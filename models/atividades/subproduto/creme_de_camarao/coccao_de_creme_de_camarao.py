@@ -1,11 +1,10 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from models.atividade_base import Atividade
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
-
 # 🔥 Logger específico para esta atividade
-logger = setup_logger('Atividade_Coccao_Creme_De_Camarao')
+logger = setup_logger('AtividadeCoccaoCremeDeCamarao')
 
 
 class CoccaoDeCremeDeCamarao(Atividade):
@@ -22,11 +21,7 @@ class CoccaoDeCremeDeCamarao(Atividade):
 
     def calcular_duracao(self):
         """
-        Define a duração da atividade conforme a quantidade.
-        Faixa oficial:
-        - 3000–20000g → 10 minutos
-        - 20001–40000g → 20 minutos
-        - 40001–60000g → 30 minutos
+        📏 Calcula a duração com base na quantidade de produto.
         """
         q = self.quantidade_produto
 
@@ -38,32 +33,26 @@ class CoccaoDeCremeDeCamarao(Atividade):
             self.duracao = timedelta(minutes=30)
         else:
             logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para COCCAO DE CREME DE CAMARAO."
+                f"❌ Quantidade {q} fora das faixas válidas para cocção do creme de camarão."
             )
             raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para COCCAO DE CREME DE CAMARAO."
+                f"❌ Quantidade {q} fora das faixas válidas para cocção do creme de camarão."
             )
 
         logger.info(
             f"🕒 Duração calculada: {self.duracao} para {q}g de creme de camarão."
         )
 
-    def tentar_alocar_e_iniciar(
-        self,
-        gestor_fogoes,
-        inicio_janela,
-        horario_limite
-    ):
+    def tentar_alocar_e_iniciar(self, gestor_fogoes, inicio_janela: datetime, horario_limite: datetime) -> bool:
         """
-        🔥 Realiza o backward scheduling:
-        Aloca o fogão se houver bocas disponíveis.
+        🔥 Realiza backward scheduling com verificação de disponibilidade de bocas.
         """
         self.calcular_duracao()
 
         logger.info(
-            f"🚀 Iniciando tentativa de alocação da atividade '{self.id}' "
-            f"(quantidade: {self.quantidade_produto}g) com deadline até {horario_limite.strftime('%H:%M')}."
-        )
+            f"🚀 Tentando alocar cocção ID {self.id} "
+            f"(quantidade: {self.quantidade_produto}g | duração: {self.duracao}) "
+            f"com deadline até {horario_limite.strftime('%H:%M')}.")
 
         sucesso, fogao, inicio_real, fim_real = gestor_fogoes.alocar(
             inicio=inicio_janela,
@@ -72,36 +61,43 @@ class CoccaoDeCremeDeCamarao(Atividade):
         )
 
         if not sucesso:
-            logger.error(f"❌ Falha na alocação do fogão para a atividade '{self.id}'.")
+            logger.error(f"❌ Falha na alocação do fogão para a atividade {self.id}.")
             return False
 
-        self.inicio_real = inicio_real
-        self.fim_real = fim_real
-        self.fogao_alocada = fogao
+        self._registrar_sucesso(fogao, inicio_real, fim_real)
+        return True
+
+    def _registrar_sucesso(self, fogao, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
+        self.fogao_alocado = fogao
+        self.equipamentos_selecionados = [fogao]
         self.alocada = True
 
         logger.info(
-            f"✅ Atividade '{self.id}' alocada com sucesso!\n"
-            f"🔥 Fogão: {fogao.nome} de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}"
+            f"✅ Atividade {self.id} alocada no fogão {fogao.nome} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
-
-        return True
+        print(
+            f"✅ Atividade {self.id} alocada no fogão {fogao.nome} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
+        )
 
     def iniciar(self):
         """
-        🟢 Marca o início da atividade.
+        🟢 Marca o início da atividade de cocção.
         """
         if not self.alocada:
             logger.error(
                 f"❌ Atividade {self.id} não alocada ainda. Não é possível iniciar."
             )
-            raise Exception("❌ Atividade não alocada. Execute a alocação antes de iniciar.")
+            raise Exception(f"❌ Atividade ID {self.id} não alocada ainda.")
 
         logger.info(
-            f"🚀 Cocção do creme de camarão iniciada no Fogão {self.fogao_alocada.nome} "
-            f"às {self.inicio_real.strftime('%H:%M')}."
+            f"🚀 Cocção do creme de camarão iniciada no fogão {self.fogao_alocado.nome} "
+            f"às {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')}"
         )
         print(
-            f"🚀 Atividade {self.id} iniciada às {self.inicio_real.strftime('%H:%M')} "
-            f"no Fogão {self.fogao_alocada.nome}."
+            f"🚀 Atividade {self.id} iniciada no fogão {self.fogao_alocado.nome} "
+            f"de {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')}"
         )

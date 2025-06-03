@@ -6,6 +6,7 @@
 import sys
 from datetime import datetime
 
+# 🔧 Ajuste de path conforme seu ambiente
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 
 from utils.logger_factory import setup_logger
@@ -37,7 +38,7 @@ fim_entrega = datetime(2025, 5, 24, 17, 0)
 # ============================================
 # 🧊 Instanciar Gestor da Câmara
 # ============================================
-gestor_camaras = GestorRefrigeracaoCongelamento(camara_refrigerada_1)
+gestor_camaras = GestorRefrigeracaoCongelamento([camara_refrigerada_1])
 
 
 # ============================================

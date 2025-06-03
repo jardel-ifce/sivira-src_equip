@@ -3,6 +3,7 @@ from models.atividade_base import Atividade
 from models.equips.bancada import Bancada
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
+from datetime import datetime
 
 
 # 🔥 Logger específico para esta atividade
@@ -16,6 +17,10 @@ class Laminacao1DeMassasParaFolhados(Atividade):
     ✔️ Sempre ocupa 4 porções da bancada, independentemente se ela é 4/4 ou 4/6.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bancada_alocada= None
+
     @property
     def quantidade_por_tipo_equipamento(self):
         return {
@@ -23,91 +28,78 @@ class Laminacao1DeMassasParaFolhados(Atividade):
         }
 
     def calcular_duracao(self):
-        """
-        🕒 Define a duração da atividade com base na quantidade de produto.
-        Faixas de tempo:
-        - 3000–17000g → 10 minutos
-        - 17001–34000g → 15 minutos
-        - 34001–50000g → 18 minutos
-        """
-        q = self.quantidade_produto
+        self.duracao = self._definir_duracao_por_faixa(self.quantidade_produto)
+        logger.info(f"🕒 Duração calculada: {self.duracao} para {self.quantidade_produto}g de massas folhadas.")
 
-        if 3000 <= q <= 17000:
-            self.duracao = timedelta(minutes=10)
-        elif 17001 <= q <= 34000:
-            self.duracao = timedelta(minutes=15)
-        elif 34001 <= q <= 50000:
-            self.duracao = timedelta(minutes=18)
+    def _definir_duracao_por_faixa(self, quantidade):
+        if 3000 <= quantidade <= 6000:
+            return timedelta(minutes=10)
+        elif 6001 <= quantidade <= 13000:
+            return timedelta(minutes=15)
+        elif 13001 <= quantidade <= 20000:
+            return timedelta(minutes=20)
         else:
-            logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para LAMINAÇÃO 1 DE MASSAS PARA FOLHADOS."
-            )
-            raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para LAMINAÇÃO 1 DE MASSAS PARA FOLHADOS."
-            )
-
-        logger.info(
-            f"🕒 Duração calculada: {self.duracao} para {q}g de massa para folhados."
-        )
+            logger.error(f"❌ Quantidade {quantidade}g inválida para armazenamento.")
+            raise ValueError(f"❌ Quantidade inválida: {quantidade}g.")
 
     def tentar_alocar_e_iniciar(
         self,
         gestor_bancadas,
+        inicio_jornada: datetime,
+        fim_jornada: datetime,
+        fracoes_necessarias: int
+    ) -> bool:
+        self.calcular_duracao()
+        return self._tentar_alocar_com_equipamentos(
+            gestor_bancadas, inicio_jornada, fim_jornada, fracoes_necessarias
+        )
+
+    def _tentar_alocar_com_equipamentos(
+        self,
+        gestor_bancadas,
         inicio_jornada,
         fim_jornada,
-        porcoes: int = 4  # <-- Sempre ocupa 4 porções da bancada
-    ):
-        """
-        🚀 Realiza o backward scheduling:
-        ✅ Aloca a bancada se houver disponibilidade.
-        ✔️ Usa 4 porções proporcional à capacidade da bancada (4/4 ou 4/6).
-        """
-        self.calcular_duracao()
+        temperatura_desejada
+    ) -> bool:
+        horario_final = fim_jornada
 
-        logger.info(
-            f"🚀 Iniciando tentativa de alocação da atividade {self.id} "
-            f"(quantidade: {self.quantidade_produto}g) até {fim_jornada.strftime('%H:%M')}."
-        )
+        while horario_final - self.duracao >= inicio_jornada:
+            horario_inicio = horario_final - self.duracao
 
-        sucesso, bancada, inicio_real, fim_real = gestor_bancadas.alocar(
-            inicio=inicio_jornada,
-            fim=fim_jornada,
-            atividade=self,
-            porcoes=porcoes
-        )
-
-        if not sucesso:
-            logger.warning(
-                f"❌ Falha na alocação da bancada para a atividade {self.id} "
-                f"dentro da jornada até {fim_jornada.strftime('%H:%M')}."
+            sucesso_bancada, bancada, ini_b, fim_b = self._tentar_alocar_bancada(
+                gestor_bancadas, horario_inicio, horario_final, temperatura_desejada
             )
-            return False
-
-        # ✅ Registrar alocação
-        self.inicio_real = inicio_real
-        self.fim_real = fim_real
+            if not sucesso_bancada:
+                horario_final -= timedelta(minutes=1)
+                continue
+            self._registrar_sucesso_bancada(bancada, ini_b, fim_b)
+            return True
+        return False
+    
+    def _tentar_alocar_bancada(self, gestor_bancadas, inicio, fim, fracoes_necessarias):
+        return gestor_bancadas.alocar(
+            inicio=inicio,
+            fim=fim,
+            atividade=self,
+            fracoes_necessarias=fracoes_necessarias,
+        )
+    def _registrar_sucesso_bancada(self, bancada, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
         self.bancada_alocada = bancada
+        self.equipamento_alocado = [bancada]
+        self.equipamentos_selecionados = [bancada]
         self.alocada = True
 
         logger.info(
-            f"✅ Atividade {self.id} alocada e iniciada na bancada {bancada.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
-            f"ocupando {porcoes}/{bancada.capacidade_total.denominator} da bancada."
-        )
-        return True
-
-    def iniciar(self):
-        """
-        🟢 Marca oficialmente o início da atividade na bancada alocada.
-        """
-        if not self.alocada:
-            raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
-
-        logger.info(
-            f"🚀 Atividade {self.id} iniciada oficialmente na bancada {self.bancada_alocada.nome} "
-            f"às {self.inicio_real.strftime('%H:%M')}."
+            f"✅ Atividade {self.id} alocada!\n"
+            f"❄️ Bancada: {bancada.nome} ({inicio.strftime('%H:%M')}–{fim.strftime('%H:%M')})\n"
         )
         print(
-            f"🚀 Atividade {self.id} iniciada às {self.inicio_real.strftime('%H:%M')} "
-            f"na bancada {self.bancada_alocada.nome}."
+            f"✅ Atividade {self.id} alocada com sucesso."
         )
+    
+    def iniciar(self):
+        if not self.alocada:
+            raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
+        logger.info(f"🚀 Atividade {self.id} iniciada.")

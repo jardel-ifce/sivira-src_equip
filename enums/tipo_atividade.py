@@ -27,6 +27,8 @@ class TipoAtividade(Enum):
     # ============================================
     ARMAZENAMENTO_SOB_TEMPERATURA_PARA_FRANGO_REFOGADO = "Armazenamento Sob Temperatura para Frango Refogado"
     PREPARO_PARA_COCCAO_DE_FRANGO_COZIDO_PRONTO = "Preparo para Cocção de Frango Cozido Pronto"
+    PREPARO_PARA_ARMAZENAMENTO_DE_FRANGO_REFOGADO = "Preparo para Armazenamento de Frango Refogado"
+    COCCAO_DE_FRANGO_COZIDO_PRONTO = "Cocção de Frango Cozido Pronto"
 
     # ============================================
     # 🥩 Atividades para Carne de Sol
@@ -88,6 +90,19 @@ class TipoAtividade(Enum):
     # 🍰 Atividades de Bolo Branco
     # ============================================
     ARMAZENAMENTO_SOB_TEMPERATURA_PARA_MASSA_PARA_BOLO_BRANCO = "Armazenamento Sob Temperatura para Massa para Bolo Branco"
+    COCCAO_DE_MASSAS_PARA_BOLO_BRANCO = "Cocção de Massas para Bolo Branco"
+    MISTURA_DE_MASSAS_PARA_BOLO_BRANCO = "Mistura de Massas para Bolo Branco"
+    PREPARO_PARA_ARMAZENAMENTO_DE_MASSA_PARA_BOLO_BRANCO = "Preparo para Armazenamento de Massa para Bolo Branco"
+    PREPARO_PARA_COCCAO_DE_MASSAS_PARA_BOLO_BRANCO = "Preparo para Cocção de Massas para Bolo Branco"
+
+    # ============================================
+    # 🍫 Atividades de Bolo de Chocolate
+    # ============================================
+    ARMAZENAMENTO_SOB_TEMPERATURA_PARA_MASSA_PARA_BOLO_DE_CHOCOLATE = "Armazenamento Sob Temperatura para Massa para Bolo de Chocolate"
+    COCCAO_DE_MASSA_PARA_BOLO_DE_CHOCOLATE = "Cocção de Massa para Bolo de Chocolate"
+    MISTURA_DE_MASSA_PARA_BOLO_DE_CHOCOLATE = "Mistura de Massa para Bolo de Chocolate"
+    PREPARO_PARA_ARMAZENAMENTO_DE_MASSA_PARA_BOLO_DE_CHOCOLATE = "Preparo para Armazenamento de Massa para Bolo de Chocolate"
+    PREPARO_PARA_COCCAO_DE_MASSA_PARA_BOLO_DE_CHOCOLATE = "Preparo para Cocção de Massa para Bolo de Chocolate"
 
 
     # ============================================
@@ -101,3 +116,10 @@ class TipoAtividade(Enum):
     LIMPEZA_DA_AREA_DE_PRODUCAO = "Limpeza da Área de Produção"
     SUPERVISAO_DA_QUALIDADE_DE_PRODUCAO_DOS_SALGADOS = "Supervisão da Qualidade da Produção dos Salgados"
     SUPERVISAO_DA_QUALIDADE_DE_PRODUCAO_DE_CONFEITARIA = "Supervisão da Qualidade da Produção de Confeitaria"
+
+    # ============================================
+    # 🍫 Atividades de Ganache de Chocolate
+    # ============================================
+    ARMAZENAMENTO_SOB_TEMPERATURA_PARA_GANACHE_DE_CHOCOLATE = "Armazenamento Sob Temperatura para Ganache de Chocolate"
+    PREPARO_PARA_COCCAO_DE_GANACHE_DE_CHOCOLATE = "Preparo para Cocção de Ganache de Chocolate"
+    PREPARO_PARA_ARMAZENAMENTO_DE_GANACHE_DE_CHOCOLATE = "Preparo para Armazenamento de Ganache de Chocolate"

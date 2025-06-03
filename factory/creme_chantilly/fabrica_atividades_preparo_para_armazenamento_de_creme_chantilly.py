@@ -45,10 +45,11 @@ fim_jornada = datetime(2025, 5, 25, 17, 0)
 gestor_bancadas = GestorBancadas([bancada_4, bancada_5, bancada_6])
 gestor_balancas = GestorBalancas([balanca_digital_2])
 
+
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
-quantidades = [5000, 12000, 18000, 25000]
+quantidades = [5000, 12000, 18000, 25000, 5000, 12000, 18000, 18000]
 
 
 # ============================================
@@ -79,7 +80,6 @@ for i, quantidade in enumerate(quantidades):
             balanca_digital_2: 1
         },
     )
-    atividade.calcular_duracao()
     atividades.append(atividade)
 
 logger.info(f"🛠️ {len(atividades)} atividades de preparo para armazenamento de creme chantilly criadas.")
@@ -98,15 +98,16 @@ for atividade in atividades:
         gestor_balancas=gestor_balancas,
         inicio_jornada=inicio_jornada,
         fim_jornada=fim_jornada,
-        porcoes_bancada=2  # 🔥 Ajustável conforme a estratégia da produção
+        fracoes_necessarias=2  # 🪵 Número de frações que serão ocupadas na bancada
     )
 
     if sucesso:
         logger.info(
             f"✅ Atividade {atividade.id} alocada com sucesso: "
-            f"Bancada {atividade.bancada_alocada.nome} de {atividade.inicio_real.strftime('%H:%M')} até {atividade.fim_real.strftime('%H:%M')} "
-            f"e Balança {atividade.balanca_alocada.nome}."
+            f"🪵 Bancada {atividade.bancada_alocada.nome} de {atividade.inicio_real.strftime('%H:%M')} até {atividade.fim_real.strftime('%H:%M')} "
+            f"e ⚖️ Balança {atividade.balanca_alocada.nome} registrada com {atividade.quantidade_produto}g."
         )
+        atividade.iniciar()
     else:
         logger.warning(
             f"❌ Atividade {atividade.id} não pôde ser alocada dentro da janela "
@@ -117,5 +118,6 @@ for atividade in atividades:
 # ============================================
 # 📅 Mostrar Agendas Finais
 # ============================================
+logger.info("📅 Agenda final das bancadas e balanças:")
 gestor_bancadas.mostrar_agenda()
 gestor_balancas.mostrar_agenda()

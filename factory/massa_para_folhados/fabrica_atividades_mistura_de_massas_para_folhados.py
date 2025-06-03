@@ -28,7 +28,7 @@ logger = setup_logger(
 # ⏰ Janela de Produção
 # ============================================
 inicio_jornada = datetime(2025, 5, 25, 8, 0)
-fim_entrega = datetime(2025, 5, 25, 17, 0)
+fim_jornada = datetime(2025, 5, 25, 17, 0)
 
 
 # ============================================
@@ -76,31 +76,37 @@ for atividade in atividades:
     )
     sucesso, masseira, inicio_real, fim_real = gestor_misturadoras.alocar(
         inicio=inicio_jornada,
-        fim=fim_entrega,
+        fim=fim_jornada,
         atividade=atividade,
         quantidade=atividade.quantidade_produto
     )
 
+# ============================================
+# 🔥 Tentar Alocar e Iniciar Atividades
+# ============================================
+for atividade in atividades:
+    logger.info(
+        f"🚀 Tentando alocar atividade {atividade.id} com {atividade.quantidade_produto}g."
+    )
+
+    sucesso = atividade.tentar_alocar_e_iniciar(
+        gestor_misturadoras=gestor_misturadoras,
+        inicio_jornada=inicio_jornada,
+        fim_jornada=fim_jornada,
+        quantidade=atividade.quantidade_produto  # 🔥 Sempre ocupa 4 porções da bancada
+    )
+
     if sucesso:
-        atividade.inicio_real = inicio_real
-        atividade.fim_real = fim_real
-        atividade.masseira_alocada = masseira
-        atividade.alocada = True
-
-        logger.info(
-            f"✅ Atividade {atividade.id} alocada com sucesso na Masseira {masseira.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}."
-        )
         atividade.iniciar()
-
     else:
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada na janela "
-            f"entre {inicio_jornada.strftime('%H:%M')} e {fim_entrega.strftime('%H:%M')}."
+            f"❌ Atividade {atividade.id} não pôde ser alocada dentro da janela "
+            f"{inicio_jornada.strftime('%H:%M')} até {fim_jornada.strftime('%H:%M')}."
         )
+
 
 
 # ============================================
-# 📅 Mostrar Agendas Finais
+# 📅 Mostrar Agenda Final
 # ============================================
 gestor_misturadoras.mostrar_agenda()

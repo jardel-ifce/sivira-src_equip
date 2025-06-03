@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
 from typing import List, Tuple, Optional
 from models.equips.balanca_digital import BalancaDigital
+from models.atividade_base import Atividade
+from utils.gerador_ocupacao import GeradorDeOcupacaoID
 from utils.logger_factory import setup_logger
-
+from datetime import datetime
 
 # ⚖️ Logger específico para o gestor de balanças
 logger = setup_logger('GestorBalancas')
@@ -10,113 +11,89 @@ logger = setup_logger('GestorBalancas')
 
 class GestorBalancas:
     """
-    ⚖️ Gestor especializado para controle de balanças digitais,
-    utilizando Backward Scheduling (agendamento reverso no tempo).
+    ⚖️ Gestor especializado para controle de balanças digitais.
+    Permite múltiplas alocações simultâneas.
     """
 
     def __init__(self, balancas: List[BalancaDigital]):
         self.balancas = balancas
+        self.gerador_ocupacao_id = GeradorDeOcupacaoID()
 
+    # ==========================================================
+    # 🎯 Alocação
+    # ==========================================================
     def alocar(
         self,
         inicio: datetime,
         fim: datetime,
-        atividade,
+        atividade: Atividade,
         quantidade_gramas: float
     ) -> Tuple[bool, Optional[BalancaDigital], Optional[datetime], Optional[datetime]]:
         """
-        🎯 Realiza a alocação backward (do fim para o início).
-        Retorna (True, balanca, inicio_real, fim_real) se sucesso,
-        caso contrário (False, None, None, None).
+        ⚖️ Tenta registrar a ocupação em alguma balança válida para o peso.
+        Mesmo sem controle de tempo, retorna uma tupla padrão com (sucesso, equipamento, inicio, fim).
         """
-        duracao = atividade.duracao
-
-        horario_final_tentativa = fim
-
-        logger.info(
-            f"🎯 Iniciando tentativa de alocação da atividade {atividade.id} "
-            f"(duração: {duracao}, quantidade: {quantidade_gramas}g) "
-            f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+        balancas_ordenadas = sorted(
+            self.balancas,
+            key=lambda b: atividade.fips_equipamentos.get(b, 999)
         )
 
-        while horario_final_tentativa - duracao >= inicio:
-            horario_inicio_tentativa = horario_final_tentativa - duracao
+        for balanca in balancas_ordenadas:
+            if not balanca.aceita_quantidade(quantidade_gramas):
+                logger.info(
+                    f"🚫 Balança {balanca.nome} não aceita {quantidade_gramas}g. Ignorando."
+                )
+                continue
 
-            for balanca in self.balancas:
-                if (
-                    balanca.validar_peso(quantidade_gramas) and
-                    balanca.esta_disponivel(horario_inicio_tentativa, horario_final_tentativa)
-                ):
-                    sucesso = balanca.ocupar(
-                        inicio=horario_inicio_tentativa,
-                        fim=horario_final_tentativa,
-                        quantidade_gramas=quantidade_gramas,
-                        atividade_id=atividade.id
-                    )
-                    if sucesso:
-                        atividade.equipamento_alocado = balanca
-                        atividade.equipamentos_selecionados = [balanca]
-                        atividade.alocada = True
+            ocupacao_id = self.gerador_ocupacao_id.gerar_id()
+            sucesso = balanca.ocupar(
+                ocupacao_id=ocupacao_id,
+                atividade_id=atividade.id,
+                quantidade=quantidade_gramas
+            )
+            if sucesso:
+                atividade.equipamento_alocado = balanca
+                atividade.equipamentos_selecionados = [balanca]
+                atividade.alocada = True
 
-                        logger.info(
-                            f"✅ Atividade {atividade.id} alocada na balança {balanca.nome} "
-                            f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
-                        )
+                logger.info(
+                    f"✅ Atividade {atividade.id} alocada na balança {balanca.nome} "
+                    f"(sem intervalo de tempo)."
+                )
+                return True, balanca, None, None
 
-                        return True, balanca, horario_inicio_tentativa, horario_final_tentativa
+            else:
+                logger.warning(
+                    f"⚠️ Falha ao registrar ocupação na balança {balanca.nome} mesmo após validação."
+                )
 
-            # ⏪ Retrocede 5 minutos
-            horario_final_tentativa -= timedelta(minutes=5)
-
-        logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada "
-            f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+        logger.error(
+            f"❌ Nenhuma balança disponível ou compatível com {quantidade_gramas}g para atividade {atividade.id}."
         )
         return False, None, None, None
 
+
     # ==========================================================
-    # 🧹 Liberação
+    # 🔓 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, atividade) -> None:
-        """
-        🔄 Libera todas as ocupações associadas a uma atividade específica.
-        """
+    def liberar_por_atividade(self, atividade: Atividade):
         logger.info(
-            f"🧹 Liberando ocupações da atividade {atividade.id} nas balanças."
+            f"🧹 Liberando ocupações associadas à atividade {atividade.id} em todas as balanças."
         )
         for balanca in self.balancas:
             balanca.liberar_por_atividade(atividade.id)
 
-    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime) -> None:
-        logger.info(
-            f"🔄 Liberando ocupações finalizadas das balanças até {horario_atual.strftime('%H:%M')}."
-        )
-        for balanca in self.balancas:
-            balanca.liberar_ocupacoes_terminadas(horario_atual)
-
-    def liberar_todas_ocupacoes(self) -> None:
-        logger.info(f"🧹 Liberando todas as ocupações de todas as balanças.")
+    def liberar_todas_ocupacoes(self):
+        logger.info("🧹 Liberando todas as ocupações de todas as balanças.")
         for balanca in self.balancas:
             balanca.liberar_todas_ocupacoes()
-
-    def liberar_intervalo(self, inicio: datetime, fim: datetime) -> None:
-        """
-        🧹 Libera ocupações que estão dentro do intervalo especificado para todas as balanças.
-        """
-        logger.info(
-            f"🧹 Liberando ocupações das balanças no intervalo "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-        )
-        for balanca in self.balancas:
-            balanca.liberar_intervalo(inicio, fim)
 
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
-    def mostrar_agenda(self) -> None:
-        logger.info("\n============================")
+    def mostrar_agenda(self):
+        logger.info("==============================================")
         logger.info("📅 Agenda das Balanças")
-        logger.info("============================")
-
+        logger.info("==============================================")
         for balanca in self.balancas:
             balanca.mostrar_agenda()

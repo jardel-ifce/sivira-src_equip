@@ -3,7 +3,6 @@ from models.atividade_base import Atividade
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
-
 # 🔥 Logger específico para esta atividade
 logger = setup_logger('Atividade_Mistura_Massas_Crocantes')
 
@@ -13,6 +12,11 @@ class MisturaDeMassasCrocantes(Atividade):
     🌀 Atividade que representa a mistura de massas crocantes.
     ✅ Utiliza masseiras (misturadoras), com controle de ocupação realizado pelo gestor.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.masseira_alocada = None
+        self.ocupacao_id = None
 
     @property
     def quantidade_por_tipo_equipamento(self):
@@ -68,7 +72,8 @@ class MisturaDeMassasCrocantes(Atividade):
         sucesso, masseira, inicio_real, fim_real = gestor_misturadoras.alocar(
             inicio=inicio_janela,
             fim=horario_limite,
-            atividade=self
+            atividade=self,
+            quantidade=self.quantidade_produto
         )
 
         if not sucesso:
@@ -76,23 +81,36 @@ class MisturaDeMassasCrocantes(Atividade):
             return False
 
         # ✅ Registrar alocação
-        self.inicio_real = inicio_real
-        self.fim_real = fim_real
-        self.masseira_alocada = masseira
-        self.alocada = True
-
-        logger.info(
-            f"✅ Atividade {self.id} alocada com sucesso na masseira {masseira.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}."
+        self._registrar_sucesso(
+            masseira=masseira,
+            inicio=inicio_real,
+            fim=fim_real
         )
 
         return True
+
+    def _registrar_sucesso(self, masseira, inicio, fim):
+        """
+        ✅ Atualiza os atributos da atividade com sucesso de alocação.
+        """
+        self.inicio_real = inicio
+        self.fim_real = fim
+        self.inicio_planejado = inicio
+        self.fim_planejado = fim
+        self.alocada = True
+        self.masseira_alocada = masseira
+        self.equipamentos_selecionados.append(masseira)
+
+        logger.info(
+            f"✅ Atividade {self.id} alocada com sucesso na masseira {masseira.nome} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
+        )
 
     def iniciar(self):
         """
         🟢 Marca oficialmente o início da atividade.
         """
-        if not self.alocada:
+        if not self.alocada or not self.masseira_alocada:
             raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
 
         logger.info(

@@ -15,26 +15,30 @@ class Atividade(ABC):
     def __init__(
         self,
         id: int,
+        id_atividade: int,
         tipo_atividade: TipoAtividade,
         tipos_profissionais_permitidos: List[TipoProfissional],
         quantidade_funcionarios: int,
         equipamentos_elegiveis: List[Equipamento],
-        quantidade_produto: float,
+        id_produto_gerado: int,
+        quantidade_produto: int,
         fips_equipamentos: Optional[Dict[Equipamento, int]] = None
     ):
         # ===========================
         # 🎯 Atributos principais
         # ===========================
         self.id = id
+        self.id_atividade = id_atividade  # ID único da atividade
         self.tipo_atividade = tipo_atividade
         self.tipos_profissionais_permitidos = tipos_profissionais_permitidos
-        self.quantidade_funcionarios = max(1, quantidade_funcionarios)  # não aceita zero
+        self.quantidade_funcionarios = max(0, quantidade_funcionarios)  
         self.equipamentos_elegiveis = equipamentos_elegiveis
         self.equipamentos_selecionados: List[Equipamento] = []
 
         # ===========================
         # 📦 Produto e alocação
         # ===========================
+        self.id_produto_gerado = id_produto_gerado
         self.quantidade_produto = quantidade_produto
         self.funcionarios_alocados: List = []
         self.alocada = False
@@ -88,7 +92,6 @@ class Atividade(ABC):
 
     def __str__(self):
         return (
-            f"\n🆔 Atividade: {self.tipo_atividade.name} (ID: {self.id})"
             f"\n📦 Quantidade Produto: {self.quantidade_produto}"
             f"\n👥 Funcionários necessários: {self.quantidade_funcionarios}"
             f"\n👷‍♂️ Funcionários alocados: {len(self.funcionarios_alocados)}"

@@ -1,36 +1,31 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from models.atividade_base import Atividade
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
 
-# 🔥 Logger específico para essa atividade
-logger = setup_logger('Atividade_Preparo_Armazenamento_Creme_Queijo')
+# 🔥 Logger específico para esta atividade
+logger = setup_logger('Atividade_Preparo_Armazenamento_Creme_De_Queijo')
 
 
 class PreparoParaArmazenamentoCremeDeQueijo(Atividade):
     """
     🧀 Atividade de preparo para armazenamento do creme de queijo.
-    Equipamentos:
-    - Bancada (ocupação fracionada, permite sobreposição).
-    - Balança (ocupação exclusiva no tempo).
+    ✅ Equipamentos:
+       - 🩵 Bancada (ocupação por frações, exclusiva no tempo por fração).
+       - ⚖️ Balança Digital (registro de uso por peso, uso concorrente).
     """
 
     @property
     def quantidade_por_tipo_equipamento(self):
-        """
-        Define os tipos de equipamentos necessários.
-        """
         return {
             TipoEquipamento.BANCADAS: 1,
             TipoEquipamento.BALANCAS: 1,
         }
 
     def calcular_duracao(self):
-        """
-        Define a duração da atividade baseada na quantidade produzida.
-        """
         q = self.quantidade_produto
+
         if 3000 <= q <= 20000:
             self.duracao = timedelta(minutes=10)
         elif 20001 <= q <= 40000:
@@ -38,82 +33,116 @@ class PreparoParaArmazenamentoCremeDeQueijo(Atividade):
         elif 40001 <= q <= 60000:
             self.duracao = timedelta(minutes=30)
         else:
-            raise ValueError(f"❌ Quantidade {q} inválida para esta atividade.")
+            logger.error(f"❌ Quantidade {q} inválida para esta atividade.")
+            raise ValueError(f"❌ Quantidade {q} inválida para PreparoParaArmazenamentoCremeDeQueijo.")
+
+        logger.info(
+            f"🕒 Duração calculada: {self.duracao} para {q}g de creme de queijo."
+        )
 
     def tentar_alocar_e_iniciar(
         self,
         gestor_bancadas,
         gestor_balancas,
-        inicio_jornada,
-        fim_jornada,
-        porcoes_bancada: int = 3  # 🔥 Número de porções da bancada
-    ):
+        inicio_jornada: datetime,
+        fim_jornada: datetime,
+        fracoes_necessarias: int = 2
+    ) -> bool:
         """
-        Realiza o backward scheduling:
-        1️⃣ Aloca primeiro a balança (ocupação exclusiva no tempo).
-        2️⃣ Depois aloca a bancada (ocupação fracionada e permite sobreposição).
+        🔁 Backward scheduling robusto com tentativa progressiva:
+        1️⃣ Aloca bancada (com controle de tempo e frações).
+        2️⃣ Registra uso da balança (sem tempo, apenas valida peso).
         """
         self.calcular_duracao()
 
-        logger.info(
-            f"🚀 Iniciando tentativa de alocação da atividade '{self.id}' "
-            f"(quantidade: {self.quantidade_produto}g) até {fim_jornada.strftime('%H:%M')}."
-        )
-
-        # 🔹 Alocação da balança (ocupação exclusiva no tempo)
-        sucesso_balanca, balanca, inicio_balanca, fim_balanca = gestor_balancas.alocar(
-            inicio=inicio_jornada,
-            fim=fim_jornada,
-            atividade=self,
-            quantidade=self.quantidade_produto
-        )
-
-        if not sucesso_balanca:
-            logger.error(f"❌ Falha na alocação da balança para a atividade '{self.id}'.")
-            return False
-
-        # 🔹 Calcular janela da bancada (imediatamente antes da balança)
-        fim_bancada = inicio_balanca
-        inicio_bancada = fim_bancada - self.duracao
-
-        sucesso_bancada, bancada, inicio_bancada_real, fim_bancada_real = gestor_bancadas.alocar(
-            inicio=inicio_bancada,
-            fim=fim_bancada,
-            atividade=self,
-            porcoes=porcoes_bancada
-        )
-
-        if not sucesso_bancada:
-            # 🔥 Rollback da balança
-            gestor_balancas.liberar(
-                inicio=inicio_balanca,
-                fim=fim_balanca,
-                atividade_id=self.id
+        # 🧪 Verifica se ao menos uma balança aceita o peso antes de tentar
+        if not any(b.aceita_quantidade(self.quantidade_produto) for b in gestor_balancas.balancas):
+            logger.error(
+                f"❌ Nenhuma balança disponível aceita {self.quantidade_produto}g para a atividade {self.id}."
             )
-            logger.error(f"❌ Falha na alocação da bancada para a atividade '{self.id}'.")
             return False
 
-        # ✅ Registrar alocação
-        self.inicio_real = inicio_bancada_real
-        self.fim_real = fim_balanca
+        logger.info(
+            f"🚀 Tentando alocar atividade {self.id} "
+            f"(quantidade: {self.quantidade_produto}g, duração: {self.duracao}) "
+            f"entre {inicio_jornada.strftime('%H:%M')} e {fim_jornada.strftime('%H:%M')}."
+        )
+
+        horario_final_tentativa = fim_jornada
+
+        while horario_final_tentativa - self.duracao >= inicio_jornada:
+            horario_inicio_tentativa = horario_final_tentativa - self.duracao
+
+            # 🔹 1. Alocação da bancada
+            sucesso_bancada, bancada, inicio_bancada_real, fim_bancada_real = gestor_bancadas.alocar(
+                inicio=horario_inicio_tentativa,
+                fim=horario_final_tentativa,
+                atividade=self,
+                fracoes_necessarias=fracoes_necessarias
+            )
+
+            if not sucesso_bancada:
+                logger.warning(
+                    f"❌ Não foi possível alocar bancada para atividade {self.id} "
+                    f"entre {horario_inicio_tentativa.strftime('%H:%M')} e {horario_final_tentativa.strftime('%H:%M')}."
+                )
+                horario_final_tentativa -= timedelta(minutes=1)
+                continue
+
+            # 🔹 2. Registro da balança
+            sucesso_balanca, balanca = gestor_balancas.alocar(
+                atividade=self,
+                quantidade_gramas=self.quantidade_produto
+            )
+
+            if not sucesso_balanca:
+                gestor_bancadas.liberar_por_atividade(self)
+                logger.warning(
+                    f"⚠️ Não foi possível registrar uso da balança para atividade {self.id}. "
+                    f"Liberando bancada {bancada.nome} e tentando outro intervalo."
+                )
+                continue
+
+            # ✅ Sucesso completo
+            self._registrar_sucesso(bancada, balanca, inicio_bancada_real, fim_bancada_real)
+            return True
+
+        logger.error(
+            f"❌ Não foi possível alocar atividade {self.id} "
+            f"dentro da janela {inicio_jornada.strftime('%H:%M')} até {fim_jornada.strftime('%H:%M')}."
+        )
+        return False
+
+    def _registrar_sucesso(self, bancada, balanca, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
         self.bancada_alocada = bancada
         self.balanca_alocada = balanca
+        self.equipamento_alocado = [bancada, balanca]
+        self.equipamentos_selecionados = [bancada, balanca]
         self.alocada = True
 
         logger.info(
-            f"✅ Atividade '{self.id}' alocada com sucesso!\n"
-            f"🪵 Bancada: {bancada.nome} de {inicio_bancada_real.strftime('%H:%M')} até {fim_bancada_real.strftime('%H:%M')}\n"
-            f"⚖️ Balança: {balanca.nome} de {inicio_balanca.strftime('%H:%M')} até {fim_balanca.strftime('%H:%M')}"
+            f"✅ Atividade {self.id} alocada com sucesso!\n"
+            f"🩵 Bancada: {bancada.nome} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}\n"
+            f"⚖️ Balança: {balanca.nome} registrada com {self.quantidade_produto}g"
         )
-
-        return True
+        print(
+            f"✅ Atividade {self.id} alocada: Bancada {bancada.nome} ({inicio.strftime('%H:%M')}–{fim.strftime('%H:%M')}) + Balança {balanca.nome}"
+        )
 
     def iniciar(self):
-        """
-        🟢 Marca o início da atividade.
-        """
+        if not self.alocada:
+            logger.error(
+                f"❌ Atividade {self.id} não alocada ainda. Não é possível iniciar."
+            )
+            raise Exception(f"❌ Atividade ID {self.id} não alocada ainda.")
+
         logger.info(
-            f"🚀 Atividade {self.id} ({self.descricao}) foi iniciada oficialmente "
-            f"no horário {self.inicio_real.strftime('%H:%M')}."
+            f"🚀 Atividade {self.id} iniciada oficialmente "
+            f"na bancada {self.bancada_alocada.nome} às {self.inicio_real.strftime('%H:%M')}."
         )
-        print(f"🚀 Atividade {self.id} ({self.descricao}) iniciada às {self.inicio_real.strftime('%H:%M')}.")
+        print(
+            f"🚀 Atividade {self.id} iniciada às {self.inicio_real.strftime('%H:%M')} "
+            f"na bancada {self.bancada_alocada.nome}."
+        )

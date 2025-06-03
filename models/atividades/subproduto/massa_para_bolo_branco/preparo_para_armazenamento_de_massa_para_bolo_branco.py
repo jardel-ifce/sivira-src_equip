@@ -1,16 +1,25 @@
+from datetime import timedelta, datetime
 from models.atividade_base import Atividade
-from models.equips.bancada import Bancada
-from models.equips.armario_esqueleto import ArmarioEsqueleto
 from enums.tipo_equipamento import TipoEquipamento
-from datetime import timedelta
+from utils.logger_factory import setup_logger
+
+# 🧁 Logger específico
+logger = setup_logger('Atividade_Preparo_Armazenamento_Massa_Bolo_Branco')
 
 
-class PreparoParaArmazenamentoDeMassasParaBoloBranco(Atividade):
+class PreparoParaArmazenamentoDeMassaParaBoloBranco(Atividade):
     """
-    Atividade que representa o preparo para armazenamento de massas para bolo branco.
-    Utiliza uma bancada (ocupando uma fração) e um armário esqueleto 
-    (seguindo a lógica de 1000g = 1 nível de tela).
+    🧁 Atividade de preparo para armazenamento de massas para bolo branco.
+    ✔️ Equipamentos:
+       - 🪵 Bancada (ocupação por frações, exclusiva no tempo por fração).
+       - 🗂️ Armário Esqueleto (ocupação por níveis, 1000g = 1 nível).
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.niveis_ocupados = None  # 👈 opcional: armazenar a quantidade de níveis alocados
+        self.armario_alocado = None
+        self.bancada_alocada = None
 
     @property
     def quantidade_por_tipo_equipamento(self):
@@ -20,68 +29,82 @@ class PreparoParaArmazenamentoDeMassasParaBoloBranco(Atividade):
         }
 
     def calcular_duracao(self):
-        """
-        Define a duração da atividade. Neste caso, tempo fixo de 20 minutos.
-        """
         self.duracao = timedelta(minutes=20)
+        logger.info(f"🕒 Duração fixada em 20 minutos para {self.quantidade_produto}g.")
 
-    def iniciar(self):
-        """
-        Executa os métodos específicos dos equipamentos selecionados,
-        priorizando conforme o FIP dos equipamentos.
-        """
-        if not self.alocada:
-            raise Exception("❌ Atividade não alocada ainda.")
+    def tentar_alocar_e_iniciar(
+        self,
+        gestor_bancadas,
+        gestor_armarios,
+        inicio_jornada: datetime,
+        fim_jornada: datetime,
+        fracoes_necessarias: int = 1
+    ) -> bool:
+        self.calcular_duracao()
 
-        bancada_alocada = None
-        armario_alocado = None
-
-        # Ordenar os equipamentos por FIP
-        equipamentos_ordenados = sorted(
-            self.equipamentos_selecionados,
-            key=lambda e: self.fips_equipamentos.get(e, 999)
+        logger.info(
+            f"🚀 Tentando alocar atividade {self.id} ({self.quantidade_produto}g) entre "
+            f"{inicio_jornada.strftime('%H:%M')} e {fim_jornada.strftime('%H:%M')}"
         )
 
-        for equipamento in equipamentos_ordenados:
-            # Ocupação da bancada
-            if isinstance(equipamento, Bancada) and bancada_alocada is None:
-                sucesso = equipamento.ocupar((1, 6))  # ✅ Fração de ocupação (ajustável se desejar)
+        # 🔹 Primeiro passo: tentar alocar armário no fim da jornada
+        status_armario, armario, inicio_armario, fim_armario = gestor_armarios.alocar(
+            inicio=inicio_jornada,
+            fim=fim_jornada,
+            atividade=self
+        )
 
-                if sucesso:
-                    bancada_alocada = equipamento
-                    print(
-                        f"🧰 Bancada {equipamento.nome} ocupada para preparo de armazenamento "
-                        f"na fração 1/6."
-                    )
-                else:
-                    print(
-                        f"⚠️ Bancada {equipamento.nome} não disponível. Buscando próxima..."
-                    )
+        if status_armario != "SUCESSO":
+            logger.warning(
+                f"❌ Armário não disponível para atividade {self.id} na janela. Encerrando tentativa."
+            )
+            return False
 
-            # Ocupação do Armário Esqueleto (1000g = 1 nível)
-            if isinstance(equipamento, ArmarioEsqueleto) and armario_alocado is None:
-                sucesso = equipamento.ocupar(self.quantidade_produto)
+        # 🔹 Segundo passo: tentar encaixar bancada antes do armário
+        inicio_bancada = inicio_armario - self.duracao
+        fim_bancada = inicio_armario
 
-                if sucesso:
-                    armario_alocado = equipamento
-                    print(
-                        f"📦 Armário Esqueleto {equipamento.nome} ocupado com "
-                        f"{self.quantidade_produto}g "
-                        f"(equivalente a {(self.quantidade_produto + 999) // 1000} níveis de tela)."
-                    )
-                else:
-                    print(
-                        f"⚠️ Armário Esqueleto {equipamento.nome} não disponível. Buscando próxima..."
-                    )
+        sucesso_bancada, bancada, i_real, f_real = gestor_bancadas.alocar(
+            inicio=inicio_bancada,
+            fim=fim_bancada,
+            atividade=self,
+            fracoes_necessarias=fracoes_necessarias
+        )
 
-            if bancada_alocada and armario_alocado:
-                print(
-                    f"✅ Preparo para armazenamento de massas para bolo branco iniciado com "
-                    f"Bancada {bancada_alocada.nome} e Armário {armario_alocado.nome}."
-                )
-                return True
+        if not sucesso_bancada:
+            gestor_armarios.liberar_por_atividade(self)
+            logger.warning(
+                f"❌ Bancada não disponível antes do armário. Liberando armário e encerrando tentativa."
+            )
+            return False
 
-        raise Exception(
-            "❌ Não foi possível alocar todos os equipamentos necessários "
-            "(Bancada e Armário Esqueleto)."
+        # ✅ Sucesso total
+        self._registrar_sucesso(bancada, armario, i_real, fim_armario)
+        return True
+
+    def _registrar_sucesso(self, bancada, armario, inicio, fim):
+        self.bancada_alocada = bancada
+        self.armario_alocado = armario
+        self.equipamento_alocado = [bancada, armario]
+        self.equipamentos_selecionados = [bancada, armario]
+        self.inicio_real = inicio
+        self.fim_real = fim
+        self.alocada = True
+
+        logger.info(
+            f"✅ Atividade {self.id} alocada com sucesso!\n"
+            f"🪵 Bancada: {bancada.nome} de {inicio.strftime('%H:%M')} até {(inicio + self.duracao).strftime('%H:%M')}\n"
+            f"🗂️ Armário: {armario.nome} de {(fim - self.duracao).strftime('%H:%M')} até {fim.strftime('%H:%M')}"
+        )
+
+    def iniciar(self):
+        if not self.alocada:
+            logger.error(f"❌ Atividade {self.id} não alocada. Não é possível iniciar.")
+            raise Exception(f"❌ Atividade ID {self.id} não alocada ainda.")
+
+        logger.info(
+            f"🚀 Atividade {self.id} iniciada na bancada {self.bancada_alocada.nome} às {self.inicio_real.strftime('%H:%M')}"
+        )
+        print(
+            f"🚀 Atividade {self.id} iniciada às {self.inicio_real.strftime('%H:%M')} na bancada {self.bancada_alocada.nome}."
         )

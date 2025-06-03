@@ -2,9 +2,7 @@ from models.equips.equipamento import Equipamento
 from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_setor import TipoSetor
 from typing import List, Tuple
-from datetime import datetime
 from utils.logger_factory import setup_logger
-
 
 # ⚖️ Logger específico para a balança
 logger = setup_logger('BalancaDigital')
@@ -12,8 +10,12 @@ logger = setup_logger('BalancaDigital')
 
 class BalancaDigital(Equipamento):
     """
-    ⚖️ Classe que representa uma Balança Digital com controle por peso e janelas de tempo.
-    ✔️ Ocupação exclusiva no tempo, rastreada por atividade.
+    ⚖️ Classe que representa uma Balança Digital com controle por peso.
+    ✔️ Sem restrição de tempo, permite múltiplas alocações simultâneas.
+    ✔️ Cada ocupação é registrada apenas com:
+       - ocupacao_id
+       - atividade_id
+       - quantidade (em gramas)
     """
 
     def __init__(
@@ -32,63 +34,40 @@ class BalancaDigital(Equipamento):
             tipo_equipamento=TipoEquipamento.BALANCAS,
             status_ativo=True
         )
-
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
-
-        # 📦 Ocupações: (quantidade_gramas, inicio, fim, atividade_id)
-        self.ocupacoes: List[Tuple[float, datetime, datetime, int]] = []
+        self.ocupacoes: List[Tuple[int, int, float]] = []  # (ocupacao_id, atividade_id, quantidade)
 
     # ==========================================================
-    # 🔍 Verificar disponibilidade
+    # ✅ Validação de quantidade
     # ==========================================================
-    def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        ocupada = any(
-            not (fim <= ini or inicio >= f)
-            for _, ini, f, _ in self.ocupacoes
-        )
-        return not ocupada
-
-    # ==========================================================
-    # ⚖️ Validação de peso
-    # ==========================================================
-    def validar_peso(self, quantidade_gramas: float) -> bool:
+    def aceita_quantidade(self, quantidade_gramas: float) -> bool:
+        """
+        ✅ Verifica se a quantidade está dentro da capacidade da balança.
+        """
         return self.capacidade_gramas_min <= quantidade_gramas <= self.capacidade_gramas_max
+
+    def validar_peso(self, quantidade_gramas: float) -> bool:
+        # Depreciação interna, mantém compatibilidade
+        return self.aceita_quantidade(quantidade_gramas)
 
     # ==========================================================
     # 🏗️ Ocupação
     # ==========================================================
-    def ocupar(
-        self,
-        inicio: datetime,
-        fim: datetime,
-        quantidade_gramas: float,
-        atividade_id: int
-    ) -> bool:
-        if not self.validar_peso(quantidade_gramas):
+    def ocupar(self, ocupacao_id: int, atividade_id: int, quantidade: float) -> bool:
+        if not self.aceita_quantidade(quantidade):
             logger.error(
-                f"❌ Peso inválido na balança {self.nome}: {quantidade_gramas}g "
+                f"❌ Peso inválido na balança {self.nome}: {quantidade}g "
                 f"(Limites: {self.capacidade_gramas_min}g - {self.capacidade_gramas_max}g)."
             )
             return False
 
-        if not self.esta_disponivel(inicio, fim):
-            logger.warning(
-                f"❌ A balança {self.nome} está ocupada de "
-                f"{inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-            )
-            return False
-
-        self.ocupacoes.append(
-            (quantidade_gramas, inicio, fim, atividade_id)
-        )
-
+        self.ocupacoes.append((ocupacao_id, atividade_id, quantidade))
         logger.info(
-            f"⚖️ Ocupou a balança {self.nome} com {quantidade_gramas}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"para atividade {atividade_id}."
+            f"⚖️ Ocupação registrada na balança {self.nome}: "
+            f"atividade {atividade_id}, quantidade {quantidade}g "
+            f"(Ocupação ID: {ocupacao_id})."
         )
-
         return True
 
     # ==========================================================
@@ -97,11 +76,10 @@ class BalancaDigital(Equipamento):
     def liberar_por_atividade(self, atividade_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (qtd, ini, fim, act_id) for (qtd, ini, fim, act_id) in self.ocupacoes
-            if act_id != atividade_id
+            (oid, aid, qtd) for (oid, aid, qtd) in self.ocupacoes
+            if aid != atividade_id
         ]
         liberadas = antes - len(self.ocupacoes)
-
         if liberadas > 0:
             logger.info(
                 f"🟩 Liberou {liberadas} ocupações da balança {self.nome} "
@@ -109,72 +87,26 @@ class BalancaDigital(Equipamento):
             )
         else:
             logger.info(
-                f"ℹ️ Nenhuma ocupação da balança {self.nome} estava associada "
-                f"à atividade {atividade_id}."
-            )
-
-    def liberar_ocupacoes_terminadas(self, horario_atual: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            (qtd, ini, fim, act_id) for (qtd, ini, fim, act_id) in self.ocupacoes
-            if fim > horario_atual
-        ]
-        liberadas = antes - len(self.ocupacoes)
-
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} ocupações da balança {self.nome} "
-                f"até {horario_atual.strftime('%H:%M')}."
+                f"ℹ️ Nenhuma ocupação da balança {self.nome} estava associada à atividade {atividade_id}."
             )
 
     def liberar_todas_ocupacoes(self):
         total = len(self.ocupacoes)
         self.ocupacoes.clear()
-        logger.info(
-            f"🟩 Liberou todas as {total} ocupações da balança {self.nome}."
-        )
-
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
-        """
-        🧹 Libera ocupações que estão dentro de um intervalo específico.
-        """
-        antes = len(self.ocupacoes)
-
-        self.ocupacoes = [
-            (qtd, ini, f, act_id) for (qtd, ini, f, act_id) in self.ocupacoes
-            if not (ini >= inicio and f <= fim)
-        ]
-
-        liberadas = antes - len(self.ocupacoes)
-
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} ocupações da balança {self.nome} "
-                f"no intervalo de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da balança {self.nome} "
-                f"estava no intervalo de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-            )
+        logger.info(f"🟩 Liberou todas as {total} ocupações da balança {self.nome}.")
 
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
-        logger.info("\n============================")
+        logger.info("==============================================")
         logger.info(f"📅 Agenda da Balança {self.nome}")
-        logger.info("============================")
+        logger.info("==============================================")
         if not self.ocupacoes:
-            logger.info("🔹 Nenhuma ocupação.")
+            logger.info("🔹 Nenhuma ocupação registrada.")
             return
-        for i, (qtd, inicio, fim, act_id) in enumerate(self.ocupacoes, start=1):
-            logger.info(
-                f"🔸 Ocupação {i}: {qtd}g | "
-                f"Início: {inicio.strftime('%H:%M')} | "
-                f"Fim: {fim.strftime('%H:%M')} | "
-                f"Atividade: {act_id}"
-            )
+        for i, (oid, aid, qtd) in enumerate(self.ocupacoes, start=1):
+            logger.info(f"🔸 Ocupação {i} (ID {oid}): {qtd}g | Atividade: {aid}")
 
     # ==========================================================
     # 🔍 Status

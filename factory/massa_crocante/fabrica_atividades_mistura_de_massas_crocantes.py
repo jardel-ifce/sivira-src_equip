@@ -39,7 +39,7 @@ gestor_misturadoras = GestorMisturadoras([masseira_1, masseira_2])
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
-quantidades = [5000, 15000, 25000, 50000]
+quantidades = [5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000,5000, 15000, 25000, 50000]
 
 
 # ============================================
@@ -57,7 +57,6 @@ for i, quantidade in enumerate(quantidades):
         quantidade_produto=quantidade,
         fips_equipamentos={masseira_1: 1, masseira_2: 2},
     )
-    atividade.calcular_duracao()
     atividades.append(atividade)
 
 logger.info(f"🛠️ {len(atividades)} atividades de mistura de massas crocantes criadas.")
@@ -70,25 +69,15 @@ for atividade in atividades:
     logger.info(
         f"🚀 Tentando alocar atividade {atividade.id} com {atividade.quantidade_produto}g."
     )
-    sucesso, masseira, inicio_real, fim_real = gestor_misturadoras.alocar(
-        inicio=inicio_jornada,
-        fim=fim_entrega,
-        atividade=atividade,
-        quantidade=atividade.quantidade_produto
+
+    sucesso = atividade.tentar_alocar_e_iniciar(
+        gestor_misturadoras=gestor_misturadoras,
+        inicio_janela=inicio_jornada,
+        horario_limite=fim_entrega
     )
 
     if sucesso:
-        atividade.inicio_real = inicio_real
-        atividade.fim_real = fim_real
-        atividade.masseira_alocada = masseira
-        atividade.alocada = True
-
-        logger.info(
-            f"✅ Atividade {atividade.id} alocada com sucesso na Masseira {masseira.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}."
-        )
         atividade.iniciar()
-
     else:
         logger.warning(
             f"❌ Atividade {atividade.id} não pôde ser alocada na janela "

@@ -3,6 +3,7 @@ from models.atividade_base import Atividade
 from models.equips.masseira import Masseira
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
+from datetime import datetime
 
 
 # 🔥 Logger específico para esta atividade
@@ -15,6 +16,10 @@ class MisturaDeMassasParaFolhados(Atividade):
     ✅ Utiliza masseiras (misturadoras), com controle de ocupação realizado pelo gestor.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.misturadora_alocada= None
+
     @property
     def quantidade_por_tipo_equipamento(self):
         return {
@@ -22,85 +27,78 @@ class MisturaDeMassasParaFolhados(Atividade):
         }
 
     def calcular_duracao(self):
-        """
-        🕒 Define a duração da atividade com base na quantidade de produto.
-        Faixas de tempo:
-        - 3000–17000g → 9 minutos
-        - 17001–34000g → 14 minutos
-        - 34001–50000g → 18 minutos
-        """
-        q = self.quantidade_produto
+        self.duracao = self._definir_duracao_por_faixa(self.quantidade_produto)
+        logger.info(f"🕒 Duração calculada: {self.duracao} para {self.quantidade_produto}g de massas folhadas.")
 
-        if 3000 <= q <= 17000:
-            self.duracao = timedelta(minutes=9)
-        elif 17001 <= q <= 34000:
-            self.duracao = timedelta(minutes=14)
-        elif 34001 <= q <= 50000:
-            self.duracao = timedelta(minutes=18)
+    def _definir_duracao_por_faixa(self, quantidade_produto):
+        if 3000 <= quantidade_produto <= 6000:
+            return timedelta(minutes=5)
+        elif 6001 <= quantidade_produto <= 13000:
+            return timedelta(minutes=8)
+        elif 13001 <= quantidade_produto <= 20000:
+            return timedelta(minutes=11)
         else:
-            logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para MISTURA DE MASSAS PARA FOLHADOS."
-            )
-            raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para MISTURA DE MASSAS PARA FOLHADOS."
-            )
-
-        logger.info(
-            f"🕒 Duração calculada: {self.duracao} para {q}g de massa para folhados."
-        )
+            logger.error(f"❌ Quantidade {quantidade_produto}g inválida para armazenamento.")
+            raise ValueError(f"❌ Quantidade inválida: {quantidade_produto}g.")
 
     def tentar_alocar_e_iniciar(
         self,
         gestor_misturadoras,
-        inicio_janela,
-        horario_limite
-    ):
-        """
-        🚀 Realiza o backward scheduling:
-        ✅ Aloca a masseira se houver disponibilidade.
-        """
+        inicio_jornada: datetime,
+        fim_jornada: datetime,
+        quantidade: int,
+    ) -> bool:
         self.calcular_duracao()
-
-        logger.info(
-            f"🚀 Iniciando tentativa de alocação da atividade {self.id} "
-            f"(quantidade: {self.quantidade_produto}g) até {horario_limite.strftime('%H:%M')}."
+        return self._tentar_alocar_com_equipamentos(
+            gestor_misturadoras, inicio_jornada, fim_jornada, quantidade
         )
 
-        sucesso, masseira, inicio_real, fim_real = gestor_misturadoras.alocar(
-            inicio=inicio_janela,
-            fim=horario_limite,
-            atividade=self
+    def _tentar_alocar_com_equipamentos(
+        self,
+        gestor_misturadoras,
+        inicio_jornada,
+        fim_jornada,
+        quantidade
+    ) -> bool:
+        horario_final = fim_jornada
+
+        while horario_final - self.duracao >= inicio_jornada:
+            horario_inicio = horario_final - self.duracao
+
+            sucesso_masseira, masseira, ini_m, fim_m = self._tentar_alocar_masseira(
+                gestor_misturadoras, horario_inicio, horario_final, quantidade
+            )
+            if not sucesso_masseira:
+                horario_final -= timedelta(minutes=1)
+                continue
+            self._registrar_sucesso_masseira(masseira, ini_m, fim_m)
+            return True
+        return False
+    
+    def _tentar_alocar_masseira(self, gestor_misturadoras, inicio, fim, quantidade):
+        return gestor_misturadoras.alocar(
+            inicio=inicio,
+            fim=fim,
+            atividade=self,
+            quantidade=quantidade,
         )
-
-        if not sucesso:
-            logger.error(f"❌ Falha na alocação da masseira para a atividade {self.id}.")
-            return False
-
-        # ✅ Registrar alocação
-        self.inicio_real = inicio_real
-        self.fim_real = fim_real
+    def _registrar_sucesso_masseira(self, masseira, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
         self.masseira_alocada = masseira
+        self.equipamento_alocado = [masseira]
+        self.equipamentos_selecionados = [masseira]
         self.alocada = True
 
         logger.info(
-            f"✅ Atividade {self.id} alocada com sucesso na masseira {masseira.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}."
-        )
-
-        return True
-
-    def iniciar(self):
-        """
-        🟢 Marca oficialmente o início da atividade.
-        """
-        if not self.alocada:
-            raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
-
-        logger.info(
-            f"🚀 Atividade {self.id} iniciada oficialmente na masseira {self.masseira_alocada.nome} "
-            f"às {self.inicio_real.strftime('%H:%M')}."
+            f"✅ Atividade {self.id} alocada!\n"
+            f"❄️ masseira: {masseira.nome} ({inicio.strftime('%H:%M')}–{fim.strftime('%H:%M')})\n"
         )
         print(
-            f"🚀 Atividade {self.id} iniciada às {self.inicio_real.strftime('%H:%M')} "
-            f"na masseira {self.masseira_alocada.nome}."
+            f"✅ Atividade {self.id} alocada com sucesso."
         )
+    
+    def iniciar(self):
+        if not self.alocada:
+            raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
+        logger.info(f"🚀 Atividade {self.id} iniciada.")

@@ -2,8 +2,9 @@ from models.atividade_base import Atividade
 from datetime import timedelta, datetime
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
+from utils.consultar_duracao_por_ids import consultar_duracao_por_ids
 
-
+# 🧊 Logger específico
 logger = setup_logger('AtividadeArmazenamentoCarneDeSol')
 
 
@@ -16,6 +17,8 @@ class ArmazenamentoSobTemperaturaParaCarneDeSolRefogada(Atividade):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tipo_ocupacao = "CAIXAS"
+        self.camara_refrigerada_alocada = None
+
 
     @property
     def quantidade_por_tipo_equipamento(self):
@@ -24,25 +27,9 @@ class ArmazenamentoSobTemperaturaParaCarneDeSolRefogada(Atividade):
         }
 
     def calcular_duracao(self):
-        q = self.quantidade_produto
+        self.duracao = consultar_duracao_por_ids(id_produto=self.id_produto_gerado, id_atividade=self.id_atividade, quantidade=self.quantidade_produto)
+        logger.info(f"🕒 Duração calculada: {self.duracao} para {self.quantidade_produto}g de carne de sol refogada.")
 
-        if 3000 <= q <= 20000:
-            self.duracao = timedelta(minutes=3)
-        elif 20001 <= q <= 40000:
-            self.duracao = timedelta(minutes=5)
-        elif 40001 <= q <= 60000:
-            self.duracao = timedelta(minutes=7)
-        else:
-            logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para armazenamento sob temperatura."
-            )
-            raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para armazenamento da carne de sol refogada."
-            )
-
-        logger.info(
-            f"🕒 Duração calculada: {self.duracao} para {q}g de carne de sol refogada."
-        )
 
     def tentar_alocar_e_iniciar(
         self,
@@ -51,59 +38,32 @@ class ArmazenamentoSobTemperaturaParaCarneDeSolRefogada(Atividade):
         fim_jornada: datetime,
         temperatura_desejada: int
     ) -> bool:
-        """
-        ❄️ Realiza backward scheduling com controle de temperatura e espaço físico.
-        ✔️ Tenta retroceder se falhar tanto por ocupação quanto por temperatura.
-        """
         self.calcular_duracao()
-
-        logger.info(
-            f"🚀 Tentando alocar armazenamento ID {self.id} "
-            f"(quantidade: {self.quantidade_produto}g, duração: {self.duracao}) "
-            f"entre {inicio_jornada.strftime('%H:%M')} e {fim_jornada.strftime('%H:%M')}."
+        return self._tentar_alocar_com_equipamentos(
+            gestor_refrigeracao, inicio_jornada, fim_jornada, temperatura_desejada
         )
 
-        horario_final_tentativa = fim_jornada
+    def _tentar_alocar_com_equipamentos(
+        self,
+        gestor_refrigeracao_congelamento,
+        inicio_jornada,
+        fim_jornada,
+        temperatura_desejada
+    ) -> bool:
+        horario_final = fim_jornada
 
-        while horario_final_tentativa - self.duracao >= inicio_jornada:
-            horario_inicio_tentativa = horario_final_tentativa - self.duracao
+        while horario_final - self.duracao >= inicio_jornada:
+            horario_inicio = horario_final - self.duracao
 
-            status, inicio_real, fim_real = gestor_refrigeracao.alocar(
-                inicio=horario_inicio_tentativa,
-                fim=horario_final_tentativa,
-                atividade=self,
-                temperatura_desejada=temperatura_desejada
+            sucesso, camara_refrigerada, ini_cr, fim_cr = self._tentar_alocar_camara_refrigerada(
+                gestor_refrigeracao_congelamento, horario_inicio, horario_final, temperatura_desejada
             )
+            if not sucesso:
+                horario_final -= timedelta(minutes=1)
+                continue
 
-            if status == "SUCESSO":
-                self.inicio_real = inicio_real
-                self.fim_real = fim_real
-                self.equipamento_alocado = gestor_refrigeracao.equipamento
-                self.equipamentos_selecionados = [self.equipamento_alocado]
-                self.alocada = True
-
-                temperatura_real = self.equipamento_alocado.faixa_temperatura_atual
-
-                logger.info(
-                    f"✅ Atividade {self.id} alocada com sucesso na {self.equipamento_alocado.nome}.\n"
-                    f"🧊 Período: {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')} "
-                    f"| Temperatura: {temperatura_real}°C."
-                )
-                print(
-                    f"✅ Atividade {self.id} alocada na {self.equipamento_alocado.nome} "
-                    f"de {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')} "
-                    f"com temperatura {temperatura_real}°C."
-                )
-                return True
-
-            else:
-                motivo = "temperatura incompatível" if status == "ERRO_TEMPERATURA" else "ocupação indisponível"
-                logger.warning(
-                    f"⚠️ Falha ({motivo}) para alocar atividade {self.id} no intervalo "
-                    f"{horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}. "
-                    f"Tentando retroceder..."
-                )
-                horario_final_tentativa -= timedelta(minutes=5)
+            self._registrar_sucesso_camara_refrigerada(camara_refrigerada, ini_cr, fim_cr)
+            return True
 
         logger.error(
             f"❌ Não foi possível alocar atividade {self.id} "
@@ -111,18 +71,36 @@ class ArmazenamentoSobTemperaturaParaCarneDeSolRefogada(Atividade):
         )
         return False
 
-    def iniciar(self):
-        if not self.alocada:
-            logger.error(
-                f"❌ Atividade {self.id} não alocada ainda. Não é possível iniciar."
-            )
-            raise Exception(f"❌ Atividade ID {self.id} não alocada ainda.")
+    def _tentar_alocar_camara_refrigerada(self, gestor_camara_refrigerada, inicio, fim, temperatura_desejada):
+        return gestor_camara_refrigerada.alocar(
+            inicio=inicio,
+            fim=fim,
+            atividade=self,
+            temperatura_desejada=temperatura_desejada
+        )
+
+    def _registrar_sucesso_camara_refrigerada(self, camara_refrigerada, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
+        self.camara_refrigerada_alocada = camara_refrigerada
+        self.equipamento_alocado = [camara_refrigerada]
+        self.equipamentos_selecionados = [camara_refrigerada]
+        self.alocada = True
+
+        temperatura_real = camara_refrigerada.faixa_temperatura_atual
 
         logger.info(
-            f"🚀 Atividade {self.id} de armazenamento iniciada na {self.equipamento_alocado.nome} "
-            f"de {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')}."
+            f"✅ Atividade {self.id} alocada com sucesso!\n"
+            f"🧊 Câmara Refrigerada: {camara_refrigerada.nome} ({inicio.strftime('%H:%M')}–{fim.strftime('%H:%M')}) "
+            f"| Temperatura: {temperatura_real}°C"
         )
         print(
-            f"🚀 Atividade {self.id} iniciada na {self.equipamento_alocado.nome} "
-            f"de {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')}."
+            f"✅ Atividade {self.id} alocada na {camara_refrigerada.nome} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"com temperatura {temperatura_real}°C."
         )
+
+    def iniciar(self):
+        if not self.alocada:
+            raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
+        logger.info(f"🚀 Atividade {self.id} iniciada.")

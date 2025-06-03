@@ -32,7 +32,7 @@ fim_entrega = datetime(2025, 5, 23, 17, 0)
 # ============================================
 # 🧊 Instanciar Gestor da Câmara
 # ============================================
-gestor_camaras = GestorRefrigeracaoCongelamento(camara_refrigerada_2)
+gestor_camaras = GestorRefrigeracaoCongelamento([camara_refrigerada_2])
 
 
 # ============================================

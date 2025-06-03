@@ -3,8 +3,7 @@ from datetime import timedelta, datetime
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
-
-# 🔥 Logger específico para esta atividade
+# 🧊 Logger específico
 logger = setup_logger('AtividadeArmazenamentoCremeChantilly')
 
 
@@ -18,19 +17,17 @@ class ArmazenamentoSobTemperaturaParaCremeChantilly(Atividade):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tipo_ocupacao = "CAIXAS"
+        self.equipamento_alocado = None
 
     @property
     def quantidade_por_tipo_equipamento(self):
-        """
-        Define o tipo de equipamento necessário para esta atividade.
-        """
         return {
             TipoEquipamento.REFRIGERACAO_CONGELAMENTO: 1,
         }
 
     def calcular_duracao(self):
         """
-        Define a duração da atividade conforme a quantidade de produto.
+        📏 Calcula a duração com base na faixa de quantidade.
         """
         q = self.quantidade_produto
 
@@ -41,11 +38,9 @@ class ArmazenamentoSobTemperaturaParaCremeChantilly(Atividade):
         elif 20001 <= q <= 30000:
             self.duracao = timedelta(minutes=7)
         else:
-            logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para armazenamento sob temperatura."
-            )
+            logger.error(f"❌ Quantidade {q} fora da faixa válida para armazenamento.")
             raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para armazenamento do creme chantilly."
+                f"❌ Quantidade {q} fora da faixa válida para armazenamento do creme chantilly."
             )
 
         logger.info(
@@ -57,17 +52,16 @@ class ArmazenamentoSobTemperaturaParaCremeChantilly(Atividade):
         gestor_refrigeracao,
         inicio_jornada: datetime,
         fim_jornada: datetime,
-        temperatura_desejada: int = 4
+        temperatura_desejada: int
     ) -> bool:
         """
-        ❄️ Faz a tentativa de alocação utilizando backward scheduling.
-        ✔️ Retrocede no tempo tanto para falhas por ocupação quanto por temperatura.
+        ❄️ Realiza backward scheduling com controle de temperatura e espaço físico.
         """
         self.calcular_duracao()
 
         logger.info(
             f"🚀 Tentando alocar armazenamento ID {self.id} "
-            f"(quantidade: {self.quantidade_produto}g, duração: {self.duracao}) "
+            f"(quantidade: {self.quantidade_produto}g | duração: {self.duracao}) "
             f"entre {inicio_jornada.strftime('%H:%M')} e {fim_jornada.strftime('%H:%M')}."
         )
 
@@ -76,7 +70,7 @@ class ArmazenamentoSobTemperaturaParaCremeChantilly(Atividade):
         while horario_final_tentativa - self.duracao >= inicio_jornada:
             horario_inicio_tentativa = horario_final_tentativa - self.duracao
 
-            status, inicio_real, fim_real = gestor_refrigeracao.alocar(
+            status, equipamento, i_real, f_real = gestor_refrigeracao.alocar(
                 inicio=horario_inicio_tentativa,
                 fim=horario_final_tentativa,
                 atividade=self,
@@ -84,32 +78,17 @@ class ArmazenamentoSobTemperaturaParaCremeChantilly(Atividade):
             )
 
             if status == "SUCESSO":
-                self.inicio_real = inicio_real
-                self.fim_real = fim_real
-                self.equipamento_alocado = gestor_refrigeracao.equipamento
-                self.equipamentos_selecionados = [self.equipamento_alocado]
-                self.alocada = True
-
-                logger.info(
-                    f"✅ Atividade {self.id} alocada com sucesso na {self.equipamento_alocado.nome}.\n"
-                    f"🧊 Período: {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')} "
-                    f"| Temperatura: {temperatura_desejada}°C."
-                )
-                print(
-                    f"✅ Atividade {self.id} alocada na {self.equipamento_alocado.nome} "
-                    f"de {self.inicio_real.strftime('%H:%M')} até {self.fim_real.strftime('%H:%M')} "
-                    f"com temperatura {temperatura_desejada}°C."
-                )
+                self._registrar_sucesso(equipamento, i_real, f_real)
                 return True
 
-            else:
-                motivo = "temperatura incompatível" if status == "ERRO_TEMPERATURA" else "ocupação indisponível"
-                logger.warning(
-                    f"⚠️ Falha ({motivo}) para alocar atividade {self.id} no intervalo "
-                    f"{horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}. "
-                    f"Tentando retroceder..."
-                )
-                horario_final_tentativa -= timedelta(minutes=5)
+            motivo = "temperatura incompatível" if status == "ERRO_TEMPERATURA" else "ocupação indisponível"
+            logger.warning(
+                f"⚠️ Falha ({motivo}) para alocar atividade {self.id} no intervalo "
+                f"{horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}. "
+                f"Tentando retroceder..."
+            )
+
+            horario_final_tentativa -= timedelta(minutes=1)
 
         logger.error(
             f"❌ Não foi possível alocar atividade {self.id} "
@@ -117,9 +96,29 @@ class ArmazenamentoSobTemperaturaParaCremeChantilly(Atividade):
         )
         return False
 
+    def _registrar_sucesso(self, equipamento, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
+        self.equipamento_alocado = equipamento
+        self.equipamentos_selecionados = [equipamento]
+        self.alocada = True
+
+        temperatura_real = equipamento.faixa_temperatura_atual
+
+        logger.info(
+            f"✅ Atividade {self.id} alocada com sucesso na {equipamento.nome}.\n"
+            f"🧊 Período: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"| Temperatura: {temperatura_real}°C."
+        )
+        print(
+            f"✅ Atividade {self.id} alocada na {equipamento.nome} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"com temperatura {temperatura_real}°C."
+        )
+
     def iniciar(self):
         """
-        🟢 Marca oficialmente o início da atividade de armazenamento.
+        ✅ Inicia oficialmente a atividade de armazenamento.
         """
         if not self.alocada:
             logger.error(

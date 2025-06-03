@@ -32,7 +32,7 @@ fim_entrega = datetime(2025, 5, 23, 17, 0)
 # ============================================
 # 🛠️ Instanciar Gestor de Câmara
 # ============================================
-gestor_camaras = GestorRefrigeracaoCongelamento(camara_refrigerada_1)
+gestor_camaras = GestorRefrigeracaoCongelamento([camara_refrigerada_1])
 
 
 # ============================================
@@ -41,7 +41,7 @@ gestor_camaras = GestorRefrigeracaoCongelamento(camara_refrigerada_1)
 quantidades = [
     5000, 12000, 18000, 25000,  # Atividade 4
     7000, 12000, 24000, 18000,  # Atividade 5 usa temperatura 7°C
-    22000, 12000,  # Atividade 10 usa temperatura 1°C
+    22000, 12000,              # Atividade 10 usa temperatura 1°C
     17000, 9000, 25000, 8000,  # Atividade 15 usa temperatura 5°C
     10000, 13000, 15000, 23000,  # Atividade 20 também a 1°C
     5000, 19000, 21000, 17000,
@@ -81,7 +81,7 @@ for atividade in atividades:
     # 🎯 Definir temperatura específica para atividades 5, 10, 15 e 20
     if atividade.id == 5:
         temperatura = 7
-    elif atividade.id == 10 or atividade.id == 20:
+    elif atividade.id in [10, 20]:
         temperatura = 1
     elif atividade.id == 15:
         temperatura = 5

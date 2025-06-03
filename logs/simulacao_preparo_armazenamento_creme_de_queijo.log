@@ -29,3 +29,285 @@
 [2025-05-25 22:38:08] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso: Bancada Bancada 7 de 16:00 até 16:40 e Balança Balança Digital 4.
 [2025-05-25 22:38:08] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 50000g.
 [2025-05-25 22:38:08] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [WARNING] ❌ Atividade 4 não pôde ser alocada dentro da janela entre 08:00 e 17:00.
+[2025-05-30 21:59:46] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento criadas.
+[2025-05-30 21:59:46] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:01:29] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:01:29] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:01:31] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:01:31] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:04:19] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:04:19] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 15000g.
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 15000g
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 22000g.
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 22000g
+[2025-05-30 22:05:54] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 50000g.
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 15000g.
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 15000g
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 22000g.
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 22000g
+[2025-05-30 22:06:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 50000g.
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 15000g.
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 15000g
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 22000g.
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 22000g
+[2025-05-30 22:06:42] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 50000g.
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 4 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 12000g.
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:08:28] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 8 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 12000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 8 com 30000g.
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 8 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:10 até 16:30
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:08:51] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 8 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 12000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 8 com 30000g.
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 8 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:10 até 16:30
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:12:20] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 8 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 12000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:12:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 8 com 50000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 8 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 12000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 2 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 8 com 50000g.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [WARNING] ❌ Atividade 8 não pôde ser alocada na janela entre 08:00 e 17:00.
+[2025-05-30 22:14:25] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 7 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 50000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [WARNING] ❌ Atividade 2 não pôde ser alocada na janela entre 08:00 e 17:00.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-05-30 22:18:01] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 7 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 50000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [WARNING] ❌ Atividade 2 não pôde ser alocada na janela entre 08:00 e 17:00.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-06-01 15:58:03] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🛠️ 7 atividades de preparo para armazenamento de creme de queijo criadas.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 1 com 5000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 1 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:50 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 2 com 50000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [WARNING] ❌ Atividade 2 não pôde ser alocada na janela entre 08:00 e 17:00.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 3 com 25000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 3 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 4 com 30000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 4 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 17:00
+⚖️ Balança: Balança Digital 4 registrada com 30000g
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 5 com 5000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 5 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:40 até 16:50
+⚖️ Balança: Balança Digital 4 registrada com 5000g
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 6 com 12000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 6 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:30 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 12000g
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🚀 Tentando alocar atividade 7 com 25000g.
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] ✅ Atividade 7 alocada com sucesso:
+🪵 Bancada: Bancada 7 de 16:20 até 16:40
+⚖️ Balança: Balança Digital 4 registrada com 25000g
+[2025-06-01 15:59:47] [SimulacaoPreparoArmazenamentoCremeDeQueijo] [INFO] 🗓️ Agenda final dos equipamentos:

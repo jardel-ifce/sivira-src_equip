@@ -1,9 +1,12 @@
 from datetime import timedelta
+from typing import List
 from models.atividade_base import Atividade
 from models.equips.hot_mix import HotMix
 from enums.tipo_equipamento import TipoEquipamento
+from enums.tipo_velocidade import TipoVelocidade
+from enums.tipo_chama import TipoChama
+from enums.tipo_pressao_chama import TipoPressaoChama
 from utils.logger_factory import setup_logger
-
 
 # 🔥 Logger específico para esta atividade
 logger = setup_logger('Atividade_Mistura_Massas_Para_Frituras')
@@ -20,6 +23,18 @@ class MisturaDeMassasParaFrituras(Atividade):
         return {
             TipoEquipamento.MISTURADORAS_COM_COCCAO: 1,
         }
+
+    @property
+    def velocidade(self) -> TipoVelocidade:
+        return TipoVelocidade.BAIXA
+
+    @property
+    def chamas(self) -> List[TipoChama]:
+        return [TipoChama.ALTA]
+
+    @property
+    def pressoes(self) -> List[TipoPressaoChama]:
+        return [TipoPressaoChama.ALTA_PRESSAO, TipoPressaoChama.CHAMA_DUPLA]
 
     def calcular_duracao(self):
         """

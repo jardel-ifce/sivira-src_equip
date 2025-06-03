@@ -1,0 +1,17 @@
+{
+  "nome_classe": "ArmazenamentoSobTemperaturaParaCremeDeLula",
+  "nome_logger": "AtividadeArmazenamentoCremeDeLula",
+  "descricao": "🧊 Atividade de armazenamento do creme de lula em câmara refrigerada.\n✅ Ocupação feita em caixas de 30kg (20.000g por caixa).\n✅ Controle rigoroso de temperatura por janela de tempo.",
+  "tipo_ocupacao": "CAIXAS",
+  "duracao_por_faixa": [
+    { "min": 3000, "max": 20000, "duracao_minutos": 3 },
+    { "min": 20001, "max": 40000, "duracao_minutos": 5 },
+    { "min": 40001, "max": 60000, "duracao_minutos": 7 }
+  ],
+  "equipamentos": [
+    {
+      "tipo": "REFRIGERACAO_CONGELAMENTO",
+      "apelido": "camara"
+    }
+  ]
+}

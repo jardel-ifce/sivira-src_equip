@@ -1,9 +1,13 @@
+# ============================================
+# 📦 Imports
+# ============================================
 import sys
+from datetime import datetime
+
+# 🔧 Ajuste de path conforme seu ambiente
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 
-from datetime import datetime
 from utils.logger_factory import setup_logger
-
 from factory.fabrica_equipamentos import bancada_7
 from models.atividades.subproduto.creme_de_frango.preparo_para_coccao_de_creme_de_frango import (
     PreparoParaCoccaoDeCremeDeFrango,
@@ -23,10 +27,10 @@ logger = setup_logger(
 
 
 # ============================================
-# ⏰ Janela de Produção
+# ⏰ Janela de producao
 # ============================================
 inicio_jornada = datetime(2025, 5, 23, 8, 0)
-fim_entrega = datetime(2025, 5, 23, 17, 0)
+fim_jornada = datetime(2025, 5, 23, 17, 0)
 
 
 # ============================================
@@ -54,37 +58,41 @@ for i, quantidade in enumerate(quantidades):
         quantidade_funcionarios=1,
         equipamentos_elegiveis=[bancada_7],
         quantidade_produto=quantidade,
-        fips_equipamentos={bancada_7: 1},
+        fips_equipamentos={bancada_7: 1},  # fator de importância padrão
     )
     atividades.append(atividade)
 
-logger.info(f"🛠️ {len(atividades)} atividades de preparo para cocção criadas.")
+logger.info(
+    f"🛠️ {len(atividades)} atividades de preparo para cocção de creme de frango criadas."
+)
 
 
 # ============================================
 # 🔥 Tentar Alocar e Iniciar Atividades
 # ============================================
 for atividade in atividades:
+    logger.info(
+        f"🚀 Tentando alocar atividade {atividade.id} com {atividade.quantidade_produto}g."
+    )
+
     sucesso = atividade.tentar_alocar_e_iniciar(
         gestor_bancadas=gestor_bancadas,
-        inicio_janela=inicio_jornada,
-        horario_limite=fim_entrega,
-        fracao_bancada=(1, 6)
+        inicio_jornada=inicio_jornada,
+        fim_jornada=fim_jornada,
+        fracoes_necessarias=1  # 🪵 Ocupação padrão de uma fração
     )
 
     if sucesso:
-        logger.info(
-            f"✅ Atividade {atividade.id} alocada com sucesso na Bancada {atividade.bancada_alocada.nome} "
-            f"de {atividade.inicio_real.strftime('%H:%M')} até {atividade.fim_real.strftime('%H:%M')}."
-        )
+        atividade.iniciar()
     else:
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada na janela "
-            f"entre {inicio_jornada.strftime('%H:%M')} e {fim_entrega.strftime('%H:%M')}."
+            f"❌ Atividade {atividade.id} não pôde ser alocada entre "
+            f"{inicio_jornada.strftime('%H:%M')} e {fim_jornada.strftime('%H:%M')}."
         )
 
 
 # ============================================
 # 📅 Mostrar Agendas Finais
 # ============================================
+logger.info("📅 Agenda final das bancadas:")
 gestor_bancadas.mostrar_agenda()

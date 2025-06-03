@@ -39,7 +39,7 @@ gestor_fogoes = GestorFogoes([fogao_1, fogao_2])
 # ================================================
 # 📦 Quantidades simuladas
 # ================================================
-quantidades = [5000, 15000, 22000, 45000, 60000]
+quantidades = [5000]
 
 
 # ================================================
@@ -75,8 +75,8 @@ for atividade in atividades:
 
     sucesso = atividade.tentar_alocar_e_iniciar(
         gestor_fogoes=gestor_fogoes,
-        inicio_janela=inicio_jornada,
-        horario_limite=fim_entrega
+        inicio_jornada=inicio_jornada,
+        fim_jornada=fim_entrega
     )
 
     if sucesso:

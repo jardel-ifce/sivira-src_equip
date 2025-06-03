@@ -33,7 +33,7 @@ logger = setup_logger(
 
 
 # ============================================
-# ⏰ Janela de Produção
+# ⏰ Jornada de Produção
 # ============================================
 inicio_jornada = datetime(2025, 5, 24, 8, 0)
 fim_entrega = datetime(2025, 5, 24, 17, 0)
@@ -61,20 +61,18 @@ for i, quantidade in enumerate(quantidades):
     atividade = PreparoParaArmazenamentoDeCremeDeLimao(
         id=i + 1,
         tipo_atividade=TipoAtividade.PREPARO_PARA_ARMAZENAMENTO_DE_CREME_DE_LIMAO,
-        tipos_profissionais_permitidos=[
-            TipoProfissional.CONFEITEIRO,
-            TipoProfissional.AUXILIAR_DE_CONFEITEIRO
-        ],
+        tipos_profissionais_permitidos=[TipoProfissional.CONFEITEIRO],
         quantidade_funcionarios=1,
         equipamentos_elegiveis=[bancada_4, bancada_5, bancada_6, balanca_digital_2],
         quantidade_produto=quantidade,
         fips_equipamentos={
-            bancada_4: 3,
+            bancada_4: 1,
             bancada_5: 1,
-            bancada_6: 2,
-            balanca_digital_2: 1
+            bancada_6: 1,
+            balanca_digital_2: 1,
         },
     )
+    atividade.calcular_duracao()
     atividades.append(atividade)
 
 logger.info(f"🛠️ {len(atividades)} atividades de preparo para armazenamento de creme de limão criadas.")
@@ -91,28 +89,26 @@ for atividade in atividades:
     sucesso = atividade.tentar_alocar_e_iniciar(
         gestor_bancadas=gestor_bancadas,
         gestor_balancas=gestor_balancas,
-        inicio_janela=inicio_jornada,
-        horario_limite=fim_entrega,
-        fracao_bancada=(1, 4)  # Pode ser ajustável conforme estratégia
+        inicio_jornada=inicio_jornada,
+        fim_jornada=fim_entrega,
+        fracoes_necessarias=3
     )
 
     if sucesso:
         logger.info(
-            f"✅ Atividade {atividade.id} alocada com sucesso: "
-            f"Bancada {atividade.bancada_alocada.nome} de {atividade.inicio_real.strftime('%H:%M')} até {atividade.fim_real.strftime('%H:%M')} "
-            f"e Balança {atividade.balanca_alocada.nome} de {atividade.inicio_real.strftime('%H:%M')} até {atividade.fim_real.strftime('%H:%M')}."
+            f"✅ Atividade {atividade.id} alocada com sucesso:\n"
+            f"🚵 Bancada: {atividade.bancada_alocada.nome} de {atividade.inicio_real.strftime('%H:%M')} até {atividade.fim_real.strftime('%H:%M')}\n"
+            f"⚖️ Balança: {atividade.balanca_alocada.nome} registrada com {atividade.quantidade_produto}g"
         )
     else:
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada dentro da janela "
-            f"entre {inicio_jornada.strftime('%H:%M')} e {fim_entrega.strftime('%H:%M')}."
-        )
+            f"❌ Atividade {atividade.id} não pôde ser alocada na janela entre "
+            f"{inicio_jornada.strftime('%H:%M')} e {fim_entrega.strftime('%H:%M')}.")
 
 
 # ============================================
-# 📅 Mostrar Agendas Finais
+# 🗓️ Mostrar Agendas Finais
 # ============================================
-logger.info("📅 Agenda final dos equipamentos:")
-
+logger.info("🗓️ Agenda final dos equipamentos:")
 gestor_bancadas.mostrar_agenda()
 gestor_balancas.mostrar_agenda()

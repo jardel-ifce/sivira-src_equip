@@ -8,6 +8,7 @@ from datetime import datetime
 
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 
+from utils.logger_factory import setup_logger
 from factory.fabrica_equipamentos import camara_refrigerada_2
 from models.atividades.subproduto.frango_refogado.armazenamento_sob_temperatura_para_frango_refogado import (
     ArmazenamentoSobTemperaturaParaFrangoRefogado,
@@ -15,7 +16,6 @@ from models.atividades.subproduto.frango_refogado.armazenamento_sob_temperatura_
 from enums.tipo_atividade import TipoAtividade
 from enums.tipo_profissional import TipoProfissional
 from services.gestor_refrigeracao_congelamento import GestorRefrigeracaoCongelamento
-from utils.logger_factory import setup_logger
 
 
 # ============================================
@@ -37,7 +37,7 @@ fim_entrega = datetime(2025, 5, 24, 17, 0)
 # ============================================
 # 🧊 Instanciar Gestor de Câmara
 # ============================================
-gestor_camaras = GestorRefrigeracaoCongelamento(camara_refrigerada_2)
+gestor_camaras = GestorRefrigeracaoCongelamento([camara_refrigerada_2])
 
 
 # ============================================
@@ -88,8 +88,8 @@ for atividade in atividades:
         atividade.iniciar()
     else:
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada "
-            f"dentro da janela {inicio_jornada.strftime('%H:%M')} até {fim_entrega.strftime('%H:%M')}."
+            f"❌ Atividade {atividade.id} não pôde ser alocada dentro da janela "
+            f"{inicio_jornada.strftime('%H:%M')} até {fim_entrega.strftime('%H:%M')}."
         )
 
 

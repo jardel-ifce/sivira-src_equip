@@ -44,7 +44,7 @@ gestor_balancas = GestorBalancas([balanca_digital_4])
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
-quantidades = [5000, 12000, 25000, 30000]
+quantidades = [5000, 50000, 25000, 30000]
 
 
 # ============================================
@@ -84,7 +84,7 @@ for atividade in atividades:
         gestor_balancas=gestor_balancas,
         inicio_jornada=inicio_jornada,
         fim_jornada=fim_entrega,
-        porcoes_bancada=3  # 🔥 Ocupa 3 porções da bancada
+        fracoes_necessarias=3  # 🔥 Ocupa 3 porções da bancada
     )
 
     if sucesso:

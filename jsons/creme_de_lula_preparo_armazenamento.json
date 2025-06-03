@@ -1,0 +1,40 @@
+{
+  "id": "preparo_armazenamento_creme_lula",
+  "nome_classe": "PreparoParaArmazenamentoDeCremeDeLula",
+  "nome_logger": "Atividade_Preparo_Armazenamento_Creme_Lula",
+  "descricao": "🦑 Atividade de preparo para armazenamento do creme de lula.",
+  "tipo_ocupacao": "CAIXAS",
+  "equipamentos": [
+    {
+      "tipo": "BANCADAS",
+      "fip": 2,
+      "parametros": {
+        "fracoes_necessarias": 2
+      }
+    },
+    {
+      "tipo": "BALANCAS",
+      "fip": 1,
+      "parametros": {
+        "peso_gramas": "auto"
+      }
+    }
+  ],
+  "duracao_por_faixa": [
+    {
+      "min": 3000,
+      "max": 20000,
+      "duracao_minutos": 3
+    },
+    {
+      "min": 20001,
+      "max": 40000,
+      "duracao_minutos": 5
+    },
+    {
+      "min": 40001,
+      "max": 60000,
+      "duracao_minutos": 7
+    }
+  ]
+}

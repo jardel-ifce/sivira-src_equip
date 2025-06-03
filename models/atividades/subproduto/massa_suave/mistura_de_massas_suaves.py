@@ -13,6 +13,11 @@ class MisturaDeMassasSuaves(Atividade):
     ✅ Utiliza masseiras (misturadoras), com controle de ocupação realizado pelo gestor.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.masseira_alocada = None
+        self.ocupacao_id = None
+
     @property
     def quantidade_por_tipo_equipamento(self):
         return {
@@ -67,7 +72,8 @@ class MisturaDeMassasSuaves(Atividade):
         sucesso, masseira, inicio_real, fim_real = gestor_misturadoras.alocar(
             inicio=inicio_janela,
             fim=horario_limite,
-            atividade=self
+            atividade=self,
+            quantidade=self.quantidade_produto
         )
 
         if not sucesso:
@@ -77,7 +83,10 @@ class MisturaDeMassasSuaves(Atividade):
         # ✅ Registrar alocação
         self.inicio_real = inicio_real
         self.fim_real = fim_real
+        self.inicio_planejado = inicio_real
+        self.fim_planejado = fim_real
         self.masseira_alocada = masseira
+        self.equipamentos_selecionados.append(masseira)
         self.alocada = True
 
         logger.info(
@@ -91,7 +100,7 @@ class MisturaDeMassasSuaves(Atividade):
         """
         🟢 Marca oficialmente o início da atividade.
         """
-        if not self.alocada:
+        if not self.alocada or not self.masseira_alocada:
             raise Exception(f"❌ Atividade {self.id} não alocada ainda.")
 
         logger.info(

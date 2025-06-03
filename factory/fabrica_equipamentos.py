@@ -13,12 +13,13 @@ from models.equips.batedeira_planetaria import BatedeiraPlanetaria
 from models.equips.masseira import Masseira
 from models.equips.hot_mix import HotMix
 from models.equips.forno import Forno
+from models.equips.armario_esqueleto import ArmarioEsqueleto
 
 from enums.tipo_setor import TipoSetor
 from enums.tipo_chama import TipoChama
-from enums.pressao_chama import PressaoChama
+from enums.tipo_pressao_chama import TipoPressaoChama
 from enums.tipo_mistura import TipoMistura
-from enums.velocidade import Velocidade
+from enums.tipo_velocidade import TipoVelocidade
 from enums.tipo_coccao import TipoCoccao
 
 
@@ -68,7 +69,7 @@ class FabricaEquipamentos:
             capacidade_por_boca_gramas_min=2000,
             capacidade_por_boca_gramas_max=30000,
             numero_bocas=6,
-            pressao_chamas_suportadas=[PressaoChama.ALTA_PRESSAO, PressaoChama.CHAMA_DUPLA]
+            pressao_chamas_suportadas=[TipoPressaoChama.ALTA_PRESSAO, TipoPressaoChama.CHAMA_DUPLA]
         )
 
     @staticmethod
@@ -82,7 +83,7 @@ class FabricaEquipamentos:
             capacidade_por_boca_gramas_min=2000,
             capacidade_por_boca_gramas_max=30000,
             numero_bocas=4,
-            pressao_chamas_suportadas=[PressaoChama.BAIXA_PRESSAO, PressaoChama.CHAMA_UNICA]
+            pressao_chamas_suportadas=[TipoPressaoChama.BAIXA_PRESSAO, TipoPressaoChama.CHAMA_UNICA]
         )
 
     # =======================
@@ -219,7 +220,7 @@ class FabricaEquipamentos:
         )
 
     @staticmethod
-    def criar_batedeira_industrial():
+    def criar_batedeira_industrial_1():
         return BatedeiraIndustrial(
             id=19,
             nome="Batedeira Industrial",
@@ -244,8 +245,8 @@ class FabricaEquipamentos:
             capacidade_gramas_max=50000,
             ritmo_execucao=TipoMistura.SEMI_RAPIDA,
             velocidades_suportadas=[
-                Velocidade.BAIXA,
-                Velocidade.MEDIA,
+                TipoVelocidade.BAIXA,
+                TipoVelocidade.MEDIA,
             ],
         )
 
@@ -259,7 +260,7 @@ class FabricaEquipamentos:
             capacidade_gramas_max=30000,
             ritmo_execucao=TipoMistura.RAPIDA,
             velocidades_suportadas=[
-                Velocidade.ALTA,
+                TipoVelocidade.ALTA,
             ],
         )
 
@@ -273,13 +274,14 @@ class FabricaEquipamentos:
             capacidade_gramas_max=20000,
             ritmo_execucao=TipoMistura.LENTA,
             velocidades_suportadas=[
-                Velocidade.BAIXA,
+                TipoVelocidade.BAIXA,
             ],
         )
 
     # =======================
     # 🍳 HotMix (Misturadoras com Cocção)
     # =======================
+
     @staticmethod
     def criar_hotmix_1():
         return HotMix(
@@ -290,9 +292,9 @@ class FabricaEquipamentos:
             capacidade_gramas_min=2000,
             capacidade_gramas_max=30000,
             velocidades_suportadas=[
-                Velocidade.BAIXA,
-                Velocidade.MEDIA,
-                Velocidade.ALTA
+                TipoVelocidade.BAIXA,
+                TipoVelocidade.MEDIA,
+                TipoVelocidade.ALTA
             ],
             chamas_suportadas=[
                 TipoChama.BAIXA,
@@ -300,10 +302,11 @@ class FabricaEquipamentos:
                 TipoChama.ALTA
             ],
             pressao_chamas_suportadas=[
-                PressaoChama.ALTA_PRESSAO,
-                PressaoChama.CHAMA_DUPLA
+                TipoPressaoChama.ALTA_PRESSAO,
+                TipoPressaoChama.CHAMA_DUPLA
             ]
         )
+
 
     @staticmethod
     def criar_hotmix_2():
@@ -315,9 +318,9 @@ class FabricaEquipamentos:
             capacidade_gramas_min=2000,
             capacidade_gramas_max=30000,
             velocidades_suportadas=[
-                Velocidade.BAIXA,
-                Velocidade.MEDIA,
-                Velocidade.ALTA
+                TipoVelocidade.BAIXA,
+                TipoVelocidade.MEDIA,
+                TipoVelocidade.ALTA
             ],
             chamas_suportadas=[
                 TipoChama.BAIXA,
@@ -325,8 +328,8 @@ class FabricaEquipamentos:
                 TipoChama.ALTA
             ],
             pressao_chamas_suportadas=[
-                PressaoChama.ALTA_PRESSAO,
-                PressaoChama.CHAMA_DUPLA
+                TipoPressaoChama.ALTA_PRESSAO,
+                TipoPressaoChama.CHAMA_DUPLA
             ]
         )
     # =======================
@@ -368,9 +371,6 @@ class FabricaEquipamentos:
             faixa_temperatura_max=4
         )
 
-    """
-    🏭 Fábrica responsável pela criação dos equipamentos.
-    """
     # =======================
     # 🔥 Fornos
     # =======================
@@ -449,6 +449,28 @@ class FabricaEquipamentos:
             velocidade_mps_min=1,
             velocidade_mps_max=4
         )
+    # =========================================
+    # 🗄️ Armário Esqueleto
+    # =========================================
+    @staticmethod
+    def criar_armario_esqueleto_1():
+        return ArmarioEsqueleto(
+            id=105,
+            nome="Armário Esqueleto 1",
+            setor=TipoSetor.CONFEITARIA,
+            nivel_tela_min=1,
+            nivel_tela_max=25
+        )
+    
+    @staticmethod
+    def criar_armario_esqueleto_2():
+        return ArmarioEsqueleto(
+            id=105,
+            nome="Armário Esqueleto 2",
+            setor=TipoSetor.CONFEITARIA,
+            nivel_tela_min=1,
+            nivel_tela_max=25
+        )
 
 
 # ✅ Instâncias prontas para importação
@@ -474,7 +496,7 @@ bancada_8 = FabricaEquipamentos.criar_bancada_8()
 
 batedeira_planetaria_1 = FabricaEquipamentos.criar_batedeira_planetaria_1()
 batedeira_planetaria_2 = FabricaEquipamentos.criar_batedeira_planetaria_2()
-batedeira_industrial = FabricaEquipamentos.criar_batedeira_industrial()
+batedeira_industrial_1 = FabricaEquipamentos.criar_batedeira_industrial_1()
 
 masseira_1 = FabricaEquipamentos.criar_masseira_1()
 masseira_2 = FabricaEquipamentos.criar_masseira_2()
@@ -491,3 +513,12 @@ forno_1 = FabricaEquipamentos.criar_forno_1()
 forno_2 = FabricaEquipamentos.criar_forno_2()
 forno_3 = FabricaEquipamentos.criar_forno_3()
 forno_4 = FabricaEquipamentos.criar_forno_4()
+
+armario_esqueleto_1 = FabricaEquipamentos.criar_armario_esqueleto_1()
+armario_esqueleto_2 = FabricaEquipamentos.criar_armario_esqueleto_2()
+
+equipamentos_por_nome = {
+    "Bancada 7": bancada_7,
+    "Balança Digital 1": balanca_digital_1,
+    "Balança Digital 2": balanca_digital_2,
+}

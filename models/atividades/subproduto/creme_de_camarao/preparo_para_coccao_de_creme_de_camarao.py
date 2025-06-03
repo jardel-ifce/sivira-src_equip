@@ -3,7 +3,6 @@ from models.atividade_base import Atividade
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
-
 # 🔥 Logger específico para essa atividade
 logger = setup_logger('Atividade_Preparo_Coccao_Creme_Camarao')
 
@@ -11,21 +10,23 @@ logger = setup_logger('Atividade_Preparo_Coccao_Creme_Camarao')
 class PreparoParaCoccaoDeCremeDeCamarao(Atividade):
     """
     🦐🍳 Atividade que representa o preparo para cocção de creme de camarão.
-    ✅ Utiliza bancada com controle de ocupação por frações (como bocas de fogões).
+    ✅ Utiliza bancada (ocupação por frações, EXCLUSIVA no tempo por fração).
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bancada_alocada = None
+        self.tipo_ocupacao = "FRACOES"
 
     @property
     def quantidade_por_tipo_equipamento(self):
-        """
-        Define os tipos de equipamentos necessários.
-        """
         return {
             TipoEquipamento.BANCADAS: 1,
         }
 
     def calcular_duracao(self):
         """
-        Define a duração da atividade baseada na quantidade produzida.
+        📏 Define a duração da atividade baseada na quantidade produzida.
         """
         q = self.quantidade_produto
 
@@ -36,8 +37,9 @@ class PreparoParaCoccaoDeCremeDeCamarao(Atividade):
         elif 40001 <= q <= 60000:
             self.duracao = timedelta(minutes=24)
         else:
+            logger.error(f"❌ Quantidade {q} inválida para esta atividade.")
             raise ValueError(
-                f"❌ Quantidade {q} inválida para esta atividade."
+                f"❌ Quantidade {q} inválida para PreparoParaCoccaoDeCremeDeCamarao."
             )
 
         logger.info(
@@ -50,9 +52,9 @@ class PreparoParaCoccaoDeCremeDeCamarao(Atividade):
         inicio_jornada,
         fim_jornada,
         fracoes_necessarias: int = 1
-    ) -> bool:
+    ):
         """
-        🪵 Realiza o backward scheduling para bancadas.
+        🪵 Realiza o backward scheduling para bancada com controle de ocupação por ID.
         """
         self.calcular_duracao()
 
@@ -75,20 +77,21 @@ class PreparoParaCoccaoDeCremeDeCamarao(Atividade):
             )
             return False
 
-        # ✅ Registrar alocação
-        self.inicio_real = inicio_real
-        self.fim_real = fim_real
+        self._registrar_sucesso(bancada, inicio_real, fim_real)
+        return True
+
+    def _registrar_sucesso(self, bancada, inicio, fim):
+        self.inicio_real = inicio
+        self.fim_real = fim
         self.bancada_alocada = bancada
         self.equipamento_alocado = bancada
         self.equipamentos_selecionados = [bancada]
         self.alocada = True
 
         logger.info(
-            f"✅ Atividade {self.id} alocada na bancada {bancada.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}."
+            f"✅ Atividade {self.id} alocada com sucesso!\n"
+            f"🪵 Bancada: {bancada.nome} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
-
-        return True
 
     def iniciar(self):
         """
@@ -96,12 +99,13 @@ class PreparoParaCoccaoDeCremeDeCamarao(Atividade):
         """
         if not self.alocada:
             logger.error(
-                f"❌ Atividade {self.id} não está alocada. Não é possível iniciar."
+                f"❌ Atividade {self.id} não alocada ainda. Não é possível iniciar."
             )
-            raise Exception(f"❌ Atividade ID {self.id} não está alocada.")
+            raise Exception(f"❌ Atividade ID {self.id} não alocada ainda.")
 
         logger.info(
-            f"🚀 Atividade {self.id} foi iniciada na bancada {self.bancada_alocada.nome} "
+            f"🚀 Atividade {self.id} foi iniciada oficialmente "
+            f"na bancada {self.bancada_alocada.nome} "
             f"às {self.inicio_real.strftime('%H:%M')}."
         )
         print(

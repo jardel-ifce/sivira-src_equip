@@ -18,7 +18,6 @@ from enums.tipo_atividade import TipoAtividade
 from enums.tipo_profissional import TipoProfissional
 from services.gestor_fornos import GestorFornos
 
-
 # ============================================
 # 🔥 Logger
 # ============================================
@@ -27,25 +26,21 @@ logger = setup_logger(
     arquivo="logs/simulacao_coccao_massas_brownie.log"
 )
 
-
 # ============================================
 # ⏰ Janela de Produção
 # ============================================
 inicio_jornada = datetime(2025, 5, 21, 8, 0)
 fim_entrega = datetime(2025, 5, 21, 17, 0)
 
-
 # ============================================
 # 🚀 Instanciar Gestor de Fornos
 # ============================================
 gestor_fornos = GestorFornos([forno_3, forno_4])
 
-
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
 quantidades = [1500, 1500, 4000, 1500]
-
 
 # ============================================
 # 🏗️ Criar Atividades
@@ -72,7 +67,6 @@ for i, quantidade in enumerate(quantidades):
 
 logger.info(f"🛠️ {len(atividades)} atividades de cocção de massas para brownie criadas.")
 
-
 # ============================================
 # 🔥 Tentar Alocar e Iniciar Atividades
 # ============================================
@@ -87,7 +81,7 @@ for atividade in atividades:
         horario_limite=fim_entrega,
         temperatura_desejada=180,   # ✅ Brownie a 180°C
         vaporizacao_desejada=None,  # ✅ Não usa vaporização
-        velocidade_desejada=None    # ✅ Sem controle de velocidade para esta atividade
+        velocidade_desejada=None    # ✅ Sem controle de velocidade
     )
 
     if sucesso:
@@ -97,7 +91,6 @@ for atividade in atividades:
             f"❌ Atividade {atividade.id} não pôde ser alocada "
             f"dentro da janela até {fim_entrega.strftime('%H:%M')}."
         )
-
 
 # ============================================
 # 📅 Mostrar Agendas Finais dos Fornos

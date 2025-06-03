@@ -4,7 +4,6 @@ from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 from utils.conversores_ocupacao import gramas_para_niveis_tela
 
-
 # 🔥 Logger específico para esta atividade
 logger = setup_logger('AtividadeCoccaoMassaBrownie')
 
@@ -23,31 +22,25 @@ class CoccaoDeMassasParaBrownie(Atividade):
         super().__init__(*args, **kwargs)
         self.tipo_ocupacao = "NIVEIS_TELA"
         self.niveis_necessarios = 0
+        self.forno_alocado = None
 
     @property
     def quantidade_por_tipo_equipamento(self):
-        """
-        Tipo de equipamento necessário.
-        """
         return {
             TipoEquipamento.FORNOS: self.niveis_necessarios,
         }
 
     def calcular_duracao(self):
         """
-        ✅ Duração fixa de 15 minutos para qualquer quantidade dentro da faixa.
+        ✅ Duração fixa de 15 minutos para qualquer quantidade entre 1000g e 20000g.
         """
         q = self.quantidade_produto
 
         if 1000 <= q <= 20000:
             self.duracao = timedelta(minutes=15)
         else:
-            logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para COCCAO DE MASSAS PARA BROWNIE."
-            )
-            raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para COCCAO DE MASSAS PARA BROWNIE."
-            )
+            logger.error(f"❌ Quantidade {q} fora da faixa válida para cocção de massa de brownie.")
+            raise ValueError(f"❌ Quantidade {q} fora da faixa válida para cocção de massa de brownie.")
 
         self.niveis_necessarios = gramas_para_niveis_tela(q)
 
@@ -66,8 +59,7 @@ class CoccaoDeMassasParaBrownie(Atividade):
         velocidade_desejada: int = None
     ) -> bool:
         """
-        🔥 Faz a tentativa de alocação utilizando backward scheduling.
-        ✔️ Faz o controle de temperatura, vaporização e velocidade.
+        🔥 Tenta alocar backward em forno com controle de temperatura e recursos.
         """
         self.calcular_duracao()
 
@@ -87,9 +79,7 @@ class CoccaoDeMassasParaBrownie(Atividade):
         )
 
         if not sucesso:
-            logger.error(
-                f"❌ Falha na alocação do forno para a atividade '{self.id}'."
-            )
+            logger.error(f"❌ Falha na alocação do forno para a atividade {self.id}.")
             return False
 
         self.inicio_real = inicio_real
@@ -115,12 +105,10 @@ class CoccaoDeMassasParaBrownie(Atividade):
 
     def iniciar(self):
         """
-        🟢 Inicia oficialmente a atividade de cocção no forno.
+        🟢 Inicia oficialmente a atividade no forno.
         """
         if not self.alocada:
-            logger.error(
-                f"❌ Atividade {self.id} não alocada ainda. Não é possível iniciar."
-            )
+            logger.error(f"❌ Atividade {self.id} não alocada ainda. Não é possível iniciar.")
             raise Exception(f"❌ Atividade ID {self.id} não alocada ainda.")
 
         logger.info(

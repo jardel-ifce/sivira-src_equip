@@ -39,7 +39,7 @@ gestor_bancadas = GestorBancadas([bancada_4, bancada_5, bancada_6])
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
-quantidades = [5000, 15000, 25000, 30000]  # 🔥 Aqui você adiciona as quantidades que quiser
+quantidades = [5000, 15000, 20000, 12000]  # 🔥 Aqui você adiciona as quantidades que quiser
 
 
 # ============================================
@@ -82,7 +82,7 @@ for atividade in atividades:
         gestor_bancadas=gestor_bancadas,
         inicio_jornada=inicio_jornada,
         fim_jornada=fim_jornada,
-        porcoes=4  # 🔥 Sempre ocupa 4 porções da bancada
+        fracoes_necessarias=4  # 🔥 Sempre ocupa 4 porções da bancada
     )
 
     if sucesso:

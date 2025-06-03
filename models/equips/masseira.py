@@ -1,5 +1,5 @@
 from models.equips.equipamento import Equipamento
-from enums.velocidade import Velocidade
+from enums.tipo_velocidade import TipoVelocidade
 from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_mistura import TipoMistura
 from enums.tipo_setor import TipoSetor
@@ -27,7 +27,7 @@ class Masseira(Equipamento):
         capacidade_gramas_max: int,
         capacidade_gramas_min: int,
         ritmo_execucao: TipoMistura,
-        velocidades_suportadas: List[Velocidade],
+        velocidades_suportadas: List[TipoVelocidade],
     ):
         super().__init__(
             id=id,
@@ -42,41 +42,44 @@ class Masseira(Equipamento):
         self.capacidade_gramas_min = capacidade_gramas_min
         self.ritmo_execucao = ritmo_execucao
         self.velocidades_suportadas = velocidades_suportadas
+        self.velocidade_atual = 0
 
-        # Ocupações: (quantidade, início, fim, atividade_id)
-        self.ocupacoes: List[Tuple[float, datetime, datetime, int]] = []
+        # 📦 Ocupações: (ocupacao_id, atividade_id, quantidade, inicio, fim)
+        self.ocupacoes: List[Tuple[int, int, float, datetime, datetime]] = []
 
     # ==========================================================
-    # 🚦 Validação de Disponibilidade
+    # ✅ Validações
     # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        """
-        Verifica se está disponível no intervalo (sem sobreposição).
-        """
-        for _, ocup_inicio, ocup_fim, _ in self.ocupacoes:
+        for _, _, _, ocup_inicio, ocup_fim in self.ocupacoes:
             if not (fim <= ocup_inicio or inicio >= ocup_fim):
                 return False
         return True
 
     def validar_capacidade(self, quantidade_gramas: float) -> bool:
-        """
-        Verifica se a quantidade está dentro dos limites da masseira.
-        """
         return self.capacidade_gramas_min <= quantidade_gramas <= self.capacidade_gramas_max
+
+    def selecionar_velocidade(self, velocidade: int) -> bool:
+        if any(v.value == velocidade for v in self.velocidades_suportadas):
+            self.velocidade_atual = velocidade
+            logger.info(f"⚙️ {self.nome} | Velocidade ajustada para {velocidade}.")
+            return True
+        logger.error(
+            f"❌ Velocidade {velocidade} não suportada pela masseira {self.nome}."
+        )
+        return False
 
     # ==========================================================
     # 🏗️ Ocupação
     # ==========================================================
     def ocupar(
         self,
+        ocupacao_id: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
         atividade_id: int
     ) -> bool:
-        """
-        Ocupa a masseira no intervalo, se disponível e com quantidade válida.
-        """
         if not self.validar_capacidade(quantidade_gramas):
             logger.error(
                 f"❌ {self.nome} | {quantidade_gramas}g fora dos limites "
@@ -90,44 +93,37 @@ class Masseira(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((quantidade_gramas, inicio, fim, atividade_id))
+        self.ocupacoes.append((ocupacao_id, atividade_id, quantidade_gramas, inicio, fim))
         logger.info(
-            f"🌀 {self.nome} | Ocupada com {quantidade_gramas}g "
+            f"🌀 {self.nome} | Ocupação registrada: {quantidade_gramas}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"para atividade {atividade_id}."
+            f"(Atividade {atividade_id}, Ocupação ID: {ocupacao_id}) "
+            f"com velocidade {self.velocidade_atual}."
         )
         return True
 
     # ==========================================================
-    # 🔓 Liberação de Ocupações
+    # 🔓 Liberação
     # ==========================================================
-    def liberar(
-        self, inicio: datetime, fim: datetime, atividade_id: int
-    ):
-        """
-        Libera uma ocupação específica.
-        """
+    def liberar(self, inicio: datetime, fim: datetime, atividade_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (qtd, ini, f, atv_id)
-            for (qtd, ini, f, atv_id) in self.ocupacoes
-            if not (ini == inicio and f == fim and atv_id == atividade_id)
+            (oid, aid, qtd, ini, f)
+            for (oid, aid, qtd, ini, f) in self.ocupacoes
+            if not (aid == atividade_id and ini == inicio and f == fim)
         ]
         depois = len(self.ocupacoes)
         if antes != depois:
             logger.info(
-                f"🟩 {self.nome} | Liberação efetuada da atividade {atividade_id} "
+                f"🟩 {self.nome} | Ocupação da atividade {atividade_id} removida "
                 f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
             )
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        """
-        Libera automaticamente as ocupações finalizadas.
-        """
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (qtd, ini, fim, atv_id)
-            for (qtd, ini, fim, atv_id) in self.ocupacoes
+            (oid, aid, qtd, ini, fim)
+            for (oid, aid, qtd, ini, fim) in self.ocupacoes
             if fim > horario_atual
         ]
         liberadas = antes - len(self.ocupacoes)
@@ -137,46 +133,26 @@ class Masseira(Equipamento):
             )
 
     # ==========================================================
-    # 🔍 Consulta de Ocupações
-    # ==========================================================
-    def obter_ocupacoes_ativas(
-        self, horario_atual: datetime
-    ) -> List[Tuple[float, datetime, datetime, int]]:
-        """
-        Retorna todas as ocupações ativas no momento.
-        """
-        return [
-            (qtd, ini, fim, atv_id)
-            for (qtd, ini, fim, atv_id) in self.ocupacoes
-            if ini <= horario_atual < fim
-        ]
-
-    # ==========================================================
-    # 📅 Visualização de Agenda
+    # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
-        """
-        Exibe a agenda da masseira.
-        """
-        print(f"\n============================")
-        print(f"📅 Agenda da Masseira {self.nome}")
-        print(f"============================")
+        logger.info("==============================================")
+        logger.info("==============================================")
+        logger.info(f"📅 Agenda da Masseira {self.nome}")
         if not self.ocupacoes:
-            print("🔹 Nenhuma ocupação registrada.")
+            logger.info("🔹 Nenhuma ocupação registrada.")
             return
-        for i, (qtd, ini, fim, atv_id) in enumerate(self.ocupacoes, start=1):
-            print(
-                f"🔸 Ocupação {i}: {qtd}g | "
-                f"Início: {ini.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')} | Atividade ID: {atv_id}"
+        for oid, aid, qtd, ini, fim in self.ocupacoes:
+            logger.info(
+                f"🔸 Ocupação {oid}: {qtd}g | "
+                f"Início: {ini.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')} | "
+                f"Atividade ID: {aid}"
             )
 
     # ==========================================================
     # 🔄 Reset Geral
     # ==========================================================
     def resetar(self):
-        """
-        Reset total da masseira.
-        """
         self.ocupacoes.clear()
         logger.info(f"🔄 {self.nome} | Resetada completamente.")
 

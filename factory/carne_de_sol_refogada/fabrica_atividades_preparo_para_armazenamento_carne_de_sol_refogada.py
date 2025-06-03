@@ -44,7 +44,7 @@ gestor_balancas = GestorBalancas([balanca_digital_4, balanca_digital_2])
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
-quantidades = [5000, 12000, 18000]
+quantidades = [5000, 12000, 18000, 10000,30000]
 
 
 # ============================================

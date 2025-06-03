@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 from models.equips.bancada import Bancada
+from models.atividade_base import Atividade
+from utils.gerador_ocupacao import GeradorDeOcupacaoID
 from utils.logger_factory import setup_logger
 
 
@@ -11,25 +13,32 @@ logger = setup_logger('GestorBancadas')
 class GestorBancadas:
     """
     🪵 Gestor especializado para controle de bancadas,
-    utilizando Backward Scheduling.
+    utilizando Backward Scheduling com FIPs.
     """
 
     def __init__(self, bancadas: List[Bancada]):
         self.bancadas = bancadas
+        self.gerador_ocupacao_id = GeradorDeOcupacaoID()
 
     def alocar(
         self,
         inicio: datetime,
         fim: datetime,
-        atividade,
+        atividade: Atividade,
         fracoes_necessarias: int
     ) -> Tuple[bool, Optional[Bancada], Optional[datetime], Optional[datetime]]:
         """
-        🪵 Realiza a alocação utilizando backward scheduling (do fim para o início).
+        🪵 Realiza a alocação utilizando backward scheduling (do fim para o início),
+        ordenando por FIP (menor valor tem prioridade).
         Retorna (True, bancada, inicio_real, fim_real) se sucesso,
         caso contrário (False, None, None, None).
         """
         duracao = atividade.duracao
+
+        equipamentos_ordenados = sorted(
+            self.bancadas,
+            key=lambda bancada: atividade.fips_equipamentos.get(bancada, 999)
+        )
 
         horario_final_tentativa = fim
 
@@ -42,13 +51,16 @@ class GestorBancadas:
         while horario_final_tentativa - duracao >= inicio:
             horario_inicio_tentativa = horario_final_tentativa - duracao
 
-            for bancada in self.bancadas:
+            for bancada in equipamentos_ordenados:
                 if bancada.fracoes_disponiveis(horario_inicio_tentativa, horario_final_tentativa) >= fracoes_necessarias:
+                    # Somente gera ID se a bancada puder realmente ser ocupada
+                    ocupacao_id = self.gerador_ocupacao_id.gerar_id()
                     sucesso = bancada.ocupar(
-                        inicio=horario_inicio_tentativa,
-                        fim=horario_final_tentativa,
+                        ocupacao_id=ocupacao_id,
+                        atividade_id=atividade.id,
                         quantidade_fracoes=fracoes_necessarias,
-                        atividade_id=atividade.id
+                        inicio=horario_inicio_tentativa,
+                        fim=horario_final_tentativa
                     )
                     if sucesso:
                         atividade.equipamento_alocado = bancada
@@ -62,8 +74,8 @@ class GestorBancadas:
 
                         return True, bancada, horario_inicio_tentativa, horario_final_tentativa
 
-            # Retrocede 5 minutos
-            horario_final_tentativa -= timedelta(minutes=5)
+            horario_final_tentativa -= timedelta(minutes=1)
+            
 
         logger.warning(
             f"❌ Atividade {atividade.id} não pôde ser alocada "
@@ -71,13 +83,11 @@ class GestorBancadas:
         )
         return False, None, None, None
 
+
     # ==========================================================
     # 🧹 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, atividade) -> None:
-        """
-        🧹 Libera todas as frações ocupadas relacionadas a uma atividade específica.
-        """
+    def liberar_por_atividade(self, atividade: Atividade) -> None:
         logger.info(
             f"🧹 Liberando frações associadas à atividade {atividade.id} em todas as bancadas."
         )
@@ -85,9 +95,6 @@ class GestorBancadas:
             bancada.liberar_por_atividade(atividade.id)
 
     def liberar_fracoes_finalizadas(self, horario_atual: datetime) -> None:
-        """
-        🔄 Libera frações que já terminaram seu período de ocupação.
-        """
         logger.info(
             f"🔄 Liberando frações finalizadas das bancadas até {horario_atual.strftime('%H:%M')}."
         )
@@ -95,10 +102,7 @@ class GestorBancadas:
             bancada.liberar_fracoes_terminadas(horario_atual)
 
     def liberar_todas_fracoes(self) -> None:
-        """
-        🧹 Libera todas as frações ocupadas de todas as bancadas.
-        """
-        logger.info(f"🧹 Liberando todas as frações de todas as bancadas.")
+        logger.info("🧹 Liberando todas as frações de todas as bancadas.")
         for bancada in self.bancadas:
             bancada.liberar_todas_fracoes()
 
@@ -106,12 +110,8 @@ class GestorBancadas:
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self) -> None:
-        """
-        📅 Mostra a agenda de todas as bancadas.
-        """
-        logger.info("\n============================")
+        logger.info("==============================================")
         logger.info("📅 Agenda das Bancadas")
-        logger.info("============================")
-
+        logger.info("==============================================")
         for bancada in self.bancadas:
             bancada.mostrar_agenda()

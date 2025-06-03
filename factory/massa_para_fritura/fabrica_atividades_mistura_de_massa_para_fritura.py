@@ -1,7 +1,14 @@
+# fabrica_atividades_mistura_massas_para_frituras.py
+
 import sys
 from datetime import datetime
+
+# 🔧 Ajuste do path
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 
+# ============================================
+# 📦 Imports
+# ============================================
 from utils.logger_factory import setup_logger
 from factory.fabrica_equipamentos import hotmix_1, hotmix_2
 from models.atividades.subproduto.massa_para_frituras.mistura_de_massas_para_frituras import (
@@ -11,7 +18,6 @@ from enums.tipo_atividade import TipoAtividade
 from enums.tipo_profissional import TipoProfissional
 from services.gestor_misturadoras_com_coccao import GestorMisturadorasComCoccao
 
-
 # ============================================
 # 🔥 Logger
 # ============================================
@@ -20,25 +26,21 @@ logger = setup_logger(
     arquivo="logs/simulacao_mistura_massas_para_frituras.log"
 )
 
-
 # ============================================
 # ⏰ Janela de Produção
 # ============================================
-inicio_jornada = datetime(2025, 5, 25, 8, 0)
-fim_entrega = datetime(2025, 5, 25, 17, 0)
-
+inicio_jornada = datetime(2025, 6, 1, 8, 0)
+fim_entrega = datetime(2025, 6, 1, 17, 0)
 
 # ============================================
-# 🛠️ Instanciar Gestor de Misturadoras com Cocção
+# 🛠️ Gestor das HotMix
 # ============================================
-gestor_misturadoras = GestorMisturadorasComCoccao([hotmix_1, hotmix_2])
-
+gestor_hotmix = GestorMisturadorasComCoccao([hotmix_1, hotmix_2])
 
 # ============================================
 # 📦 Quantidades simuladas
 # ============================================
-quantidades = [5000, 15000, 25000, 30000]
-
+quantidades = [5000, 15000, 25000, 30000, 5000, 15000, 25000, 30000, ]
 
 # ============================================
 # 🏗️ Criar Atividades
@@ -56,13 +58,15 @@ for i, quantidade in enumerate(quantidades):
         quantidade_funcionarios=1,
         equipamentos_elegiveis=[hotmix_1, hotmix_2],
         quantidade_produto=quantidade,
-        fips_equipamentos={hotmix_1: 1, hotmix_2: 2},
+        fips_equipamentos={
+            hotmix_1: 1,
+            hotmix_2: 2
+        },
     )
     atividade.calcular_duracao()
     atividades.append(atividade)
 
 logger.info(f"🛠️ {len(atividades)} atividades de mistura de massas para frituras criadas.")
-
 
 # ============================================
 # 🔥 Tentar Alocar e Iniciar Atividades
@@ -71,32 +75,22 @@ for atividade in atividades:
     logger.info(
         f"🚀 Tentando alocar atividade {atividade.id} com {atividade.quantidade_produto}g."
     )
-    sucesso, hotmix, inicio_real, fim_real = gestor_misturadoras.alocar(
-        inicio=inicio_jornada,
-        fim=fim_entrega,
-        atividade=atividade
+
+    sucesso = atividade.tentar_alocar_e_iniciar(
+        gestor_misturadoras=gestor_hotmix,
+        inicio_janela=inicio_jornada,
+        horario_limite=fim_entrega
     )
 
     if sucesso:
-        atividade.inicio_real = inicio_real
-        atividade.fim_real = fim_real
-        atividade.hotmix_alocada = hotmix
-        atividade.alocada = True
-
-        logger.info(
-            f"✅ Atividade {atividade.id} alocada com sucesso na HotMix {hotmix.nome} "
-            f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}."
-        )
         atividade.iniciar()
-
     else:
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada na janela "
-            f"entre {inicio_jornada.strftime('%H:%M')} e {fim_entrega.strftime('%H:%M')}."
+            f"❌ Atividade {atividade.id} não pôde ser alocada entre "
+            f"{inicio_jornada.strftime('%H:%M')} e {fim_entrega.strftime('%H:%M')}."
         )
 
-
 # ============================================
-# 📅 Mostrar Agendas Finais
+# 📅 Mostrar Agenda Final
 # ============================================
-gestor_misturadoras.mostrar_agenda()
+gestor_hotmix.mostrar_agenda()

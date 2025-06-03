@@ -1,10 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from models.atividade_base import Atividade
 from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
-
-# 🔥 Logger específico para esta atividade
+# 🔥 Logger específico
 logger = setup_logger('Atividade_Coccao_Carne_De_Sol')
 
 
@@ -13,6 +12,10 @@ class CoccaoDeCarneDeSolCozidaPronta(Atividade):
     🔥🥩 Atividade que representa a cocção da carne de sol cozida pronta.
     ✅ Utiliza fogões, ocupando bocas de acordo com a quantidade de produto.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fogao_alocado = None
 
     @property
     def quantidade_por_tipo_equipamento(self):
@@ -30,54 +33,63 @@ class CoccaoDeCarneDeSolCozidaPronta(Atividade):
             self.duracao = timedelta(minutes=40)
         else:
             logger.error(
-                f"❌ Quantidade {q} fora das faixas válidas para COCCAO DE CARNE DE SOL COZIDA PRONTA."
+                f"❌ Quantidade {q}g fora das faixas válidas para cocção da carne de sol cozida pronta."
             )
             raise ValueError(
-                f"❌ Quantidade {q} fora das faixas válidas para COCCAO DE CARNE DE SOL COZIDA PRONTA."
+                f"❌ Quantidade {q}g fora das faixas válidas para cocção da carne de sol cozida pronta."
             )
 
         logger.info(
-            f"🕒 Duração calculada: {self.duracao} para {q}g de carne de sol cozida pronta."
+            f"🕒 Duração fixada em {self.duracao} para {q}g de carne de sol cozida pronta."
         )
 
     def tentar_alocar_e_iniciar(
         self,
         gestor_fogoes,
-        inicio_janela,
-        horario_limite
-    ):
+        inicio_janela: datetime,
+        horario_limite: datetime
+    ) -> bool:
         """
-        🔥 Realiza o backward scheduling:
-        Aloca o fogão se houver bocas disponíveis.
+        🔥 Realiza o backward scheduling tentando alocar fogão com bocas disponíveis.
         """
         self.calcular_duracao()
 
         logger.info(
-            f"🚀 Iniciando tentativa de alocação da atividade '{self.id}' "
-            f"(quantidade: {self.quantidade_produto}g) com deadline até {horario_limite.strftime('%H:%M')}."
+            f"🚀 Tentando alocar atividade {self.id} ({self.quantidade_produto}g) "
+            f"dentro da janela até {horario_limite.strftime('%H:%M')}."
         )
 
-        sucesso, fogao, inicio_real, fim_real = gestor_fogoes.alocar(
+        sucesso, fogao, i_real, f_real = gestor_fogoes.alocar(
             inicio=inicio_janela,
             fim=horario_limite,
             atividade=self
         )
 
         if not sucesso:
-            logger.error(f"❌ Falha na alocação do fogão para a atividade '{self.id}'.")
+            logger.error(
+                f"❌ Falha na alocação do fogão para atividade {self.id}."
+            )
             return False
 
-        self.inicio_real = inicio_real
-        self.fim_real = fim_real
+        self._registrar_sucesso(fogao, i_real, f_real)
+        return True
+
+    def _registrar_sucesso(self, fogao, inicio, fim):
         self.fogao_alocado = fogao
+        self.equipamento_alocado = fogao
+        self.equipamentos_selecionados = [fogao]
+        self.inicio_real = inicio
+        self.fim_real = fim
         self.alocada = True
 
         logger.info(
-            f"✅ Atividade '{self.id}' alocada com sucesso!\n"
-            f"🔥 Fogão: {fogao.nome} de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}"
+            f"✅ Atividade {self.id} alocada com sucesso!\n"
+            f"🔥 Fogão: {fogao.nome} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}"
         )
-
-        return True
+        print(
+            f"✅ Atividade {self.id} alocada de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"no Fogão {fogao.nome}."
+        )
 
     def iniciar(self):
         """

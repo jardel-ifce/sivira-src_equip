@@ -36,15 +36,15 @@ class Bancada(Equipamento):
 
         self.numero_fracoes = numero_fracoes
 
-        # (quantidade=1, inicio, fim, atividade_id)
-        self.fracoes_ocupadas: List[Tuple[int, datetime, datetime, int]] = []
+        # Ocupações: (ocupacao_id, atividade_id, quantidade, inicio, fim)
+        self.fracoes_ocupadas: List[Tuple[int, int, int, datetime, datetime]] = []
 
     # ==========================================================
     # 🔍 Verificar disponibilidade
     # ==========================================================
     def fracoes_disponiveis(self, inicio: datetime, fim: datetime) -> int:
         ocupadas = sum(
-            1 for _, ini, f, _ in self.fracoes_ocupadas
+            qtd for (_, _, qtd, ini, f) in self.fracoes_ocupadas
             if not (fim <= ini or inicio >= f)
         )
         return self.numero_fracoes - ocupadas
@@ -54,35 +54,27 @@ class Bancada(Equipamento):
     # ==========================================================
     def ocupar(
         self,
-        inicio: datetime,
-        fim: datetime,
+        ocupacao_id: int,
+        atividade_id: int,
         quantidade_fracoes: int,
-        atividade_id: int
+        inicio: datetime,
+        fim: datetime
     ) -> bool:
-        quantidade_restante = quantidade_fracoes
-
-        while quantidade_restante > 0:
-            if self.fracoes_disponiveis(inicio, fim) <= 0:
-                logger.warning(
-                    f"❌ Todas as frações da bancada {self.nome} estão ocupadas nesse período "
-                    f"({inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')})."
-                )
-                return False
-
-            self.fracoes_ocupadas.append(
-                (1, inicio, fim, atividade_id)
+        if self.fracoes_disponiveis(inicio, fim) < quantidade_fracoes:
+            logger.warning(
+                f"❌ Frações insuficientes na bancada {self.nome} "
+                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
             )
-            quantidade_restante -= 1
+            return False
 
-            logger.info(
-                f"🪵 Ocupou uma fração da bancada {self.nome} "
-                f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-                f"para atividade {atividade_id}."
-            )
+        self.fracoes_ocupadas.append(
+            (ocupacao_id, atividade_id, quantidade_fracoes, inicio, fim)
+        )
 
         logger.info(
-            f"✅ Ocupação completa registrada na bancada {self.nome} "
-            f"para atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
+            f"🪵 Ocupou {quantidade_fracoes} frações da bancada {self.nome} "
+            f"para atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"(Ocupação ID: {ocupacao_id})."
         )
         return True
 
@@ -92,14 +84,14 @@ class Bancada(Equipamento):
     def liberar_por_atividade(self, atividade_id: int):
         antes = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas = [
-            (qtd, ini, fim, act_id) for (qtd, ini, fim, act_id) in self.fracoes_ocupadas
-            if act_id != atividade_id
+            (oid, aid, qtd, ini, fim) for (oid, aid, qtd, ini, fim) in self.fracoes_ocupadas
+            if aid != atividade_id
         ]
         liberadas = antes - len(self.fracoes_ocupadas)
 
         if liberadas > 0:
             logger.info(
-                f"🟩 Liberou {liberadas} frações da bancada {self.nome} "
+                f"🟩 Liberou {liberadas} registros de frações da bancada {self.nome} "
                 f"relacionadas à atividade {atividade_id}."
             )
         else:
@@ -111,7 +103,7 @@ class Bancada(Equipamento):
     def liberar_fracoes_terminadas(self, horario_atual: datetime):
         antes = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas = [
-            (qtd, ini, fim, act_id) for (qtd, ini, fim, act_id) in self.fracoes_ocupadas
+            (oid, aid, qtd, ini, fim) for (oid, aid, qtd, ini, fim) in self.fracoes_ocupadas
             if fim > horario_atual
         ]
         liberadas = antes - len(self.fracoes_ocupadas)
@@ -135,7 +127,7 @@ class Bancada(Equipamento):
         antes = len(self.fracoes_ocupadas)
 
         self.fracoes_ocupadas = [
-            (qtd, ini, f, act_id) for (qtd, ini, f, act_id) in self.fracoes_ocupadas
+            (oid, aid, qtd, ini, f) for (oid, aid, qtd, ini, f) in self.fracoes_ocupadas
             if not (ini >= inicio and f <= fim)
         ]
 
@@ -153,21 +145,20 @@ class Bancada(Equipamento):
             )
 
     # ==========================================================
-    # 🗓️ Agenda
+    # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
-        logger.info(f"\n============================")
+        logger.info("==============================================")
         logger.info(f"📅 Agenda da Bancada {self.nome}")
-        logger.info(f"============================")
+        logger.info("==============================================")
         if not self.fracoes_ocupadas:
             logger.info("🔹 Nenhuma ocupação.")
             return
-        for i, (_, inicio, fim, act_id) in enumerate(self.fracoes_ocupadas, start=1):
+        for i, (oid, aid, qtd, inicio, fim) in enumerate(self.fracoes_ocupadas, start=1):
             logger.info(
-                f"🔸 Ocupação {i}: Fração 1 | "
-                f"Início: {inicio.strftime('%H:%M')} | "
-                f"Fim: {fim.strftime('%H:%M')} | "
-                f"Atividade: {act_id}"
+                f"🔸 Ocupação {i} (ID {oid}): {qtd} frações | "
+                f"Início: {inicio.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')} | "
+                f"Atividade: {aid}"
             )
 
     # ==========================================================
