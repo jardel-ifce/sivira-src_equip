@@ -1,7 +1,6 @@
 from typing import List, Tuple, Optional
 from models.equips.balanca_digital import BalancaDigital
 from models.atividade_base import Atividade
-from utils.gerador_ocupacao import GeradorDeOcupacaoID
 from utils.logger_factory import setup_logger
 from datetime import datetime
 
@@ -17,7 +16,6 @@ class GestorBalancas:
 
     def __init__(self, balancas: List[BalancaDigital]):
         self.balancas = balancas
-        self.gerador_ocupacao_id = GeradorDeOcupacaoID()
 
     # ==========================================================
     # 🎯 Alocação
@@ -45,9 +43,7 @@ class GestorBalancas:
                 )
                 continue
 
-            ocupacao_id = self.gerador_ocupacao_id.gerar_id()
             sucesso = balanca.ocupar(
-                ocupacao_id=ocupacao_id,
                 atividade_id=atividade.id,
                 quantidade=quantidade_gramas
             )
@@ -71,7 +67,6 @@ class GestorBalancas:
             f"❌ Nenhuma balança disponível ou compatível com {quantidade_gramas}g para atividade {atividade.id}."
         )
         return False, None, None, None
-
 
     # ==========================================================
     # 🔓 Liberação

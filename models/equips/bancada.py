@@ -5,7 +5,6 @@ from typing import List, Tuple
 from datetime import datetime
 from utils.logger_factory import setup_logger
 
-
 # 🪵 Logger específico para Bancada
 logger = setup_logger('Bancada')
 
@@ -35,16 +34,15 @@ class Bancada(Equipamento):
         )
 
         self.numero_fracoes = numero_fracoes
-
-        # Ocupações: (ocupacao_id, atividade_id, quantidade, inicio, fim)
-        self.fracoes_ocupadas: List[Tuple[int, int, int, datetime, datetime]] = []
+        # Ocupações: (atividade_id, quantidade, inicio, fim)
+        self.fracoes_ocupadas: List[Tuple[int, int, datetime, datetime]] = []
 
     # ==========================================================
     # 🔍 Verificar disponibilidade
     # ==========================================================
     def fracoes_disponiveis(self, inicio: datetime, fim: datetime) -> int:
         ocupadas = sum(
-            qtd for (_, _, qtd, ini, f) in self.fracoes_ocupadas
+            qtd for (aid, qtd, ini, f) in self.fracoes_ocupadas
             if not (fim <= ini or inicio >= f)
         )
         return self.numero_fracoes - ocupadas
@@ -54,7 +52,6 @@ class Bancada(Equipamento):
     # ==========================================================
     def ocupar(
         self,
-        ocupacao_id: int,
         atividade_id: int,
         quantidade_fracoes: int,
         inicio: datetime,
@@ -68,13 +65,12 @@ class Bancada(Equipamento):
             return False
 
         self.fracoes_ocupadas.append(
-            (ocupacao_id, atividade_id, quantidade_fracoes, inicio, fim)
+            (atividade_id, quantidade_fracoes, inicio, fim)
         )
 
         logger.info(
             f"🪵 Ocupou {quantidade_fracoes} frações da bancada {self.nome} "
-            f"para atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Ocupação ID: {ocupacao_id})."
+            f"para atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
         return True
 
@@ -84,7 +80,7 @@ class Bancada(Equipamento):
     def liberar_por_atividade(self, atividade_id: int):
         antes = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas = [
-            (oid, aid, qtd, ini, fim) for (oid, aid, qtd, ini, fim) in self.fracoes_ocupadas
+            (aid, qtd, ini, fim) for (aid, qtd, ini, fim) in self.fracoes_ocupadas
             if aid != atividade_id
         ]
         liberadas = antes - len(self.fracoes_ocupadas)
@@ -103,7 +99,7 @@ class Bancada(Equipamento):
     def liberar_fracoes_terminadas(self, horario_atual: datetime):
         antes = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas = [
-            (oid, aid, qtd, ini, fim) for (oid, aid, qtd, ini, fim) in self.fracoes_ocupadas
+            (aid, qtd, ini, fim) for (aid, qtd, ini, fim) in self.fracoes_ocupadas
             if fim > horario_atual
         ]
         liberadas = antes - len(self.fracoes_ocupadas)
@@ -125,12 +121,10 @@ class Bancada(Equipamento):
         🧹 Libera todas as frações ocupadas dentro de um intervalo específico.
         """
         antes = len(self.fracoes_ocupadas)
-
         self.fracoes_ocupadas = [
-            (oid, aid, qtd, ini, f) for (oid, aid, qtd, ini, f) in self.fracoes_ocupadas
+            (aid, qtd, ini, f) for (aid, qtd, ini, f) in self.fracoes_ocupadas
             if not (ini >= inicio and f <= fim)
         ]
-
         liberadas = antes - len(self.fracoes_ocupadas)
 
         if liberadas > 0:
@@ -154,11 +148,10 @@ class Bancada(Equipamento):
         if not self.fracoes_ocupadas:
             logger.info("🔹 Nenhuma ocupação.")
             return
-        for i, (oid, aid, qtd, inicio, fim) in enumerate(self.fracoes_ocupadas, start=1):
+        for i, (aid, qtd, inicio, fim) in enumerate(self.fracoes_ocupadas, start=1):
             logger.info(
-                f"🔸 Ocupação {i} (ID {oid}): {qtd} frações | "
-                f"Início: {inicio.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')} | "
-                f"Atividade: {aid}"
+                f"🪵 Atividade: {aid} | Frações: {qtd} | "
+                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} "
             )
 
     # ==========================================================

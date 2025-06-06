@@ -5,6 +5,7 @@ sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 # 📦 Imports dos Equipamentos
 # =========================================
 from models.equips.camara_refrigerada import CamaraRefrigerada
+from models.equips.freezer import Freezer
 from models.equips.fogao import Fogao
 from models.equips.balanca_digital import BalancaDigital
 from models.equips.bancada import Bancada
@@ -50,7 +51,7 @@ class FabricaEquipamentos:
             nome="Câmara Refrigerada 2",
             setor=TipoSetor.ALMOXARIFADO,
             capacidade_niveis_tela=25,
-            capacidade_caixa_30kg=200,
+            capacidade_caixa_30kg=20,
             faixa_temperatura_min=-18,
             faixa_temperatura_max=-7,
         )
@@ -223,7 +224,7 @@ class FabricaEquipamentos:
     def criar_batedeira_industrial_1():
         return BatedeiraIndustrial(
             id=19,
-            nome="Batedeira Industrial",
+            nome="Batedeira Industrial 1",
             setor=TipoSetor.CONFEITARIA,
             numero_operadores=1,
             velocidade_min=1,
@@ -243,10 +244,10 @@ class FabricaEquipamentos:
             setor=TipoSetor.PANIFICACAO,
             capacidade_gramas_min=3000,
             capacidade_gramas_max=50000,
-            ritmo_execucao=TipoMistura.SEMI_RAPIDA,
+            tipos_de_mistura_suportados=[TipoMistura.SEMI_RAPIDA],
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA,
-                TipoVelocidade.MEDIA,
+                TipoVelocidade.MEDIA
             ],
         )
 
@@ -258,9 +259,9 @@ class FabricaEquipamentos:
             setor=TipoSetor.PANIFICACAO,
             capacidade_gramas_min=3000,
             capacidade_gramas_max=30000,
-            ritmo_execucao=TipoMistura.RAPIDA,
+            tipos_de_mistura_suportados=[TipoMistura.RAPIDA],
             velocidades_suportadas=[
-                TipoVelocidade.ALTA,
+                TipoVelocidade.ALTA
             ],
         )
 
@@ -272,9 +273,9 @@ class FabricaEquipamentos:
             setor=TipoSetor.CONFEITARIA,
             capacidade_gramas_min=3000,
             capacidade_gramas_max=20000,
-            ritmo_execucao=TipoMistura.LENTA,
+            tipos_de_mistura_suportados=TipoMistura.LENTA,
             velocidades_suportadas=[
-                TipoVelocidade.BAIXA,
+                TipoVelocidade.BAIXA
             ],
         )
 
@@ -337,11 +338,10 @@ class FabricaEquipamentos:
     # =======================
     @staticmethod
     def criar_freezer_1():
-        return CamaraRefrigerada(
+        return Freezer(
             id=25,
             nome="Freezer 1",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_niveis_tela=0,  # 🔥 Freezer não usa níveis de tela
             capacidade_caixa_30kg=6,
             faixa_temperatura_min=0,
             faixa_temperatura_max=4
@@ -349,11 +349,10 @@ class FabricaEquipamentos:
 
     @staticmethod
     def criar_freezer_2():
-        return CamaraRefrigerada(
+        return Freezer(
             id=26,
             nome="Freezer 2",
             setor=TipoSetor.CONFEITARIA,
-            capacidade_niveis_tela=0,
             capacidade_caixa_30kg=6,
             faixa_temperatura_min=0,
             faixa_temperatura_max=4
@@ -361,11 +360,10 @@ class FabricaEquipamentos:
 
     @staticmethod
     def criar_freezer_3():
-        return CamaraRefrigerada(
+        return Freezer(
             id=27,
             nome="Freezer 3",
             setor=TipoSetor.COZINHA,
-            capacidade_niveis_tela=0,
             capacidade_caixa_30kg=6,
             faixa_temperatura_min=0,
             faixa_temperatura_max=4
@@ -385,7 +383,7 @@ class FabricaEquipamentos:
             nivel_tela_max=1,
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
-            setup=15,
+            setup_min=15,
             tipo_coccao=TipoCoccao.TURBO,
             vaporizacao_seg_min=1,
             vaporizacao_seg_max=5,
@@ -404,7 +402,7 @@ class FabricaEquipamentos:
             nivel_tela_max=2,
             faixa_temperatura_min=120,
             faixa_temperatura_max=200,
-            setup=20,
+            setup_min=20,
             tipo_coccao=TipoCoccao.LASTRO,
             vaporizacao_seg_min=1,
             vaporizacao_seg_max=5,
@@ -423,10 +421,10 @@ class FabricaEquipamentos:
             nivel_tela_max=4,
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
-            setup=20,
+            setup_min=20,
             tipo_coccao=TipoCoccao.LASTRO,
-            vaporizacao_seg_min=None,
-            vaporizacao_seg_max=None,
+            vaporizacao_seg_min=1,
+            vaporizacao_seg_max=10,
             velocidade_mps_min=2,
             velocidade_mps_max=5
         )
@@ -442,7 +440,7 @@ class FabricaEquipamentos:
             nivel_tela_max=4,
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
-            setup=20,
+            setup_min=20,
             tipo_coccao=TipoCoccao.LASTRO,
             vaporizacao_seg_min=None,
             vaporizacao_seg_max=None,

@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
-
-from enums.tipo_atividade import TipoAtividade
 from enums.tipo_profissional import TipoProfissional
 from models.equips.equipamento import Equipamento
 
@@ -16,7 +14,6 @@ class Atividade(ABC):
         self,
         id: int,
         id_atividade: int,
-        tipo_atividade: TipoAtividade,
         tipos_profissionais_permitidos: List[TipoProfissional],
         quantidade_funcionarios: int,
         equipamentos_elegiveis: List[Equipamento],
@@ -29,7 +26,6 @@ class Atividade(ABC):
         # ===========================
         self.id = id
         self.id_atividade = id_atividade  # ID único da atividade
-        self.tipo_atividade = tipo_atividade
         self.tipos_profissionais_permitidos = tipos_profissionais_permitidos
         self.quantidade_funcionarios = max(0, quantidade_funcionarios)  
         self.equipamentos_elegiveis = equipamentos_elegiveis
@@ -60,14 +56,7 @@ class Atividade(ABC):
         # ===========================
         self.calcular_duracao()
 
-    # ============================================
-    # ⏳ Agenda
-    # ============================================
-
-    def definir_agenda(self, inicio: datetime):
-        self.inicio_previsto = inicio
-        self.fim_previsto = inicio + self.duracao
-
+  
     # ============================================
     # 🔧 Métodos abstratos
     # ============================================
@@ -78,17 +67,6 @@ class Atividade(ABC):
         Subclasse implementa: calcula a duração da atividade.
         """
         pass
-
-    @abstractmethod
-    def iniciar(self):
-        """
-        Subclasse implementa: executa a lógica da atividade.
-        """
-        pass
-
-    # ============================================
-    # 🔍 Visualização e Status
-    # ============================================
 
     def __str__(self):
         return (
@@ -108,7 +86,6 @@ class Atividade(ABC):
         Retorna um resumo simples da atividade para logs rápidos.
         """
         return (
-            f"[{self.tipo_atividade.name} ID {self.id}] "
             f"{self.inicio_previsto.strftime('%H:%M') if self.inicio_previsto else '??:??'} - "
             f"{self.fim_previsto.strftime('%H:%M') if self.fim_previsto else '??:??'} | "
             f"{'Alocada' if self.alocada else 'Não Alocada'}"

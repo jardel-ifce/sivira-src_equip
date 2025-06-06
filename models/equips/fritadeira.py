@@ -1,196 +1,174 @@
 from models.equips.equipamento import Equipamento
 from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_setor import TipoSetor
-from enums.tipo_atividade import TipoAtividade
-from fractions import Fraction
-from datetime import datetime
 from typing import List, Tuple
+from datetime import datetime
+from utils.logger_factory import setup_logger
+
+# 🍟 Logger exclusivo da Fritadeira
+logger = setup_logger('Fritadeira')
 
 
 class Fritadeira(Equipamento):
     """
-    Classe que representa uma Fritadeira.
+    🍟 Representa uma Fritadeira com controle por frações.
+    ✔️ Valida capacidade mínima e máxima por atividade.
+    ✔️ Controla temperatura e tempo de setup.
+    ✔️ Permite múltiplas ocupações simultâneas com validação de janela de tempo.
     """
 
-    # ============================================
-    # 🔧 Inicialização
-    # ============================================
     def __init__(
         self,
         id: int,
         nome: str,
         setor: TipoSetor,
         numero_operadores: int,
-        capacidade_fracionamento: tuple[int, int],
-        capacidade_gramas_min: int,
-        capacidade_gramas_max: int,
-        setup_min: int,
-        setup_max: int,
+        numero_fracoes: int,
+        capacidade_min: int,
+        capacidade_max: int,
         faixa_temperatura_min: int,
         faixa_temperatura_max: int,
+        setup_minutos: int
     ):
         super().__init__(
             id=id,
             nome=nome,
             setor=setor,
-            tipo_equipamento=TipoEquipamento.FRITADEIRAS,
             numero_operadores=numero_operadores,
-            status_ativo=True,
+            tipo_equipamento=TipoEquipamento.FRITADEIRA,
+            status_ativo=True
         )
 
-        # Capacidade fracionada (Ex.: 1/2, 1/3, 1/4 da fritadeira)
-        self.capacidade_total = Fraction(*capacidade_fracionamento)
-        self.capacidade_ocupada = Fraction(0, 1)
-
-        # Capacidade por peso
-        self.capacidade_gramas_min = capacidade_gramas_min
-        self.capacidade_gramas_max = capacidade_gramas_max
-        self.capacidade_gramas_atual = 0
-
-        # Setup operacional
-        self.setup_min = setup_min
-        self.setup_max = setup_max
-        self.setup_atual = 0
-
-        # Faixa de temperatura
+        self.numero_fracoes = numero_fracoes
+        self.capacidade_min = capacidade_min
+        self.capacidade_max = capacidade_max
         self.faixa_temperatura_min = faixa_temperatura_min
         self.faixa_temperatura_max = faixa_temperatura_max
-        self.faixa_temperatura_atual = 0
+        self.setup_minutos = setup_minutos
 
-        self.ocupacao: List[Tuple[datetime, datetime, TipoAtividade]] = []
+        # 📦 Ocupações: (atividade_id, quantidade, inicio, fim, temperatura, setup)
+        self.fracoes_ocupadas: List[Tuple[int, int, datetime, datetime, int, int]] = []
 
-    # ============================================
-    # 🧠 Ocupação Fracionada
-    # ============================================
-    def ocupar(self, quantidade: tuple[int, int]) -> bool:
-        quantidade_frac = Fraction(*quantidade)
+    # ==========================================================
+    # ✅ Validações
+    # ==========================================================
+    def validar_quantidade(self, quantidade: int) -> bool:
+        """
+        ✅ Verifica se a quantidade está dentro da faixa permitida pela fritadeira.
+        """
+        return self.capacidade_min <= quantidade <= self.capacidade_max
 
-        if self.capacidade_ocupada + quantidade_frac <= self.capacidade_total:
-            self.capacidade_ocupada += quantidade_frac
-            print(
-                f"✅ Ocupou {quantidade_frac} da fritadeira {self.nome}. "
-                f"Ocupação atual: {self.capacidade_ocupada}/{self.capacidade_total}."
-            )
-            return True
+    def validar_temperatura(self, temperatura: int) -> bool:
+        """
+        🌡️ Verifica se a temperatura solicitada está dentro da faixa permitida.
+        """
+        return self.faixa_temperatura_min <= temperatura <= self.faixa_temperatura_max
 
-        print(
-            f"❌ Não foi possível ocupar {quantidade_frac} da fritadeira {self.nome}. "
-            f"Disponível: {self.fracao_disponivel()}."
+    # ==========================================================
+    # 🔍 Verificar disponibilidade
+    # ==========================================================
+    def fracoes_disponiveis(self, inicio: datetime, fim: datetime) -> int:
+        """
+        🔍 Calcula quantas frações estão livres no intervalo solicitado.
+        """
+        ocupadas = sum(
+            qtd for (aid, qtd, ini, f, temp, setup) in self.fracoes_ocupadas
+            if not (fim <= ini or inicio >= f)
         )
-        return False
+        return self.numero_fracoes - ocupadas
 
-    def liberar(self, quantidade: tuple[int, int] | Fraction) -> bool:
-        quantidade_frac = (
-            Fraction(*quantidade) if isinstance(quantidade, tuple) else quantidade
-        )
-
-        self.capacidade_ocupada -= quantidade_frac
-
-        if self.capacidade_ocupada < 0:
-            self.capacidade_ocupada = Fraction(0, 1)
-            print("⚠️ Tentou liberar mais do que ocupado. Resetado para zero.")
+    # ==========================================================
+    # 🔐 Ocupação
+    # ==========================================================
+    def ocupar(
+        self,
+        atividade_id: int,
+        quantidade_fracoes: int,
+        inicio: datetime,
+        fim: datetime,
+        temperatura: int
+    ) -> bool:
+        """
+        🔐 Tenta ocupar a fritadeira com base nas regras de capacidade, temperatura e frações disponíveis.
+        """
+        if not self.validar_quantidade(quantidade_fracoes):
+            logger.warning(f"❌ Quantidade inválida: {quantidade_fracoes}g para a fritadeira {self.nome}.")
             return False
 
-        print(
-            f"🟩 Liberou {quantidade_frac} da fritadeira {self.nome}. "
-            f"Ocupação atual: {self.capacidade_ocupada}/{self.capacidade_total}."
+        if not self.validar_temperatura(temperatura):
+            logger.warning(f"❌ Temperatura inválida: {temperatura}°C para a fritadeira {self.nome}.")
+            return False
+
+        if self.fracoes_disponiveis(inicio, fim) < quantidade_fracoes:
+            logger.warning(
+                f"❌ Frações insuficientes na fritadeira {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            )
+            return False
+
+        self.fracoes_ocupadas.append(
+            (atividade_id, quantidade_fracoes, inicio, fim, temperatura, self.setup_minutos)
+        )
+
+        logger.info(
+            f"🍟 Fritadeira {self.nome} ocupada por atividade {atividade_id} "
+            f"com {quantidade_fracoes} frações, temperatura {temperatura}°C "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} (setup: {self.setup_minutos} min)."
         )
         return True
 
-    def liberar_tudo(self):
-        print(
-            f"🟩 Liberou toda a ocupação fracionada da fritadeira {self.nome}. "
-            f"Ocupação anterior: {self.capacidade_ocupada}/{self.capacidade_total}."
-        )
-        self.capacidade_ocupada = Fraction(0, 1)
+    # ==========================================================
+    # 🧹 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, atividade_id: int):
+        """
+        🧹 Libera todas as frações ocupadas associadas à atividade fornecida.
+        """
+        antes = len(self.fracoes_ocupadas)
+        self.fracoes_ocupadas = [
+            (aid, qtd, ini, fim, temp, setup)
+            for (aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
+            if aid != atividade_id
+        ]
+        liberadas = antes - len(self.fracoes_ocupadas)
 
-    def fracao_disponivel(self) -> Fraction:
-        return self.capacidade_total - self.capacidade_ocupada
-
-    # ============================================
-    # ⚖️ Ocupação por Peso
-    # ============================================
-    def ocupar_capacidade_gramas(self, gramas: int) -> bool:
-        if gramas < self.capacidade_gramas_min:
-            print(
-                f"❌ Quantidade {gramas}g abaixo do mínimo permitido ({self.capacidade_gramas_min}g) na fritadeira {self.nome}."
+        if liberadas > 0:
+            logger.info(
+                f"🟩 Liberou {liberadas} ocupações da fritadeira {self.nome} "
+                f"relacionadas à atividade {atividade_id}."
             )
-            return False
-
-        if gramas + self.capacidade_gramas_atual > self.capacidade_gramas_max:
-            print(
-                f"❌ Ocupação excede a capacidade máxima ({self.capacidade_gramas_max}g) da fritadeira {self.nome}."
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação da fritadeira {self.nome} estava associada à atividade {atividade_id}."
             )
-            return False
 
-        self.capacidade_gramas_atual += gramas
-        print(
-            f"✅ Ocupou {gramas}g na fritadeira {self.nome}. "
-            f"Ocupação atual: {self.capacidade_gramas_atual}/{self.capacidade_gramas_max}g."
-        )
-        return True
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
+    def mostrar_agenda(self):
+        """
+        📅 Exibe todas as ocupações atuais da fritadeira.
+        """
+        logger.info("==============================================")
+        logger.info(f"📅 Agenda da Fritadeira {self.nome}")
+        logger.info("==============================================")
 
-    def liberar_capacidade_gramas(self, gramas: int) -> bool:
-        if self.capacidade_gramas_atual - gramas < 0:
-            print(
-                f"❌ Não é possível liberar {gramas}g. Ocupação atual: {self.capacidade_gramas_atual}g."
+        if not self.fracoes_ocupadas:
+            logger.info("🔹 Nenhuma ocupação.")
+            return
+
+        for (aid, qtd, inicio, fim, temp, setup) in self.fracoes_ocupadas:
+            logger.info(
+                f"🍟 Atividade {aid} | Frações: {qtd} | "
+                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+                f"Temp: {temp}°C | Setup: {setup} min"
             )
-            return False
 
-        self.capacidade_gramas_atual -= gramas
-        print(
-            f"🟩 Liberou {gramas}g da fritadeira {self.nome}. "
-            f"Ocupação atual: {self.capacidade_gramas_atual}/{self.capacidade_gramas_max}g."
-        )
-        return True
-
-    def liberar_toda_capacidade_gramas(self):
-        print(
-            f"🟩 Liberou toda a capacidade em gramas da fritadeira {self.nome}. "
-            f"Ocupação anterior: {self.capacidade_gramas_atual}g."
-        )
-        self.capacidade_gramas_atual = 0
-
-    def gramas_disponiveis(self) -> int:
-        return self.capacidade_gramas_max - self.capacidade_gramas_atual
-
-    # ============================================
-    # ⚙️ Setup Operacional
-    # ============================================
-    def configurar_setup(self, setup: int) -> bool:
-        if setup < self.setup_min or setup > self.setup_max:
-            print(
-                f"❌ Setup {setup} fora dos limites. Permitido: {self.setup_min} a {self.setup_max}."
-            )
-            return False
-
-        self.setup_atual = setup
-        print(f"⚙️ Setup configurado para {setup} na fritadeira {self.nome}.")
-        return True
-
-    # ============================================
-    # 🌡️ Controle de Temperatura
-    # ============================================
-    def configurar_faixa_temperatura(self, faixa: int) -> bool:
-        if faixa < self.faixa_temperatura_min or faixa > self.faixa_temperatura_max:
-            print(
-                f"❌ Temperatura {faixa}°C fora dos limites permitidos. "
-                f"Permitido: {self.faixa_temperatura_min}°C a {self.faixa_temperatura_max}°C."
-            )
-            return False
-
-        self.faixa_temperatura_atual = faixa
-        print(f"🌡️ Temperatura ajustada para {faixa}°C na fritadeira {self.nome}.")
-        return True
-
-    # ============================================
-    # 🔍 Status e Representação
-    # ============================================
+    # ==========================================================
+    # 📊 Representação
+    # ==========================================================
     def __str__(self):
         return (
-            super().__str__() +
-            f"\n🧠 Capacidade fracionada: {self.capacidade_ocupada}/{self.capacidade_total} | Disponível: {self.fracao_disponivel()}"
-            f"\n⚖️ Ocupação em gramas: {self.capacidade_gramas_atual}/{self.capacidade_gramas_max}g | Disponível: {self.gramas_disponiveis()}g"
-            f"\n⚙️ Setup atual: {self.setup_atual} (Limites: {self.setup_min} a {self.setup_max})"
-            f"\n🌡️ Temperatura atual: {self.faixa_temperatura_atual}°C (Faixa: {self.faixa_temperatura_min}°C a {self.faixa_temperatura_max}°C)"
+            f"\n🍟 Fritadeira: {self.nome} (ID: {self.id})"
+            f"\nSetor: {self.setor.name} | Status: {'Ativa' if self.status_ativo else 'Inativa'}"
+            f"\nFrações totais: {self.numero_fracoes} | Ocupações atuais: {len(self.fracoes_ocupadas)}"
         )

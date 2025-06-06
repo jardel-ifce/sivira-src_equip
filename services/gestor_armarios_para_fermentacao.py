@@ -1,113 +1,117 @@
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from models.equips.armario_esqueleto import ArmarioEsqueleto
+from models.equips.armario_fermentador import ArmarioFermentador
 from models.atividade_base import Atividade
 from utils.conversores_ocupacao import gramas_para_niveis_tela
-from utils.gerador_ocupacao import GeradorDeOcupacaoID
 from utils.logger_factory import setup_logger
 
-# 🗂️ Logger específico
+# 🔳 Logger exclusivo do gestor de Armários Esqueleto
 logger = setup_logger('GestorArmariosParaFermentacao')
+
+Armarios = Union[ArmarioEsqueleto, ArmarioFermentador]
 
 
 class GestorArmariosParaFermentacao:
     """
-    🗂️ Gestor especializado no controle de Armários Esqueleto para fermentação.
-    Utiliza backward scheduling considerando:
-    - Ocupação por níveis de tela (1000g por nível)
+    🔳 Gestor especializado no controle de Armários para Fermentação (tipo Esqueleto).
+    Utiliza backward scheduling e FIP.
     """
 
-    def __init__(self, armarios: List[ArmarioEsqueleto]):
+    def __init__(self, armarios: List[Armarios]):
         self.armarios = armarios
-        self.gerador_ocupacao_id = GeradorDeOcupacaoID()
+
+    def _ordenar_por_fip(self, atividade: Atividade) -> List[Armarios]:
+        ordenadas = sorted(
+            self.armarios,
+            key=lambda m: atividade.fips_equipamentos.get(m, 999)
+        )
+        logger.info("📊 Ordem dos armários esqueleto por FIP (prioridade):")
+        for m in ordenadas:
+            fip = atividade.fips_equipamentos.get(m, 999)
+            logger.info(f"🔹 {m.nome} (FIP: {fip})")
+        return ordenadas
 
     def alocar(
         self,
         inicio: datetime,
         fim: datetime,
-        atividade: Atividade
-    ) -> Tuple[str, Optional[ArmarioEsqueleto], Optional[datetime], Optional[datetime]]:
+        atividade: Atividade,
+        quantidade_gramas: int
+    ) -> Tuple[bool, Optional[ArmarioEsqueleto], Optional[datetime], Optional[datetime]]:
         """
-        🗂️ Tenta alocar backward dentro da janela, com base em FIP e níveis de tela necessários.
-        Retorna:
-        - "SUCESSO" se conseguiu alocar
-        - "ERRO_OCUPACAO" se nenhum armário tinha espaço suficiente
+        🔳 Faz a alocação utilizando backward scheduling por FIP.
+        Converte a quantidade de gramas para níveis de tela automaticamente.
+        Retorna (True, equipamento, inicio_real, fim_real) se sucesso.
+        Caso contrário: (False, None, None, None)
         """
-
         duracao = atividade.duracao
-        quantidade_gramas = atividade.quantidade_produto
-        niveis_necessarios = gramas_para_niveis_tela(quantidade_gramas)
-
-        armarios_ordenados = sorted(
-            self.armarios,
-            key=lambda armario: atividade.fips_equipamentos.get(armario, 999)
-        )
-
+        equipamentos_ordenados = self._ordenar_por_fip(atividade)
         horario_final_tentativa = fim
 
-        while horario_final_tentativa - duracao >= inicio:
-            horario_inicial_tentativa = horario_final_tentativa - duracao
+        logger.info(
+            f"🌟 Tentando alocar atividade {atividade.id} ({quantidade_gramas}g | {duracao}) entre "
+            f"{inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}"
+        )
+        niveis_necessarios = gramas_para_niveis_tela(quantidade_gramas)
 
-            for armario in armarios_ordenados:
-                if not armario.verificar_espaco_niveis(
-                    niveis_necessarios, horario_inicial_tentativa, horario_final_tentativa
-                ):
-                    logger.info(
-                        f"❌ Armário {armario.nome} sem espaço entre "
-                        f"{horario_inicial_tentativa.strftime('%H:%M')} e {horario_final_tentativa.strftime('%H:%M')}."
-                    )
+        while horario_final_tentativa - duracao >= inicio:
+            horario_inicio_tentativa = horario_final_tentativa - duracao
+
+            for armario in equipamentos_ordenados:
+                if not armario.verificar_espaco_niveis(niveis_necessarios, horario_inicio_tentativa, horario_final_tentativa):
                     continue
 
-                ocupacao_id = self.gerador_ocupacao_id.gerar_id()
                 sucesso = armario.ocupar_niveis(
-                    ocupacao_id=ocupacao_id,
                     atividade_id=atividade.id,
                     quantidade=niveis_necessarios,
-                    inicio=horario_inicial_tentativa,
+                    inicio=horario_inicio_tentativa,
                     fim=horario_final_tentativa
                 )
 
                 if sucesso:
+                    atividade.equipamento_alocado = armario
+                    atividade.equipamentos_selecionados = [armario]
+                    atividade.alocada = True
+
                     logger.info(
-                        f"✅ Armário {armario.nome} alocado para Atividade {atividade.id} "
-                        f"com {niveis_necessarios} níveis de {horario_inicial_tentativa.strftime('%H:%M')} "
-                        f"até {horario_final_tentativa.strftime('%H:%M')}."
+                        f"✅ Atividade {atividade.id} alocada no armário {armario.nome} | "
+                        f"{horario_inicio_tentativa.strftime('%H:%M')} → {horario_final_tentativa.strftime('%H:%M')} | "
+                        f"{niveis_necessarios} níveis"
                     )
-                    return "SUCESSO", armario, horario_inicial_tentativa, horario_final_tentativa
+                    return True, armario, horario_inicio_tentativa, horario_final_tentativa
 
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Nenhum armário pôde ser alocado para a atividade {atividade.id} "
-            f"com {niveis_necessarios} níveis entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            f"❌ Atividade {atividade.id} não alocada entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}"
         )
-        return "ERRO_OCUPACAO", None, None, None
+        return False, None, None, None
 
     # ==========================================================
-    # 🔓 Liberações
+    # 🧹 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, atividade: Atividade):
+    def liberar_por_atividade(self, atividade: Atividade) -> None:
+        logger.info(f"🧹 Liberando níveis da atividade {atividade.id} em todos os armários.")
         for armario in self.armarios:
             armario.liberar_por_atividade(atividade.id)
 
-    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime) -> None:
+        logger.info(f"🔄 Liberando ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
         for armario in self.armarios:
             armario.liberar_ocupacoes_finalizadas(horario_atual)
 
-    def liberar_todas_ocupacoes(self):
+    def liberar_todas_ocupacoes(self) -> None:
+        logger.info("🧼 Liberando todas as ocupações de todos os armários.")
         for armario in self.armarios:
             armario.liberar_todas_ocupacoes()
-
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
-        for armario in self.armarios:
-            armario.liberar_intervalo(inicio, fim)
 
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
-    def mostrar_agenda(self):
+    def mostrar_agenda(self) -> None:
         logger.info("==============================================")
-        logger.info("📅 Agenda dos Armários Esqueleto")
+        logger.info("📅 Agenda dos Armários para Fermentação")
         logger.info("==============================================")
         for armario in self.armarios:
             armario.mostrar_agenda()

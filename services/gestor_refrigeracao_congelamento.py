@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from models.equips.camara_refrigerada import CamaraRefrigerada
+from models.equips.freezer import Freezer
 from models.atividade_base import Atividade
 from utils.conversores_ocupacao import gramas_para_caixas, gramas_para_niveis_tela
-from utils.gerador_ocupacao import GeradorDeOcupacaoID
 from utils.logger_factory import setup_logger
+import unicodedata
 
 # ❄️ Logger específico
 logger = setup_logger('GestorRefrigeracaoCongelamento')
 
+RefrigeradoresCongeladores = Union[CamaraRefrigerada, Freezer]
 
 class GestorRefrigeracaoCongelamento:
     """
@@ -16,60 +18,77 @@ class GestorRefrigeracaoCongelamento:
     Retorno padrão: (sucesso: bool, equipamento, inicio, fim)
     """
 
-    def __init__(self, equipamentos: List[CamaraRefrigerada]):
+    def __init__(self, equipamentos: List[RefrigeradoresCongeladores]):
         self.equipamentos = equipamentos
-        self.gerador_ocupacao_id = GeradorDeOcupacaoID()
+
+    def _ordenar_por_fip(self, atividade: Atividade) -> List[RefrigeradoresCongeladores]:
+        ordenadas = sorted(
+            self.equipamentos,
+            key=lambda m: atividade.fips_equipamentos.get(m, 999)
+        )
+        logger.info("📊 Ordem dos refrigeradores/congeladores por FIP (prioridade):")
+        for m in ordenadas:
+            fip = atividade.fips_equipamentos.get(m, 999)
+            logger.info(f"🔹 {m.nome} (FIP: {fip})")
+        return ordenadas
 
     def alocar(
         self,
         inicio: datetime,
         fim: datetime,
         atividade: Atividade,
-        temperatura_desejada: int
-    ) -> Tuple[bool, Optional[CamaraRefrigerada], Optional[datetime], Optional[datetime]]:
+        quantidade_produto: int
+    ) -> Tuple[bool, Optional[RefrigeradoresCongeladores], Optional[datetime], Optional[datetime]]:
         """
         ❄️ Faz a alocação utilizando backward scheduling.
         Retorna (True, equipamento, inicio_real, fim_real) se sucesso.
         Caso contrário: (False, None, None, None)
         """
-
         duracao = atividade.duracao
-        quantidade_gramas = atividade.quantidade_produto
+        atividade.quantidade_produto = quantidade_produto
 
-        if atividade.tipo_ocupacao == "CAIXAS":
-            quantidade_ocupacao = gramas_para_caixas(quantidade_gramas)
-            metodo_verificacao = "verificar_espaco_caixas"
-            metodo_ocupar = "ocupar_caixas"
-        elif atividade.tipo_ocupacao == "NIVEIS_TELA":
-            quantidade_ocupacao = gramas_para_niveis_tela(quantidade_gramas)
-            metodo_verificacao = "verificar_espaco_niveis"
-            metodo_ocupar = "ocupar_niveis"
-        else:
-            raise ValueError("❌ Tipo de ocupação inválido. Use 'CAIXAS' ou 'NIVEIS_TELA'.")
-
-        equipamentos_ordenados = sorted(
-            self.equipamentos,
-            key=lambda eq: atividade.fips_equipamentos.get(eq, 999)
-        )
-
+        equipamentos_ordenados = self._ordenar_por_fip(atividade)
         horario_final_tentativa = fim
-
-        logger.info(
-            f"🎯 Iniciando tentativa de alocação da atividade {atividade.id} "
-            f"({quantidade_gramas}g | {duracao}) entre "
-            f"{inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} | Temp: {temperatura_desejada}°C"
-        )
 
         while horario_final_tentativa - duracao >= inicio:
             horario_inicio_tentativa = horario_final_tentativa - duracao
 
             for equipamento in equipamentos_ordenados:
+                temperatura_desejada = self._obter_faixa_temperatura(atividade, equipamento)
+                tipo_armazenamento = self._obter_tipo_armazenamento(atividade, equipamento)
+
+                logger.info(
+                    f"🌟 Tentando alocar Atividade {atividade.id} em {equipamento.nome} "
+                    f"({quantidade_produto}g | {duracao}) entre "
+                    f"{horario_inicio_tentativa.strftime('%H:%M')} e {horario_final_tentativa.strftime('%H:%M')} "
+                    f"| Temp: {temperatura_desejada if temperatura_desejada is not None else 'N/A'}°C"
+                )
+
+                if tipo_armazenamento not in {"CAIXAS", "NIVEIS_TELA"}:
+                    logger.warning(
+                        f"⚠️ Tipo de armazenamento inválido ou ausente para {equipamento.nome}: {tipo_armazenamento}"
+                    )
+                    continue
+
+                if tipo_armazenamento == "CAIXAS":
+                    quantidade_ocupacao = gramas_para_caixas(quantidade_produto)
+                    metodo_verificacao = "verificar_espaco_caixas"
+                    metodo_ocupar = "ocupar_caixas"
+                else:  # tipo_armazenamento == "NIVEIS_TELA"
+                    quantidade_ocupacao = gramas_para_niveis_tela(quantidade_produto)
+                    metodo_verificacao = "verificar_espaco_niveis"
+                    metodo_ocupar = "ocupar_niveis"
+
+                if temperatura_desejada is None:
+                    logger.warning(f"⚠️ Temperatura desejada não definida para {equipamento.nome}.")
+                    continue
+
                 if not equipamento.verificar_compatibilidade_de_temperatura(
                     horario_inicio_tentativa, horario_final_tentativa, temperatura_desejada
                 ):
                     continue
 
-                if equipamento.selecionar_faixa_temperatura(temperatura_desejada) == "ERRO_TEMPERATURA":
+                if not equipamento.selecionar_faixa_temperatura(temperatura_desejada):
                     continue
 
                 if not getattr(equipamento, metodo_verificacao)(
@@ -77,9 +96,7 @@ class GestorRefrigeracaoCongelamento:
                 ):
                     continue
 
-                ocupacao_id = self.gerador_ocupacao_id.gerar_id()
                 sucesso = getattr(equipamento, metodo_ocupar)(
-                    ocupacao_id=ocupacao_id,
                     atividade_id=atividade.id,
                     quantidade=quantidade_ocupacao,
                     inicio=horario_inicio_tentativa,
@@ -105,6 +122,55 @@ class GestorRefrigeracaoCongelamento:
             f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
+
+
+
+    def _obter_faixa_temperatura(self, atividade: Atividade, equipamento) -> Optional[int]:
+        """
+        🌡️ Busca no JSON a faixa de temperatura configurada para o equipamento específico.
+        """
+        try:
+            if hasattr(atividade, "configuracoes_equipamentos"):
+                nome_bruto = equipamento.nome.lower().replace(" ", "_")
+                nome_chave = unicodedata.normalize("NFKD", nome_bruto).encode("ASCII", "ignore").decode("utf-8")
+                
+                logger.debug(f"🔎 Procurando faixa de temperatura para: '{nome_chave}'")
+                logger.debug(f"🗂️ Chaves disponíveis: {list(atividade.configuracoes_equipamentos.keys())}")
+
+                config = atividade.configuracoes_equipamentos.get(nome_chave)
+                if config and "faixa_temperatura" in config:
+                    faixa_temp = int(config["faixa_temperatura"])
+                    logger.debug(f"✅ Faixa de temperatura encontrada para {nome_chave}: {faixa_temp}")
+                    return faixa_temp
+                else:
+                    logger.debug(f"❌ Nenhuma faixa de temperatura definida para: '{nome_chave}'")
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao tentar obter faixa de temperatura para {equipamento.nome}: {e}")
+        return None
+
+    def _obter_tipo_armazenamento(self, atividade: Atividade, equipamento) -> Optional[str]:
+        """
+        📦 Busca no JSON o tipo de armazenamento (CAIXAS, NIVEIS_TELA, etc.) para o equipamento específico.
+        """
+        try:
+            if hasattr(atividade, "configuracoes_equipamentos"):
+                nome_bruto = equipamento.nome.lower().replace(" ", "_")
+                nome_chave = unicodedata.normalize("NFKD", nome_bruto).encode("ASCII", "ignore").decode("utf-8")
+                
+                logger.debug(f"🔎 Procurando tipo de armazenamento para: '{nome_chave}'")
+                logger.debug(f"🗂️ Chaves disponíveis: {list(atividade.configuracoes_equipamentos.keys())}")
+
+                config = atividade.configuracoes_equipamentos.get(nome_chave)
+                if config and "tipo_de_armazenamento" in config:
+                    tipo = str(config["tipo_de_armazenamento"]).upper()
+                    logger.debug(f"✅ Tipo de armazenamento encontrado para {nome_chave}: {tipo}")
+                    return tipo
+                else:
+                    logger.debug(f"❌ Nenhum tipo de armazenamento definido para: '{nome_chave}'")
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao tentar obter tipo de armazenamento para {equipamento.nome}: {e}")
+        return None
+
 
     # ==========================================================
     # 🔓 Liberações

@@ -1,27 +1,29 @@
 from models.equips.equipamento import Equipamento
 from enums.tipo_setor import TipoSetor
 from enums.tipo_equipamento import TipoEquipamento
-from enums.tipo_atividade import TipoAtividade
 from typing import List, Tuple
 from datetime import datetime
+from utils.logger_factory import setup_logger
+
+# 🔳 Logger específico para o ArmárrioFermentador
+logger = setup_logger('ArmarioFermentador')
 
 
 class ArmarioFermentador(Equipamento):
     """
-    Classe que representa um Armário de Fermentação.
-    Controle da ocupação por níveis de tela.
+    🔳 Representa um ArmárrioFermentador para fermentação.
+    ✔️ Armazenamento exclusivo por níveis de tela.
+    ✔️ Sem controle de temperatura.
+    ✔️ Sem sobreposição de ocupação além do limite de níveis.
     """
 
-    # =============================================
-    # 🔧 Inicialização
-    # =============================================
     def __init__(
         self,
         id: int,
         nome: str,
         setor: TipoSetor,
         nivel_tela_min: int,
-        nivel_tela_max: int
+        nivel_tela_max: int,
     ):
         super().__init__(
             id=id,
@@ -29,68 +31,145 @@ class ArmarioFermentador(Equipamento):
             tipo_equipamento=TipoEquipamento.ARMARIOS_PARA_FERMENTACAO,
             setor=setor,
             numero_operadores=0,
-            status_ativo=True
+            status_ativo=True,
         )
 
         self.nivel_tela_min = nivel_tela_min
         self.nivel_tela_max = nivel_tela_max
-        self.nivel_tela_atual = 0
-        self.ocupacao: List[Tuple[datetime, datetime, TipoAtividade]] = []
 
-    # =============================================
-    # 🗂️ Ocupação por Níveis de Tela
-    # =============================================
-    def ocupar(self, niveis: int) -> bool:
+        # 📦 Ocupações: (atividade_id, quantidade, inicio, fim)
+        self.ocupacao_niveis: List[Tuple[int, int, datetime, datetime]] = []
+
+    # ==========================================================
+    # 🔍 Consulta de disponibilidade
+    # ==========================================================
+    def niveis_disponiveis(self, inicio: datetime, fim: datetime) -> int:
         """
-        Ocupa uma quantidade de níveis de tela.
+        🔍 Calcula a quantidade de níveis disponíveis entre o intervalo informado.
         """
-        if self.nivel_tela_atual + niveis > self.nivel_tela_max:
-            print(
-                f"❌ {self.nome} | Não é possível ocupar {niveis} níveis. "
-                f"Capacidade máxima: {self.nivel_tela_max}. Ocupados atualmente: {self.nivel_tela_atual}."
+        ocupadas = sum(
+            qtd for (_, qtd, ini, f) in self.ocupacao_niveis
+            if not (fim <= ini or inicio >= f)
+        )
+        return self.nivel_tela_max - ocupadas
+
+    def verificar_espaco_niveis(self, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+        """
+        ✅ Verifica se há espaço suficiente para armazenar a quantidade desejada de níveis.
+        """
+        return self.niveis_disponiveis(inicio, fim) >= quantidade
+
+    # ==========================================================
+    # 🔐 Ocupação
+    # ==========================================================
+    def ocupar_niveis(
+        self,
+        atividade_id: int,
+        quantidade: int,
+        inicio: datetime,
+        fim: datetime
+    ) -> bool:
+        """
+        🔐 Realiza a ocupação dos níveis de tela no intervalo solicitado.
+        """
+        if not self.verificar_espaco_niveis(quantidade, inicio, fim):
+            logger.warning(
+                f"❌ Níveis insuficientes no 🔳 {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
             )
             return False
 
-        self.nivel_tela_atual += niveis
-        print(
-            f"✅ {self.nome} | Ocupou {niveis} níveis. "
-            f"Ocupação atual: {self.nivel_tela_atual}/{self.nivel_tela_max}."
+        self.ocupacao_niveis.append((atividade_id, quantidade, inicio, fim))
+
+        logger.info(
+            f"📥 Ocupação registrada no 🔳 {self.nome} | "
+            f"Atividade {atividade_id} | {quantidade} níveis | "
+            f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}."
         )
         return True
 
-    def liberar(self, niveis: int) -> bool:
+    # ==========================================================
+    # 🧹 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, atividade_id: int):
         """
-        Libera uma quantidade de níveis de tela.
+        🧹 Libera todas as ocupações associadas à atividade.
         """
-        self.nivel_tela_atual -= niveis
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (aid, qtd, ini, fim)
+            for (aid, qtd, ini, fim) in self.ocupacao_niveis
+            if aid != atividade_id
+        ]
+        logger.info(
+            f"🧹 Liberadas {antes - len(self.ocupacao_niveis)} ocupações do 🔳 {self.nome} para atividade {atividade_id}."
+        )
 
-        if self.nivel_tela_atual < 0:
-            print(
-                f"⚠️ {self.nome} | Tentou liberar {niveis} níveis, excedendo o ocupado. "
-                "Resetando ocupação para 0."
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        """
+        🔄 Libera ocupações finalizadas até o horário atual.
+        """
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (aid, qtd, ini, fim)
+            for (aid, qtd, ini, fim) in self.ocupacao_niveis
+            if fim > horario_atual
+        ]
+        logger.info(
+            f"🕒 {antes - len(self.ocupacao_niveis)} ocupações finalizadas liberadas no 🔳 {self.nome} até {horario_atual.strftime('%H:%M')}."
+        )
+
+    def liberar_todas_ocupacoes(self):
+        """
+        🧼 Remove todas as ocupações do armário.
+        """
+        total = len(self.ocupacao_niveis)
+        self.ocupacao_niveis.clear()
+        logger.info(f"🧼 Todas as {total} ocupações do 🔳 {self.nome} foram removidas.")
+
+    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+        """
+        ⏱️ Libera todas as ocupações dentro do intervalo solicitado.
+        """
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (aid, qtd, ini, f)
+            for (aid, qtd, ini, f) in self.ocupacao_niveis
+            if not (ini >= inicio and f <= fim)
+        ]
+        logger.info(
+            f"🧹 Liberadas {antes - len(self.ocupacao_niveis)} ocupações do 🔳 {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+        )
+
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
+    def mostrar_agenda(self):
+        """
+        📅 Exibe a agenda atual do armário.
+        """
+        logger.info("==============================================")
+        logger.info(f"📅 Agenda do 🔳 {self.nome}")
+        logger.info("==============================================")
+
+        if not self.ocupacao_niveis:
+            logger.info("🔹 Nenhuma ocupação registrada.")
+            return
+
+        for (aid, qtd, ini, fim) in self.ocupacao_niveis:
+            logger.info(
+                f"🗂️ Atividade {aid} | {qtd} níveis | "
+                f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
             )
-            self.nivel_tela_atual = 0
-            return False
 
-        print(
-            f"🟩 {self.nome} | Liberou {niveis} níveis. "
-            f"Ocupação atual: {self.nivel_tela_atual}/{self.nivel_tela_max}."
-        )
-        return True
-
-    def niveis_disponiveis(self) -> int:
-        """
-        Retorna o número de níveis de tela disponíveis para ocupação.
-        """
-        return self.nivel_tela_max - self.nivel_tela_atual
-
-    # =============================================
-    # 🔍 Status e Visualização
-    # =============================================
+    # ==========================================================
+    # 🔍 Status
+    # ==========================================================
     def __str__(self):
+        ocupadas = sum(
+            qtd for (_, qtd, _, _) in self.ocupacao_niveis
+        )
         return (
-            super().__str__() +
-            f"\n🗂️ Níveis de Tela Ocupados: {self.nivel_tela_atual}/{self.nivel_tela_max}"
-            f"\n🧠 Níveis Disponíveis: {self.niveis_disponiveis()}"
-            f"\n🟦 Status: {'Ocupado' if self.nivel_tela_atual > 0 else 'Disponível'}"
+            f"\n🔳 ArmárrioFermentador: {self.nome} (ID: {self.id})"
+            f"\nSetor: {self.setor.name} | Status: {'Ativo' if self.status_ativo else 'Inativo'}"
+            f"\nNíveis Ocupados: {ocupadas}/{self.nivel_tela_max}"
         )

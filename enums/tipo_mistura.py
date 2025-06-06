@@ -8,4 +8,4 @@ class TipoMistura(Enum):
     SEMI_RAPIDA = "Semi-rápida"
 
     def __str__(self):
-        return self.name.capitalize()
+        return self.value

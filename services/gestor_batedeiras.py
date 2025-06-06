@@ -1,29 +1,29 @@
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 from models.equips.batedeira_industrial import BatedeiraIndustrial
+from models.equips.batedeira_planetaria import BatedeiraPlanetaria
 from models.atividade_base import Atividade
-from utils.gerador_ocupacao import GeradorDeOcupacaoID
 from utils.logger_factory import setup_logger
-
-
+import unicodedata
 # 🏭 Logger específico para o gestor de batedeiras
 logger = setup_logger('GestorBatedeiras')
+
+Batedeira = Union[BatedeiraIndustrial, BatedeiraPlanetaria]
 
 
 class GestorBatedeiras:
     """
-    🏭 Gestor especializado para controle de batedeiras industriais,
+    🏭 Gestor especializado para controle de batedeiras industriais e planetárias,
     utilizando backward scheduling com prioridade por FIP.
     """
 
-    def __init__(self, batedeiras: List[BatedeiraIndustrial]):
+    def __init__(self, batedeiras: List[Batedeira]):
         self.batedeiras = batedeiras
-        self.gerador_ocupacao_id = GeradorDeOcupacaoID()
 
     # ==========================================================
     # 🧠 Ordenação por FIP
     # ==========================================================
-    def _ordenar_por_fip(self, atividade: Atividade) -> List[BatedeiraIndustrial]:
+    def _ordenar_por_fip(self, atividade: Atividade) -> List[Batedeira]:
         ordenadas = sorted(
             self.batedeiras,
             key=lambda b: atividade.fips_equipamentos.get(b, 999)
@@ -35,6 +35,37 @@ class GestorBatedeiras:
         return ordenadas
 
     # ==========================================================
+    # 🔁 Obter velocidade segura
+    # ==========================================================
+   
+
+    def _obter_velocidade(self, atividade: Atividade, batedeira: Batedeira) -> Optional[int]:
+        """
+        🔍 Busca no JSON a velocidade (inteira) configurada para a batedeira específica,
+        retornando None se não encontrar.
+        """
+        try:
+            if hasattr(atividade, "configuracoes_equipamentos"):
+                nome_bruto = batedeira.nome.lower().replace(" ", "_")
+                nome_chave = unicodedata.normalize("NFKD", nome_bruto).encode("ASCII", "ignore").decode("utf-8")
+                
+                logger.debug(f"🔎 Procurando velocidade para: '{nome_chave}'")
+                logger.debug(f"🗂️ Chaves disponíveis: {list(atividade.configuracoes_equipamentos.keys())}")
+
+                config = atividade.configuracoes_equipamentos.get(nome_chave)
+                if config and "velocidade" in config:
+                    velocidade = int(config["velocidade"])
+                    logger.debug(f"✅ Velocidade encontrada para {nome_chave}: {velocidade}")
+                    return velocidade
+                else:
+                    logger.debug(f"❌ Nenhuma velocidade definida para: '{nome_chave}'")
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao tentar obter velocidade para {batedeira.nome}: {e}")
+        return None
+
+
+
+    # ==========================================================
     # 🎯 Alocação backward
     # ==========================================================
     def alocar(
@@ -43,7 +74,7 @@ class GestorBatedeiras:
         fim: datetime,
         atividade: Atividade,
         quantidade: float
-    ) -> Tuple[bool, Optional[BatedeiraIndustrial], Optional[datetime], Optional[datetime]]:
+    ) -> Tuple[bool, Optional[Batedeira], Optional[datetime], Optional[datetime]]:
 
         duracao = atividade.duracao
         horario_final_tentativa = fim
@@ -64,19 +95,18 @@ class GestorBatedeiras:
                     batedeira.validar_capacidade(quantidade)
                     and batedeira.esta_disponivel(horario_inicio_tentativa, horario_final_tentativa)
                 ):
-                    ocupacao_id = self.gerador_ocupacao_id.gerar_id()
+                    velocidade = self._obter_velocidade(atividade, batedeira)
 
                     sucesso = batedeira.ocupar(
-                        ocupacao_id=ocupacao_id,
                         quantidade_gramas=quantidade,
                         inicio=horario_inicio_tentativa,
                         fim=horario_final_tentativa,
-                        atividade_id=atividade.id
+                        atividade_id=atividade.id,
+                        velocidade=velocidade
                     )
                     if sucesso:
-                        atividade.equipamentos_selecionados.append(batedeira)
-                        atividade.inicio_planejado = horario_inicio_tentativa
-                        atividade.fim_planejado = horario_final_tentativa
+                        atividade.equipamento_alocado = batedeira
+                        atividade.equipamentos_selecionados = [batedeira]
                         atividade.alocada = True
 
                         logger.info(
@@ -92,6 +122,7 @@ class GestorBatedeiras:
             f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
+
 
     # ==========================================================
     # 🔓 Liberação
@@ -117,7 +148,7 @@ class GestorBatedeiras:
     # ==========================================================
     # 🔍 Consulta
     # ==========================================================
-    def obter_batedeira_por_id(self, id: int) -> Optional[BatedeiraIndustrial]:
+    def obter_batedeira_por_id(self, id: int) -> Optional[Batedeira]:
         for batedeira in self.batedeiras:
             if batedeira.id == id:
                 return batedeira

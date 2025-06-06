@@ -1,29 +1,27 @@
 from models.equips.equipamento import Equipamento
-from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_setor import TipoSetor
-from enums.tipo_atividade import TipoAtividade
-from typing import List, Tuple
+from enums.tipo_equipamento import TipoEquipamento
+from typing import List, Tuple, Optional
 from datetime import datetime
+from utils.logger_factory import setup_logger
+
+logger = setup_logger('Freezer')
 
 
 class Freezer(Equipamento):
     """
-    Classe que representa um Freezer com controle de ocupação por caixas de 30kg,
-    respeitando limites mínimo e máximo de ocupação.
+    ❄️ Representa um Freezer com controle de ocupação exclusivamente por caixas de 30kg,
+    considerando períodos de tempo e controle de temperatura.
     """
 
-    # ============================================
-    # 🔧 Inicialização
-    # ============================================
     def __init__(
         self,
         id: int,
         nome: str,
         setor: TipoSetor,
-        capacidade_caixa_30kg_min: int,
-        capacidade_caixa_30kg_max: int,
+        capacidade_caixa_30kg: int,
         faixa_temperatura_min: int,
-        faixa_temperatura_max: int,
+        faixa_temperatura_max: int
     ):
         super().__init__(
             id=id,
@@ -31,108 +29,126 @@ class Freezer(Equipamento):
             tipo_equipamento=TipoEquipamento.REFRIGERACAO_CONGELAMENTO,
             setor=setor,
             numero_operadores=0,
-            status_ativo=True,
+            status_ativo=True
         )
 
-        self.capacidade_caixa_30kg_min = capacidade_caixa_30kg_min
-        self.capacidade_caixa_30kg_max = capacidade_caixa_30kg_max
-        self.capacidade_caixa_30kg_atual = 0
+        self.capacidade_caixa_30kg = capacidade_caixa_30kg
+        self.ocupacao_caixas: List[Tuple[int, datetime, datetime]] = []
 
         self.faixa_temperatura_min = faixa_temperatura_min
         self.faixa_temperatura_max = faixa_temperatura_max
-        self.faixa_temperatura_atual = 0
+        self.faixa_temperatura_atual = None
 
-        self.ocupacao: List[Tuple[datetime, datetime, TipoAtividade]] = []
+        # Histórico: (atividade_id, quantidade, inicio, fim, temperatura)
+        self.historico_temperatura: List[Tuple[int, int, datetime, datetime, Optional[int]]] = []
 
-    # ============================================
-    # 📦 Métodos de Ocupação por Caixa
-    # ============================================
-    def ocupar_caixas(self, quantidade_caixas: int) -> bool:
-        """
-        Ocupa caixas no freezer, respeitando limites mínimo e máximo.
-        """
-        if quantidade_caixas < self.capacidade_caixa_30kg_min:
-            print(
-                f"❌ Ocupação mínima não atendida. "
-                f"Quantidade informada: {quantidade_caixas}. "
-                f"Mínimo exigido: {self.capacidade_caixa_30kg_min} caixas."
+    # ==========================================================
+    # 🌡️ Controle de Temperatura
+    # ==========================================================
+    def registrar_temperatura(self, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime):
+        self.historico_temperatura.append((atividade_id, quantidade, inicio, fim, self.faixa_temperatura_atual))
+        logger.info(
+            f"🌡️ Temperatura {self.faixa_temperatura_atual}°C registrada para Atividade {atividade_id} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} no {self.nome}."
+        )
+
+    def verificar_compatibilidade_de_temperatura(
+        self,
+        inicio: datetime,
+        fim: datetime,
+        temperatura_desejada: int
+    ) -> bool:
+        conflitos = [
+            temp for (_, _, ini, f, temp) in self.historico_temperatura
+            if not (fim <= ini or inicio >= f)
+        ]
+        return all(temp == temperatura_desejada for temp in conflitos) if conflitos else True
+
+    def selecionar_faixa_temperatura(self, temperatura_desejada: int) -> bool:
+        if self.faixa_temperatura_atual == temperatura_desejada and self.faixa_temperatura_atual is not None:
+            return True
+
+        ocupacoes_ativas = [
+            (qtd, ini, fim) for (qtd, ini, fim) in self.ocupacao_caixas
+            if ini <= datetime.now() <= fim
+        ]
+
+        if ocupacoes_ativas:
+            logger.warning(
+                f"⚠️ Não é possível ajustar a temperatura do {self.nome} para {temperatura_desejada}°C. "
+                f"Temperatura atual: {self.faixa_temperatura_atual}°C, há ocupações ativas."
             )
             return False
 
-        if self.capacidade_caixa_30kg_atual + quantidade_caixas > self.capacidade_caixa_30kg_max:
-            print(
-                f"❌ Ocupação excede a capacidade máxima do Freezer {self.nome}. "
-                f"Disponível: {self.caixas_disponiveis()} caixas."
-            )
-            return False
-
-        self.capacidade_caixa_30kg_atual += quantidade_caixas
-        print(
-            f"✅ Ocupou {quantidade_caixas} caixas no Freezer {self.nome}. "
-            f"Ocupação atual: {self.capacidade_caixa_30kg_atual}/{self.capacidade_caixa_30kg_max}."
+        self.faixa_temperatura_atual = temperatura_desejada
+        logger.info(
+            f"🌡️ Freezer {self.nome} estava vazio. Temperatura ajustada para {temperatura_desejada}°C."
         )
         return True
 
-    def liberar_caixas(self, quantidade_caixas: int) -> bool:
-        """
-        Libera caixas do freezer.
-        """
-        if self.capacidade_caixa_30kg_atual - quantidade_caixas < 0:
-            print(
-                f"❌ Não é possível liberar {quantidade_caixas} caixas. "
-                f"Apenas {self.capacidade_caixa_30kg_atual} estão ocupadas."
-            )
-            return False
-
-        self.capacidade_caixa_30kg_atual -= quantidade_caixas
-        print(
-            f"🟩 Liberou {quantidade_caixas} caixas do Freezer {self.nome}. "
-            f"Ocupação atual: {self.capacidade_caixa_30kg_atual}/{self.capacidade_caixa_30kg_max}."
+    # ==========================================================
+    # 📦 Ocupação por Caixas
+    # ==========================================================
+    def verificar_espaco_caixas(self, quantidade_caixas: int, inicio: datetime, fim: datetime) -> bool:
+        ocupadas = sum(
+            qtd for (qtd, ini, f) in self.ocupacao_caixas
+            if not (fim <= ini or inicio >= f)
         )
+        return (ocupadas + quantidade_caixas) <= self.capacidade_caixa_30kg
+
+    def ocupar_caixas(self, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+        if not self.verificar_espaco_caixas(quantidade, inicio, fim):
+            return False
+        self.ocupacao_caixas.append((quantidade, inicio, fim))
+        self.registrar_temperatura(atividade_id, quantidade, inicio, fim)
         return True
 
-    def liberar_todas_as_caixas(self):
-        """
-        Libera todas as caixas ocupadas no freezer.
-        """
-        print(
-            f"🟩 Liberou todas as {self.capacidade_caixa_30kg_atual} caixas do Freezer {self.nome}."
-        )
-        self.capacidade_caixa_30kg_atual = 0
+    # ==========================================================
+    # 🔓 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, atividade_id: int):
+        self.historico_temperatura = [
+            (aid, qtd, ini, fim, temp)
+            for (aid, qtd, ini, fim, temp) in self.historico_temperatura
+            if aid != atividade_id
+        ]
 
-    def caixas_disponiveis(self) -> int:
-        """
-        Retorna o número de caixas ainda disponíveis.
-        """
-        return self.capacidade_caixa_30kg_max - self.capacidade_caixa_30kg_atual
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        self.ocupacao_caixas = [(qtd, ini, fim) for (qtd, ini, fim) in self.ocupacao_caixas if fim > horario_atual]
+        self.historico_temperatura = [
+            (aid, qtd, ini, fim, temp)
+            for (aid, qtd, ini, fim, temp) in self.historico_temperatura if fim > horario_atual
+        ]
 
-    # ============================================
-    # 🌡️ Controle da Temperatura
-    # ============================================
-    def selecionar_faixa_temperatura(self, temperatura: int) -> bool:
-        """
-        Seleciona a temperatura do freezer dentro dos limites permitidos.
-        """
-        if temperatura > self.faixa_temperatura_max or temperatura < self.faixa_temperatura_min:
-            print(
-                f"❌ Temperatura {temperatura}°C fora da faixa permitida "
-                f"({self.faixa_temperatura_min}°C a {self.faixa_temperatura_max}°C)."
+    def liberar_todas_ocupacoes(self):
+        self.ocupacao_caixas.clear()
+        self.historico_temperatura.clear()
+
+    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+        self.ocupacao_caixas = [
+            (qtd, ini, f) for (qtd, ini, f) in self.ocupacao_caixas
+            if not (ini >= inicio and f <= fim)
+        ]
+        self.historico_temperatura = [
+            (aid, qtd, ini, f, temp)
+            for (aid, qtd, ini, f, temp) in self.historico_temperatura
+            if not (ini >= inicio and f <= fim)
+        ]
+
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
+    def mostrar_agenda(self):
+        logger.info(f"==============================================")
+        logger.info(f"📅 Agenda do {self.nome}")
+        logger.info(f"==============================================")
+
+        if not self.historico_temperatura:
+            logger.info("🔹 Nenhuma ocupação registrada.")
+            return
+
+        for (atividade_id, quantidade, inicio, fim, temp) in self.historico_temperatura:
+            logger.info(
+                f"❄️ Atividade {atividade_id} | Caixas: {quantidade} unidades | "
+                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Temperatura: {temp}°C"
             )
-            return False
-
-        self.faixa_temperatura_atual = temperatura
-        print(
-            f"🌡️ Temperatura ajustada para {temperatura}°C no Freezer {self.nome}."
-        )
-        return True
-
-    # ============================================
-    # 🔍 Visualização e Status
-    # ============================================
-    def __str__(self):
-        return (
-            super().__str__() +
-            f"\n📦 Capacidade (caixas de 30kg): {self.capacidade_caixa_30kg_min} mín. / {self.capacidade_caixa_30kg_max} máx."
-            f"\n📦 Caixas ocupadas: {self.capacidade_caixa_30kg_atual} | Disponíveis: {self.caixas_disponiveis()}"
-            f"\n🌡️ Temperatura: {self.faixa_temperatura_atual}°C | Faixa permitida: {self.faixa_temperatura_min}°C a {self.faixa_temperatura_max}°C"
-        )

@@ -1,170 +1,120 @@
-from models.equips.equipamento import Equipamento
+from datetime import datetime
+from typing import List, Optional
 from enums.tipo_velocidade import TipoVelocidade
-from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_mistura import TipoMistura
 from enums.tipo_setor import TipoSetor
-from datetime import datetime
-from typing import List, Tuple
+from enums.tipo_equipamento import TipoEquipamento
 from utils.logger_factory import setup_logger
 
-
-# 🔥 Logger específico da Masseira
-logger = setup_logger('Masseira')
+logger = setup_logger("Masseira")
 
 
-class Masseira(Equipamento):
-    """
-    🌀 Classe que representa uma Masseira (Misturadora).
-    ✔️ Controle temporal e de capacidade (mínima e máxima).
-    ✔️ Ocupação exclusiva por janela de tempo.
-    """
-
+class Masseira:
     def __init__(
         self,
         id: int,
         nome: str,
         setor: TipoSetor,
-        capacidade_gramas_max: int,
-        capacidade_gramas_min: int,
-        ritmo_execucao: TipoMistura,
-        velocidades_suportadas: List[TipoVelocidade],
+        capacidade_gramas_min: float,
+        capacidade_gramas_max: float,
+        velocidades_suportadas: Optional[List[TipoVelocidade]] = None,
+        tipos_de_mistura_suportados: Optional[List[TipoMistura]] = None
     ):
-        super().__init__(
-            id=id,
-            nome=nome,
-            setor=setor,
-            tipo_equipamento=TipoEquipamento.MISTURADORAS,
-            numero_operadores=1,
-            status_ativo=True,
-        )
-
-        self.capacidade_gramas_max = capacidade_gramas_max
+        self.id = id
+        self.nome = nome
+        self.setor = setor
+        self.tipo_equipamento = TipoEquipamento.MISTURADORAS  # ✅ usado por atividades genéricas
         self.capacidade_gramas_min = capacidade_gramas_min
-        self.ritmo_execucao = ritmo_execucao
-        self.velocidades_suportadas = velocidades_suportadas
-        self.velocidade_atual = 0
+        self.capacidade_gramas_max = capacidade_gramas_max
+        self.velocidades_suportadas = velocidades_suportadas or []
+        self.tipos_de_mistura_suportados = tipos_de_mistura_suportados or []
+        self.ocupacoes = []
 
-        # 📦 Ocupações: (ocupacao_id, atividade_id, quantidade, inicio, fim)
-        self.ocupacoes: List[Tuple[int, int, float, datetime, datetime]] = []
+    def validar_capacidade(self, quantidade: float) -> bool:
+        if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
+            logger.warning(
+                f"⚠️ Quantidade {quantidade}g fora da faixa permitida pela {self.nome} "
+                f"({self.capacidade_gramas_min}g - {self.capacidade_gramas_max}g)"
+            )
+            return False
+        return True
 
-    # ==========================================================
-    # ✅ Validações
-    # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for _, _, _, ocup_inicio, ocup_fim in self.ocupacoes:
-            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+        for ocupacao in self.ocupacoes:
+            if not (fim <= ocupacao["inicio"] or inicio >= ocupacao["fim"]):
                 return False
         return True
 
-    def validar_capacidade(self, quantidade_gramas: float) -> bool:
-        return self.capacidade_gramas_min <= quantidade_gramas <= self.capacidade_gramas_max
-
-    def selecionar_velocidade(self, velocidade: int) -> bool:
-        if any(v.value == velocidade for v in self.velocidades_suportadas):
-            self.velocidade_atual = velocidade
-            logger.info(f"⚙️ {self.nome} | Velocidade ajustada para {velocidade}.")
-            return True
-        logger.error(
-            f"❌ Velocidade {velocidade} não suportada pela masseira {self.nome}."
-        )
-        return False
-
-    # ==========================================================
-    # 🏗️ Ocupação
-    # ==========================================================
     def ocupar(
         self,
-        ocupacao_id: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
-        atividade_id: int
+        atividade_id: int,
+        velocidades: Optional[List[TipoVelocidade]] = None,
+        tipo_mistura: Optional[TipoMistura] = None
     ) -> bool:
         if not self.validar_capacidade(quantidade_gramas):
-            logger.error(
-                f"❌ {self.nome} | {quantidade_gramas}g fora dos limites "
-                f"({self.capacidade_gramas_min}g - {self.capacidade_gramas_max}g)."
-            )
             return False
 
-        if not self.esta_disponivel(inicio, fim):
-            logger.warning(
-                f"❌ {self.nome} | Ocupada de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-            )
-            return False
+        if velocidades:
+            for v in velocidades:
+                if v not in self.velocidades_suportadas:
+                    logger.warning(f"⚠️ Velocidade {v.name} não suportada pela {self.nome}.")
+                    return False
 
-        self.ocupacoes.append((ocupacao_id, atividade_id, quantidade_gramas, inicio, fim))
+        # 🔒 Validação segura para tipo_mistura
+        if tipo_mistura is not None:
+            if not isinstance(tipo_mistura, TipoMistura):
+                logger.error(f"❌ tipo_mistura inválido recebido: {tipo_mistura} ({type(tipo_mistura)})")
+                return False
+
+            if tipo_mistura not in self.tipos_de_mistura_suportados:
+                logger.warning(f"⚠️ Tipo de mistura {tipo_mistura.name} não suportado pela {self.nome}.")
+                return False
+
+        self.ocupacoes.append({
+            "atividade_id": atividade_id,
+            "quantidade": quantidade_gramas,
+            "inicio": inicio,
+            "fim": fim,
+            "velocidades": [v.name for v in velocidades] if velocidades else [],
+            "tipo_mistura": tipo_mistura.name if tipo_mistura else None
+        })
+
         logger.info(
-            f"🌀 {self.nome} | Ocupação registrada: {quantidade_gramas}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Atividade {atividade_id}, Ocupação ID: {ocupacao_id}) "
-            f"com velocidade {self.velocidade_atual}."
+            f"✅ Masseira {self.nome} ocupada para atividade {atividade_id} "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
         return True
 
-    # ==========================================================
-    # 🔓 Liberação
-    # ==========================================================
-    def liberar(self, inicio: datetime, fim: datetime, atividade_id: int):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            (oid, aid, qtd, ini, f)
-            for (oid, aid, qtd, ini, f) in self.ocupacoes
-            if not (aid == atividade_id and ini == inicio and f == fim)
-        ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(
-                f"🟩 {self.nome} | Ocupação da atividade {atividade_id} removida "
-                f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-            )
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            (oid, aid, qtd, ini, fim)
-            for (oid, aid, qtd, ini, fim) in self.ocupacoes
-            if fim > horario_atual
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(
-                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
-            )
+        self.ocupacoes = [o for o in self.ocupacoes if o["fim"] > horario_atual]
 
-    # ==========================================================
-    # 📅 Agenda
-    # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
-        logger.info("==============================================")
         logger.info(f"📅 Agenda da Masseira {self.nome}")
-        if not self.ocupacoes:
-            logger.info("🔹 Nenhuma ocupação registrada.")
-            return
-        for oid, aid, qtd, ini, fim in self.ocupacoes:
+        logger.info("==============================================")
+
+        todas_ocupacoes = []
+        for ocupacao in self.ocupacoes:
+            todas_ocupacoes.append({
+                "atividade_id": ocupacao["atividade_id"],
+                "quantidade": ocupacao["quantidade"],
+                "inicio": ocupacao["inicio"],
+                "fim": ocupacao["fim"],
+                "velocidades": ocupacao.get("velocidades", []),
+                "tipo_mistura": ocupacao.get("tipo_mistura")
+            })
+
+        todas_ocupacoes.sort(key=lambda o: o["atividade_id"])
+
+        for o in todas_ocupacoes:
+            velocidades_formatadas = ", ".join([v.replace("_", " ").title() for v in o["velocidades"]]) if o["velocidades"] else "-"
+            tipo_mistura_formatado = o["tipo_mistura"].name.replace("_", " ").title() if hasattr(o["tipo_mistura"], "name") else str(o["tipo_mistura"])
             logger.info(
-                f"🔸 Ocupação {oid}: {qtd}g | "
-                f"Início: {ini.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')} | "
-                f"Atividade ID: {aid}"
+                f"🥣 Atividade {o['atividade_id']} | Quantidade: {o['quantidade']}g | "
+                f"{o['inicio'].strftime('%H:%M')} → {o['fim'].strftime('%H:%M')} | "
+                f"Velocidade: {velocidades_formatadas} | Tipo Mistura: {tipo_mistura_formatado}"
             )
-
-    # ==========================================================
-    # 🔄 Reset Geral
-    # ==========================================================
-    def resetar(self):
-        self.ocupacoes.clear()
-        logger.info(f"🔄 {self.nome} | Resetada completamente.")
-
-    # ==========================================================
-    # 🔍 Visualização e Status
-    # ==========================================================
-    def __str__(self):
-        velocidades = ', '.join(v.name for v in self.velocidades_suportadas)
-        return (
-            super().__str__() +
-            f"\n📦 Capacidade Máxima: {self.capacidade_gramas_max}g"
-            f"\n📦 Capacidade Mínima: {self.capacidade_gramas_min}g"
-            f"\n🌀 Ritmo de Execução: {self.ritmo_execucao.name}"
-            f"\n⚙️ Velocidades Suportadas: {velocidades}"
-        )

@@ -1,0 +1,339 @@
+[
+  {
+    "id_subproduto": 1,
+    "nome_produto": "carne_de_sol_refogada",
+    "atividades": [
+      {
+        "id_atividade": 1,
+        "nome": "armazenamento_sob_temperatura_para_carne_de_sol_refogada",
+        "tipo_atividade": "ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CARNE_DE_SOL_REFOGADA",
+        "tipo_equipamento": {
+          "REFRIGERACAO_CONGELAMENTO": 1
+        },
+        "equipamentos_elegiveis": ["camara_refrigerada_2"],
+        "fips_equipamentos": {
+          "camara_refrigerada_2": 1
+        },
+        "configuracoes_equipamentos":{
+          "camara_refrigerada_2": {
+            "faixa_temperatura": -18,
+            "tipo_de_armazenamento": "CAIXAS"
+          }
+        },
+        "tipos_profissionais_permitidos": ["COZINHEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:03:00" },
+          { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:05:00" },
+          { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:07:00" }
+        ]
+      },
+      {
+        "id_atividade": 2,
+        "nome": "preparo_para_armazenamento_de_carne_de_sol_refogada",
+        "tipo_atividade": "PREPARO_PARA_ARMAZENAMENTO_DE_CARNE_DE_SOL_REFOGADA",
+        "tipo_equipamento": {
+          "BANCADAS": 1,
+          "BALANCAS": 1
+        },
+        "equipamentos_elegiveis": ["bancada_7", "balanca_digital_4"],
+        "fips_equipamentos": {
+          "bancada_7": 1,
+          "balanca_digital_4": 1
+        },
+        "configuracoes_equipamentos": {
+          "bancada_7": {
+            "fracoes_necessarias": 2
+          }
+        },
+        "tipos_profissionais_permitidos": ["COZINHEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:05:00" },
+          { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:07:00" },
+          { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:10:00" }
+        ]
+      },
+      {
+        "id_atividade": 3,
+        "nome": "coccao_de_carne_de_sol_cozida_pronta",
+        "tipo_atividade": "COCCAO_DE_CARNE_DE_SOL_COZIDA_PRONTA",
+        "tipo_equipamento": {
+          "FOGOES": 1
+        },
+        "equipamentos_elegiveis": ["fogao_1", "fogao_2"],
+        "fips_equipamentos": {
+          "fogao_1": 2,
+          "fogao_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "fogao_1": {
+            "tipo_chama": ["MEDIA"],
+            "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+          },
+          "fogao_2": {
+            "tipo_chama": ["BAIXA"],
+            "pressao_chama": ["BAIXA_PRESSAO", "CHAMA_UNICA"]
+          }
+        },
+        "tipos_profissionais_permitidos": ["COZINHEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:40:00" },
+          { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:40:00" },
+          { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:40:00" }
+        ]
+      },
+      {
+        "id_atividade": 4,
+        "nome": "armazenamento_sob_temperatura_para_carne_de_sol_refogada_temp_menos_17",
+        "tipo_atividade": "ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CARNE_DE_SOL_REFOGADA",
+        "tipo_equipamento": {
+          "REFRIGERACAO_CONGELAMENTO": 1
+        },
+        "equipamentos_elegiveis": ["camara_refrigerada_2"],
+        "fips_equipamentos": {
+          "camara_refrigerada_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "faixa_temperatura": -17,
+          "tipo_de_armazenamento": "CAIXAS"
+        },
+        "tipos_profissionais_permitidos": ["COZINHEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:03:00" },
+          { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:05:00" },
+          { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:07:00" }
+        ]
+      }
+    ]
+  },
+  {
+    "id_subproduto": 2,
+    "nome_produto": "massa_crocante",
+    "atividades": [
+      {
+        "id_atividade": 5,
+        "nome": "mistura_de_massas_crocantes",
+        "tipo_atividade": "MISTURA_DE_MASSAS_CROCANTES",
+        "tipo_equipamento": {
+          "MISTURADORAS": 1
+        },
+        "equipamentos_elegiveis": ["masseira_1", "masseira_2"],
+        "fips_equipamentos": {
+          "masseira_1": 2,
+          "masseira_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "masseira_1": {
+            "velocidade": ["BAIXA", "MEDIA"],
+            "tipo_mistura": "SEMI_RAPIDA"
+          },
+          "masseira_2": {
+            "velocidade": ["ALTA"],
+            "tipo_mistura": "RAPIDA"
+          }
+        },
+        "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 17000, "duracao": "00:07:00" },
+          { "quantidade_min": 17001, "quantidade_max": 34000, "duracao": "00:11:00" },
+          { "quantidade_min": 34001, "quantidade_max": 60000, "duracao": "00:15:00" }
+        ]
+      }
+    ]
+  },
+  {
+    "id_subproduto": 3,
+    "nome_produto": "massa_para_brownie",
+    "atividades": [
+      {
+        "id_atividade": 6,
+        "nome": "mistura_de_massas_para_brownie",
+        "tipo_atividade": "MISTURAS_DE_MASSA_PARA_BROWNIE",
+        "tipo_equipamento": {
+          "BATEDEIRAS": 1
+        },
+        "equipamentos_elegiveis": ["batedeira_planetaria_1", "batedeira_planetaria_2", "batedeira_industrial_1"],
+        "fips_equipamentos": {
+          "batedeira_planetaria_1": 1,
+          "batedeira_planetaria_2": 1,
+          "batedeira_industrial_1": 2
+        },
+        "configuracoes_equipamentos": {
+          "batedeira_planetaria_1": {
+            "velocidade": 5
+          },
+          "batedeira_planetaria_2": {
+            "velocidade": 5
+          },
+          "batedeira_industrial_1": {
+            "velocidade": 5
+        }
+      },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 6000, "duracao": "00:05:00" },
+          { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:07:00" },
+          { "quantidade_min": 13001, "quantidade_max": 20000, "duracao": "00:09:00" }
+        ]
+      },
+      {
+        "id_atividade": 10,
+        "nome": "coccao_de_massas_para_brownie",
+        "tipo_atividade": "COCCAO_DE_MASSA_PARA_BROWNIE",
+        "tipo_equipamento": {
+          "FORNOS": 1
+        },
+        "equipamentos_elegiveis": ["forno_3", "forno_4"],
+        "fips_equipamentos": {
+          "forno_3": 2,
+          "forno_4": 1
+        },
+        "configuracoes_equipamentos": {
+          "forno_3": {
+            "faixa_temperatura": 180,
+            "tipo_coccao": ["LASTRO"],
+            "vaporizacao": 3       
+          },
+          "forno_4": {
+            "faixa_temperatura": 180,
+            "tipo_coccao": ["LASTRO"],  
+            "velocidade_mps": 2
+          }
+      },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 6000, "duracao": "00:15:00" },
+          { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:15:00" },
+          { "quantidade_min": 13001, "quantidade_max": 20000, "duracao": "00:15:00" }
+        ]
+      }
+    ]
+  },
+  {
+    "id_subproduto": 4,
+    "nome_produto": "massa_para_fritura",
+    "atividades": [
+      {
+        "id_atividade": 7,
+        "nome": "mistura_de_massas_para_fritura",
+        "tipo_atividade": "MISTURAS_DE_MASSAS_PARA_FRITURA",
+        "tipo_equipamento": {
+          "MISTURADORAS_COM_COCCAO": 1
+        },
+        "equipamentos_elegiveis": ["hotmix_1", "hotmix_2"],
+        "fips_equipamentos": {
+          "hotmix_1": 1,
+          "hotmix_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "hotmix_1": {
+            "velocidade": "ALTA",
+            "tipo_chama": "ALTA",
+            "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+          },
+          "hotmix_2": {
+            "velocidade": "ALTA",
+            "tipo_chama": "ALTA",
+            "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+          }
+      },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 2000, "quantidade_max": 10000, "duracao": "00:12:00" },
+          { "quantidade_min": 10001, "quantidade_max": 20000, "duracao": "00:16:00" },
+          { "quantidade_min": 20001, "quantidade_max": 30000, "duracao": "00:20:00" }
+        ]
+      }
+    ]
+  },
+  {
+    "id_subproduto": 5,
+    "nome_produto": "massa_para_bolo_de_chocolate",
+    "atividades": [
+      {
+        "id_atividade": 8,
+        "nome": "preparo_para_coccao_de_massa_para_bolo_de_chocolate",
+        "tipo_atividade": "",
+        "tipo_equipamento": {
+          "BANCADAS": 1,
+          "ARMARIOS_PARA_FERMENTACAO": 1
+        },
+        "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6", "armario_esqueleto_1", "armario_esqueleto_2"],
+        "fips_equipamentos": {
+          "bancada_4": 1,
+          "bancada_5": 2,
+          "bancada_6": 3,
+          "armario_esqueleto_1": 1,
+          "armario_esqueleto_2": 2
+        },
+        "configuracoes_equipamentos": {
+          "bancada_4": {
+            "fracoes_necessarias": 1
+          },
+          "bancada_5": {
+            "fracoes_necessarias": 1
+          },
+          "bancada_6": {
+            "fracoes_necessarias": 1
+          },
+          "armario_esqueleto_1": {
+            "tipo_de_armazenamento": "NIVEIS_TELA"
+          },
+          "armario_esqueleto_2": {
+            "tipo_de_armazenamento": "NIVEIS_TELA"
+          }
+      },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 6000, "duracao": "00:08:00" },
+          { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:16:00" },
+          { "quantidade_min": 13001, "quantidade_max": 20000, "duracao": "00:24:00" }
+        ]
+      }
+    ]
+  },
+  {
+    "id_subproduto": 6,
+    "nome_produto": "massa_para_folhados",
+    "atividades": [
+      {
+        "id_atividade": 9,
+        "nome": "descanso_de_massass_para_folhados",
+        "tipo_atividade": "",
+        "tipo_equipamento": {
+          "REFRIGERACAO_CONGELAMENTO": 1
+        },
+        "equipamentos_elegiveis": ["camara_refrigerada_1", "freezer_2"],
+        "fips_equipamentos": {
+          "camara_refrigerada_1": 2,
+          "freezer_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "camara_refrigerada_1": {
+            "tipo_de_armazenamento": "CAIXAS",
+            "faixa_temperatura": 4
+          },
+          "freezer_2": {
+            "tipo_de_armazenamento": "CAIXAS",
+            "faixa_temperatura": 4
+          }
+      },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 6000, "duracao": "00:01:00" },
+          { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:01:00" },
+          { "quantidade_min": 13001, "quantidade_max": 20000, "duracao": "00:01:00" }
+        ]
+      }
+    ]
+  }
+]

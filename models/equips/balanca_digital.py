@@ -13,7 +13,6 @@ class BalancaDigital(Equipamento):
     ⚖️ Classe que representa uma Balança Digital com controle por peso.
     ✔️ Sem restrição de tempo, permite múltiplas alocações simultâneas.
     ✔️ Cada ocupação é registrada apenas com:
-       - ocupacao_id
        - atividade_id
        - quantidade (em gramas)
     """
@@ -36,25 +35,21 @@ class BalancaDigital(Equipamento):
         )
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
-        self.ocupacoes: List[Tuple[int, int, float]] = []  # (ocupacao_id, atividade_id, quantidade)
+        self.ocupacoes: List[Tuple[int, float]] = []  # (atividade_id, quantidade)
 
     # ==========================================================
     # ✅ Validação de quantidade
     # ==========================================================
     def aceita_quantidade(self, quantidade_gramas: float) -> bool:
-        """
-        ✅ Verifica se a quantidade está dentro da capacidade da balança.
-        """
         return self.capacidade_gramas_min <= quantidade_gramas <= self.capacidade_gramas_max
 
     def validar_peso(self, quantidade_gramas: float) -> bool:
-        # Depreciação interna, mantém compatibilidade
         return self.aceita_quantidade(quantidade_gramas)
 
     # ==========================================================
     # 🏗️ Ocupação
     # ==========================================================
-    def ocupar(self, ocupacao_id: int, atividade_id: int, quantidade: float) -> bool:
+    def ocupar(self, atividade_id: int, quantidade: float) -> bool:
         if not self.aceita_quantidade(quantidade):
             logger.error(
                 f"❌ Peso inválido na balança {self.nome}: {quantidade}g "
@@ -62,11 +57,10 @@ class BalancaDigital(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((ocupacao_id, atividade_id, quantidade))
+        self.ocupacoes.append((atividade_id, quantidade))
         logger.info(
             f"⚖️ Ocupação registrada na balança {self.nome}: "
-            f"atividade {atividade_id}, quantidade {quantidade}g "
-            f"(Ocupação ID: {ocupacao_id})."
+            f"atividade {atividade_id}, quantidade {quantidade}g."
         )
         return True
 
@@ -76,7 +70,7 @@ class BalancaDigital(Equipamento):
     def liberar_por_atividade(self, atividade_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd) for (oid, aid, qtd) in self.ocupacoes
+            (aid, qtd) for (aid, qtd) in self.ocupacoes
             if aid != atividade_id
         ]
         liberadas = antes - len(self.ocupacoes)
@@ -105,8 +99,8 @@ class BalancaDigital(Equipamento):
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
-        for i, (oid, aid, qtd) in enumerate(self.ocupacoes, start=1):
-            logger.info(f"🔸 Ocupação {i} (ID {oid}): {qtd}g | Atividade: {aid}")
+        for i, (aid, qtd) in enumerate(self.ocupacoes, start=1):
+            logger.info(f"⚖️ Atividade: {aid} | Quantidade: {qtd}g")
 
     # ==========================================================
     # 🔍 Status

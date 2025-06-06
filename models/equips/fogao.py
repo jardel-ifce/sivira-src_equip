@@ -3,8 +3,7 @@ from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_setor import TipoSetor
 from enums.tipo_chama import TipoChama
 from enums.tipo_pressao_chama import TipoPressaoChama
-from typing import List, Tuple
-from typing import Optional
+from typing import List, Tuple, Optional
 from datetime import datetime
 from utils.logger_factory import setup_logger
 
@@ -14,8 +13,8 @@ logger = setup_logger('Fogao')
 
 class Fogao(Equipamento):
     """
-    🔥 Classe que representa um Fogão com controle de ocupação por bocas,
-    considerando janelas de tempo e vínculo com IDs de ocupação e atividade.
+    🔥 Fogão com controle de ocupação por boca, permitindo múltiplas atividades simultâneas,
+    desde que cada boca esteja livre no intervalo desejado.
     """
 
     def __init__(
@@ -28,7 +27,7 @@ class Fogao(Equipamento):
         capacidade_por_boca_gramas_min: int,
         capacidade_por_boca_gramas_max: int,
         numero_bocas: int,
-        pressao_chamas_suportadas: List[TipoPressaoChama]
+        pressao_chamas_suportadas: List[TipoPressaoChama],
     ):
         super().__init__(
             id=id,
@@ -45,121 +44,121 @@ class Fogao(Equipamento):
         self.numero_bocas = numero_bocas
         self.pressao_chamas_suportadas = pressao_chamas_suportadas
 
-        # 📂 Formato: ocupacao_id, atividade_id, quantidade, inicio, fim
-        self.bocas_ocupadas: List[Tuple[int, int, int, datetime, datetime]] = []
+        # Cada boca tem sua própria lista de ocupações:
+        self.ocupacoes_por_boca: List[List[Tuple[int, int, datetime, datetime, TipoChama, List[TipoPressaoChama]]]] = [
+            [] for _ in range(numero_bocas)
+        ]
 
-    def bocas_disponiveis(self, inicio: datetime, fim: datetime) -> int:
-        ocupadas = sum(
-            1 for _, _, _, ini, f in self.bocas_ocupadas
-            if not (fim <= ini or inicio >= f)
-        )
-        return self.numero_bocas - ocupadas
+    def boca_disponivel(self, boca_index: int, inicio: datetime, fim: datetime) -> bool:
+        for _, _, ini, f, _, _ in self.ocupacoes_por_boca[boca_index]:
+            if not (fim <= ini or inicio >= f):
+                return False
+        return True
 
-    def ocupar(
+    def bocas_disponiveis(self, inicio: datetime, fim: datetime) -> List[int]:
+        return [
+            i for i in range(self.numero_bocas)
+            if self.boca_disponivel(i, inicio, fim)
+        ]
+
+    def ocupar_boca(
         self,
-        ocupacao_id: Optional[int],
+        boca: int,
         atividade_id: int,
-        quantidade_gramas: int,
+        quantidade: int,
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        tipo_chama: TipoChama,
+        pressao_chama: List[TipoPressaoChama]
     ) -> bool:
-        bocas_disponiveis = self.bocas_disponiveis(inicio, fim)
+        if not self.boca_disponivel(boca, inicio, fim):
+            return False
 
-        if bocas_disponiveis == 0:
+        if not (self.capacidade_por_boca_gramas_min <= quantidade <= self.capacidade_por_boca_gramas_max):
             logger.warning(
-                f"❌ Todas as bocas do fogão {self.nome} estão ocupadas nesse período "
-                f"({inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')})."
+                f"❌ Quantidade {quantidade}g fora dos limites da boca ({self.capacidade_por_boca_gramas_min}-{self.capacidade_por_boca_gramas_max})g"
             )
             return False
 
-        for b in range(bocas_disponiveis, 0, -1):
-            quantidade_por_boca = quantidade_gramas / b
-            print(f"🔍 Tentando dividir {quantidade_gramas}g em {b} bocas: {quantidade_por_boca}g por boca.")
-            if self.capacidade_por_boca_gramas_min <= quantidade_por_boca <= self.capacidade_por_boca_gramas_max:
-                if ocupacao_id is None:
-                    return True
-
-                quantidade_por_boca = round(quantidade_por_boca)
-                for _ in range(b):
-                    self.bocas_ocupadas.append(
-                        (ocupacao_id, atividade_id, quantidade_por_boca, inicio, fim)
-                    )
-                    logger.info(
-                        f"🔥 Ocupou uma boca do fogão {self.nome} com {quantidade_por_boca}g "
-                        f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-                    )
-
-                logger.info(
-                    f"✅ Ocupação completa registrada no fogão {self.nome} "
-                    f"para atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-                )
-                return True
-
-        logger.error(
-            f"❌ Não foi possível dividir {quantidade_gramas}g em bocas disponíveis "
-            f"respeitando limites ({self.capacidade_por_boca_gramas_min}-{self.capacidade_por_boca_gramas_max}g) "
-            f"no fogão {self.nome}."
+        self.ocupacoes_por_boca[boca].append(
+            (atividade_id, quantidade, inicio, fim, tipo_chama, pressao_chama)
         )
-        return False
+
+        pressoes_formatadas = ", ".join([p.value for p in pressao_chama])
+
+        logger.info(
+            f"🔥 Ocupou a boca {boca + 1} do fogão {self.nome} com {quantidade}g "
+            f"para atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"| Chama: {tipo_chama.value} | Pressão: {pressoes_formatadas}"
+        )
+        return True
 
     def liberar_bocas_terminadas(self, horario_atual: datetime):
-        antes = len(self.bocas_ocupadas)
-        self.bocas_ocupadas = [
-            (oid, aid, qtd, ini, fim)
-            for (oid, aid, qtd, ini, fim) in self.bocas_ocupadas
-            if fim > horario_atual
-        ]
-        liberadas = antes - len(self.bocas_ocupadas)
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} bocas do fogão {self.nome} "
-                f"que estavam ocupadas até {horario_atual.strftime('%H:%M')}."
-            )
+        total_liberadas = 0
+        for i in range(self.numero_bocas):
+            antes = len(self.ocupacoes_por_boca[i])
+            self.ocupacoes_por_boca[i] = [
+                (aid, qtd, ini, fim, chama, pressao)
+                for (aid, qtd, ini, fim, chama, pressao) in self.ocupacoes_por_boca[i]
+                if fim > horario_atual
+            ]
+            total_liberadas += antes - len(self.ocupacoes_por_boca[i])
+
+        if total_liberadas > 0:
+            logger.info(f"🟩 Liberou {total_liberadas} ocupações finalizadas no fogão {self.nome}.")
 
     def liberar_por_atividade(self, atividade_id: int):
-        antes = len(self.bocas_ocupadas)
-        self.bocas_ocupadas = [
-            (oid, aid, qtd, ini, fim)
-            for (oid, aid, qtd, ini, fim) in self.bocas_ocupadas
+        liberadas = 0
+        for i in range(self.numero_bocas):
+            antes = len(self.ocupacoes_por_boca[i])
+            self.ocupacoes_por_boca[i] = [
+                (aid, qtd, ini, fim, chama, pressao)
+                for (aid, qtd, ini, fim, chama, pressao) in self.ocupacoes_por_boca[i]
+                if aid != atividade_id
+            ]
+            liberadas += antes - len(self.ocupacoes_por_boca[i])
+        logger.info(f"🟩 Liberou {liberadas} ocupações da atividade {atividade_id} no fogão {self.nome}.")
+
+    def liberar_boca(self, boca: int, atividade_id: int):
+        antes = len(self.ocupacoes_por_boca[boca])
+        self.ocupacoes_por_boca[boca] = [
+            (aid, qtd, ini, fim, chama, pressao)
+            for (aid, qtd, ini, fim, chama, pressao) in self.ocupacoes_por_boca[boca]
             if aid != atividade_id
         ]
-        depois = len(self.bocas_ocupadas)
-        logger.info(
-            f"🟩 Liberou {antes - depois} bocas associadas à atividade {atividade_id} no fogão {self.nome}."
-        )
+        depois = len(self.ocupacoes_por_boca[boca])
+        if antes != depois:
+            logger.info(f"🟩 Liberou atividade {atividade_id} da boca {boca + 1} no fogão {self.nome}.")
 
     def liberar_todas_bocas(self):
-        total = len(self.bocas_ocupadas)
-        self.bocas_ocupadas.clear()
-        logger.info(
-            f"🟩 Liberou todas as {total} bocas do fogão {self.nome}."
-        )
+        total = sum(len(ocupacoes) for ocupacoes in self.ocupacoes_por_boca)
+        self.ocupacoes_por_boca = [[] for _ in range(self.numero_bocas)]
+        logger.info(f"🟩 Liberou todas as {total} ocupações do fogão {self.nome}.")
 
-    #==========================================================
-    # 🗓️ Agenda
-    # ==========================================================
     def mostrar_agenda(self):
-        logger.info(f"==============================================")
+        logger.info("==============================================")
         logger.info(f"📅 Agenda do {self.nome}")
-        logger.info(f"==============================================")
-        if not self.bocas_ocupadas:
-            logger.info("🔹 Nenhuma ocupação.")
-            return
-        for (oid, aid, qtd, inicio, fim) in self.bocas_ocupadas:
+        logger.info("==============================================")
+
+        todas_ocupacoes = []
+        for boca_idx, ocupacoes in enumerate(self.ocupacoes_por_boca):
+            for (atividade_id, quantidade, inicio, fim, tipo_chama, pressoes) in ocupacoes:
+                todas_ocupacoes.append({
+                    "boca": boca_idx + 1,
+                    "atividade_id": atividade_id,
+                    "quantidade": quantidade,
+                    "inicio": inicio,
+                    "fim": fim,
+                    "chama": tipo_chama,
+                    "pressoes": pressoes
+                })
+
+        todas_ocupacoes.sort(key=lambda o: (o["atividade_id"], o["boca"]))
+
+        for o in todas_ocupacoes:
+            pressoes_formatadas = ", ".join([p.value for p in o["pressoes"]])
             logger.info(
-                f"🔸 Ocupação {oid}: Atividade {aid} | {qtd}g | "
-                f"Início: {inicio.strftime('%H:%M')} | "
-                f"Fim: {fim.strftime('%H:%M')}"
+                f"🔥 Atividade {o['atividade_id']} | Boca: {o['boca']} | Quantidade: {o['quantidade']}g | "
+                f"{o['inicio'].strftime('%H:%M')} → {o['fim'].strftime('%H:%M')} | "
+                f"Chama: {o['chama'].value} | Pressão: {pressoes_formatadas}"
             )
-
-
-
-    def __str__(self):
-        return (
-            f"\n🔥 Fogão: {self.nome} (ID: {self.id})"
-            f"\nSetor: {self.setor.name} | Status: {'Ativo' if self.status_ativo else 'Inativo'}"
-            f"\nBocas: {self.numero_bocas} | Ocupadas agora: {len(self.bocas_ocupadas)}"
-            f"\nCapacidade por boca: {self.capacidade_por_boca_gramas_min}g até {self.capacidade_por_boca_gramas_max}g"
-            f"\nChamas suportadas: {[chama.name for chama in self.chamas_suportadas]}"
-            f"\nPressão das chamas: {[pressao.name for pressao in self.pressao_chamas_suportadas]}"
-        )
