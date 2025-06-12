@@ -9,6 +9,8 @@ from services.gestor_fornos import GestorFornos
 from services.gestor_misturadoras_com_coccao import GestorMisturadorasComCoccao
 from services.gestor_misturadoras import GestorMisturadoras
 from services.gestor_refrigeracao_congelamento import GestorRefrigeracaoCongelamento
+from services.gestor_modeladoras import GestorModeladoras
+from services.gestor_divisoras_boleadoras import GestorDivisorasBoleadoras
 
 
 # Adicione mais gestores conforme necessário
@@ -22,5 +24,7 @@ MAPA_GESTOR = {
     TipoEquipamento.FORNOS: GestorFornos,
     TipoEquipamento.MISTURADORAS_COM_COCCAO: GestorMisturadorasComCoccao,
     TipoEquipamento.MISTURADORAS: GestorMisturadoras,
-    TipoEquipamento.REFRIGERACAO_CONGELAMENTO: GestorRefrigeracaoCongelamento
+    TipoEquipamento.REFRIGERACAO_CONGELAMENTO: GestorRefrigeracaoCongelamento,
+    TipoEquipamento.MODELADORAS: GestorModeladoras,
+    TipoEquipamento.DIVISORAS_BOLEADORAS: GestorDivisorasBoleadoras
 }

@@ -47,7 +47,7 @@ class Forno(Equipamento):
         self.nivel_tela_min = nivel_tela_min
         self.nivel_tela_max = nivel_tela_max
         self.capacidade_niveis_tela = nivel_tela_max
-        self.ocupacao_niveis: List[Tuple[int, int, datetime, datetime]] = []
+        self.ocupacao_niveis: List[Tuple[int, int, int, datetime, datetime]] = []  # (ordem_id, atividade_id, quantidade, início, fim)
 
         # 🌡️ Controle de temperatura
         self.faixa_temperatura_min = faixa_temperatura_min
@@ -71,9 +71,9 @@ class Forno(Equipamento):
         self.tipo_coccao = tipo_coccao
 
         # 🧾 Históricos de parâmetros aplicados por atividade
-        self.historico_temperatura: List[Tuple[int, int, datetime, datetime, Optional[int]]] = []
-        self.historico_vaporizacao: List[Tuple[int, int, datetime, datetime, Optional[int]]] = []
-        self.historico_velocidade: List[Tuple[int, int, datetime, datetime, Optional[int]]] = []
+        self.historico_temperatura: List[Tuple[int, int, int, datetime, datetime, Optional[int]]] = []
+        self.historico_vaporizacao: List[Tuple[int, int, int, datetime, datetime, Optional[int]]] = []
+        self.historico_velocidade: List[Tuple[int, int, int, datetime, datetime, Optional[int]]] = []
 
     # ==========================================================
     # 🌡️ Temperatura
@@ -86,7 +86,7 @@ class Forno(Equipamento):
         return True
 
     def verificar_compatibilidade_temperatura(self, inicio: datetime, fim: datetime, temperatura: int) -> bool:
-        conflitos = [temp for (_, _, ini, f, temp) in self.historico_temperatura if not (fim <= ini or inicio >= f)]
+        conflitos = [temp for (_, _, _, ini, f, temp) in self.historico_temperatura if not (fim <= ini or inicio >= f)]
         return all(temp == temperatura for temp in conflitos) if conflitos else True
 
     # ==========================================================
@@ -107,7 +107,7 @@ class Forno(Equipamento):
     def verificar_compatibilidade_vaporizacao(self, inicio: datetime, fim: datetime, vaporizacao: Optional[int]) -> bool:
         if not self.tem_vaporizacao:
             return True
-        conflitos = [vap for (_, _, ini, f, vap) in self.historico_vaporizacao if not (fim <= ini or inicio >= f)]
+        conflitos = [vap for (_, _, _, ini, f, vap) in self.historico_vaporizacao if not (fim <= ini or inicio >= f)]
         return all(vap == vaporizacao for vap in conflitos) if conflitos else True
 
     # ==========================================================
@@ -128,39 +128,100 @@ class Forno(Equipamento):
     def verificar_compatibilidade_velocidade(self, inicio: datetime, fim: datetime, velocidade: Optional[int]) -> bool:
         if not self.tem_velocidade:
             return True
-        conflitos = [vel for (_, _, ini, f, vel) in self.historico_velocidade if not (fim <= ini or inicio >= f)]
+        conflitos = [vel for (_, _, _, ini, f, vel) in self.historico_velocidade if not (fim <= ini or inicio >= f)]
         return all(vel == velocidade for vel in conflitos) if conflitos else True
 
     # ==========================================================
     # 🗂️ Ocupação
     # ==========================================================
     def verificar_espaco_niveis(self, quantidade: int, inicio: datetime, fim: datetime) -> bool:
-        ocupados = sum(qtd for (_, qtd, ini, f) in self.ocupacao_niveis if not (fim <= ini or inicio >= f))
+        ocupados = sum(qtd for (_, _, qtd, ini, f) in self.ocupacao_niveis if not (fim <= ini or inicio >= f))
         return (ocupados + quantidade) <= self.capacidade_niveis_tela
 
-    def ocupar_niveis(self, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+    def ocupar_niveis(self, ordem_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
         if not self.verificar_espaco_niveis(quantidade, inicio, fim):
             return False
-        self.ocupacao_niveis.append((atividade_id, quantidade, inicio, fim))
-        self.historico_temperatura.append((atividade_id, quantidade, inicio, fim, self.temperatura_atual))
+        self.ocupacao_niveis.append((ordem_id, atividade_id, quantidade, inicio, fim))
+        self.historico_temperatura.append((ordem_id, atividade_id, quantidade, inicio, fim, self.temperatura_atual))
         if self.tem_vaporizacao:
-            self.historico_vaporizacao.append((atividade_id, quantidade, inicio, fim, self.vaporizacao_atual))
+            self.historico_vaporizacao.append((ordem_id, atividade_id, quantidade, inicio, fim, self.vaporizacao_atual))
         if self.tem_velocidade:
-            self.historico_velocidade.append((atividade_id, quantidade, inicio, fim, self.velocidade_atual))
+            self.historico_velocidade.append((ordem_id, atividade_id, quantidade, inicio, fim, self.velocidade_atual))
+        
         return True
 
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, atividade_id: int):
-        self.ocupacao_niveis = [(aid, qtd, ini, fim) for (aid, qtd, ini, fim) in self.ocupacao_niveis if aid != atividade_id]
+    def liberar_por_ordem(self, ordem_id: int):
+        """
+        ❌ Libera todas as ocupações relacionadas à ordem especificada.
+        """
+        antes = len(self.ocupacao_niveis)
+
+        self.ocupacao_niveis = [
+            (oid, aid, qtd, ini, fim)
+            for (oid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if oid != ordem_id
+        ]
+        self.historico_temperatura = [
+            (oid, aid, qtd, ini, fim, t)
+            for (oid, aid, qtd, ini, fim, t) in self.historico_temperatura
+            if oid != ordem_id
+        ]
+        self.historico_vaporizacao = [
+            (oid, aid, qtd, ini, fim, v)
+            for (oid, aid, qtd, ini, fim, v) in self.historico_vaporizacao
+            if oid != ordem_id
+        ]
+        self.historico_velocidade = [
+            (oid, aid, qtd, ini, fim, v)
+            for (oid, aid, qtd, ini, fim, v) in self.historico_velocidade
+            if oid != ordem_id
+        ]
+
+        depois = len(self.ocupacao_niveis)
+        if antes != depois:
+            logger.info(f"🧼 Ocupações da ordem {ordem_id} removidas do forno {self.nome}.")
+        self._resetar_se_vazio()
+
+    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
+        """
+        ❌ Libera ocupações específicas de uma atividade dentro de uma ordem.
+        """
+        antes = len(self.ocupacao_niveis)
+
+        self.ocupacao_niveis = [
+            (oid, aid, qtd, ini, fim)
+            for (oid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if not (oid == ordem_id and aid == atividade_id)
+        ]
+        self.historico_temperatura = [
+            (oid, aid, qtd, ini, fim, t)
+            for (oid, aid, qtd, ini, fim, t) in self.historico_temperatura
+            if not (oid == ordem_id and aid == atividade_id)
+        ]
+        self.historico_vaporizacao = [
+            (oid, aid, qtd, ini, fim, v)
+            for (oid, aid, qtd, ini, fim, v) in self.historico_vaporizacao
+            if not (oid == ordem_id and aid == atividade_id)
+        ]
+        self.historico_velocidade = [
+            (oid, aid, qtd, ini, fim, v)
+            for (oid, aid, qtd, ini, fim, v) in self.historico_velocidade
+            if not (oid == ordem_id and aid == atividade_id)
+        ]
+
+        depois = len(self.ocupacao_niveis)
+        if antes != depois:
+            logger.info(f"🧼 Ocupações da atividade {atividade_id} da ordem {ordem_id} removidas do forno {self.nome}.")
         self._resetar_se_vazio()
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        self.ocupacao_niveis = [(aid, qtd, ini, fim) for (aid, qtd, ini, fim) in self.ocupacao_niveis if fim > horario_atual]
-        self.historico_temperatura = [(aid, qtd, ini, fim, t) for (aid, qtd, ini, fim, t) in self.historico_temperatura if fim > horario_atual]
-        self.historico_vaporizacao = [(aid, qtd, ini, fim, v) for (aid, qtd, ini, fim, v) in self.historico_vaporizacao if fim > horario_atual]
-        self.historico_velocidade = [(aid, qtd, ini, fim, v) for (aid, qtd, ini, fim, v) in self.historico_velocidade if fim > horario_atual]
+        self.ocupacao_niveis = [(oid, aid, qtd, ini, fim) for (oid, aid, qtd, ini, fim) in self.ocupacao_niveis if fim > horario_atual]
+        self.historico_temperatura = [(oid, aid, qtd, ini, fim, t) for (oid, aid, qtd, ini, fim, t) in self.historico_temperatura if fim > horario_atual]
+        self.historico_vaporizacao = [(oid, aid, qtd, ini, fim, v) for (oid, aid, qtd, ini, fim, v) in self.historico_vaporizacao if fim > horario_atual]
+        self.historico_velocidade = [(oid, aid, qtd, ini, fim, v) for (oid, aid, qtd, ini, fim, v) in self.historico_velocidade if fim > horario_atual]
         self._resetar_se_vazio()
 
     def liberar_todas_ocupacoes(self):
@@ -191,16 +252,16 @@ class Forno(Equipamento):
             logger.info("🔹 Nenhuma ocupação.")
             return
 
-        for (atividade_id, quantidade, inicio, fim) in self.ocupacao_niveis:
-            temp = next((t for (aid, qtd, ini, f, t) in self.historico_temperatura
-                         if aid == atividade_id and ini == inicio and f == fim), None)
-            vap = next((v for (aid, qtd, ini, f, v) in self.historico_vaporizacao
-                        if aid == atividade_id and ini == inicio and f == fim), None) if self.tem_vaporizacao else None
-            vel = next((v for (aid, qtd, ini, f, v) in self.historico_velocidade
-                        if aid == atividade_id and ini == inicio and f == fim), None) if self.tem_velocidade else None
+        for (ordem_id, atividade_id, quantidade, inicio, fim) in self.ocupacao_niveis:
+            temp = next((t for (oid, aid, qtd, ini, f, t) in self.historico_temperatura
+                         if aid == atividade_id and ini == inicio and f == fim and oid == ordem_id), None)
+            vap = next((v for (oid, aid, qtd, ini, f, v) in self.historico_vaporizacao
+                        if aid == atividade_id and ini == inicio and f == fim and oid == ordem_id), None) if self.tem_vaporizacao else None
+            vel = next((v for (oid, aid, qtd, ini, f, v) in self.historico_velocidade
+                        if aid == atividade_id and ini == inicio and f == fim and oid == ordem_id), None) if self.tem_velocidade else None
 
             logger.info(
-                f"🔥 Atividade {atividade_id} | {quantidade} níveis | "
+                f"🔥 Atividade {atividade_id} | Ordem {ordem_id} | {quantidade} níveis | "
                 f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
                 f"🌡️ {temp if temp is not None else '---'}°C | "
                 f"💨 {vap if vap is not None else '---'}s | "

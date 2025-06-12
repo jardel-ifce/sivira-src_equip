@@ -1,0 +1,24 @@
+[
+  {
+    "id_ficha_tecnica": 1,
+    "id_item": 1,
+    "nome": "pao_frances",
+    "descricao": "Pão Francês",
+    "tipo_item": "PRODUTO",
+    "unidade_medida": "un",
+    "peso_unitario": 65,
+    "quantidade_base": 100,
+    "perda_percentual": 0.0,
+    "politicas_producao": "SOB_DEMANDA",
+    "itens": [
+      {
+        "id_item": 2,
+        "descricao": "Massa Crocante",
+        "nome": "massa_crocante",
+        "tipo_item": "SUBPRODUTO",
+        "proporcao": 100,
+        "id_ficha_tecnica": 2
+      }
+    ]
+  }
+]

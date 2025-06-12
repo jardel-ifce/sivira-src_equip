@@ -23,12 +23,12 @@ class Masseira:
         self.id = id
         self.nome = nome
         self.setor = setor
-        self.tipo_equipamento = TipoEquipamento.MISTURADORAS  # ✅ usado por atividades genéricas
+        self.tipo_equipamento = TipoEquipamento.MISTURADORAS
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
         self.velocidades_suportadas = velocidades_suportadas or []
         self.tipos_de_mistura_suportados = tipos_de_mistura_suportados or []
-        self.ocupacoes = []
+        self.ocupacoes: List[dict] = []
 
     def validar_capacidade(self, quantidade: float) -> bool:
         if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
@@ -47,10 +47,11 @@ class Masseira:
 
     def ocupar(
         self,
+        ordem_id: int,
+        atividade_id: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
-        atividade_id: int,
         velocidades: Optional[List[TipoVelocidade]] = None,
         tipo_mistura: Optional[TipoMistura] = None
     ) -> bool:
@@ -63,7 +64,6 @@ class Masseira:
                     logger.warning(f"⚠️ Velocidade {v.name} não suportada pela {self.nome}.")
                     return False
 
-        # 🔒 Validação segura para tipo_mistura
         if tipo_mistura is not None:
             if not isinstance(tipo_mistura, TipoMistura):
                 logger.error(f"❌ tipo_mistura inválido recebido: {tipo_mistura} ({type(tipo_mistura)})")
@@ -74,6 +74,7 @@ class Masseira:
                 return False
 
         self.ocupacoes.append({
+            "ordem_id": ordem_id,
             "atividade_id": atividade_id,
             "quantidade": quantidade_gramas,
             "inicio": inicio,
@@ -83,11 +84,27 @@ class Masseira:
         })
 
         logger.info(
-            f"✅ Masseira {self.nome} ocupada para atividade {atividade_id} "
+            f"✅ Masseira {self.nome} ocupada para atividade {atividade_id} da ordem {ordem_id} "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
         return True
 
+    def liberar_por_ordem(self, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [o for o in self.ocupacoes if o["ordem_id"] != ordem_id]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🧼 Liberadas {antes - depois} ocupações da ordem {ordem_id} na Masseira {self.nome}.")
+
+    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o["ordem_id"] == ordem_id and o["atividade_id"] == atividade_id)
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🧼 Liberadas ocupações da atividade {atividade_id} da ordem {ordem_id} na Masseira {self.nome}.")
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         self.ocupacoes = [o for o in self.ocupacoes if o["fim"] > horario_atual]
@@ -97,24 +114,13 @@ class Masseira:
         logger.info(f"📅 Agenda da Masseira {self.nome}")
         logger.info("==============================================")
 
-        todas_ocupacoes = []
-        for ocupacao in self.ocupacoes:
-            todas_ocupacoes.append({
-                "atividade_id": ocupacao["atividade_id"],
-                "quantidade": ocupacao["quantidade"],
-                "inicio": ocupacao["inicio"],
-                "fim": ocupacao["fim"],
-                "velocidades": ocupacao.get("velocidades", []),
-                "tipo_mistura": ocupacao.get("tipo_mistura")
-            })
-
-        todas_ocupacoes.sort(key=lambda o: o["atividade_id"])
+        todas_ocupacoes = sorted(self.ocupacoes, key=lambda o: o["atividade_id"])
 
         for o in todas_ocupacoes:
             velocidades_formatadas = ", ".join([v.replace("_", " ").title() for v in o["velocidades"]]) if o["velocidades"] else "-"
-            tipo_mistura_formatado = o["tipo_mistura"].name.replace("_", " ").title() if hasattr(o["tipo_mistura"], "name") else str(o["tipo_mistura"])
+            tipo_mistura_formatado = o["tipo_mistura"].replace("_", " ").title() if o["tipo_mistura"] else "-"
             logger.info(
-                f"🥣 Atividade {o['atividade_id']} | Quantidade: {o['quantidade']}g | "
+                f"🥣 Ordem {o['ordem_id']} | Atividade {o['atividade_id']} | Quantidade: {o['quantidade']}g | "
                 f"{o['inicio'].strftime('%H:%M')} → {o['fim'].strftime('%H:%M')} | "
                 f"Velocidade: {velocidades_formatadas} | Tipo Mistura: {tipo_mistura_formatado}"
             )

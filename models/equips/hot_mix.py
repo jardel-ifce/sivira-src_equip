@@ -15,12 +15,6 @@ logger = setup_logger("HotMix")
 class HotMix(Equipamento):
     """
     🍳 Equipamento HotMix — Misturadora com Cocção de Alta Performance.
-
-    🛠️ Características:
-    - Ocupação exclusiva por atividade (não permite concorrência).
-    - Valida: capacidade mínima e máxima, tipo de chama, pressão e velocidade.
-    - Armazena histórico completo de todas as ocupações.
-    - Ideal para preparos técnicos que exigem controle térmico e cinético refinado.
     """
 
     def __init__(
@@ -44,37 +38,26 @@ class HotMix(Equipamento):
             status_ativo=True
         )
 
-        # 🎯 Capacidade operacional
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
-
-        # ⚙️ Parâmetros técnicos suportados
         self.velocidades_suportadas = velocidades_suportadas
         self.chamas_suportadas = chamas_suportadas
         self.pressao_chamas_suportadas = pressao_chamas_suportadas
 
-        # 📜 Registro das ocupações
+        # Tupla: (ordem_id, atividade_id, quantidade, inicio, fim, velocidade, chama, pressoes)
         self.ocupacoes: List[
             Tuple[int, int, int, datetime, datetime, TipoVelocidade, TipoChama, List[TipoPressaoChama]]
         ] = []
 
-    # ==========================================================
-    # ✅ Verificação de disponibilidade
-    # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        """
-        🔍 Verifica se há alguma ocupação ativa que conflite com o período desejado.
-        """
         for _, _, _, ini, f, *_ in self.ocupacoes:
             if not (fim <= ini or inicio >= f):
                 return False
         return True
 
-    # ==========================================================
-    # 🔒 Ocupação do equipamento
-    # ==========================================================
     def ocupar(
         self,
+        ordem_id: int,
         atividade_id: int,
         quantidade: int,
         inicio: datetime,
@@ -83,9 +66,6 @@ class HotMix(Equipamento):
         chama: TipoChama,
         pressao_chamas: List[TipoPressaoChama]
     ) -> bool:
-        """
-        🛠️ Ocupe o equipamento se todos os parâmetros estiverem dentro dos limites permitidos.
-        """
         if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
             logger.warning(f"❌ Quantidade {quantidade}g fora dos limites do HotMix {self.nome}.")
             return False
@@ -106,9 +86,8 @@ class HotMix(Equipamento):
             logger.error(f"❌ Pressões de chama não suportadas por {self.nome}.")
             return False
 
-        # ✅ Tudo validado. Registra ocupação!
         self.ocupacoes.append((
-            len(self.ocupacoes) + 1,
+            ordem_id,
             atividade_id,
             quantidade,
             inicio,
@@ -119,51 +98,53 @@ class HotMix(Equipamento):
         ))
 
         logger.info(
-            f"🍳 HotMix {self.nome} ocupado com {quantidade}g para atividade {atividade_id} "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} | "
+            f"🍳 HotMix {self.nome} ocupado | Ordem {ordem_id} | Atividade {atividade_id} | {quantidade}g | "
+            f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
             f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
             f"Pressões: {[p.name for p in pressao_chamas]}"
         )
         return True
 
-    # ==========================================================
-    # 🔓 Liberação de ocupações
-    # ==========================================================
     def liberar_concluidas(self, horario: datetime):
-        """
-        🧼 Remove ocupações cujo horário de fim já passou.
-        """
         antes = len(self.ocupacoes)
         self.ocupacoes = [o for o in self.ocupacoes if o[4] > horario]
         depois = len(self.ocupacoes)
         if antes != depois:
             logger.info(f"🟩 Liberadas {antes - depois} ocupações finalizadas do HotMix {self.nome}.")
 
-    def liberar_por_atividade(self, atividade_id: int):
+    def liberar_por_ordem(self, ordem_id: int):
         """
-        🧹 Remove todas as ocupações associadas à atividade especificada.
+        ❌ Libera todas as ocupações associadas à ordem de produção.
         """
         antes = len(self.ocupacoes)
-        self.ocupacoes = [o for o in self.ocupacoes if o[1] != atividade_id]
+        self.ocupacoes = [o for o in self.ocupacoes if o[0] != ordem_id]
         depois = len(self.ocupacoes)
         if antes != depois:
-            logger.info(f"🟩 Liberadas ocupações da atividade {atividade_id} no HotMix {self.nome}.")
+            logger.info(f"🟩 Liberadas ocupações da ordem {ordem_id} no HotMix {self.nome}.")
 
-    # ==========================================================
-    # 📅 Visualização da agenda
-    # ==========================================================
+    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
+        """
+        ❌ Libera ocupações específicas de uma atividade dentro de uma ordem.
+        """
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[0] == ordem_id and o[1] == atividade_id)
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🟩 Liberadas ocupações da atividade {atividade_id} da ordem {ordem_id} no HotMix {self.nome}.")
+
     def mostrar_agenda(self):
-        """
-        📊 Exibe a agenda de ocupações futuras do equipamento.
-        """
         logger.info("==============================================")
         logger.info(f"📅 Agenda do HotMix {self.nome}")
         logger.info("==============================================")
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
-        for (_, aid, qtd, ini, fim, velocidade, chama, pressoes) in self.ocupacoes:
+        for (ordem_id, atividade_id, qtd, ini, fim, velocidade, chama, pressoes) in self.ocupacoes:
             logger.info(
-                f"🔸 Atividade {aid} | {qtd}g | {ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+                f"🔸 Ordem {ordem_id} | Atividade {atividade_id} | {qtd}g | "
+                f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
                 f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
                 f"Pressões: {[p.name for p in pressoes]}"
             )

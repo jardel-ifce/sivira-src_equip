@@ -1,0 +1,51 @@
+[
+  {
+    "id_ficha_tecnica": 2,
+    "id_item": 2,
+    "nome": "massa_crocante",
+    "descricao": "Massa crocante",
+    "tipo_item": "SUBPRODUTO",
+    "unidade_medida": "g",
+    "peso_unitario": 0,
+    "quantidade_base": 100,
+    "perda_percentual": 0.0,
+    "politicas_producao": "SOB_DEMANDA",
+    "itens": [
+      {
+        "id_item": 3,
+        "descricao": "Farinha de trigo para pães",
+        "nome": "farinha_de_trigo_para_paes",
+        "tipo_item": "INSUMO",
+        "proporcao": 100
+      },
+      {
+        "id_item": 4,
+        "descricao": "Gelo para alimentos",
+        "nome": "gelo_para_alimentos",
+        "tipo_item": "INSUMO",
+        "proporcao": 60
+      },
+      {
+        "id_item": 5,
+        "descricao": "Sal refinado",
+        "nome": "sal_refinado",
+        "tipo_item": "INSUMO",
+        "proporcao": 2
+      },
+      {
+        "id_item": 6,
+        "descricao": "Fermento biológico seco",
+        "nome": "fermento_biologico_seco",
+        "tipo_item": "INSUMO",
+        "proporcao": 1
+      }, 
+      {
+        "id_item": 7,
+        "descricao": "Aditivo em pasta",
+        "nome": "aditivo_em_pasta",
+        "tipo_item": "INSUMO",
+        "proporcao": 0.3
+      }
+    ]
+  }
+]

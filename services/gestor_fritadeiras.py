@@ -1,200 +1,140 @@
-from models.equips.equipamento import Equipamento
-from enums.tipo_equipamento import TipoEquipamento
-from enums.tipo_setor import TipoSetor
-from typing import List, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import List, Optional, Tuple
+from models.equips.fritadeira import Fritadeira
+from models.atividade_base import Atividade
 from utils.logger_factory import setup_logger
+import unicodedata
 
-# 🍟 Logger exclusivo da Fritadeira
-logger = setup_logger('Fritadeira')
+# 🍟 Logger exclusivo para o gestor de fritadeiras
+logger = setup_logger('GestorFritadeiras')
 
 
-class Fritadeira(Equipamento):
+class GestorFritadeiras:
     """
-    🍟 Representa uma Fritadeira com controle por frações.
-    ✔️ Valida capacidade mínima e máxima por atividade.
-    ✔️ Controla faixa de temperatura e tempo de setup.
-    ✔️ Permite múltiplas ocupações simultâneas com validação de janela de tempo.
+    🍟 Gestor especializado no controle de fritadeiras.
+    ✔️ Utiliza Backward Scheduling com FIP.
+    ✔️ Valida temperatura, capacidade e disponibilidade de frações.
+    ✔️ Lê configurações do equipamento via JSON.
     """
 
-    def __init__(
-        self,
-        id: int,
-        nome: str,
-        setor: TipoSetor,
-        numero_operadores: int,
-        numero_fracoes: int,
-        capacidade_min: int,
-        capacidade_max: int,
-        faixa_temperatura_min: int,
-        faixa_temperatura_max: int,
-        setup_minutos: int
-    ):
-        super().__init__(
-            id=id,
-            nome=nome,
-            setor=setor,
-            numero_operadores=numero_operadores,
-            tipo_equipamento=TipoEquipamento.FRITADEIRAS,
-            status_ativo=True
+    def __init__(self, fritadeiras: List[Fritadeira]):
+        self.fritadeiras = fritadeiras
+
+    # ==========================================================
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
+    # ==========================================================  
+    def _ordenar_por_fip(self, atividade: Atividade) -> List[Fritadeira]:
+        return sorted(
+            self.fritadeiras,
+            key=lambda f: atividade.fips_equipamentos.get(f, 999)
         )
-
-        self.numero_fracoes = numero_fracoes
-        self.capacidade_min = capacidade_min
-        self.capacidade_max = capacidade_max
-        self.faixa_temperatura_min = faixa_temperatura_min
-        self.faixa_temperatura_max = faixa_temperatura_max
-        self.setup_minutos = setup_minutos
-
-        # 📦 Ocupações: (atividade_id, quantidade, inicio, fim, faixa_temperatura, setup)
-        self.fracoes_ocupadas: List[Tuple[int, int, datetime, datetime, int, int]] = []
-
+    
     # ==========================================================
-    # ✅ Validações
+    # 🔍 Leitura dos parâmetros via JSON
     # ==========================================================
-    def validar_quantidade(self, quantidade: int) -> bool:
-        """
-        ✅ Verifica se a quantidade está dentro da faixa permitida pela fritadeira.
-        """
-        return self.capacidade_min <= quantidade <= self.capacidade_max
+    def _normalizar_nome(self, nome: str) -> str:
+        nome_bruto = nome.lower().replace(" ", "_")
+        return unicodedata.normalize("NFKD", nome_bruto).encode("ASCII", "ignore").decode("utf-8")
 
-    def validar_temperatura(self, faixa_temperatura: int) -> bool:
-        """
-        🌡️ Verifica se a faixa de temperatura solicitada está dentro do intervalo permitido.
-        """
-        return self.faixa_temperatura_min <= faixa_temperatura <= self.faixa_temperatura_max
+    def _obter_fracoes_necessarias(self, atividade: Atividade, fritadeira: Fritadeira) -> Optional[int]:
+        try:
+            chave = self._normalizar_nome(fritadeira.nome)
+            config = atividade.configuracoes_equipamentos.get(chave, {})
+            return int(config.get("fracoes_necessarias", 0))
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao obter quantidade de frações para {fritadeira.nome}: {e}")
+            return None
 
-    # ==========================================================
-    # 🔍 Verificar disponibilidade
-    # ==========================================================
-    def fracoes_disponiveis(self, inicio: datetime, fim: datetime) -> int:
-        """
-        🔍 Calcula quantas frações estão livres no intervalo solicitado.
-        """
-        ocupadas = sum(
-            qtd for (aid, qtd, ini, f, temp, setup) in self.fracoes_ocupadas
-            if not (fim <= ini or inicio >= f)
-        )
-        return self.numero_fracoes - ocupadas
+    def _obter_temperatura(self, atividade: Atividade, fritadeira: Fritadeira) -> Optional[int]:
+        try:
+            chave = self._normalizar_nome(fritadeira.nome)
+            config = atividade.configuracoes_equipamentos.get(chave, {})
+            return int(config.get("temperatura", 0))
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao obter temperatura para {fritadeira.nome}: {e}")
+            return None
 
     # ==========================================================
-    # 🔐 Ocupação
+    # 🎯 Alocação
     # ==========================================================
-    def ocupar(
+    def alocar(
         self,
-        atividade_id: int,
-        quantidade_fracoes: int,
         inicio: datetime,
         fim: datetime,
-        faixa_temperatura: int
-    ) -> bool:
+        atividade: Atividade
+    ) -> Tuple[bool, Optional[Fritadeira], Optional[datetime], Optional[datetime]]:
         """
-        🔐 Tenta ocupar a fritadeira com base nas regras de capacidade, faixa de temperatura e frações disponíveis.
+        🍟 Tenta alocar uma fritadeira considerando backward scheduling e parâmetros do JSON.
+
+        Retorna:
+        (sucesso, fritadeira, inicio_real, fim_real)
         """
-        if not self.validar_quantidade(quantidade_fracoes):
-            logger.warning(f"❌ Quantidade inválida: {quantidade_fracoes}g para a fritadeira {self.nome}.")
-            return False
+        duracao = atividade.duracao
+        equipamentos_ordenados = self._ordenar_por_fip(atividade)
+        horario_final_tentativa = fim
 
-        if not self.validar_temperatura(faixa_temperatura):
-            logger.warning(f"❌ Faixa de temperatura inválida: {faixa_temperatura}°C para a fritadeira {self.nome}.")
-            return False
+        while horario_final_tentativa - duracao >= inicio:
+            horario_inicial_tentativa = horario_final_tentativa - duracao
 
-        if self.fracoes_disponiveis(inicio, fim) < quantidade_fracoes:
-            logger.warning(
-                f"❌ Frações insuficientes na fritadeira {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
-            return False
+            for fritadeira in equipamentos_ordenados:
+                temperatura = self._obter_temperatura(atividade, fritadeira)
+                quantidade_fracoes = self._obter_fracoes_necessarias(atividade, fritadeira)
 
-        self.fracoes_ocupadas.append(
-            (atividade_id, quantidade_fracoes, inicio, fim, faixa_temperatura, self.setup_minutos)
+                if not temperatura or not quantidade_fracoes:
+                    continue
+
+                if fritadeira.ocupar(
+                    ordem_id=atividade.ordem_id,
+                    atividade_id=atividade.id,
+                    quantidade_fracoes=quantidade_fracoes,
+                    inicio=horario_inicial_tentativa,
+                    fim=horario_final_tentativa,
+                    temperatura=temperatura
+                ):
+                    atividade.equipamento_alocado = fritadeira
+                    atividade.equipamentos_selecionados = [fritadeira]
+                    atividade.alocada = True
+
+                    logger.info(
+                        f"✅ Fritadeira {fritadeira.nome} alocada para Atividade {atividade.id} de "
+                        f"{horario_inicial_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')} | "
+                        f"Temp: {temperatura}°C | Frações: {quantidade_fracoes}"
+                    )
+                    return True, fritadeira, horario_inicial_tentativa, horario_final_tentativa
+
+            horario_final_tentativa -= timedelta(minutes=1)
+
+        logger.warning(
+            f"❌ Nenhuma fritadeira disponível para a atividade {atividade.id} "
+            f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
-
-        logger.info(
-            f"🍟 Fritadeira {self.nome} ocupada por atividade {atividade_id} "
-            f"com {quantidade_fracoes} frações, faixa temperatura {faixa_temperatura}°C "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} (setup: {self.setup_minutos} min)."
-        )
-        return True
+        return False, None, None, None
 
     # ==========================================================
-    # 🧹 Liberação
+    # 🔓 Liberações
     # ==========================================================
-    def liberar_por_atividade(self, atividade_id: int):
-        """
-        🧹 Libera todas as frações ocupadas associadas à atividade fornecida.
-        """
-        antes = len(self.fracoes_ocupadas)
-        self.fracoes_ocupadas = [
-            (aid, qtd, ini, fim, temp, setup)
-            for (aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
-            if aid != atividade_id
-        ]
-        liberadas = antes - len(self.fracoes_ocupadas)
+    def liberar_por_atividade(self, atividade: Atividade):
+        for fritadeira in self.fritadeiras:
+            fritadeira.liberar_por_atividade(atividade.id, atividade.ordem_id)
 
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} ocupações da fritadeira {self.nome} "
-                f"relacionadas à atividade {atividade_id}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da fritadeira {self.nome} estava associada à atividade {atividade_id}."
-            )
+    def liberar_por_ordem(self, atividade: Atividade):
+        for fritadeira in self.fritadeiras:
+            fritadeira.liberar_por_ordem(atividade.ordem_id)
 
-    def liberar_fracoes_terminadas(self, horario_atual: datetime):
-        """
-        🔁 Libera as frações cujas ocupações já terminaram até o horário atual.
-        """
-        antes = len(self.fracoes_ocupadas)
-        self.fracoes_ocupadas = [
-            (aid, qtd, ini, fim, temp, setup)
-            for (aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
-            if fim > horario_atual
-        ]
-        liberadas = antes - len(self.fracoes_ocupadas)
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        for fritadeira in self.fritadeiras:
+            fritadeira.liberar_ocupacoes_finalizadas(horario_atual)
 
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} frações da fritadeira {self.nome} "
-                f"que estavam ocupadas até {horario_atual.strftime('%H:%M')}."
-            )
-
-    def liberar_todas_fracoes(self):
-        """
-        🧹 Limpa completamente todas as frações ocupadas da fritadeira.
-        """
-        total = len(self.fracoes_ocupadas)
-        self.fracoes_ocupadas.clear()
-        logger.info(f"🟩 Liberou todas as {total} frações da fritadeira {self.nome}.")
+    def liberar_todas_ocupacoes(self):
+        for fritadeira in self.fritadeiras:
+            fritadeira.fracoes_ocupadas.clear()
 
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
-        """
-        📅 Exibe todas as ocupações atuais da fritadeira.
-        """
         logger.info("==============================================")
-        logger.info(f"📅 Agenda da Fritadeira {self.nome}")
+        logger.info("📅 Agenda das Fritadeiras")
         logger.info("==============================================")
-
-        if not self.fracoes_ocupadas:
-            logger.info("🔹 Nenhuma ocupação.")
-            return
-
-        for (aid, qtd, inicio, fim, temp, setup) in self.fracoes_ocupadas:
-            logger.info(
-                f"🍟 Atividade {aid} | Frações: {qtd} | "
-                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
-                f"Faixa Temp: {temp}°C | Setup: {setup} min"
-            )
-
-    # ==========================================================
-    # 📊 Representação
-    # ==========================================================
-    def __str__(self):
-        return (
-            f"\n🍟 Fritadeira: {self.nome} (ID: {self.id})"
-            f"\nSetor: {self.setor.name} | Status: {'Ativa' if self.status_ativo else 'Inativa'}"
-            f"\nFrações totais: {self.numero_fracoes} | Ocupações atuais: {len(self.fracoes_ocupadas)}"
-        )
+        for fritadeira in self.fritadeiras:
+            fritadeira.mostrar_agenda()

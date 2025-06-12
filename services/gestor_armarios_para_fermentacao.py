@@ -14,13 +14,16 @@ Armarios = Union[ArmarioEsqueleto, ArmarioFermentador]
 
 class GestorArmariosParaFermentacao:
     """
-    🔳 Gestor especializado no controle de Armários para Fermentação (tipo Esqueleto).
+    🔳 Gestor especializado no controle de Armários para Fermentação (tipo Esqueleto e Fermentador).
     Utiliza backward scheduling e FIP.
     """
 
     def __init__(self, armarios: List[Armarios]):
         self.armarios = armarios
-
+    
+    # ==========================================================
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
+    # ==========================================================
     def _ordenar_por_fip(self, atividade: Atividade) -> List[Armarios]:
         ordenadas = sorted(
             self.armarios,
@@ -31,7 +34,10 @@ class GestorArmariosParaFermentacao:
             fip = atividade.fips_equipamentos.get(m, 999)
             logger.info(f"🔹 {m.nome} (FIP: {fip})")
         return ordenadas
-
+    
+    # ==========================================================
+    # 🎯 Alocação
+    # ==========================================================
     def alocar(
         self,
         inicio: datetime,
@@ -46,11 +52,11 @@ class GestorArmariosParaFermentacao:
         Caso contrário: (False, None, None, None)
         """
         duracao = atividade.duracao
-        equipamentos_ordenados = self._ordenar_por_fip(atividade)
+        armarios_ordenados = self._ordenar_por_fip(atividade)
         horario_final_tentativa = fim
 
         logger.info(
-            f"🌟 Tentando alocar atividade {atividade.id} ({quantidade_gramas}g | {duracao}) entre "
+            f"🎯 Tentando alocar atividade {atividade.id} ({quantidade_gramas}g | {duracao}) entre "
             f"{inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}"
         )
         niveis_necessarios = gramas_para_niveis_tela(quantidade_gramas)
@@ -58,11 +64,12 @@ class GestorArmariosParaFermentacao:
         while horario_final_tentativa - duracao >= inicio:
             horario_inicio_tentativa = horario_final_tentativa - duracao
 
-            for armario in equipamentos_ordenados:
+            for armario in armarios_ordenados:
                 if not armario.verificar_espaco_niveis(niveis_necessarios, horario_inicio_tentativa, horario_final_tentativa):
                     continue
 
                 sucesso = armario.ocupar_niveis(
+                    ordem_id=atividade.ordem_id,
                     atividade_id=atividade.id,
                     quantidade=niveis_necessarios,
                     inicio=horario_inicio_tentativa,
@@ -89,20 +96,21 @@ class GestorArmariosParaFermentacao:
         return False, None, None, None
 
     # ==========================================================
-    # 🧹 Liberação
+    # 🔓 Liberação
     # ==========================================================
     def liberar_por_atividade(self, atividade: Atividade) -> None:
-        logger.info(f"🧹 Liberando níveis da atividade {atividade.id} em todos os armários.")
         for armario in self.armarios:
-            armario.liberar_por_atividade(atividade.id)
+            armario.liberar_por_atividade(atividade.id, atividade.ordem_id)
+
+    def liberar_por_ordem(self, atividade: Atividade) -> None:
+        for armario in self.armarios:
+            armario.liberar_por_ordem(atividade.ordem_id)
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime) -> None:
-        logger.info(f"🔄 Liberando ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
         for armario in self.armarios:
             armario.liberar_ocupacoes_finalizadas(horario_atual)
 
     def liberar_todas_ocupacoes(self) -> None:
-        logger.info("🧼 Liberando todas as ocupações de todos os armários.")
         for armario in self.armarios:
             armario.liberar_todas_ocupacoes()
 

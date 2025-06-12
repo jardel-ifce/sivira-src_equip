@@ -33,25 +33,16 @@ class Freezer(Equipamento):
         )
 
         self.capacidade_caixa_30kg = capacidade_caixa_30kg
-        self.ocupacao_caixas: List[Tuple[int, datetime, datetime]] = []
+        self.ocupacao_caixas: List[Tuple[int, datetime, datetime, Optional[int]]] = []  # (quantidade, inicio, fim, ordem_id)
+        self.ocupacoes: List[Tuple[Optional[int], int, int, datetime, datetime, Optional[int]]] = []  # (ordem_id, atividade_id, quantidade, inicio, fim, temperatura)
 
         self.faixa_temperatura_min = faixa_temperatura_min
         self.faixa_temperatura_max = faixa_temperatura_max
         self.faixa_temperatura_atual = None
 
-        # Histórico: (atividade_id, quantidade, inicio, fim, temperatura)
-        self.historico_temperatura: List[Tuple[int, int, datetime, datetime, Optional[int]]] = []
-
     # ==========================================================
     # 🌡️ Controle de Temperatura
     # ==========================================================
-    def registrar_temperatura(self, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime):
-        self.historico_temperatura.append((atividade_id, quantidade, inicio, fim, self.faixa_temperatura_atual))
-        logger.info(
-            f"🌡️ Temperatura {self.faixa_temperatura_atual}°C registrada para Atividade {atividade_id} "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} no {self.nome}."
-        )
-
     def verificar_compatibilidade_de_temperatura(
         self,
         inicio: datetime,
@@ -59,7 +50,7 @@ class Freezer(Equipamento):
         temperatura_desejada: int
     ) -> bool:
         conflitos = [
-            temp for (_, _, ini, f, temp) in self.historico_temperatura
+            temp for (_, _, _, ini, f, temp) in self.ocupacoes
             if not (fim <= ini or inicio >= f)
         ]
         return all(temp == temperatura_desejada for temp in conflitos) if conflitos else True
@@ -69,7 +60,7 @@ class Freezer(Equipamento):
             return True
 
         ocupacoes_ativas = [
-            (qtd, ini, fim) for (qtd, ini, fim) in self.ocupacao_caixas
+            (qtd, ini, fim, _) for (qtd, ini, fim, _) in self.ocupacao_caixas
             if ini <= datetime.now() <= fim
         ]
 
@@ -91,47 +82,82 @@ class Freezer(Equipamento):
     # ==========================================================
     def verificar_espaco_caixas(self, quantidade_caixas: int, inicio: datetime, fim: datetime) -> bool:
         ocupadas = sum(
-            qtd for (qtd, ini, f) in self.ocupacao_caixas
+            qtd for (qtd, ini, f, _) in self.ocupacao_caixas
             if not (fim <= ini or inicio >= f)
         )
         return (ocupadas + quantidade_caixas) <= self.capacidade_caixa_30kg
 
-    def ocupar_caixas(self, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+    def ocupar_caixas(
+        self,
+        ordem_id: Optional[int],
+        atividade_id: int,
+        quantidade: int,
+        inicio: datetime,
+        fim: datetime
+    ) -> bool:
         if not self.verificar_espaco_caixas(quantidade, inicio, fim):
             return False
-        self.ocupacao_caixas.append((quantidade, inicio, fim))
-        self.registrar_temperatura(atividade_id, quantidade, inicio, fim)
+
+        self.ocupacao_caixas.append((quantidade, inicio, fim, ordem_id))
+        self.ocupacoes.append((ordem_id, atividade_id, quantidade, inicio, fim, self.faixa_temperatura_atual))
+
+        logger.info(
+            f"📦 {self.nome} alocado para Atividade {atividade_id} | Ordem {ordem_id} "
+            f"| Caixas: {quantidade} | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} "
+            f"| Temperatura: {self.faixa_temperatura_atual}°C"
+        )
         return True
 
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, atividade_id: int):
-        self.historico_temperatura = [
-            (aid, qtd, ini, fim, temp)
-            for (aid, qtd, ini, fim, temp) in self.historico_temperatura
-            if aid != atividade_id
+    def liberar_por_atividade(self, atividade_id: int, ordem_id: Optional[int] = None):
+        self.ocupacoes = [
+            (oid, aid, qtd, ini, fim, temp)
+            for (oid, aid, qtd, ini, fim, temp) in self.ocupacoes
+            if not (aid == atividade_id and (ordem_id is None or oid == ordem_id))
+        ]
+        self.ocupacao_caixas = [
+            (qtd, ini, fim, oid)
+            for (qtd, ini, fim, oid) in self.ocupacao_caixas
+            if not (oid == ordem_id and any(aid == atividade_id and oid == ordem_id for (_, aid, _, ini2, fim2, _) in self.ocupacoes))
+        ]
+
+    def liberar_por_ordem(self, ordem_id: int):
+        self.ocupacoes = [
+            (oid, aid, qtd, ini, fim, temp)
+            for (oid, aid, qtd, ini, fim, temp) in self.ocupacoes
+            if oid != ordem_id
+        ]
+        self.ocupacao_caixas = [
+            (qtd, ini, fim, oid)
+            for (qtd, ini, fim, oid) in self.ocupacao_caixas
+            if oid != ordem_id
         ]
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        self.ocupacao_caixas = [(qtd, ini, fim) for (qtd, ini, fim) in self.ocupacao_caixas if fim > horario_atual]
-        self.historico_temperatura = [
-            (aid, qtd, ini, fim, temp)
-            for (aid, qtd, ini, fim, temp) in self.historico_temperatura if fim > horario_atual
+        self.ocupacoes = [
+            (oid, aid, qtd, ini, fim, temp)
+            for (oid, aid, qtd, ini, fim, temp) in self.ocupacoes if fim > horario_atual
+        ]
+        self.ocupacao_caixas = [
+            (qtd, ini, fim, oid)
+            for (qtd, ini, fim, oid) in self.ocupacao_caixas if fim > horario_atual
         ]
 
     def liberar_todas_ocupacoes(self):
+        self.ocupacoes.clear()
         self.ocupacao_caixas.clear()
-        self.historico_temperatura.clear()
 
     def liberar_intervalo(self, inicio: datetime, fim: datetime):
-        self.ocupacao_caixas = [
-            (qtd, ini, f) for (qtd, ini, f) in self.ocupacao_caixas
+        self.ocupacoes = [
+            (oid, aid, qtd, ini, f, temp)
+            for (oid, aid, qtd, ini, f, temp) in self.ocupacoes
             if not (ini >= inicio and f <= fim)
         ]
-        self.historico_temperatura = [
-            (aid, qtd, ini, f, temp)
-            for (aid, qtd, ini, f, temp) in self.historico_temperatura
+        self.ocupacao_caixas = [
+            (qtd, ini, f, oid)
+            for (qtd, ini, f, oid) in self.ocupacao_caixas
             if not (ini >= inicio and f <= fim)
         ]
 
@@ -139,16 +165,17 @@ class Freezer(Equipamento):
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
-        logger.info(f"==============================================")
+        logger.info("==============================================")
         logger.info(f"📅 Agenda do {self.nome}")
-        logger.info(f"==============================================")
+        logger.info("==============================================")
 
-        if not self.historico_temperatura:
+        if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
 
-        for (atividade_id, quantidade, inicio, fim, temp) in self.historico_temperatura:
+        for (ordem_id, atividade_id, quantidade, inicio, fim, temp) in self.ocupacoes:
             logger.info(
-                f"❄️ Atividade {atividade_id} | Caixas: {quantidade} unidades | "
-                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Temperatura: {temp}°C"
+                f"📦 Ordem {ordem_id} | Atividade {atividade_id} | Caixas: {quantidade} | "
+                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Temp: {temp}°C"
             )
+

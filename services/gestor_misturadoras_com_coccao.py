@@ -15,7 +15,10 @@ logger = setup_logger("GestorMisturadorasComCoccao")
 class GestorMisturadorasComCoccao:
     def __init__(self, hotmixes: List[HotMix]):
         self.hotmixes = hotmixes
-
+    
+    # ==========================================================
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
+    # ==========================================================  
     def _ordenar_por_fip(self, atividade: Atividade) -> List[HotMix]:
         ordenadas = sorted(
             self.hotmixes,
@@ -26,87 +29,10 @@ class GestorMisturadorasComCoccao:
             fip = atividade.fips_equipamentos.get(m, 999)
             logger.info(f"🔹 {m.nome} (FIP: {fip})")
         return ordenadas
-
-    def alocar(
-        self,
-        inicio: datetime,
-        fim: datetime,
-        atividade: Atividade,
-        quantidade_produto: Optional[float] = None,
-    ) -> Tuple[bool, Optional[HotMix], Optional[datetime], Optional[datetime]]:
-
-        if not isinstance(atividade.quantidade_produto, (int, float)):
-            logger.error("❌ Quantidade inválida para a atividade.")
-            return False, None, None, None
-
-        quantidade = quantidade_produto
-        duracao = atividade.duracao
-        horario_final = fim
-
-        hotmixes_ordenados = self._ordenar_por_fip(atividade)
-
-        while horario_final - duracao >= inicio:
-            horario_inicio = horario_final - duracao
-
-            for hotmix in hotmixes_ordenados:
-                if not hotmix.esta_disponivel(horario_inicio, horario_final):
-                    continue
-
-                if not (hotmix.capacidade_gramas_min <= quantidade <= hotmix.capacidade_gramas_max):
-                    continue
-
-                velocidade = self._obter_velocidade(atividade, hotmix)
-                chama = self._obter_chama(atividade, hotmix)
-                pressao = self._obter_pressoes(atividade, hotmix)
-
-                if velocidade is None or chama is None or not pressao:
-                    continue
-
-                sucesso = hotmix.ocupar(
-                    atividade_id=atividade.id,
-                    quantidade=quantidade,
-                    inicio=horario_inicio,
-                    fim=horario_final,
-                    velocidade=velocidade,
-                    chama=chama,
-                    pressao_chamas=pressao
-                )
-
-                if sucesso:
-                    atividade.equipamentos_selecionados.append(hotmix)
-                    atividade.inicio_planejado = horario_inicio
-                    atividade.fim_planejado = horario_final
-                    atividade.alocada = True
-                    logger.info(
-                        f"✅ Atividade {atividade.id} alocada de {horario_inicio.strftime('%H:%M')} até {horario_final.strftime('%H:%M')} no equipamento {hotmix.nome}"
-                    )
-                    return True, hotmix, horario_inicio, horario_final
-
-            horario_final -= timedelta(minutes=5)
-
-        logger.warning(
-            f"❌ Atividade {atividade.id} não alocada entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}.")
-        return False, None, None, None
-
-    def liberar_por_atividade(self, atividade_id: int):
-        for hotmix in self.hotmixes:
-            hotmix.liberar_por_atividade(atividade_id)
-
-    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        for hotmix in self.hotmixes:
-            hotmix.liberar_concluidas(horario_atual)
-
-    def liberar_todas_ocupacoes(self):
-        for hotmix in self.hotmixes:
-            hotmix.ocupacoes.clear()
-
-    def mostrar_agenda(self):
-        logger.info("==============================================")
-        logger.info("📅 Agenda das Misturadoras com Cocção (HotMix)")
-        logger.info("==============================================")
-        for hotmix in self.hotmixes:
-            hotmix.mostrar_agenda()
-
+    
+    # ==========================================================
+    # 🔍 Leitura dos parâmetros via JSON
+    # ==========================================================
     @staticmethod
     def _normalizar_nome(nome: str) -> str:
         return unicodedata.normalize("NFKD", nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
@@ -140,3 +66,99 @@ class GestorMisturadorasComCoccao:
             except Exception:
                 continue
         return pressoes
+
+    # ==========================================================
+    # 🎯 Alocação
+    # ==========================================================    
+    def alocar(
+        self,
+        inicio: datetime,
+        fim: datetime,
+        atividade: Atividade,
+        quantidade_gramas: float,
+        **kwargs
+    ) -> Tuple[bool, Optional[HotMix], Optional[datetime], Optional[datetime]]:
+
+
+        duracao = atividade.duracao
+        horario_final = fim
+
+        hotmixes_ordenados = self._ordenar_por_fip(atividade)
+
+        while horario_final - duracao >= inicio:
+            horario_inicio = horario_final - duracao
+
+            for hotmix in hotmixes_ordenados:
+                if not hotmix.esta_disponivel(horario_inicio, horario_final):
+                    continue
+
+                if not (hotmix.capacidade_gramas_min <= quantidade_gramas <= hotmix.capacidade_gramas_max):
+                    continue
+
+                velocidade = self._obter_velocidade(atividade, hotmix)
+                chama = self._obter_chama(atividade, hotmix)
+                pressoes = self._obter_pressoes(atividade, hotmix)
+
+                if velocidade is None or chama is None or not pressoes:
+                    continue
+
+                sucesso = hotmix.ocupar(
+                    ordem_id=atividade.ordem_id,
+                    atividade_id=atividade.id,
+                    quantidade=quantidade_gramas,
+                    inicio=horario_inicio,
+                    fim=horario_final,
+                    velocidade=velocidade,
+                    chama=chama,
+                    pressao_chamas=pressoes
+                )
+
+                if sucesso:
+                    atividade.equipamentos_selecionados.append(hotmix)
+                    atividade.inicio_planejado = horario_inicio
+                    atividade.fim_planejado = horario_final
+                    atividade.alocada = True
+                    logger.info(
+                        f"✅ Atividade {atividade.id} (Ordem {atividade.ordem_id}) alocada de "
+                        f"{horario_inicio.strftime('%H:%M')} até {horario_final.strftime('%H:%M')} no HotMix {hotmix.nome}"
+                    )
+                    return True, hotmix, horario_inicio, horario_final
+
+            horario_final -= timedelta(minutes=1)
+
+        logger.warning(
+            f"❌ Atividade {atividade.id} (Ordem {atividade.ordem_id}) não alocada entre "
+            f"{inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+        )
+        return False, None, None, None
+    
+    # ==========================================================
+    # 🔓 Liberações
+    # ==========================================================
+    def liberar_por_atividade(self, atividade: Atividade):
+        for hotmix in self.hotmixes:
+            hotmix.liberar_por_atividade(atividade.id, atividade.ordem_id)
+    
+    def liberar_por_ordem(self, atividade: Atividade):
+        for hotmix in self.hotmixes:
+            hotmix.liberar_por_atividade(atividade.ordem_id)
+      
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        for hotmix in self.hotmixes:
+            hotmix.liberar_concluidas(horario_atual)
+
+    def liberar_todas_ocupacoes(self):
+        for hotmix in self.hotmixes:
+            hotmix.ocupacoes.clear()
+
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
+    def mostrar_agenda(self):
+        logger.info("==============================================")
+        logger.info("📅 Agenda das Misturadoras com Cocção (HotMix)")
+        logger.info("==============================================")
+        for hotmix in self.hotmixes:
+            hotmix.mostrar_agenda()
+
+    

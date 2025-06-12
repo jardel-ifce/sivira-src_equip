@@ -14,6 +14,9 @@ class GestorMisturadoras:
     def __init__(self, masseiras: List[Masseira]):
         self.masseiras = masseiras
 
+    # ==========================================================
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
+    # ==========================================================  
     def _ordenar_por_fip(self, atividade: Atividade) -> List[Masseira]:
         ordenadas = sorted(
             self.masseiras,
@@ -24,20 +27,81 @@ class GestorMisturadoras:
             fip = atividade.fips_equipamentos.get(m, 999)
             logger.info(f"🔹 {m.nome} (FIP: {fip})")
         return ordenadas
+    
+    # ==========================================================
+    # 🔍 Leitura dos parâmetros via JSON
+    # ==========================================================    
+    def _obter_velocidades_para_masseira(self, atividade: Atividade, masseira: Masseira) -> List[TipoVelocidade]:
+        chave = self._normalizar_nome(masseira.nome)
+        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave, {})
 
+        velocidades_raw = config.get("velocidade", [])
+        if isinstance(velocidades_raw, str):
+            velocidades_raw = [velocidades_raw]
+
+        velocidades: List[TipoVelocidade] = []
+        for v in velocidades_raw:
+            try:
+                velocidades.append(TipoVelocidade[v.strip().upper()])
+            except KeyError:
+                logger.warning(f"⚠️ Velocidade inválida: '{v}' para masseira {masseira.nome}")
+
+        if not velocidades:
+            logger.warning(f"⚠️ Nenhuma velocidade definida para masseira {masseira.nome}")
+        else:
+            logger.info(f"⚙️ Velocidades para {masseira.nome}: {[v.name for v in velocidades]}")
+        return velocidades
+
+    def _obter_tipo_mistura_para_masseira(self, atividade: Atividade, masseira: Masseira) -> Optional[TipoMistura]:
+        chave = self._normalizar_nome(masseira.nome)
+        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave, {})
+
+        raw = config.get("tipo_mistura")
+        if raw is None:
+            logger.warning(f"⚠️ Tipo de mistura não definido para masseira {masseira.nome}")
+            return None
+
+        if isinstance(raw, list):
+            if not raw:
+                logger.warning(f"⚠️ Lista vazia de tipo_mistura para masseira {masseira.nome}")
+                return None
+            raw = raw[0]
+
+        try:
+            tipo = TipoMistura[raw.strip().upper()]
+            logger.info(f"⚙️ Tipo de mistura para {masseira.nome}: {tipo.name}")
+            return tipo
+        except KeyError:
+            logger.warning(f"⚠️ Tipo de mistura inválido: '{raw}' para masseira {masseira.nome}")
+            return None
+
+    @staticmethod
+    def _normalizar_nome(nome: str) -> str:
+        return (
+            unicodedata.normalize("NFKD", nome.lower())
+            .encode("ASCII", "ignore")
+            .decode()
+            .replace(" ", "_")
+        )
+    
+    # ==========================================================
+    # 🎯 Alocação
+    # ==========================================================    
     def alocar(
         self,
         inicio: datetime,
         fim: datetime,
         atividade: Atividade,
-        quantidade: float
+        quantidade: float,
+        **kwargs
     ) -> Tuple[bool, Optional[Masseira], Optional[datetime], Optional[datetime]]:
 
+    
         duracao = atividade.duracao
         horario_final_tentativa = fim
 
         logger.info(
-            f"🎯 Tentando alocar atividade {atividade.id} "
+            f"🎯 Tentando alocar atividade {atividade.id} (Ordem {atividade.ordem_id}) "
             f"(duração: {duracao}, quantidade: {quantidade}g) "
             f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
@@ -47,7 +111,6 @@ class GestorMisturadoras:
         while horario_final_tentativa - duracao >= inicio:
             horario_inicio_tentativa = horario_final_tentativa - duracao
 
-            # 🔁 Primeiro tenta dividir entre masseiras disponíveis
             masseiras_disponiveis = [
                 m for m in masseiras_ordenadas
                 if m.esta_disponivel(horario_inicio_tentativa, horario_final_tentativa)
@@ -66,10 +129,11 @@ class GestorMisturadoras:
                     tipo_mistura = self._obter_tipo_mistura_para_masseira(atividade, masseira)
 
                     sucesso = masseira.ocupar(
+                        ordem_id=atividade.ordem_id,
+                        atividade_id=atividade.id,
                         quantidade_gramas=alocar,
                         inicio=horario_inicio_tentativa,
                         fim=horario_final_tentativa,
-                        atividade_id=atividade.id,
                         velocidades=velocidades,
                         tipo_mistura=tipo_mistura
                     )
@@ -84,18 +148,30 @@ class GestorMisturadoras:
                         atividade.fim_planejado = horario_final_tentativa
                         atividade.alocada = True
                         logger.info(
-                            f"✅ Atividade {atividade.id} dividida em {len(equipamentos_usados)} masseira(s) "
+                            f"✅ Atividade {atividade.id} da ordem {atividade.ordem_id} alocada em "
+                            f"{len(equipamentos_usados)} masseira(s) "
                             f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}"
                         )
                         return True, equipamentos_usados[0], horario_inicio_tentativa, horario_final_tentativa
 
-            horario_final_tentativa -= timedelta(minutes=5)
+            horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada em nenhuma masseira "
-            f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            f"❌ Atividade {atividade.id} da ordem {atividade.ordem_id} não pôde ser alocada "
+            f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
+    
+    # ==========================================================
+    # 🔓 Liberações
+    # ==========================================================
+    def liberar_por_atividade(self, atividade: Atividade):
+        for masseira in self.masseiras:
+            masseira.liberar_por_atividade(atividade.id, atividade.ordem_id)
+
+    def liberar_por_ordem(self, atividade: Atividade):
+        for masseira in self.masseiras:
+            masseira.liberar_por_ordem(atividade.ordem_id)
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         for masseira in self.masseiras:
@@ -104,7 +180,10 @@ class GestorMisturadoras:
     def liberar_todas_ocupacoes(self):
         for masseira in self.masseiras:
             masseira.ocupacoes.clear()
-
+   
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
         logger.info("📅 Agenda das Masseiras")
@@ -118,44 +197,4 @@ class GestorMisturadoras:
                 return masseira
         return None
 
-    def _obter_velocidades_para_masseira(self, atividade: Atividade, masseira: Masseira) -> List[TipoVelocidade]:
-        chave = self._normalizar_nome(masseira.nome)
-        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave)
-        velocidades_raw = config.get("velocidade", []) if config else []
-
-        if isinstance(velocidades_raw, str):
-            velocidades_raw = [velocidades_raw]
-
-        velocidades = []
-        for v in velocidades_raw:
-            try:
-                velocidades.append(TipoVelocidade[v])
-            except Exception:
-                logger.warning(f"⚠️ Velocidade inválida: '{v}' para masseira {chave}")
-
-        if not velocidades:
-            logger.warning(f"⚠️ Nenhuma velocidade definida para masseira {chave}")
-        else:
-            logger.info(f"⚙️ Velocidades para {masseira.nome}: {[v.name for v in velocidades]}")
-
-        return velocidades
-
-    def _obter_tipo_mistura_para_masseira(self, atividade: Atividade, masseira: Masseira) -> Optional[TipoMistura]:
-        chave = self._normalizar_nome(masseira.nome)
-        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave)
-
-        if not config or not config.get("tipo_mistura"):
-            logger.warning(f"⚠️ Tipo de mistura não definido para masseira {chave}")
-            return None
-
-        try:
-            tipo = TipoMistura[config["tipo_mistura"]]
-            logger.info(f"⚙️ Tipo de mistura para {masseira.nome}: {tipo.name}")
-            return tipo
-        except Exception:
-            logger.warning(f"⚠️ Tipo de mistura inválido: '{config['tipo_mistura']}' para masseira {chave}")
-            return None
-
-    @staticmethod
-    def _normalizar_nome(nome: str) -> str:
-        return unicodedata.normalize("NFKD", nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
+    

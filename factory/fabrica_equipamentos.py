@@ -15,7 +15,9 @@ from models.equips.masseira import Masseira
 from models.equips.hot_mix import HotMix
 from models.equips.forno import Forno
 from models.equips.armario_esqueleto import ArmarioEsqueleto
-
+from models.equips.divisora_de_massas import DivisoraDeMassas
+from models.equips.modeladora_de_paes import ModeladoraDePaes
+from models.equips.armario_fermentador import ArmarioFermentador
 from enums.tipo_setor import TipoSetor
 from enums.tipo_chama import TipoChama
 from enums.tipo_pressao_chama import TipoPressaoChama
@@ -471,6 +473,103 @@ class FabricaEquipamentos:
         )
 
 
+    # =========================================
+    # 🗄️ Divisoras de Massas
+    # =========================================
+
+    def criar_divisora_de_massas_1():
+        return DivisoraDeMassas(
+            id=106,
+            nome="Divisoras de Massas 1",
+            setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
+            capacidade_boleamento_unidades_por_segundo=100,
+            capacidade_divisao_unidades_por_segundo=100,
+            capacidade_gramas_max=30000,
+            capacidade_gramas_min=100,
+            boleadora=False
+        )
+    
+    def criar_divisora_de_massas_2():
+        return DivisoraDeMassas(
+            id=107,
+            nome="Divisoras de Massas 2",
+            setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
+            capacidade_boleamento_unidades_por_segundo=100,
+            capacidade_divisao_unidades_por_segundo=100,
+            capacidade_gramas_max=30000,
+            capacidade_gramas_min=100,
+            boleadora=True
+        )
+    # =========================================
+    # 🧁 Modeladora de Pães Divisoras de Massas
+    # =========================================
+    @staticmethod 
+    def criar_modeladora_de_paes_1():
+        return ModeladoraDePaes(
+            id=108,
+            nome="Modeladora de Pães 1",
+            setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
+            capacidade_min_unidades_por_minuto=60,
+            capacidade_max_unidades_por_minuto=120 
+        )
+    @staticmethod 
+    def criar_modeladora_de_paes_2():
+        return ModeladoraDePaes(
+            id=109,
+            nome="Modeladora de Pães 2",
+            setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
+            capacidade_min_unidades_por_minuto=60,
+            capacidade_max_unidades_por_minuto=120 
+        )
+    # =========================================
+    # 🗄️ Armário Fermentador
+    # =========================================
+
+    @staticmethod
+    def criar_armario_fermentador_1():
+        return ArmarioFermentador(
+            id=110,
+            nome="Armário Fermentador 1",
+            setor=TipoSetor.PANIFICACAO,
+            nivel_tela_min=1,
+            nivel_tela_max=25
+        )
+    
+    @staticmethod
+    def criar_armario_fermentador_2():
+        return ArmarioFermentador(
+            id=111,
+            nome="Armário Fermentador 2",
+            setor=TipoSetor.PANIFICACAO,
+            nivel_tela_min=1,
+            nivel_tela_max=25
+        )
+
+    @staticmethod
+    def criar_armario_fermentador_3():
+        return ArmarioFermentador(
+            id=112,
+            nome="Armário Fermentador 3",
+            setor=TipoSetor.PANIFICACAO,
+            nivel_tela_min=1,
+            nivel_tela_max=25
+        )
+    @staticmethod
+    def criar_armario_fermentador_4():
+        return ArmarioFermentador(
+            id=113,
+            nome="Armário Fermentador 4",
+            setor=TipoSetor.PANIFICACAO,
+            nivel_tela_min=1,
+            nivel_tela_max=25
+        )
+        
+        
+
 # ✅ Instâncias prontas para importação
 camara_refrigerada_1 = FabricaEquipamentos.criar_camara_refrigerada_1()
 camara_refrigerada_2 = FabricaEquipamentos.criar_camara_refrigerada_2()
@@ -514,6 +613,17 @@ forno_4 = FabricaEquipamentos.criar_forno_4()
 
 armario_esqueleto_1 = FabricaEquipamentos.criar_armario_esqueleto_1()
 armario_esqueleto_2 = FabricaEquipamentos.criar_armario_esqueleto_2()
+
+armario_fermentador_1 = FabricaEquipamentos.criar_armario_fermentador_1()
+armario_fermentador_2 = FabricaEquipamentos.criar_armario_fermentador_2()
+armario_fermentador_3 = FabricaEquipamentos.criar_armario_fermentador_3()
+armario_fermentador_4 = FabricaEquipamentos.criar_armario_fermentador_4()
+
+divisora_de_massas_1 = FabricaEquipamentos.criar_divisora_de_massas_1()
+divisora_de_massas_2 = FabricaEquipamentos.criar_divisora_de_massas_2()
+
+modeladora_de_paes_1 = FabricaEquipamentos.criar_modeladora_de_paes_1()
+modeladora_de_paes_2 = FabricaEquipamentos.criar_modeladora_de_paes_2()
 
 equipamentos_por_nome = {
     "Bancada 7": bancada_7,

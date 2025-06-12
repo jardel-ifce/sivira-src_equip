@@ -14,7 +14,10 @@ logger = setup_logger("GestorFogoes")
 class GestorFogoes:
     def __init__(self, fogoes: List[Fogao]):
         self.fogoes = fogoes
-    
+
+    # ==========================================================
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
+    # ==========================================================    
     def _ordenar_por_fip(self, atividade: Atividade) -> List[Fogao]:
         ordenadas = sorted(
             self.fogoes,
@@ -26,6 +29,36 @@ class GestorFogoes:
             logger.info(f"🔹 {m.nome} (FIP: {fip})")
         return ordenadas
 
+    # ==========================================================
+    # 🔁 Obter tipos de chama e pressões de chama
+    # ==========================================================   
+    def _obter_tipo_chama_para_fogao(self, atividade: Atividade, fogao: Fogao) -> Optional[TipoChama]:
+        chave = unicodedata.normalize("NFKD", fogao.nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
+        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave)
+        if not config or not config.get("tipo_chama"):
+            logger.warning(f"⚠️ Tipo de chama não definido para '{chave}'")
+            return None
+        try:
+            return TipoChama[config["tipo_chama"][0]]
+        except Exception:
+            logger.warning(f"⚠️ Valor inválido em tipo_chama para {chave}")
+            return None
+
+    def _obter_pressao_chama_para_fogao(self, atividade: Atividade, fogao: Fogao) -> List[TipoPressaoChama]:
+        chave = unicodedata.normalize("NFKD", fogao.nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
+        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave)
+        pressoes_raw = config.get("pressao_chama", []) if config else []
+        pressoes = []
+        for p in pressoes_raw:
+            try:
+                pressoes.append(TipoPressaoChama[p])
+            except Exception:
+                logger.warning(f"⚠️ Pressão inválida: '{p}' para fogão {chave}")
+        return pressoes
+    
+    # ==========================================================
+    # 🎯 Alocação
+    # ==========================================================
     def alocar(
         self,
         inicio: datetime,
@@ -33,6 +66,7 @@ class GestorFogoes:
         atividade: Atividade,
         quantidade_produto: int
     ) -> Tuple[bool, Optional[Fogao], Optional[datetime], Optional[datetime]]:
+
 
         capacidade_total = sum(
             fogao.numero_bocas * fogao.capacidade_por_boca_gramas_max
@@ -57,7 +91,6 @@ class GestorFogoes:
         horario_final = fim
 
         equipamentos_ordenados = self._ordenar_por_fip(atividade)
-        
 
         while horario_final - duracao >= inicio:
             horario_inicio = horario_final - duracao
@@ -74,13 +107,14 @@ class GestorFogoes:
 
                 for idx in bocas_livres:
                     sucesso = fogao.ocupar_boca(
-                        boca=idx,
+                        ordem_id=atividade.ordem_id,
                         atividade_id=atividade.id,
                         quantidade=int(quantidade_por_boca),
                         inicio=horario_inicio,
                         fim=horario_final,
                         tipo_chama=tipo_chama,
-                        pressao_chama=pressoes_chama  # ✅ passa a lista completa
+                        pressao_chama=pressoes_chama,
+                        boca=idx
                     )
 
                     if sucesso:
@@ -100,46 +134,28 @@ class GestorFogoes:
                 return True, fogao_usado, horario_inicio, horario_final
 
             for fogao, idx_boca in bocas_alocadas:
-                fogao.liberar_boca(idx_boca, atividade.id)
+                fogao.liberar_boca(idx_boca, atividade.id, ordem_id=atividade.ordem_id)
 
-            horario_final -= timedelta(minutes=5)
+            horario_final -= timedelta(minutes=1)
 
         logger.warning(
             f"❌ Atividade {atividade.id} não alocada entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
 
-    def _obter_tipo_chama_para_fogao(self, atividade: Atividade, fogao: Fogao) -> Optional[TipoChama]:
-        chave = self._normalizar_nome(fogao.nome)
-        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave)
-        if not config or not config.get("tipo_chama"):
-            logger.warning(f"⚠️ Tipo de chama não definido para '{chave}'")
-            return None
-        try:
-            return TipoChama[config["tipo_chama"][0]]
-        except Exception:
-            logger.warning(f"⚠️ Valor inválido em tipo_chama para {chave}")
-            return None
+    
 
-    def _obter_pressao_chama_para_fogao(self, atividade: Atividade, fogao: Fogao) -> List[TipoPressaoChama]:
-        chave = self._normalizar_nome(fogao.nome)
-        config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave)
-        pressoes_raw = config.get("pressao_chama", []) if config else []
-        pressoes = []
-        for p in pressoes_raw:
-            try:
-                pressoes.append(TipoPressaoChama[p])
-            except Exception:
-                logger.warning(f"⚠️ Pressão inválida: '{p}' para fogão {chave}")
-        return pressoes
-
-    @staticmethod
-    def _normalizar_nome(nome: str) -> str:
-        return unicodedata.normalize("NFKD", nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
-
-    def liberar_por_atividade(self, atividade_id: int):
+    # ==========================================================
+    # 🧹 Liberação de ocupações
+    # ==========================================================
+    def liberar_por_atividade(self, atividade: Atividade, ordem_id: int):
         for fogao in self.fogoes:
-            fogao.liberar_por_atividade(atividade_id)
+            fogao.liberar_por_atividade(atividade.id, ordem_id)
+
+    def liberar_por_ordem(self, ordem_id: int):
+        for fogao in self.fogoes:
+            fogao.liberar_por_atividade(ordem_id)
+
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         for fogao in self.fogoes:
@@ -149,6 +165,9 @@ class GestorFogoes:
         for fogao in self.fogoes:
             fogao.liberar_todas_bocas()
 
+    # ==========================================================
+    # 📅 Visualização de agenda
+    # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
         logger.info("📅 Agenda dos Fogões")

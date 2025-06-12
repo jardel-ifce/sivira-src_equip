@@ -5,10 +5,11 @@ from models.equips.batedeira_planetaria import BatedeiraPlanetaria
 from models.atividade_base import Atividade
 from utils.logger_factory import setup_logger
 import unicodedata
+
 # 🏭 Logger específico para o gestor de batedeiras
 logger = setup_logger('GestorBatedeiras')
 
-Batedeira = Union[BatedeiraIndustrial, BatedeiraPlanetaria]
+Batedeiras = Union[BatedeiraIndustrial, BatedeiraPlanetaria]
 
 
 class GestorBatedeiras:
@@ -17,13 +18,13 @@ class GestorBatedeiras:
     utilizando backward scheduling com prioridade por FIP.
     """
 
-    def __init__(self, batedeiras: List[Batedeira]):
+    def __init__(self, batedeiras: List[Batedeiras]):
         self.batedeiras = batedeiras
 
     # ==========================================================
-    # 🧠 Ordenação por FIP
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
     # ==========================================================
-    def _ordenar_por_fip(self, atividade: Atividade) -> List[Batedeira]:
+    def _ordenar_por_fip(self, atividade: Atividade) -> List[Batedeiras]:
         ordenadas = sorted(
             self.batedeiras,
             key=lambda b: atividade.fips_equipamentos.get(b, 999)
@@ -35,11 +36,9 @@ class GestorBatedeiras:
         return ordenadas
 
     # ==========================================================
-    # 🔁 Obter velocidade segura
+    # 🔁 Obter velocidade 
     # ==========================================================
-   
-
-    def _obter_velocidade(self, atividade: Atividade, batedeira: Batedeira) -> Optional[int]:
+    def _obter_velocidade(self, atividade: Atividade, batedeira: Batedeiras) -> Optional[int]:
         """
         🔍 Busca no JSON a velocidade (inteira) configurada para a batedeira específica,
         retornando None se não encontrar.
@@ -63,10 +62,8 @@ class GestorBatedeiras:
             logger.warning(f"⚠️ Erro ao tentar obter velocidade para {batedeira.nome}: {e}")
         return None
 
-
-
     # ==========================================================
-    # 🎯 Alocação backward
+    # 🎯 Alocação
     # ==========================================================
     def alocar(
         self,
@@ -74,7 +71,7 @@ class GestorBatedeiras:
         fim: datetime,
         atividade: Atividade,
         quantidade: float
-    ) -> Tuple[bool, Optional[Batedeira], Optional[datetime], Optional[datetime]]:
+    ) -> Tuple[bool, Optional[Batedeiras], Optional[datetime], Optional[datetime]]:
 
         duracao = atividade.duracao
         horario_final_tentativa = fim
@@ -98,6 +95,7 @@ class GestorBatedeiras:
                     velocidade = self._obter_velocidade(atividade, batedeira)
 
                     sucesso = batedeira.ocupar(
+                        ordem_id=atividade.ordem_id,
                         quantidade_gramas=quantidade,
                         inicio=horario_inicio_tentativa,
                         fim=horario_final_tentativa,
@@ -115,7 +113,7 @@ class GestorBatedeiras:
                         )
                         return True, batedeira, horario_inicio_tentativa, horario_final_tentativa
 
-            horario_final_tentativa -= timedelta(minutes=5)
+            horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
             f"❌ Atividade {atividade.id} não pôde ser alocada em nenhuma batedeira "
@@ -123,13 +121,20 @@ class GestorBatedeiras:
         )
         return False, None, None, None
 
-
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         for batedeira in self.batedeiras:
             batedeira.liberar_ocupacoes_finalizadas(horario_atual)
+
+    def liberar_por_atividade(self, atividade: Atividade):
+        for batedeira in self.batedeiras:
+            batedeira.liberar_por_atividade(atividade.id, atividade.ordem_id)
+
+    def liberar_por_ordem(self, atividade: Atividade):
+        for batedeira in self.batedeiras:
+            batedeira.liberar_por_ordem(atividade.ordem_id)
 
     def liberar_todas_ocupacoes(self):
         for batedeira in self.batedeiras:
@@ -148,7 +153,7 @@ class GestorBatedeiras:
     # ==========================================================
     # 🔍 Consulta
     # ==========================================================
-    def obter_batedeira_por_id(self, id: int) -> Optional[Batedeira]:
+    def obter_batedeira_por_id(self, id: int) -> Optional[Batedeiras]:
         for batedeira in self.batedeiras:
             if batedeira.id == id:
                 return batedeira

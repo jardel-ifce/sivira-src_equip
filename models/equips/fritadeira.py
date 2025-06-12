@@ -46,51 +46,31 @@ class Fritadeira(Equipamento):
         self.faixa_temperatura_max = faixa_temperatura_max
         self.setup_minutos = setup_minutos
 
-        # 📦 Ocupações: (atividade_id, quantidade, inicio, fim, temperatura, setup)
-        self.fracoes_ocupadas: List[Tuple[int, int, datetime, datetime, int, int]] = []
+        # 📦 Ocupações: (ordem_id, atividade_id, quantidade, inicio, fim, temperatura, setup)
+        self.fracoes_ocupadas: List[Tuple[int, int, int, datetime, datetime, int, int]] = []
 
-    # ==========================================================
-    # ✅ Validações
-    # ==========================================================
     def validar_quantidade(self, quantidade: int) -> bool:
-        """
-        ✅ Verifica se a quantidade está dentro da faixa permitida pela fritadeira.
-        """
         return self.capacidade_min <= quantidade <= self.capacidade_max
 
     def validar_temperatura(self, temperatura: int) -> bool:
-        """
-        🌡️ Verifica se a temperatura solicitada está dentro da faixa permitida.
-        """
         return self.faixa_temperatura_min <= temperatura <= self.faixa_temperatura_max
 
-    # ==========================================================
-    # 🔍 Verificar disponibilidade
-    # ==========================================================
     def fracoes_disponiveis(self, inicio: datetime, fim: datetime) -> int:
-        """
-        🔍 Calcula quantas frações estão livres no intervalo solicitado.
-        """
         ocupadas = sum(
-            qtd for (aid, qtd, ini, f, temp, setup) in self.fracoes_ocupadas
+            qtd for (_, _, qtd, ini, f, _, _) in self.fracoes_ocupadas
             if not (fim <= ini or inicio >= f)
         )
         return self.numero_fracoes - ocupadas
 
-    # ==========================================================
-    # 🔐 Ocupação
-    # ==========================================================
     def ocupar(
         self,
+        ordem_id: int,
         atividade_id: int,
         quantidade_fracoes: int,
         inicio: datetime,
         fim: datetime,
         temperatura: int
     ) -> bool:
-        """
-        🔐 Tenta ocupar a fritadeira com base nas regras de capacidade, temperatura e frações disponíveis.
-        """
         if not self.validar_quantidade(quantidade_fracoes):
             logger.warning(f"❌ Quantidade inválida: {quantidade_fracoes}g para a fritadeira {self.nome}.")
             return False
@@ -101,12 +81,11 @@ class Fritadeira(Equipamento):
 
         if self.fracoes_disponiveis(inicio, fim) < quantidade_fracoes:
             logger.warning(
-                f"❌ Frações insuficientes na fritadeira {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
+                f"❌ Frações insuficientes na fritadeira {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}.")
             return False
 
         self.fracoes_ocupadas.append(
-            (atividade_id, quantidade_fracoes, inicio, fim, temperatura, self.setup_minutos)
+            (ordem_id, atividade_id, quantidade_fracoes, inicio, fim, temperatura, self.setup_minutos)
         )
 
         logger.info(
@@ -116,56 +95,87 @@ class Fritadeira(Equipamento):
         )
         return True
 
-    # ==========================================================
-    # 🧹 Liberação
-    # ==========================================================
-    def liberar_por_atividade(self, atividade_id: int):
+    def liberar_por_ordem(self, ordem_id: int):
         """
-        🧹 Libera todas as frações ocupadas associadas à atividade fornecida.
+        🧹 Libera todas as ocupações associadas à ordem fornecida.
         """
         antes = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas = [
-            (aid, qtd, ini, fim, temp, setup)
-            for (aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
-            if aid != atividade_id
+            (oid, aid, qtd, ini, fim, temp, setup)
+            for (oid, aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
+            if oid != ordem_id
         ]
         liberadas = antes - len(self.fracoes_ocupadas)
 
         if liberadas > 0:
             logger.info(
-                f"🟩 Liberou {liberadas} ocupações da fritadeira {self.nome} "
-                f"relacionadas à atividade {atividade_id}."
+                f"🗑️ Liberou {liberadas} ocupações da fritadeira {self.nome} "
+                f"relacionadas à ordem {ordem_id}."
             )
         else:
             logger.info(
-                f"ℹ️ Nenhuma ocupação da fritadeira {self.nome} estava associada à atividade {atividade_id}."
+                f"ℹ️ Nenhuma ocupação da fritadeira {self.nome} estava associada à ordem {ordem_id}."
             )
 
-    # ==========================================================
-    # 📅 Agenda
-    # ==========================================================
+    def liberar_por_atividade(self, atividade_id: int,  ordem_id: int):
+        """
+        🧹 Libera ocupações específicas de uma atividade dentro de uma ordem.
+        """
+        antes = len(self.fracoes_ocupadas)
+        self.fracoes_ocupadas = [
+            (oid, aid, qtd, ini, fim, temp, setup)
+            for (oid, aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
+            if not (oid == ordem_id and aid == atividade_id)
+        ]
+        liberadas = antes - len(self.fracoes_ocupadas)
+
+        if liberadas > 0:
+            logger.info(
+                f"🗑️ Liberou {liberadas} ocupações da fritadeira {self.nome} "
+                f"relacionadas à atividade {atividade_id} da ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação da fritadeira {self.nome} associada à atividade {atividade_id} "
+                f"da ordem {ordem_id} foi encontrada."
+            )
+    def liberar_ocupacoes_finalizadas(self, agora: datetime):
+        """
+        ⏱️ Libera todas as ocupações cuja janela já foi finalizada até o tempo atual.
+        """
+        antes = len(self.fracoes_ocupadas)
+        self.fracoes_ocupadas = [
+            (oid, aid, qtd, ini, fim, temp, setup)
+            for (oid, aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
+            if fim > agora
+        ]
+        liberadas = antes - len(self.fracoes_ocupadas)
+
+        if liberadas > 0:
+            logger.info(
+                f"✅ Liberadas {liberadas} ocupações finalizadas da fritadeira {self.nome} até {agora.strftime('%H:%M')}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação finalizada para liberar na fritadeira {self.nome} até {agora.strftime('%H:%M')}."
+            )
+            
     def mostrar_agenda(self):
-        """
-        📅 Exibe todas as ocupações atuais da fritadeira.
-        """
         logger.info("==============================================")
-        logger.info(f"📅 Agenda da Fritadeira {self.nome}")
+        logger.info(f"🗕️ Agenda da Fritadeira {self.nome}")
         logger.info("==============================================")
 
         if not self.fracoes_ocupadas:
             logger.info("🔹 Nenhuma ocupação.")
             return
 
-        for (aid, qtd, inicio, fim, temp, setup) in self.fracoes_ocupadas:
+        for (ordem_id, aid, qtd, inicio, fim, temp, setup) in self.fracoes_ocupadas:
             logger.info(
-                f"🍟 Atividade {aid} | Frações: {qtd} | "
+                f"🍟 Ordem {ordem_id} | Atividade {aid} | Frações: {qtd} | "
                 f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
                 f"Temp: {temp}°C | Setup: {setup} min"
             )
 
-    # ==========================================================
-    # 📊 Representação
-    # ==========================================================
     def __str__(self):
         return (
             f"\n🍟 Fritadeira: {self.nome} (ID: {self.id})"

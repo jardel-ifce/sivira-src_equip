@@ -5,15 +5,15 @@ from datetime import datetime
 from typing import List, Tuple
 from utils.logger_factory import setup_logger
 
-# 🏭 Logger específico para a Batedeira Planetária
+# 🪐 Logger específico para a Batedeira Planetária
 logger = setup_logger('BatedeiraPlanetaria')
 
 
 class BatedeiraPlanetaria(Equipamento):
     """
-    🏭 Classe que representa uma Batedeira Planetária.
+    🪐 Representa uma Batedeira Planetária.
     ✅ Controle de velocidade mínima e máxima.
-    ✅ Ocupação com exclusividade no tempo.
+    ✅ Ocupação exclusiva no tempo.
     ✅ Capacidade de mistura validada por peso.
     """
 
@@ -41,14 +41,14 @@ class BatedeiraPlanetaria(Equipamento):
         self.velocidade_min = velocidade_min
         self.velocidade_max = velocidade_max
 
-        # 📦 Ocupações: (atividade_id, quantidade, inicio, fim, velocidade)
-        self.ocupacoes: List[Tuple[int, float, datetime, datetime, int]] = []
+        # 📦 Ocupações: (ordem_id, atividade_id, quantidade, inicio, fim, velocidade)
+        self.ocupacoes: List[Tuple[int, int, float, datetime, datetime, int]] = []
 
     # ==========================================================
     # ✅ Validações
     # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for _, _, ocup_inicio, ocup_fim, _ in self.ocupacoes:
+        for _, _, _, ocup_inicio, ocup_fim, _ in self.ocupacoes:
             if not (fim <= ocup_inicio or inicio >= ocup_fim):
                 return False
         return True
@@ -64,6 +64,7 @@ class BatedeiraPlanetaria(Equipamento):
     # ==========================================================
     def ocupar(
         self,
+        ordem_id: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
@@ -94,11 +95,11 @@ class BatedeiraPlanetaria(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((atividade_id, quantidade_gramas, inicio, fim, velocidade))
+        self.ocupacoes.append((ordem_id, atividade_id, quantidade_gramas, inicio, fim, velocidade))
         logger.info(
-            f"🏭 {self.nome} | Ocupação registrada: {quantidade_gramas}g "
+            f"🪐 {self.nome} | Ocupação registrada: {quantidade_gramas}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Atividade {atividade_id}) com velocidade {velocidade}."
+            f"(Atividade {atividade_id}, Ordem {ordem_id}) com velocidade {velocidade}."
         )
         return True
 
@@ -108,8 +109,8 @@ class BatedeiraPlanetaria(Equipamento):
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (aid, qtd, ini, fim, vel)
-            for (aid, qtd, ini, fim, vel) in self.ocupacoes
+            (oid, aid, qtd, ini, fim, vel)
+            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
             if fim > horario_atual
         ]
         liberadas = antes - len(self.ocupacoes)
@@ -118,34 +119,43 @@ class BatedeiraPlanetaria(Equipamento):
                 f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
             )
 
-    def liberar(self, inicio: datetime, fim: datetime, atividade_id: int):
+
+    def liberar_por_atividade(self, atividade_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (aid, qtd, ini, fim, vel)
-            for (aid, qtd, ini, fim, vel) in self.ocupacoes
-            if not (aid == atividade_id and ini == inicio and fim == fim)
+            (oid, aid, qtd, ini, fim, vel)
+            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            if aid != atividade_id
         ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(
-                f"🟩 {self.nome} | Ocupação da atividade {atividade_id} removida "
-                f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
-            )
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(f"🟩 {self.nome} | Liberadas {liberadas} ocupações da atividade {atividade_id}.")
+
+    def liberar_por_ordem(self, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            (oid, aid, qtd, ini, fim, vel)
+            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            if oid != ordem_id
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(f"🟩 {self.nome} | Liberadas {liberadas} ocupações da ordem {ordem_id}.")
 
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
-        logger.info(f"📅 Agenda da Batedeira {self.nome}")
+        logger.info(f"📅 Agenda da {self.nome}")
         logger.info("==============================================")
 
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
 
-        for aid, qtd, ini, fim, vel in self.ocupacoes:
+        for oid, aid, qtd, ini, fim, vel in self.ocupacoes:
             logger.info(
-                f"🌀 Atividade ID {aid} | Quantidade: {qtd}g | "
+                f"🌀 Atividade ID {aid} | Ordem {oid} | Quantidade: {qtd}g | "
                 f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Velocidade: {vel}"
             )

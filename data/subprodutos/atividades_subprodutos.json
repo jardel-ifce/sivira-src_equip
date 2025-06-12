@@ -1,0 +1,38 @@
+[
+  {
+    "id_item": 2,
+    "nome": "massa_crocante",
+    "atividades": [
+      {
+        "id_atividade": 1,
+        "nome": "mistura_de_massas_crocantes",
+        "tipo_atividade": "MISTURA_DE_MASSAS_CROCANTES",
+        "tipo_equipamento": {
+          "MISTURADORAS": 1
+        },
+        "equipamentos_elegiveis": ["masseira_1", "masseira_2"],
+        "fips_equipamentos": {
+          "masseira_1": 2,
+          "masseira_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "masseira_1": {
+            "velocidade": ["BAIXA", "MEDIA"],
+            "tipo_mistura": ["SEMI_RAPIDA"]
+          },
+          "masseira_2": {
+            "velocidade": ["ALTA"],
+            "tipo_mistura": ["RAPIDA"]
+          }
+        },
+        "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+        "quantidade_funcionarios": 2,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 17000, "duracao": "00:07:00" },
+          { "quantidade_min": 17001, "quantidade_max": 34000, "duracao": "00:11:00" },
+          { "quantidade_min": 34001, "quantidade_max": 50000, "duracao": "00:15:00" }
+        ]
+      }
+    ]
+  }
+]

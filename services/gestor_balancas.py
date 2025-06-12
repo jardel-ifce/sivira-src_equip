@@ -16,6 +16,21 @@ class GestorBalancas:
 
     def __init__(self, balancas: List[BalancaDigital]):
         self.balancas = balancas
+    
+    # ==========================================================
+    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
+    # ==========================================================
+    def _ordenar_por_fip(self, atividade: Atividade) -> List[BalancaDigital]:
+        ordenadas = sorted(
+            self.balancas,
+            key=lambda m: atividade.fips_equipamentos.get(m, 999)
+        )
+
+        logger.info("📊 Ordem as balanças por FIP (prioridade):")
+        for m in ordenadas:
+            fip = atividade.fips_equipamentos.get(m, 999)
+            logger.info(f"🔹 {m.nome} (FIP: {fip})")
+        return ordenadas
 
     # ==========================================================
     # 🎯 Alocação
@@ -27,14 +42,8 @@ class GestorBalancas:
         atividade: Atividade,
         quantidade_gramas: float
     ) -> Tuple[bool, Optional[BalancaDigital], Optional[datetime], Optional[datetime]]:
-        """
-        ⚖️ Tenta registrar a ocupação em alguma balança válida para o peso.
-        Mesmo sem controle de tempo, retorna uma tupla padrão com (sucesso, equipamento, inicio, fim).
-        """
-        balancas_ordenadas = sorted(
-            self.balancas,
-            key=lambda b: atividade.fips_equipamentos.get(b, 999)
-        )
+        
+        balancas_ordenadas = self._ordenar_por_fip(atividade)
 
         for balanca in balancas_ordenadas:
             if not balanca.aceita_quantidade(quantidade_gramas):
@@ -43,20 +52,25 @@ class GestorBalancas:
                 )
                 continue
 
+            # Aloca informando ordem + atividade
             sucesso = balanca.ocupar(
+                ordem_id=atividade.ordem_id,
                 atividade_id=atividade.id,
                 quantidade=quantidade_gramas
             )
+
             if sucesso:
                 atividade.equipamento_alocado = balanca
                 atividade.equipamentos_selecionados = [balanca]
                 atividade.alocada = True
 
+                # Instante fictício, pois balanças não controlam tempo
+                instante = inicio
                 logger.info(
                     f"✅ Atividade {atividade.id} alocada na balança {balanca.nome} "
-                    f"(sem intervalo de tempo)."
+                    f"(instante: {instante.isoformat()})."
                 )
-                return True, balanca, None, None
+                return True, balanca, instante, instante
 
             else:
                 logger.warning(
@@ -72,14 +86,14 @@ class GestorBalancas:
     # 🔓 Liberação
     # ==========================================================
     def liberar_por_atividade(self, atividade: Atividade):
-        logger.info(
-            f"🧹 Liberando ocupações associadas à atividade {atividade.id} em todas as balanças."
-        )
         for balanca in self.balancas:
-            balanca.liberar_por_atividade(atividade.id)
+            balanca.liberar_por_atividade(atividade.id, atividade.ordem_id)
+
+    def liberar_por_ordem(self, atividade: Atividade):
+        for balanca in self.balancas:
+            balanca.liberar_por_ordem(atividade.ordem_id)
 
     def liberar_todas_ocupacoes(self):
-        logger.info("🧹 Liberando todas as ocupações de todas as balanças.")
         for balanca in self.balancas:
             balanca.liberar_todas_ocupacoes()
 
@@ -87,6 +101,9 @@ class GestorBalancas:
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
+        """
+        Exibe a agenda atual de cada balança.
+        """
         logger.info("==============================================")
         logger.info("📅 Agenda das Balanças")
         logger.info("==============================================")

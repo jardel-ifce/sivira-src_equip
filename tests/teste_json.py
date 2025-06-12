@@ -12,7 +12,7 @@ from enums.tipo_profissional import TipoProfissional
 from services.mapa_gestor_equipamento import MAPA_GESTOR
 from utils.logger_factory import setup_logger
 from models.atividade_base import Atividade
-from parser.leitor_json_subprodutos import buscar_dados_por_id_atividade
+from parser.carregador_json_atividades import buscar_dados_por_id_atividade
 from factory import fabrica_equipamentos
 from enums.tipo_chama import TipoChama
 from enums.tipo_pressao_chama import TipoPressaoChama
