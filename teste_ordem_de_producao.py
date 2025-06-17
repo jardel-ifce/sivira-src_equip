@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 ordem = []
-for i in range(1,5):
+for i in range(1,2):
     ordem = OrdemDeProducao(
         ordem_id=i,
         id_produto=1,

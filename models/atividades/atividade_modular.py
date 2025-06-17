@@ -130,10 +130,11 @@ class AtividadeModular(Atividade):
 
         while horario_final - self.duracao >= inicio_jornada:
             sucesso = True
-            equipamentos_alocados = []
-            ocupacoes_efetuadas = []
+            equipamentos_alocados = []  # Lista para registrar os equipamentos alocados com sucesso
+            ocupacoes_efetuadas = []  # Lista para registrar as ocupações
             horario_fim_etapa = horario_final
 
+            # Itera sobre os equipamentos elegíveis
             for tipo_eqp, _ in reversed(list(self._quantidade_por_tipo_equipamento.items())):
                 equipamentos = [eqp for eqp in self.equipamentos_elegiveis if eqp.tipo_equipamento == tipo_eqp]
 
@@ -155,7 +156,7 @@ class AtividadeModular(Atividade):
                 nome_normalizado = self._normalizar_nome(equipamento_exemplo.nome)
                 config = self.configuracoes_equipamentos.get(nome_normalizado, {})
 
-                # 🔧 Corrigido: cálculo seguro de horário de início
+                # 🔧 Cálculo seguro de horário de início
                 inicio_previsto = horario_fim_etapa - self.duracao
 
                 if self.duracao.total_seconds() > 0 and inicio_previsto == horario_fim_etapa:
@@ -174,7 +175,7 @@ class AtividadeModular(Atividade):
                         break
 
                     equipamentos_alocados.append(resultado)
-                    horario_fim_etapa = resultado[2]
+                    horario_fim_etapa = resultado[2]  # Atualiza o horário de fim da etapa
 
                 except Exception as e:
                     logger.error(f"❌ Erro ao alocar {tipo_eqp}: {e}")
@@ -182,11 +183,11 @@ class AtividadeModular(Atividade):
                     break
 
             if sucesso:
+                # Se todos os equipamentos foram alocados com sucesso, registramos o sucesso
                 inicio_funcionario, fim_funcionario = self._registrar_sucesso(equipamentos_alocados, horario_fim_etapa, horario_final)
                 profissionais = self._priorizar_funcionarios()
-                # ✅ Atribui à atividade
                 self.funcionarios_alocados = profissionais
-                # 📝 Registra a alocação no histórico de cada profissional
+
                 for f in profissionais:
                     f.registrar_alocacao(self.ordem_id, self.id, self.nome_atividade, inicio_funcionario, fim_funcionario)
 
@@ -196,7 +197,7 @@ class AtividadeModular(Atividade):
                     )
                 return True
 
-
+            # Rollback caso falha na alocação de qualquer equipamento
             for equipamento in [e[1] for e in equipamentos_alocados]:
                 try:
                     if hasattr(equipamento, "liberar_por_atividade"):
