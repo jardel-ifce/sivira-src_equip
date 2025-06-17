@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip")  # ajuste para o seu caminho
+
 from datetime import datetime, timedelta
 from services.mapa_gestor_equipamento import MAPA_GESTOR
 from utils.logger_factory import setup_logger

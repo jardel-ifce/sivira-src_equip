@@ -11,25 +11,25 @@ logger = setup_logger('GestorBalancas')
 class GestorBalancas:
     """
     ⚖️ Gestor especializado para controle de balanças digitais.
-    Permite múltiplas alocações simultâneas.
+    Permite múltiplas alocações simultâneas com controle de tempo.
     """
 
     def __init__(self, balancas: List[BalancaDigital]):
         self.balancas = balancas
-    
+
     # ==========================================================
     # 📊 Ordenação dos equipamentos por FIP (fator de importância)
     # ==========================================================
     def _ordenar_por_fip(self, atividade: Atividade) -> List[BalancaDigital]:
         ordenadas = sorted(
             self.balancas,
-            key=lambda m: atividade.fips_equipamentos.get(m, 999)
+            key=lambda b: atividade.fips_equipamentos.get(b, 999)
         )
 
-        logger.info("📊 Ordem as balanças por FIP (prioridade):")
-        for m in ordenadas:
-            fip = atividade.fips_equipamentos.get(m, 999)
-            logger.info(f"🔹 {m.nome} (FIP: {fip})")
+        logger.info("📊 Ordem das balanças por FIP (prioridade):")
+        for b in ordenadas:
+            fip = atividade.fips_equipamentos.get(b, 999)
+            logger.info(f"🔹 {b.nome} (FIP: {fip})")
         return ordenadas
 
     # ==========================================================
@@ -52,11 +52,13 @@ class GestorBalancas:
                 )
                 continue
 
-            # Aloca informando ordem + atividade
+            # Aloca informando início e fim
             sucesso = balanca.ocupar(
                 ordem_id=atividade.ordem_id,
                 atividade_id=atividade.id,
-                quantidade=quantidade_gramas
+                quantidade=quantidade_gramas,
+                inicio=inicio,
+                fim=fim
             )
 
             if sucesso:
@@ -64,13 +66,11 @@ class GestorBalancas:
                 atividade.equipamentos_selecionados = [balanca]
                 atividade.alocada = True
 
-                # Instante fictício, pois balanças não controlam tempo
-                instante = inicio
                 logger.info(
                     f"✅ Atividade {atividade.id} alocada na balança {balanca.nome} "
-                    f"(instante: {instante.isoformat()})."
+                    f"(início: {inicio.strftime('%H:%M')}, fim: {fim.strftime('%H:%M')})."
                 )
-                return True, balanca, instante, instante
+                return True, balanca, inicio, fim
 
             else:
                 logger.warning(
@@ -101,9 +101,6 @@ class GestorBalancas:
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
-        """
-        Exibe a agenda atual de cada balança.
-        """
         logger.info("==============================================")
         logger.info("📅 Agenda das Balanças")
         logger.info("==============================================")

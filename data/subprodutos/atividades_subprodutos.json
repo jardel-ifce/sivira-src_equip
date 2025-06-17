@@ -15,6 +15,7 @@
           "masseira_1": 2,
           "masseira_2": 1
         },
+        "tempo_maximo_de_espera": "00:05:00",
         "configuracoes_equipamentos": {
           "masseira_1": {
             "velocidade": ["BAIXA", "MEDIA"],
@@ -26,6 +27,10 @@
           }
         },
         "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+        "fips_profissionais_permitidos": {
+          "PADEIRO": 1,
+          "AUXILIAR_DE_PADEIRO": 2
+        },
         "quantidade_funcionarios": 2,
         "faixas": [
           { "quantidade_min": 3000, "quantidade_max": 17000, "duracao": "00:07:00" },

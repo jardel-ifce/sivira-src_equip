@@ -2,6 +2,7 @@ from models.equips.equipamento import Equipamento
 from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_setor import TipoSetor
 from typing import List, Tuple
+from datetime import datetime
 from utils.logger_factory import setup_logger
 
 # ⚖️ Logger específico para a balança
@@ -11,11 +12,13 @@ logger = setup_logger('BalancaDigital')
 class BalancaDigital(Equipamento):
     """
     ⚖️ Classe que representa uma Balança Digital com controle por peso.
-    ✔️ Sem restrição de tempo, permite múltiplas alocações simultâneas.
+    ✔️ Permite múltiplas alocações simultâneas, com registro de tempo.
     ✔️ Cada ocupação é registrada com:
        - ordem_id
        - atividade_id
        - quantidade (em gramas)
+       - inicio (datetime)
+       - fim (datetime)
     """
 
     def __init__(
@@ -37,8 +40,8 @@ class BalancaDigital(Equipamento):
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
 
-        # 📦 Ocupações: (ordem_id, atividade_id, quantidade)
-        self.ocupacoes: List[Tuple[int, int, float]] = []
+        # 📦 Ocupações: (ordem_id, atividade_id, quantidade, inicio, fim)
+        self.ocupacoes: List[Tuple[int, int, float, datetime, datetime]] = []
 
     # ==========================================================
     # ✅ Validação de quantidade
@@ -52,7 +55,14 @@ class BalancaDigital(Equipamento):
     # ==========================================================
     # 🏗️ Ocupação
     # ==========================================================
-    def ocupar(self, ordem_id: int, atividade_id: int, quantidade: float) -> bool:
+    def ocupar(
+        self,
+        ordem_id: int,
+        atividade_id: int,
+        quantidade: float,
+        inicio: datetime,
+        fim: datetime
+    ) -> bool:
         if not self.aceita_quantidade(quantidade):
             logger.error(
                 f"❌ Peso inválido na balança {self.nome}: {quantidade}g "
@@ -60,10 +70,11 @@ class BalancaDigital(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((ordem_id, atividade_id, quantidade))
+        self.ocupacoes.append((ordem_id, atividade_id, quantidade, inicio, fim))
         logger.info(
             f"⚖️ Ocupação registrada na balança {self.nome}: "
-            f"ordem {ordem_id}, atividade {atividade_id}, quantidade {quantidade}g."
+            f"ordem {ordem_id}, atividade {atividade_id}, quantidade {quantidade}g, "
+            f"início {inicio.strftime('%H:%M')}, fim {fim.strftime('%H:%M')}."
         )
         return True
 
@@ -73,7 +84,8 @@ class BalancaDigital(Equipamento):
     def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd) for (oid, aid, qtd) in self.ocupacoes
+            (oid, aid, qtd, ini, fim)
+            for (oid, aid, qtd, ini, fim) in self.ocupacoes
             if not (aid == atividade_id and oid == ordem_id)
         ]
         liberadas = antes - len(self.ocupacoes)
@@ -90,7 +102,8 @@ class BalancaDigital(Equipamento):
     def liberar_por_ordem(self, ordem_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd) for (oid, aid, qtd) in self.ocupacoes
+            (oid, aid, qtd, ini, fim)
+            for (oid, aid, qtd, ini, fim) in self.ocupacoes
             if oid != ordem_id
         ]
         liberadas = antes - len(self.ocupacoes)
@@ -119,8 +132,11 @@ class BalancaDigital(Equipamento):
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
-        for i, (oid, aid, qtd) in enumerate(self.ocupacoes, start=1):
-            logger.info(f"⚖️ Ordem: {oid} | Atividade: {aid} | Quantidade: {qtd}g")
+        for i, (oid, aid, qtd, ini, fim) in enumerate(self.ocupacoes, start=1):
+            logger.info(
+                f"⚖️ Ordem: {oid} | Atividade: {aid} | Quantidade: {qtd}g | "
+                f"Início: {ini.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')}"
+            )
 
     # ==========================================================
     # 🔍 Status

@@ -1,12 +1,9 @@
 from typing import List
 from datetime import datetime
 import os
-from factory.fabrica_funcionarios import funcionarios_disponiveis
-from models.funcionarios.funcionario import Funcionario
 from models.atividades.atividade_modular import AtividadeModular
 from parser.carregador_json_atividades import buscar_atividades_por_id_item
 from parser.carregador_json_fichas_tecnicas import buscar_ficha_tecnica_por_id
-from parser.carregador_json_tipos_profissionais import buscar_tipos_profissionais_por_id_item
 from models.ficha_tecnica_modular import FichaTecnicaModular
 from enums.tipo_item import TipoItem
 from utils.logger_factory import setup_logger
@@ -22,15 +19,12 @@ class OrdemDeProducao:
         quantidade: int,
         inicio_jornada: datetime,
         fim_jornada: datetime,
-        todos_funcionarios: List[Funcionario] = funcionarios_disponiveis
     ):
         self.ordem_id=ordem_id
         self.id_produto = id_produto
         self.quantidade = quantidade
         self.inicio_jornada = inicio_jornada
         self.fim_jornada = fim_jornada
-        self.todos_funcionarios = todos_funcionarios
-        self.funcionarios_elegiveis: List[Funcionario] = []
         self.ficha_tecnica_modular: FichaTecnicaModular | None = None
         self.atividades_modulares: List[AtividadeModular] = []
 
@@ -40,8 +34,6 @@ class OrdemDeProducao:
             dados_ficha_tecnica=dados_ficha,
             quantidade_requerida=self.quantidade
         )
-        self.funcionarios_elegiveis = self._filtrar_funcionarios_por_item(self.id_produto)
-
 
     def mostrar_estrutura(self):
         if self.ficha_tecnica_modular:
@@ -61,9 +53,7 @@ class OrdemDeProducao:
                     id_atividade=dados_atividade["id_atividade"],
                     tipo_item=ficha_modular.tipo_item,
                     quantidade_produto=ficha_modular.quantidade_requerida,
-                    ordem_id = self.ordem_id,
-                    id_produto=self.id_produto,
-                    funcionarios_elegiveis=self.funcionarios_elegiveis
+                    ordem_id = self.ordem_id
                 )
                 self.atividades_modulares.append(atividade)
         except Exception:
@@ -110,19 +100,6 @@ class OrdemDeProducao:
             self.rollback()
             raise
 
-    def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
-        """
-        🔎 Filtra os funcionários compatíveis com o item, com base nos tipos profissionais exigidos.
-
-        Args:
-            id_item (int): ID do produto ou subproduto.
-
-        Returns:
-            List[Funcionario]: Lista apenas com os funcionários compatíveis.
-        """
-        tipos_necessarios = buscar_tipos_profissionais_por_id_item(id_item)
-        return [f for f in self.todos_funcionarios if f.tipo_profissional in tipos_necessarios]
-
     def rollback(self):
         logger.warning(f"🧹 Iniciando rollback da ordem {self.ordem_id}...")
 
@@ -143,7 +120,3 @@ class OrdemDeProducao:
                 logger.info(f"🗑️ Arquivo de log removido: {log_path}")
         except Exception as e:
             logger.warning(f"⚠️ Falha ao remover log da ordem: {e}")
-
-    def exibir_historico_de_funcionarios(self):
-        for funcionario in funcionarios_disponiveis:
-            funcionario.exibir_historico()
