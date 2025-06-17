@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import List
+from models.funcionarios.funcionario import Funcionario
 
 def mostrar_ocupacoes_do_equipamento(equipamento, data_desejada, atividades_por_id=None):
     """
@@ -54,3 +56,31 @@ def exibir_historico_global(funcionarios: list):
 
 
 
+def exibir_ocupacoes_funcionarios_ordenadas_por_ordem(funcionarios: List[Funcionario]):
+    """
+    🧑‍🏭 Exibe ocupações dos funcionários agrupadas por ordem e ordenadas por horário.
+    """
+    for funcionario in funcionarios:
+        if not funcionario.ocupacoes:
+            print(f"\n✅ {funcionario.nome} não possui ocupações registradas.")
+            continue
+
+        print(f"\n📋 Ocupações de {funcionario.nome} agrupadas por ordem:")
+
+        ocupacoes_por_ordem = {}
+        for ordem_id, id_atividade, id_json, inicio, fim in funcionario.ocupacoes:
+            if ordem_id not in ocupacoes_por_ordem:
+                ocupacoes_por_ordem[ordem_id] = []
+            ocupacoes_por_ordem[ordem_id].append((id_atividade, id_json, inicio, fim))
+
+        for ordem_id in sorted(ocupacoes_por_ordem.keys()):
+            print(f"📦 Ordem {ordem_id}:")
+            for id_atividade, id_json, inicio, fim in sorted(ocupacoes_por_ordem[ordem_id], key=lambda o: o[2]):
+                data_str = inicio.strftime('%d/%m/%Y')
+                hora_inicio = inicio.strftime('%H:%M')
+                hora_fim = fim.strftime('%H:%M')
+                duracao_min = int((fim - inicio).total_seconds() // 60)
+                print(
+                    f"   • Atividade {id_atividade}/{id_json} — {data_str} "
+                    f"das {hora_inicio} às {hora_fim} ({duracao_min} min)"
+                )

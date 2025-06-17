@@ -10,7 +10,7 @@ funcionario_1 = Funcionario(
     nome="Funcionário 1",
     tipo_profissional=TipoProfissional.PADEIRO,
     regras_folga=[
-        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.TERCA),
+        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEXTA),
         RegraFolga(TipoFolga.N_DIA_SEMANA_DO_MES, dia_semana=DiaSemana.DOMINGO, n_ocorrencia=2)
     ],
     ch_semanal=44,
@@ -23,9 +23,9 @@ funcionario_1 = Funcionario(
 funcionario_2 = Funcionario(
     id=2,
     nome="Funcionário 2",
-    tipo_profissional=TipoProfissional.AUXILIAR_DE_PADEIRO,
+    tipo_profissional=TipoProfissional.PADEIRO,
     regras_folga=[
-        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.QUARTA)
+        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEXTA)
     ],
     ch_semanal=44,
     horario_inicio=time(8, 0),
@@ -38,7 +38,7 @@ funcionario_2 = Funcionario(
 funcionario_3 = Funcionario(
     id=3,
     nome="Funcionário 3",
-    tipo_profissional=TipoProfissional.CONFEITEIRO,
+    tipo_profissional=TipoProfissional.AUXILIAR_DE_PADEIRO,
     regras_folga=[
         RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEXTA)
     ],
@@ -52,7 +52,7 @@ funcionario_3 = Funcionario(
 funcionario_4 = Funcionario(
     id=4,
     nome="Funcionário 4",
-    tipo_profissional=TipoProfissional.AUXILIAR_DE_CONFEITEIRO,
+    tipo_profissional=TipoProfissional.AUXILIAR_DE_PADEIRO,
     regras_folga=[
         RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.QUINTA),
     ],
@@ -66,7 +66,7 @@ funcionario_4 = Funcionario(
 funcionario_5 = Funcionario(
     id=5,
     nome="Funcionário 5",
-    tipo_profissional=TipoProfissional.PADEIRO,
+    tipo_profissional=TipoProfissional.CONFEITEIRO,
     regras_folga=[
         RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEGUNDA)
     ],

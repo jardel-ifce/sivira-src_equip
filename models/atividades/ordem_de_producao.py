@@ -10,7 +10,7 @@ from parser.carregador_json_tipos_profissionais import buscar_tipos_profissionai
 from models.ficha_tecnica_modular import FichaTecnicaModular
 from enums.tipo_item import TipoItem
 from utils.logger_factory import setup_logger
-
+from datetime import timedelta
 logger = setup_logger("OrdemDeProducao")
 
 
@@ -82,6 +82,9 @@ class OrdemDeProducao:
     def executar_atividades_em_ordem(self):
         logger.info(f"🚀 Iniciando execução da Ordem {self.ordem_id} com {len(self.atividades_modulares)} atividades")
         current_fim = self.fim_jornada
+        flag_primeira = True
+        inicio_anterior = None
+        tempo_max_de_espera_anterior = None
 
         try:
             atividades_produto = sorted(
@@ -91,15 +94,69 @@ class OrdemDeProducao:
             )
 
             for at in atividades_produto:
-                ok = at.tentar_alocar_e_iniciar(self.inicio_jornada, current_fim)
+                ok, inicio_at, fim_at, tempo_max_de_espera_at = at.tentar_alocar_e_iniciar(self.inicio_jornada, current_fim)
+     
+
+                if flag_primeira:
+                    #print(f"Atividadeeee {at.id_atividade} - Início: {inicio_at}, Fim: {fim_at}")
+                    #print(f"Inicio anterior: {inicio_anterior}")
+                    #print(f"Inicio atual: {inicio_at}")
+                    #print(f"Fim atual: {fim_at}")
+                    #print(f"Diferença: Não tem diferença, é a primeira atividade")
+                    #print(f"Tempo máximo de espera até a proxima atividade: {tempo_max_de_espera_anterior}")
+                    inicio_anterior = inicio_at
+                    tempo_max_de_espera_anterior = tempo_max_de_espera_at
+                    flag_primeira = False
+                else:
+                    #print(f"Atividadeeee {at.id_atividade} - Início: {inicio_at}, Fim: {fim_at}")
+                    #print(f"Inicio anterior: {inicio_anterior}")
+                    #print(f"Inicio atual: {inicio_at}")
+                    #print(f"Fim atual: {fim_at}")
+                    #print(f"Diferença: {inicio_anterior - fim_at}")
+                    #print(f"Tempo máximo de espera até a proxima atividade: {tempo_max_de_espera_anterior}")
+                    if inicio_anterior - fim_at > tempo_max_de_espera_anterior:
+                        #print(f"Excedeu o tempo máximo de espera para a atividade {inicio_anterior - fim_at}")
+                        tempo_atraso = inicio_anterior - fim_at
+                        #raise RuntimeError(f"❌ Falha ao alocar atividade SUBPRODUTO {at.id_atividade} - Excedeu o tempo máximo de espera: {tempo_atraso}")
+
+                      #  ok = False
+                    inicio_anterior = inicio_at
+                    tempo_max_de_espera_anterior = tempo_max_de_espera_at
                 if not ok:
                     raise RuntimeError(f"❌ Falha ao alocar atividade PRODUTO {at.id_atividade}")
+                
                 current_fim = at.inicio_real
 
             atividades_sub = [a for a in self.atividades_modulares if a.tipo_item == TipoItem.SUBPRODUTO]
 
             for at in atividades_sub:
-                ok = at.tentar_alocar_e_iniciar(self.inicio_jornada, current_fim)
+                ok, inicio_at, fim_at, tempo_max_de_espera_at = at.tentar_alocar_e_iniciar(self.inicio_jornada, current_fim)
+
+                if flag_primeira:
+                    #print(f"Atividadeeee {at.id_atividade} - Início: {inicio_at}, Fim: {fim_at}")
+                    #print(f"Inicio anterior: {inicio_anterior}")
+                    #print(f"Inicio atual: {inicio_at}")
+                    #print(f"Fim atual: {fim_at}")
+                    #print(f"Diferença: Não tem diferença, é a primeira atividade")
+                    #print(f"Tempo máximo de espera até a proxima atividade: {tempo_max_de_espera_anterior}")
+                    inicio_anterior = inicio_at
+                    tempo_max_de_espera_anterior = tempo_max_de_espera_at
+                    flag_primeira = False
+                else:
+                    #print(f"Atividadeeee {at.id_atividade} - Início: {inicio_at}, Fim: {fim_at}")
+                   # print(f"Inicio anterior: {inicio_anterior}")
+                    #print(f"Inicio atual: {inicio_at}")
+                    #print(f"Fim atual: {fim_at}")
+                    #print(f"Diferença: {inicio_anterior - fim_at}")
+                    #print(f"Tempo máximo de espera até a proxima atividade: {tempo_max_de_espera_anterior}")
+                    if inicio_anterior - fim_at > tempo_max_de_espera_anterior:
+                        #print(f"Excedeu o tempo máximo de espera para a atividade {inicio_anterior - fim_at}")
+                        tempo_atraso = inicio_anterior - fim_at
+                        #raise RuntimeError(f"❌ Falha ao alocar atividade SUBPRODUTO {at.id_atividade} - Excedeu o tempo máximo de espera: {tempo_atraso}")
+                       # ok = False
+                    inicio_anterior = inicio_at
+                    tempo_max_de_espera_anterior = tempo_max_de_espera_at
+
                 if not ok:
                     raise RuntimeError(f"❌ Falha ao alocar atividade SUBPRODUTO {at.id_atividade}")
 
@@ -109,6 +166,7 @@ class OrdemDeProducao:
             logger.error(f"🛑 Erro na execução da ordem {self.ordem_id}: {e}")
             self.rollback()
             raise
+
 
     def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
         """
@@ -131,7 +189,7 @@ class OrdemDeProducao:
                 for equipamento in atividade.equipamentos_selecionados:
                     try:
                         if hasattr(equipamento, "liberar_por_atividade"):
-                            equipamento.liberar_por_atividade(atividade.id)
+                            equipamento.liberar_por_atividade(atividade.id, ordem_id=atividade.ordem_id)
                             logger.info(f"↩️ Liberado: Atividade {atividade.id} em {equipamento.nome}")
                     except Exception as e:
                         logger.warning(f"⚠️ Falha ao liberar {equipamento.nome}: {e}")

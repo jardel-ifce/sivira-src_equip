@@ -104,14 +104,19 @@ class Funcionario:
         inicio: datetime,
         fim: datetime
     ):
-        if self.esta_disponivel(inicio, fim - inicio):
+        disponivel, motivo = self.verificar_disponibilidade(inicio, fim)
+        if disponivel:
             self.ocupacoes.append((ordem_id, id_atividade_modular, id_atividade_json, inicio, fim))
             print(
                 f"⏱️ {self.nome} ocupado de {inicio.time()} até {fim.time()} "
                 f"— Ordem #{ordem_id} | Atividade #{id_atividade_modular}/{id_atividade_json}"
             )
         else:
-            print(f"⚠️ {self.nome} não está disponível para a atividade no horário solicitado.")
+            print(
+                f"⚠️ {self.nome} não está disponível para a atividade no horário solicitado. "
+                f"Motivo: {motivo}"
+            )
+
 
     def desalocar(self, id_atividade: int, ordem_id: Optional[int] = None):
         """
@@ -202,3 +207,18 @@ class Funcionario:
         """
         for oid, aid, ini, fim in self.historico_alocacoes:
             print(f"📦 Ordem {oid} | Atividade {aid} | {ini.strftime('%H:%M')} - {fim.strftime('%H:%M')} - ")
+
+    def verificar_disponibilidade(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        🔍 Verifica se o funcionário está disponível entre `inicio` e `fim`,
+        analisando apenas conflitos com outras ocupações.
+        """
+        for _, _, _, ocup_inicio, ocup_fim in self.ocupacoes:
+            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+                return False, (
+                    f"Conflito com ocupação de {ocup_inicio.strftime('%H:%M')} "
+                    f"a {ocup_fim.strftime('%H:%M')}."
+                )
+
+        return True, "Disponível."
+

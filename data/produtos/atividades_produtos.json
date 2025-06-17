@@ -12,7 +12,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["balanca_digital_1", "bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:03:00",
         "fips_equipamentos": {
           "balanca_digital_1": 1,
           "bancada_1": 1,
@@ -36,8 +36,8 @@
         "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
         
         "fips_profissionais_permitidos": {
-          "PADEIRO": 1,
-          "AUXILIAR_DE_PADEIRO": 2
+          "PADEIRO": 2,
+          "AUXILIAR_DE_PADEIRO": 1
         },
         "quantidade_funcionarios": 2,
         "faixas": [
@@ -55,7 +55,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["divisora_de_massas_1", "divisora_de_massas_2", "bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "divisora_de_massas_1": 1,
           "divisora_de_massas_2": 1,
@@ -85,8 +85,8 @@
         },
         "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
         "fips_profissionais_permitidos": {
-          "PADEIRO": 1,
-          "AUXILIAR_DE_PADEIRO": 2
+          "PADEIRO": 2,
+          "AUXILIAR_DE_PADEIRO": 1
         },
         "quantidade_funcionarios": 2,
         "faixas": [
@@ -104,7 +104,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["modeladora_de_paes_1", "bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:04:00",
         "fips_equipamentos": {
           "modeladora_de_paes_1": 1,
           "bancada_1": 1,
@@ -127,8 +127,8 @@
         },
         "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
         "fips_profissionais_permitidos": {
-          "PADEIRO": 1,
-          "AUXILIAR_DE_PADEIRO": 2
+          "PADEIRO": 2,
+          "AUXILIAR_DE_PADEIRO": 1
         },
         "quantidade_funcionarios": 2,
         "faixas": [
@@ -145,7 +145,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "bancada_1": 1,
           "bancada_2": 2,
@@ -167,8 +167,8 @@
         },
         "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
         "fips_profissionais_permitidos": {
-          "PADEIRO": 1,
-          "AUXILIAR_DE_PADEIRO": 2
+          "PADEIRO": 2,
+          "AUXILIAR_DE_PADEIRO": 1
         },
         "quantidade_funcionarios": 2,
         "faixas": [
@@ -185,7 +185,7 @@
           "ARMARIOS_PARA_FERMENTACAO": 1
         },
         "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "armario_fermentador_1": 1,
           "armario_fermentador_2": 1,
@@ -210,7 +210,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "bancada_1": 1,
           "bancada_2": 2,
@@ -249,7 +249,7 @@
           "FORNOS": 1
         },
         "equipamentos_elegiveis": ["forno_1", "forno_2"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "forno_1": 1,
           "forno_2": 2
@@ -284,7 +284,7 @@
           "ARMARIOS_PARA_FERMENTACAO": 1
         },
         "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
-        "tempo_maximo_de_espera": "00:05:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "armario_fermentador_1": 2,
           "armario_fermentador_2": 2,
@@ -295,8 +295,8 @@
         },
         "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
         "fips_profissionais_permitidos": {
-          "PADEIRO": 1,
-          "AUXILIAR_DE_PADEIRO": 2
+          "PADEIRO": 2,
+          "AUXILIAR_DE_PADEIRO": 1
         },
         "quantidade_funcionarios": 1,
         "faixas": [

@@ -5,6 +5,7 @@ from enums.tipo_profissional import TipoProfissional
 from typing import List, Optional
 from services.mapa_gestor_equipamento import MAPA_GESTOR
 from utils.logger_factory import setup_logger
+from utils.conversores_temporais import converter_para_timedelta
 from models.atividade_base import Atividade
 from models.funcionarios.funcionario import Funcionario
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade
@@ -19,7 +20,7 @@ class AtividadeModular(Atividade):
     def __init__(self, id, id_atividade: int, tipo_item: TipoItem, quantidade_produto: int, *args, **kwargs):
         self.ordem_id = kwargs.get("ordem_id")
         id_produto_gerado = kwargs.get("id_produto")
-
+        
 
         dados_atividade = kwargs.get("dados")
         if not dados_atividade:
@@ -55,6 +56,8 @@ class AtividadeModular(Atividade):
         # Quantidade de profissionais requeridos para a atividade
         self.qtd_profissionais_requeridos: int = int(dados_atividade.get("quantidade_funcionarios", 0))
 
+
+        self.tempo_maximo_de_espera = converter_para_timedelta(dados_atividade.get("tempo_maximo_de_espera"))
 
         nomes_equipamentos = dados_atividade.get("equipamentos_elegiveis", [])
         equipamentos_elegiveis = [getattr(fabrica_equipamentos, nome) for nome in nomes_equipamentos]
@@ -184,18 +187,34 @@ class AtividadeModular(Atividade):
 
             if sucesso:
                 # Se todos os equipamentos foram alocados com sucesso, registramos o sucesso
-                inicio_funcionario, fim_funcionario = self._registrar_sucesso(equipamentos_alocados, horario_fim_etapa, horario_final)
-                profissionais = self._priorizar_funcionarios()
+                inicio_atividade, fim_atividade = self._registrar_sucesso(equipamentos_alocados, horario_fim_etapa, horario_final)
+                profissionais = self._priorizar_funcionarios(inicio_atividade, fim_atividade)
                 self.funcionarios_alocados = profissionais
 
+                todos_ocuparam = True
                 for f in profissionais:
-                    f.registrar_alocacao(self.ordem_id, self.id, self.nome_atividade, inicio_funcionario, fim_funcionario)
+                    disponivel, motivo = f.verificar_disponibilidade(inicio_atividade, fim_atividade)
+                    if disponivel:
+                        f.registrar_ocupacao(
+                            ordem_id=self.ordem_id,
+                            id_atividade_modular=self.id,
+                            id_atividade_json=self.id_atividade,
+                            inicio=inicio_atividade,
+                            fim=fim_atividade
+                        )
+                    else:
+                        todos_ocuparam = False
+                        logger.warning(
+                            f"⚠️ Funcionário {f.nome} **não foi alocado** para a atividade {self.nome_atividade} "
+                            f"entre {inicio_atividade.strftime('%H:%M')} e {fim_atividade.strftime('%H:%M')}. Motivo: {motivo}"
+                        )
 
+                if todos_ocuparam:
                     logger.info(
-                        f"👷 Funcionário {f.nome} alocado na atividade {self.nome_atividade} "
-                        f"das {inicio_funcionario.strftime('%H:%M')} às {fim_funcionario.strftime('%H:%M')}"
+                        f"✅ Todos os funcionários foram alocados corretamente para a atividade {self.nome_atividade} "
+                        f"entre {inicio_atividade.strftime('%H:%M')} e {fim_atividade.strftime('%H:%M')}"
                     )
-                return True
+                return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera
 
             # Rollback caso falha na alocação de qualquer equipamento
             for equipamento in [e[1] for e in equipamentos_alocados]:
@@ -234,7 +253,7 @@ class AtividadeModular(Atividade):
                     linha = (
                         f"{self.ordem_id} | "
                         f"{self.id_atividade} | {self.nome_item} | {self.nome_atividade} | "
-                        f"{equipamento.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')}\n"
+                        f"{equipamento.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')} \n"
                     )
                     arq.write(linha)
         inicios = [i for _, _, i, _ in equipamentos_alocados if i]
@@ -290,13 +309,13 @@ class AtividadeModular(Atividade):
 
 
     # MÉTODOS DE FUNCIONÁRIOS
-    def _priorizar_funcionarios(self) -> List[Funcionario]:
+    def _priorizar_funcionarios(self, inicio: datetime, fim: datetime) -> List[Funcionario]:
         """
         Seleciona até N profissionais (quantidade_funcionarios) com base em:
-        - tipos permitidos (self.tipos_necessarios)
-        - fips definidos no JSON
-        - engajamento na ordem
-        - desempate com f.fip (opcional)
+        - tipos permitidos
+        - fips definidos no JSON (quanto maior, melhor)
+        - engajamento na ordem (quem já está, tem prioridade)
+        - disponibilidade no intervalo da atividade
         """
 
         n = self.qtd_profissionais_requeridos
@@ -304,13 +323,12 @@ class AtividadeModular(Atividade):
             logger.info(f"ℹ️ Atividade {self.nome_atividade} não requer funcionários.")
             return []
 
-        # 🧪 DEBUG: tipos esperados e funcionários elegíveis
         logger.warning(f"🧪 [{self.nome_atividade}] Tipos profissionais necessários: {self.tipos_necessarios}")
         logger.warning(f"🧪 [{self.nome_atividade}] Funcionários elegíveis na ordem:")
         for f in self.funcionarios_elegiveis:
             logger.warning(f"   └ {f.nome} ({f.tipo_profissional.name})")
 
-        # 🔍 Candidatos compatíveis (corrigido: enum direto)
+        # Candidatos por tipo permitido
         candidatos = [
             f for f in self.funcionarios_elegiveis
             if f.tipo_profissional in self.tipos_necessarios
@@ -320,13 +338,25 @@ class AtividadeModular(Atividade):
             logger.warning(f"⚠️ Nenhum funcionário compatível para {self.nome_atividade}")
             return []
 
-        # 🔢 Critério de ordenação por prioridade (fip JSON + engajamento + fip real)
         def chave_ordem(f: Funcionario):
-            fip_json = self.fips_profissionais_permitidos.get(f.tipo_profissional.name, 999_999)
-            engajado = 0 if f.ja_esta_na_ordem(self.ordem_id) else 1
-            return (fip_json, engajado, f.fip)
+            fip_json = self.fips_profissionais_permitidos.get(f.tipo_profissional.name, 0)
+            engajado = f.ja_esta_na_ordem(self.ordem_id)
+            return (-int(engajado), -fip_json, -f.fip)
 
-        selecionados = sorted(candidatos, key=chave_ordem)[:n]
+        candidatos_ordenados = sorted(candidatos, key=chave_ordem)
+
+        selecionados = []
+        for f in candidatos_ordenados:
+            disponivel, motivo = f.verificar_disponibilidade(inicio, fim)
+            if disponivel:
+                selecionados.append(f)
+            else:
+                logger.warning(
+                    f"⚠️ {f.nome} não pôde ser selecionado para {self.nome_atividade}. Motivo: {motivo}"
+                )
+
+            if len(selecionados) == n:
+                break
 
         if len(selecionados) < n:
             logger.warning(
@@ -334,4 +364,3 @@ class AtividadeModular(Atividade):
             )
 
         return selecionados
-
