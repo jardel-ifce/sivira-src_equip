@@ -5,11 +5,11 @@
     "nome": "massa_crocante",
     "descricao": "Massa crocante",
     "tipo_item": "SUBPRODUTO",
-    "unidade_medida": "g",
+    "unidade_medida": "GRAMAS",
     "peso_unitario": 0,
     "quantidade_base": 100,
     "perda_percentual": 0.0,
-    "politicas_producao": "SOB_DEMANDA",
+    "politica_producao": "SOB_DEMANDA",
     "itens": [
       {
         "id_item": 3,

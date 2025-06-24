@@ -1,6 +1,8 @@
 from enum import Enum
 
 class TipoEmbalagem(Enum):
-    SIMPLES = "Simples"
-    VACUO = "Vácuo"
-    SELADORA = "Seladora"
+    SIMPLES = "SIMPLES"
+    VACUO = "VACUO"
+    SELADORA = "SELADORA"
+
+    

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from enums.tipo_velocidade import TipoVelocidade
 from enums.tipo_mistura import TipoMistura
 from enums.tipo_setor import TipoSetor
@@ -10,6 +10,11 @@ logger = setup_logger("Masseira")
 
 
 class Masseira:
+    """🥣 Classe que representa uma Masseira.
+    ✔️ Controle de capacidade por peso.
+    ✔️ Ocupação exclusiva no tempo.
+    ✔️ Suporta múltiplas velocidades e tipos de mistura.
+    """
     def __init__(
         self,
         id: int,
@@ -28,8 +33,13 @@ class Masseira:
         self.capacidade_gramas_max = capacidade_gramas_max
         self.velocidades_suportadas = velocidades_suportadas or []
         self.tipos_de_mistura_suportados = tipos_de_mistura_suportados or []
-        self.ocupacoes: List[dict] = []
 
+        # Lista de ocupações (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, velocidades, tipo_mistura)
+        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime, List[TipoVelocidade], TipoMistura]] = []
+
+    # ==========================================================
+    # ✅ Validações
+    # ==========================================================
     def validar_capacidade(self, quantidade: float) -> bool:
         if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
             logger.warning(
@@ -40,14 +50,21 @@ class Masseira:
         return True
 
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for ocupacao in self.ocupacoes:
-            if not (fim <= ocupacao["inicio"] or inicio >= ocupacao["fim"]):
+        for _, _, _, _, ocup_inicio, ocup_fim, *_ in self.ocupacoes:
+            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+                logger.warning(
+                    f"⚠️ Masseira {self.nome} não disponível entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                )
                 return False
         return True
-
+    
+    # ==========================================================
+    # 🥣 Ocupação
+    # ==========================================================
     def ocupar(
         self,
         ordem_id: int,
+        pedido_id: int,
         atividade_id: int,
         quantidade_gramas: float,
         inicio: datetime,
@@ -73,54 +90,89 @@ class Masseira:
                 logger.warning(f"⚠️ Tipo de mistura {tipo_mistura.name} não suportado pela {self.nome}.")
                 return False
 
-        self.ocupacoes.append({
-            "ordem_id": ordem_id,
-            "atividade_id": atividade_id,
-            "quantidade": quantidade_gramas,
-            "inicio": inicio,
-            "fim": fim,
-            "velocidades": [v.name for v in velocidades] if velocidades else [],
-            "tipo_mistura": tipo_mistura.name if tipo_mistura else None
-        })
+        self.ocupacoes.append(
+            (ordem_id, pedido_id, atividade_id, quantidade_gramas, inicio, fim, velocidades or [], tipo_mistura)
+        )
 
         logger.info(
             f"✅ Masseira {self.nome} ocupada para atividade {atividade_id} da ordem {ordem_id} "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
         return True
-
-    def liberar_por_ordem(self, ordem_id: int):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [o for o in self.ocupacoes if o["ordem_id"] != ordem_id]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🧼 Liberadas {antes - depois} ocupações da ordem {ordem_id} na Masseira {self.nome}.")
-
-    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
+    # ==========================================================
+    # 🔓 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, atividade_id: int, pedido_id: int, ordem_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
             o for o in self.ocupacoes
-            if not (o["ordem_id"] == ordem_id and o["atividade_id"] == atividade_id)
+            if not (o[2] == atividade_id and o[1] == pedido_id and o[0] == ordem_id)
         ]
         depois = len(self.ocupacoes)
         if antes != depois:
-            logger.info(f"🧼 Liberadas ocupações da atividade {atividade_id} da ordem {ordem_id} na Masseira {self.nome}.")
+            logger.info(
+                f"🔓 Ocupação liberada na {self.nome} para atividade {atividade_id}, "
+                f"pedido {pedido_id}, ordem {ordem_id}."
+            )
+        else:
+            logger.warning(
+                f"⚠️ Nenhuma ocupação encontrada na {self.nome} para atividade {atividade_id}, "
+                f"pedido {pedido_id}, ordem {ordem_id}."
+            )
 
+    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[0] == ordem_id and o[1] == pedido_id)
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🔓 Ocupação liberada na {self.nome} para pedido {pedido_id}, ordem {ordem_id}.")
+        else:
+            logger.warning(f"⚠️ Nenhuma ocupação encontrada na {self.nome} para pedido {pedido_id}, ordem {ordem_id}.") 
+
+    def liberar_por_ordem(self, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if o[0] != ordem_id
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🔓 Ocupação liberada na {self.nome} para ordem {ordem_id}.")
+        else:
+            logger.warning(f"⚠️ Nenhuma ocupação encontrada na {self.nome} para ordem {ordem_id}.")
+    
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        self.ocupacoes = [o for o in self.ocupacoes if o["fim"] > horario_atual]
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if o[5] > horario_atual
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(f"🟩 Masseira {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
+        else:
+            logger.info(f"ℹ️ Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}.")
 
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
-        logger.info(f"📅 Agenda da Masseira {self.nome}")
+        logger.info(f"📅 Agenda da {self.nome}")
         logger.info("==============================================")
 
-        todas_ocupacoes = sorted(self.ocupacoes, key=lambda o: o["atividade_id"])
-
-        for o in todas_ocupacoes:
-            velocidades_formatadas = ", ".join([v.replace("_", " ").title() for v in o["velocidades"]]) if o["velocidades"] else "-"
-            tipo_mistura_formatado = o["tipo_mistura"].replace("_", " ").title() if o["tipo_mistura"] else "-"
+        if not self.ocupacoes:
+            logger.info("ℹ️ Nenhuma ocupação agendada.")
+            return
+        
+        for ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, velocidades, tipo_mistura in self.ocupacoes:
+            velocidades_str = ", ".join([v.name for v in velocidades]) if velocidades else "Nenhuma"
             logger.info(
-                f"🥣 Ordem {o['ordem_id']} | Atividade {o['atividade_id']} | Quantidade: {o['quantidade']}g | "
-                f"{o['inicio'].strftime('%H:%M')} → {o['fim'].strftime('%H:%M')} | "
-                f"Velocidade: {velocidades_formatadas} | Tipo Mistura: {tipo_mistura_formatado}"
+                f"📦 Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id} | "
+                f"Quantidade: {quantidade}g | Início: {inicio.strftime('%H:%M')} | "
+                f"Fim: {fim.strftime('%H:%M')} | Velocidades: {velocidades_str} | "
+                f"Tipo de Mistura: {tipo_mistura.name if tipo_mistura else 'Nenhum'}"
             )

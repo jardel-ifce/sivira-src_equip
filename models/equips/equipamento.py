@@ -7,11 +7,14 @@ logger = setup_logger('Equipamento')
 
 class Equipamento:
     """
-    Superclasse base para qualquer equipamento.
+    ⚙️ Superclasse base para qualquer equipamento.
     Responsável pela gestão de identidade, setor, tipo, ocupação temporal e status.
     As subclasses são responsáveis pela gestão física (peso, níveis, caixas, etc.).
     """
 
+    # ============================================
+    # 🔧 Inicialização
+    # ============================================
     def __init__(
         self,
         id: int,

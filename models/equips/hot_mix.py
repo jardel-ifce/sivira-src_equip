@@ -15,6 +15,10 @@ logger = setup_logger("HotMix")
 class HotMix(Equipamento):
     """
     🍳 Equipamento HotMix — Misturadora com Cocção de Alta Performance.
+    ✔️ Controle de ocupação por ordem, pedido, atividade e quantidade.
+    ✔️ Suporta múltiplas velocidades, chamas e pressões de chama.
+    ✔️ Valida capacidade mínima e máxima por atividade.
+    ✔️ Ocupação exclusiva no tempo, sem sobreposição de atividades.
     """
 
     def __init__(
@@ -44,20 +48,27 @@ class HotMix(Equipamento):
         self.chamas_suportadas = chamas_suportadas
         self.pressao_chamas_suportadas = pressao_chamas_suportadas
 
-        # Tupla: (ordem_id, atividade_id, quantidade, inicio, fim, velocidade, chama, pressoes)
+        # Tupla: (ordem_id, pedido, atividade_id, quantidade, inicio, fim, velocidade, chama, pressoes)
         self.ocupacoes: List[
-            Tuple[int, int, int, datetime, datetime, TipoVelocidade, TipoChama, List[TipoPressaoChama]]
+            Tuple[int, int, int, int, datetime, datetime, TipoVelocidade, TipoChama, List[TipoPressaoChama]]
         ] = []
 
+    # ==========================================================
+    # ✅ Validações
+    # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for _, _, _, ini, f, *_ in self.ocupacoes:
+        for _, _, _, _, ini, f, *_ in self.ocupacoes:
             if not (fim <= ini or inicio >= f):
                 return False
         return True
-
+    
+    # ==========================================================
+    # 🍳 Ocupações
+    # =========================================================
     def ocupar(
         self,
         ordem_id: int,
+        pedido_id: int,
         atividade_id: int,
         quantidade: int,
         inicio: datetime,
@@ -88,6 +99,7 @@ class HotMix(Equipamento):
 
         self.ocupacoes.append((
             ordem_id,
+            pedido_id,
             atividade_id,
             quantidade,
             inicio,
@@ -98,52 +110,84 @@ class HotMix(Equipamento):
         ))
 
         logger.info(
-            f"🍳 HotMix {self.nome} ocupado | Ordem {ordem_id} | Atividade {atividade_id} | {quantidade}g | "
+            f"🍳 HotMix {self.nome} ocupado | Ordem {ordem_id} | Pedido {pedido_id} |Atividade {atividade_id} | {quantidade}g | "
             f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
             f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
             f"Pressões: {[p.name for p in pressao_chamas]}"
         )
         return True
 
-    def liberar_concluidas(self, horario: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [o for o in self.ocupacoes if o[4] > horario]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🟩 Liberadas {antes - depois} ocupações finalizadas do HotMix {self.nome}.")
+    # ==========================================================
+    # 🔓 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
+        ocupacoes_iniciais = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == ordem_id and ocupacao[1] == pedido_id and ocupacao[2] == atividade_id)
+        ]
 
+        if len(self.ocupacoes) < ocupacoes_iniciais:
+            logger.info(
+                f"🔓 HotMix {self.nome} liberado | Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id}."
+            )
+        else:
+            logger.warning(
+                f"⚠️ Nenhuma ocupação encontrada para liberar | Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id}."
+            )
+    
+    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+        ocupacoes_iniciais = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == ordem_id and ocupacao[1] == pedido_id)
+        ]
+
+        if len(self.ocupacoes) < ocupacoes_iniciais:
+            logger.info(
+                f"🔓 HotMix {self.nome} liberado | Ordem {ordem_id} | Pedido {pedido_id}."
+            )
+        else:
+            logger.warning(
+                f"⚠️ Nenhuma ocupação encontrada para liberar | Ordem {ordem_id} | Pedido {pedido_id}."
+            )
+    
     def liberar_por_ordem(self, ordem_id: int):
-        """
-        ❌ Libera todas as ocupações associadas à ordem de produção.
-        """
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [o for o in self.ocupacoes if o[0] != ordem_id]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🟩 Liberadas ocupações da ordem {ordem_id} no HotMix {self.nome}.")
+        ocupacoes_iniciais = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[0] != ordem_id
+        ]
 
-    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
-        """
-        ❌ Libera ocupações específicas de uma atividade dentro de uma ordem.
-        """
+        if len(self.ocupacoes) < ocupacoes_iniciais:
+            logger.info(f"🔓 HotMix {self.nome} liberado | Ordem {ordem_id}.")
+        else:
+            logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar | Ordem {ordem_id}.")
+
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[0] == ordem_id and o[1] == atividade_id)
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[5] > horario_atual
         ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🟩 Liberadas ocupações da atividade {atividade_id} da ordem {ordem_id} no HotMix {self.nome}.")
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(f"🔓 HotMix {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
+        else:
+            logger.warning(f"⚠️ Nenhuma ocupação finalizada encontrada para liberar | Até {horario_atual.strftime('%H:%M')}.")
 
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
-        logger.info(f"📅 Agenda do HotMix {self.nome}")
+        logger.info(f"📅 Agenda do {self.nome}")
         logger.info("==============================================")
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
-        for (ordem_id, atividade_id, qtd, ini, fim, velocidade, chama, pressoes) in self.ocupacoes:
+        for (ordem_id, pedido_id, atividade_id, qtd, ini, fim, velocidade, chama, pressoes) in self.ocupacoes:
             logger.info(
-                f"🔸 Ordem {ordem_id} | Atividade {atividade_id} | {qtd}g | "
+                f"🔸 Ordem {ordem_id} | Pedido {pedido_id} |  Atividade {atividade_id} | {qtd}g | "
                 f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
                 f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
                 f"Pressões: {[p.name for p in pressoes]}"

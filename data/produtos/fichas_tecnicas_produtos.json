@@ -5,11 +5,11 @@
     "nome": "pao_frances",
     "descricao": "Pão Francês",
     "tipo_item": "PRODUTO",
-    "unidade_medida": "un",
+    "unidade_medida": "UNIDADES",
     "peso_unitario": 65,
     "quantidade_base": 100,
     "perda_percentual": 0.0,
-    "politicas_producao": "SOB_DEMANDA",
+    "politica_producao": "SOB_DEMANDA",
     "itens": [
       {
         "id_item": 2,

@@ -13,13 +13,11 @@ class BalancaDigital(Equipamento):
     """
     ⚖️ Classe que representa uma Balança Digital com controle por peso.
     ✔️ Permite múltiplas alocações simultâneas, com registro de tempo.
-    ✔️ Cada ocupação é registrada com:
-       - ordem_id
-       - atividade_id
-       - quantidade (em gramas)
-       - inicio (datetime)
-       - fim (datetime)
     """
+        
+    # ============================================
+    # 🔧 Inicialização
+    # ============================================
 
     def __init__(
         self,
@@ -40,8 +38,8 @@ class BalancaDigital(Equipamento):
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
 
-        # 📦 Ocupações: (ordem_id, atividade_id, quantidade, inicio, fim)
-        self.ocupacoes: List[Tuple[int, int, float, datetime, datetime]] = []
+        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim)
+        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime]] = []
 
     # ==========================================================
     # ✅ Validação de quantidade
@@ -58,6 +56,7 @@ class BalancaDigital(Equipamento):
     def ocupar(
         self,
         ordem_id: int,
+        pedido_id: int,
         atividade_id: int,
         quantidade: float,
         inicio: datetime,
@@ -70,10 +69,10 @@ class BalancaDigital(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((ordem_id, atividade_id, quantidade, inicio, fim))
+        self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim))
         logger.info(
             f"⚖️ Ocupação registrada na balança {self.nome}: "
-            f"ordem {ordem_id}, atividade {atividade_id}, quantidade {quantidade}g, "
+            f"Ordem {ordem_id}, pedido {pedido_id}, atividade {atividade_id}, quantidade {quantidade}g, "
             f"início {inicio.strftime('%H:%M')}, fim {fim.strftime('%H:%M')}."
         )
         return True
@@ -81,46 +80,46 @@ class BalancaDigital(Equipamento):
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
-        antes = len(self.ocupacoes)
+    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
         self.ocupacoes = [
-            (oid, aid, qtd, ini, fim)
-            for (oid, aid, qtd, ini, fim) in self.ocupacoes
-            if not (aid == atividade_id and oid == ordem_id)
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
+            if not (oid == ordem_id and pid == pedido_id and aid == atividade_id)
         ]
-        liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} ocupações da balança {self.nome} "
-                f"relacionadas à atividade {atividade_id} da ordem {ordem_id}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da balança {self.nome} estava associada à atividade {atividade_id} da ordem {ordem_id}."
-            )
+    
+        logger.info(
+            f"🔓 Liberadas ocupações da balança {self.nome} "
+            f"relacionadas à atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id}."
+        )
+
+    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+        self.ocupacoes = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
+            if (oid != ordem_id and pid != pedido_id)
+        ]
+
+        logger.info(
+            f"🔓 Liberadas ocupações da balança {self.nome} "
+            f"relacionadas à ordem {ordem_id} e pedido {pedido_id}."
+        )
 
     def liberar_por_ordem(self, ordem_id: int):
-        antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd, ini, fim)
-            for (oid, aid, qtd, ini, fim) in self.ocupacoes
-            if oid != ordem_id
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
+            if (oid != ordem_id)
         ]
-        liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(
-                f"🟩 Liberou {liberadas} ocupações da balança {self.nome} "
-                f"relacionadas à ordem {ordem_id}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da balança {self.nome} estava associada à ordem {ordem_id}."
-            )
+
+        logger.info(
+            f"🔓 Liberadas ocupações da balança {self.nome} "
+            f"relacionadas à ordem {ordem_id}."
+        )
 
     def liberar_todas_ocupacoes(self):
         total = len(self.ocupacoes)
         self.ocupacoes.clear()
-        logger.info(f"🟩 Liberou todas as {total} ocupações da balança {self.nome}.")
+        logger.info(f"🔓 Liberou todas as {total} ocupações da balança {self.nome}.")
 
     # ==========================================================
     # 📅 Agenda
@@ -132,9 +131,9 @@ class BalancaDigital(Equipamento):
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
-        for i, (oid, aid, qtd, ini, fim) in enumerate(self.ocupacoes, start=1):
+        for i, (oid, pid, aid, qtd, ini, fim) in enumerate(self.ocupacoes, start=1):
             logger.info(
-                f"⚖️ Ordem: {oid} | Atividade: {aid} | Quantidade: {qtd}g | "
+                f"⚖️ Ordem: {oid} | Pedido: {pid} | Atividade: {aid} | Quantidade: {qtd}g | "
                 f"Início: {ini.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')}"
             )
 

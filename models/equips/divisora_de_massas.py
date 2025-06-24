@@ -1,15 +1,23 @@
 from models.equips.equipamento import Equipamento
 from enums.tipo_setor import TipoSetor
 from enums.tipo_equipamento import TipoEquipamento
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional
 from datetime import datetime
+from utils.logger_factory import setup_logger
 
+logger = setup_logger('DivisoraDeMassas')
 
 class DivisoraDeMassas(Equipamento):
     """
-    Classe que representa uma divisora de massas com ou sem boleadora.
+    🔪 Classe que representa uma divisora de massas com ou sem boleadora.
+    ✔️ Controle de capacidade mínima e máxima por lote.
+    ✔️ Permite divisão de massas em frações, com opção de boleamento.
+    ✔️ Ocupação exclusiva no tempo.
     """
 
+    # ============================================
+    # 🔧 Inicialização
+    # ============================================
     def __init__(
         self,
         id: int,
@@ -36,70 +44,135 @@ class DivisoraDeMassas(Equipamento):
         self.boleadora = boleadora
         self.capacidade_divisao_unidades_por_segundo = capacidade_divisao_unidades_por_segundo
         self.capacidade_boleamento_unidades_por_segundo = capacidade_boleamento_unidades_por_segundo
-        self.ocupacao: List[Dict] = []
 
+        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, boleadora)
+        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime, Optional[bool]]] = []
+
+    # ==========================================================
+    # ✅ Validações
+    # ==========================================================
     def validar_capacidade(self, gramas: int) -> bool:
         if gramas < self.capacidade_gramas_min:
-            print(f"❌ Quantidade {gramas}g abaixo da capacidade mínima ({self.capacidade_gramas_min}g) da divisora {self.nome}.")
+            logger.warning(
+                f"⚠️ Quantidade {gramas}g abaixo da capacidade mínima ({self.capacidade_gramas_min}g) da divisora {self.nome}."
+            )
             return False
         if gramas > self.capacidade_gramas_max:
-            print(f"❌ Quantidade {gramas}g excede a capacidade máxima ({self.capacidade_gramas_max}g) da divisora {self.nome}.")
+            logger.warning(
+                f"⚠️ Quantidade {gramas}g acima da capacidade máxima ({self.capacidade_gramas_max}g) da divisora {self.nome}."
+            )
             return False
         return True
 
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for ocup in self.ocupacao:
-            if not (fim <= ocup["inicio"] or inicio >= ocup["fim"]):
+        for _, _, _, _, ocup_inicio, ocup_fim, _ in self.ocupacoes:
+            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+                logger.warning(
+                    f"⚠️ Divisora {self.nome} já está ocupada entre {ocup_inicio.strftime('%H:%M')} e {ocup_fim.strftime('%H:%M')}."
+                )
                 return False
         return True
 
+    # ==========================================================
+    # 🔪 Ocupação
+    # ==========================================================
     def ocupar(
         self,
         ordem_id: int,
+        pedido_id: int,
         atividade_id: int,
         quantidade: int,
         inicio: datetime,
         fim: datetime
     ) -> bool:
-        self.ocupacao.append({
-            "ordem_id": ordem_id,
-            "atividade_id": atividade_id,
-            "quantidade": quantidade,
-            "inicio": inicio,
-            "fim": fim,
-            "boleadora": self.boleadora
-        })
-        print(
-            f"🔵 {self.nome} | Ordem {ordem_id} | Atividade {atividade_id} | {quantidade}g | "
-            f"Boleadora: {'Sim' if self.boleadora else 'Não'} | "
-            f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+        if not self.validar_capacidade(quantidade):
+            return False
+
+        if not self.esta_disponivel(inicio, fim):
+            return False
+
+        boleadora = self.boleadora and quantidade >= self.capacidade_gramas_min
+        self.ocupacoes.append(
+            (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, boleadora)
+        )
+
+        logger.info(
+            f"🔪 Ocupação registrada na divisora {self.nome}: "
+            f"Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_id}, "
+            f"Quantidade {quantidade}g, Início {inicio.strftime('%H:%M')}, Fim {fim.strftime('%H:%M')}, "
+            f"Boleadora: {'Sim' if boleadora else 'Não'}."
         )
         return True
-
-    def liberar_ocupacoes_anteriores_a(self, momento: datetime):
-        ocupacoes_ativas = [o for o in self.ocupacao if o["fim"] > momento]
-        liberadas = len(self.ocupacao) - len(ocupacoes_ativas)
-        self.ocupacao = ocupacoes_ativas
-        if liberadas > 0:
-            print(f"🟩 {self.nome} | Liberou {liberadas} ocupações anteriores a {momento.strftime('%H:%M')}.")
-
-    def liberar_por_ordem(self, ordem_id: int):
-        antes = len(self.ocupacao)
-        self.ocupacao = [o for o in self.ocupacao if o["ordem_id"] != ordem_id]
-        liberadas = antes - len(self.ocupacao)
-        if liberadas > 0:
-            print(f"🧼 {self.nome} | Liberou {liberadas} ocupações da ordem {ordem_id}.")
-
-    def liberar_por_atividade(self, atividade_id: int, ordem_id: int):
-        antes = len(self.ocupacao)
-        self.ocupacao = [
-            o for o in self.ocupacao
-            if not (o["atividade_id"] == atividade_id and o["ordem_id"] == ordem_id)
+    
+    # ==========================================================
+    # 🔓 Liberação
+    # ==========================================================
+ 
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[4] < fim and o[5] > inicio)
         ]
-        liberadas = antes - len(self.ocupacao)
+        liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
-            print(f"🧼 {self.nome} | Liberou ocupações da atividade {atividade_id} da ordem {ordem_id}.")
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            )
+    def liberar_por_atividade(self, atividade_id: int, pedido_id: int, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[2] == atividade_id and o[1] == pedido_id and o[0] == ordem_id)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"🔓 Nenhuma ocupação encontrada para atividade {atividade_id}, "
+                f"pedido {pedido_id}, ordem {ordem_id} na divisora {self.nome}."
+            )
 
+    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes if not (o[0] == ordem_id and o[1] == pedido_id)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"do pedido {pedido_id} da ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"🔓 Nenhuma ocupação do pedido {pedido_id} da ordem {ordem_id} encontrada na divisora {self.nome}."
+            )
+    
+    def liberar_por_ordem(self, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes if o[0] != ordem_id
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"da ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"🔓 Nenhuma ocupação da ordem {ordem_id} encontrada na divisora {self.nome}."
+            )   
+
+    # ==========================================================
+    # 📅 Agenda
+    # ==========================================================
     def mostrar_agenda(self):
         print("==============================================")
         print(f"📅 Agenda da Divisora {self.nome}")
@@ -107,21 +180,11 @@ class DivisoraDeMassas(Equipamento):
         if not self.ocupacao:
             print("🔸 Nenhuma ocupação registrada.")
             return
-
-        ocupacoes_ordenadas = sorted(self.ocupacao, key=lambda o: (o["inicio"], o["atividade_id"]))
-        for o in ocupacoes_ordenadas:
+        
+        for ocupacao in self.ocupacoes:
+            ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, boleadora = ocupacao
             print(
-                f"🧾 Ordem {o['ordem_id']} | Atividade {o['atividade_id']} | {o['quantidade']}g | "
-                f"{o['inicio'].strftime('%H:%M')} → {o['fim'].strftime('%H:%M')} | "
-                f"Boleadora: {'Sim' if o['boleadora'] else 'Não'}"
+                f"🔸 Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_id}, "
+                f"Quantidade {quantidade}g, Início {inicio.strftime('%H:%M')}, "
+                f"Fim {fim.strftime('%H:%M')}, Boleadora: {'Sim' if boleadora else 'Não'}"
             )
-
-    def __str__(self):
-        return (
-            super().__str__() +
-            f"\n🧠 Capacidade por lote: {self.capacidade_gramas_min}g até {self.capacidade_gramas_max}g"
-            f"\n⚙️ Velocidade de divisão: {self.capacidade_divisao_unidades_por_segundo} unidades/segundo"
-            f"\n⚙️ Velocidade de boleamento: {self.capacidade_boleamento_unidades_por_segundo} unidades/segundo"
-            f"\n🔗 Possui boleadora: {'Sim' if self.boleadora else 'Não'}"
-            f"\n🗂️ Ocupações registradas: {len(self.ocupacao)}"
-        )

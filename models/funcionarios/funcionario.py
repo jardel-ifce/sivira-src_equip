@@ -2,13 +2,18 @@ from datetime import datetime, timedelta, date, time
 from typing import List, Optional, Tuple
 from utils.regras_folga import RegraFolga
 from utils.data_utils import mapa_dia_semana, formatar_hora_e_min
+from utils.logger_factory import setup_logger
 from enums.tipo_folga import TipoFolga
 from enums.tipo_profissional import TipoProfissional
 
+logger = setup_logger('Funcionario')
 
 class Funcionario:
     """
     👷 Representa um funcionário da produção com controle de jornada, folgas e ocupações.
+    ✔️ Gerencia folgas semanais e mensais.
+    ✔️ Verifica disponibilidade para alocação em atividades.
+    ✔️ Registra ocupações por atividade, ordem e pedido.
     """
 
     def __init__(
@@ -35,14 +40,15 @@ class Funcionario:
 
 
 
-        # (ordem_id, id_atividade_modular, id_atividade_json, inicio, fim)
+        # (ordem_id, pedido_id, atividade_id, inicio, fim)
         self.ocupacoes: List[tuple[int, int, int, datetime, datetime]] = []
 
         self.regras_folga = regras_folga
         self.folga_semanal = None
         self.folga_mensal = []
-        # (ordem_id, atividade_id, atividade_nome, inicio, fim)
-        self.historico_alocacoes: List[Tuple[int, int, str, datetime, datetime]] = []
+
+        # (ordem_id, pedido_id, atividade_id, atividade_nome, inicio, fim)
+        self.historico_alocacoes: List[Tuple[int, int, int, str, datetime, datetime]] = []
 
         for regra in regras_folga:
             if regra.tipo == TipoFolga.DIA_FIXO_SEMANA:
@@ -50,6 +56,9 @@ class Funcionario:
             elif regra.tipo == TipoFolga.N_DIA_SEMANA_DO_MES:
                 self.folga_mensal = [regra.dia_semana.value, regra.n_ocorrencia]
 
+    # ==========================================================
+    # ✅ Validações
+    # ==========================================================
     def esta_de_folga(self, dia: datetime) -> bool:
         data = dia.date()
         dia_semana = data.weekday()
@@ -72,6 +81,26 @@ class Funcionario:
                 data_cursor += timedelta(days=1)
 
         return False
+    
+    def ja_esta_no_pedido(self, pedido_id: int, ordem_id: int) -> bool:
+        for ocupacao in self.ocupacoes:
+            oid, pid, *_ = ocupacao
+            if pid == pedido_id and oid == ordem_id:
+                return True
+        return False
+    def verificar_disponibilidade_no_intervalo(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        for i, (_, _, _, ocup_inicio, ocup_fim) in enumerate(self.ocupacoes):
+            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+                logger.debug(
+                    f"🚫 Conflito detectado na ocupação {i}: "
+                    f"({ocup_inicio.strftime('%H:%M')} - {ocup_fim.strftime('%H:%M')}) "
+                    f"vs tentativa ({inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')})"
+                )
+                return False, (
+                    f"Conflito com ocupação de {ocup_inicio.strftime('%H:%M')} "
+                    f"a {ocup_fim.strftime('%H:%M')}."
+                )
+        return True, "Disponível."
 
     def esta_disponivel(self, inicio: datetime, duracao_min: timedelta) -> bool:
         fim = inicio + duracao_min
@@ -99,57 +128,79 @@ class Funcionario:
     def registrar_ocupacao(
         self,
         ordem_id: int,
-        id_atividade_modular: int,
+        pedido_id: int,
         id_atividade_json: int,
         inicio: datetime,
         fim: datetime
     ):
-        disponivel, motivo = self.verificar_disponibilidade(inicio, fim)
+        disponivel, motivo = self.verificar_disponibilidade_no_intervalo(inicio, fim)
         if disponivel:
-            self.ocupacoes.append((ordem_id, id_atividade_modular, id_atividade_json, inicio, fim))
-            print(
-                f"⏱️ {self.nome} ocupado de {inicio.time()} até {fim.time()} "
-                f"— Ordem #{ordem_id} | Atividade #{id_atividade_modular}/{id_atividade_json}"
+            self.ocupacoes.append((ordem_id, pedido_id, id_atividade_json, inicio, fim))
+            logger.info(
+                f"✅ {self.nome} | Ocupação registrada: {id_atividade_json} de {inicio.strftime('%H:%M')} "
+                f"até {fim.strftime('%H:%M')}."
             )
+            
         else:
-            print(
-                f"⚠️ {self.nome} não está disponível para a atividade no horário solicitado. "
-                f"Motivo: {motivo}"
+            logger.warning(
+                f"🚫 {self.nome} | Ocupação não registrada: {id_atividade_json} de {inicio.strftime('%H:%M')} "
+                f"até {fim.strftime('%H:%M')}. Motivo: {motivo}"
             )
 
+    # ==========================================================
+    # 🔒 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[0] == ordem_id and o[1] == pedido_id and o[2] == atividade_id)
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🔓 Ocupação do {self.nome} liberada para a atividade {atividade_id} do pedido {pedido_id} da ordem {ordem_id}.")
+        # else:
+        #     logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar o {self.nome} da atividade {atividade_id} do pedido {pedido_id} da ordem {ordem_id}.")
 
-    def desalocar(self, id_atividade: int, ordem_id: Optional[int] = None):
-        """
-        🔁 Remove a ocupação associada à atividade e, se fornecido, à ordem específica.
-        """
-        ocup_antes = len(self.ocupacoes)
+    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[0] == ordem_id and o[1] == pedido_id)
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🔓 Ocupação do {self.nome} liberada para o pedido {pedido_id} da ordem {ordem_id}.")
+        #else:
+            #logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar o {self.nome} do pedido {pedido_id} da ordem {ordem_id}.")
+       
+    
+    def liberar_por_ordem(self, ordem_id: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if o[0] != ordem_id
+        ]
+        depois = len(self.ocupacoes)
+        if antes != depois:
+            logger.info(f"🔓 Ocupação do {self.nome} liberada da ordem {ordem_id}.")
+        #else:
+            #logger.warning(f"⚠️ Nenhuma ocupação encontrada do {self.nome} para liberar da ordem {ordem_id}.")
 
-        if ordem_id is not None:
-            self.ocupacoes = [
-                oc for oc in self.ocupacoes
-                if not (oc[0] == ordem_id and oc[1] == id_atividade)
-            ]
-        else:
-            self.ocupacoes = [oc for oc in self.ocupacoes if oc[1] != id_atividade]
-
-        ocup_depois = len(self.ocupacoes)
-        if ocup_antes > ocup_depois:
-            print(f"↩️ {self.nome} desalocado da atividade #{id_atividade} (ordem {ordem_id if ordem_id else 'todas'})")
-        else:
-            print(f"⚠️ Nenhuma ocupação encontrada para desalocar: atividade #{id_atividade} (ordem {ordem_id if ordem_id else 'todas'})")
-
-    def mostrar_ocupacoes(self):
-        if not self.ocupacoes:
-            print(f"✅ {self.nome} não possui ocupações registradas.")
-            return
-
-        print(f"📅 Ocupações de {self.nome}:")
-        for i, (ordem_id, id_atividade, id_json, inicio, fim) in enumerate(sorted(self.ocupacoes, key=lambda o: o[3]), start=1):
-            data_str = inicio.strftime('%d/%m/%Y')
-            hora_inicio = inicio.strftime('%H:%M')
-            hora_fim = fim.strftime('%H:%M')
-            duracao_min = int((fim - inicio).total_seconds() // 60)
-            print(f"  {i}. {data_str} — das {hora_inicio} às {hora_fim} ({duracao_min} min) → ordem:{ordem_id} | atividade:{id_atividade}/{id_json}")
+    # ==========================================================
+    # 📅 Agenda 
+    # ==========================================================
+    def mostrar_agenda(self):
+        logger.info("==============================================")
+        logger.info(f"📅 Agenda do Funcionário: {self.nome}")
+        logger.info("==============================================")
+        
+        for ocupacao in self.ocupacoes:
+            ordem_id, pedido_id, atividade_json_id, inicio, fim = ocupacao
+            logger.info(
+                f"🗓️ Ocupação: Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_json_id} "
+                f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}"
+            )
 
     def mostrar_folgas(self, inicio: datetime, fim: datetime):
         print(f"🛌 Folgas de {self.nome} entre {inicio.strftime('%d/%m/%Y')} e {fim.strftime('%d/%m/%Y')}:")
@@ -166,59 +217,3 @@ class Funcionario:
                 print(f"  • {dia}")
         else:
             print("  Nenhuma folga registrada nesse período.")
-
-    def __str__(self):
-        return (
-            f"Funcionario: id = {self.id} | nome = {self.nome} | tipo_profissional = {self.tipo_profissional}\n"
-            f"carga_horaria = {self.ch} | fator_importancia = {self.fip}\n"
-            f"horario_inicio_turno = {formatar_hora_e_min(self.horario_inicio_turno)}\n"
-            f"horario_final_turno = {formatar_hora_e_min(self.horario_final_turno)}\n"
-            f"intervalo de {self.horario_intervalo[1].seconds // 60} min às {formatar_hora_e_min(self.horario_intervalo[0])}"
-        )
-    def esta_de_folga(self, data: datetime) -> bool:
-        """
-        Verifica se o funcionário está de folga em uma determinada data.
-        """
-        for folga in self.folgas:
-            if folga[0] <= data <= folga[1]:
-                return True
-        return False
-        
-    # ========================================================
-    # ALOCACOES SEM CRITERIOS DE FOLGA OU VERIFICACAO DE HORÁRIOS
-    # ========================================================
-
-    def registrar_alocacao(self, ordem_id: int, atividade_id: int, nome_atividade: str, inicio: datetime, fim: datetime):
-        """
-        Registra uma alocação da atividade associada à ordem com seus horários.
-        """
-        self.historico_alocacoes.append((ordem_id, atividade_id, nome_atividade, inicio, fim))
-
-    def ja_esta_na_ordem(self, ordem_id: int) -> bool:
-        """
-        Verifica se o funcionário já foi alocado em alguma atividade da ordem fornecida.
-        """
-        return any(oid == ordem_id for oid, _, _, _, _ in self.historico_alocacoes)
-
-
-    def exibir_historico(self):
-        """
-        Apenas para debug ou visualização.
-        """
-        for oid, aid, ini, fim in self.historico_alocacoes:
-            print(f"📦 Ordem {oid} | Atividade {aid} | {ini.strftime('%H:%M')} - {fim.strftime('%H:%M')} - ")
-
-    def verificar_disponibilidade(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
-        """
-        🔍 Verifica se o funcionário está disponível entre `inicio` e `fim`,
-        analisando apenas conflitos com outras ocupações.
-        """
-        for _, _, _, ocup_inicio, ocup_fim in self.ocupacoes:
-            if not (fim <= ocup_inicio or inicio >= ocup_fim):
-                return False, (
-                    f"Conflito com ocupação de {ocup_inicio.strftime('%H:%M')} "
-                    f"a {ocup_fim.strftime('%H:%M')}."
-                )
-
-        return True, "Disponível."
-

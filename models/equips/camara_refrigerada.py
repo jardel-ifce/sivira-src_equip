@@ -12,8 +12,14 @@ class CamaraRefrigerada(Equipamento):
     """
     🧊 Representa uma Câmara Refrigerada com controle de ocupação
     por caixas ou níveis de tela, considerando períodos de tempo e controle de temperatura.
+    ✔️ Permite múltiplas alocações simultâneas, com registro de tempo e temperatura.
+    ✔️ Controle de temperatura com faixa mínima e máxima.
+    ✔️ Ocupação por caixas de 30kg ou níveis de tela.
     """
 
+    # ============================================
+    # 🔧 Inicialização
+    # ============================================
     def __init__(
         self,
         id: int,
@@ -43,19 +49,12 @@ class CamaraRefrigerada(Equipamento):
         self.faixa_temperatura_max = faixa_temperatura_max
         self.faixa_temperatura_atual = None
 
-        # Ocupações: (ordem_id, atividade_id, quantidade, inicio, fim, temperatura)
-        self.ocupacoes: List[Tuple[int, int, int, datetime, datetime, Optional[int]]] = []
+        # Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, temperatura)
+        self.ocupacoes: List[Tuple[int, int, int, int, datetime, datetime, Optional[int]]] = []
 
     # ==========================================================
     # 🌡️ Controle de Temperatura
     # ==========================================================
-    def ocupar(self, ordem_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime):
-        self.ocupacoes.append((ordem_id, atividade_id, quantidade, inicio, fim, self.faixa_temperatura_atual))
-        logger.info(
-            f"🌡️ Temperatura {self.faixa_temperatura_atual}°C registrada para Atividade {atividade_id} "
-            f"(Ordem {ordem_id}) de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} na {self.nome}."
-        )
-
     def verificar_compatibilidade_de_temperatura(
         self,
         inicio: datetime,
@@ -68,30 +67,39 @@ class CamaraRefrigerada(Equipamento):
         ]
         return all(temp == temperatura_desejada for temp in conflitos) if conflitos else True
 
-    def selecionar_faixa_temperatura(self, temperatura_desejada: int) -> bool:
+    def selecionar_faixa_temperatura(
+        self,
+        temperatura_desejada: int,
+        inicio: datetime,
+        fim: datetime
+    ) -> bool:
+        # Se já está na temperatura desejada, não precisa trocar
         if self.faixa_temperatura_atual == temperatura_desejada and self.faixa_temperatura_atual is not None:
             return True
 
+        # Verifica se há ocupações planejadas no mesmo intervalo (colisão)
         ocupacoes_ativas = [
-            (qtd, ini, fim) for (qtd, ini, fim) in self.ocupacao_caixas + self.ocupacao_niveis
-            if ini <= datetime.now() <= fim
+            (qtd, ini, f) for (qtd, ini, f) in self.ocupacao_caixas + self.ocupacao_niveis
+            if not (fim <= ini or inicio >= f)
         ]
 
         if ocupacoes_ativas:
             logger.warning(
                 f"⚠️ Não é possível ajustar a temperatura da {self.nome} para {temperatura_desejada}°C. "
-                f"Temperatura atual: {self.faixa_temperatura_atual}°C, há ocupações ativas."
+                f"Temperatura atual: {self.faixa_temperatura_atual}°C, há ocupações no período de "
+                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}."
             )
             return False
 
         self.faixa_temperatura_atual = temperatura_desejada
         logger.info(
-            f"🌡️ Câmara {self.nome} estava vazia. Temperatura ajustada para {temperatura_desejada}°C."
+            f"🌡️ Câmara {self.nome} estava sem ocupações no período. Temperatura ajustada para {temperatura_desejada}°C "
+            f"para {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}."
         )
         return True
 
     # ==========================================================
-    # 📦 Ocupação por Caixas
+    # ✅ Validações
     # ==========================================================
     def verificar_espaco_caixas(self, quantidade_caixas: int, inicio: datetime, fim: datetime) -> bool:
         ocupadas = sum(
@@ -99,41 +107,87 @@ class CamaraRefrigerada(Equipamento):
             if not (fim <= ini or inicio >= f)
         )
         return (ocupadas + quantidade_caixas) <= self.capacidade_caixa_30kg
-
-    def ocupar_caixas(self, ordem_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
-        if not self.verificar_espaco_caixas(quantidade, inicio, fim):
-            return False
-        self.ocupacao_caixas.append((quantidade, inicio, fim))
-        self.ocupar(ordem_id, atividade_id, quantidade, inicio, fim)
-        return True
-
-    # ==========================================================
-    # 🗂️ Ocupação por Níveis
-    # ==========================================================
+    
     def verificar_espaco_niveis(self, quantidade: int, inicio: datetime, fim: datetime) -> bool:
         ocupadas = sum(
             qtd for (qtd, ini, f) in self.ocupacao_niveis
             if not (fim <= ini or inicio >= f)
         )
         return (ocupadas + quantidade) <= self.capacidade_niveis_tela
+    
+    # ==========================================================
+    # 📦 | 🗂️  Ocupação
+    # ==========================================================
+    def ocupar(self, ordem_id: int, pedido_id, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime):
+        self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, self.faixa_temperatura_atual))
+        logger.info(
+            f"🧊 Ocupação registrada na {self.nome} | "
+            f"Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id} | "
+            f"{quantidade} unidades | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+            f"Temperatura: {self.faixa_temperatura_atual}°C"
+        )
+        return True
 
-    def ocupar_niveis(self, ordem_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+    # ==========================================================
+    # 📦 Ocupação por Caixas
+    # ==========================================================
+    def ocupar_caixas(self, ordem_id: int, pedido_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+        if not self.verificar_espaco_caixas(quantidade, inicio, fim):
+            return False
+        self.ocupacao_caixas.append((quantidade, inicio, fim))
+        self.ocupar(ordem_id, pedido_id, atividade_id, quantidade, inicio, fim)
+        return True
+
+    # ==========================================================
+    # 🗂️ Ocupação por Níveis
+    # ==========================================================
+    def ocupar_niveis(self, ordem_id: int, pedido_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
         if not self.verificar_espaco_niveis(quantidade, inicio, fim):
             return False
         self.ocupacao_niveis.append((quantidade, inicio, fim))
-        self.ocupar(ordem_id, atividade_id, quantidade, inicio, fim)
+        self.ocupar(ordem_id, pedido_id, atividade_id, quantidade, inicio, fim)
         return True
 
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_por_ordem(self, ordem_id: int):
+    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
         """
-        ❄️ Libera todas as ocupações da ordem especificada, incluindo caixas, níveis e log de temperatura.
+        🔓 Libera ocupações específicas da atividade.
         """
         self.ocupacoes = [
-            (oid, aid, qtd, ini, fim, temp)
-            for (oid, aid, qtd, ini, fim, temp) in self.ocupacoes
+            (oid, pid, aid, qtd, ini, fim, temp)
+            for (oid, pid, aid, qtd, ini, fim, temp) in self.ocupacoes
+            if not (aid == atividade_id and pid == pedido_id and oid == ordem_id)
+        ]
+
+        self.ocupacao_niveis = [
+            (qtd, ini, fim)
+            for (qtd, ini, fim) in self.ocupacao_niveis
+            if not any(
+                aid == atividade_id and pid == pedido_id and oid == ordem_id and qtd == qtd and ini == ini and fim == fim
+                for (oid, aid, pid, _, ini, fim, _) in self.ocupacoes
+            )
+        ]
+
+        self.ocupacao_caixas = [
+            (qtd, ini, fim)
+            for (qtd, ini, fim) in self.ocupacao_caixas
+            if not any(
+                aid == atividade_id and pid == pedido_id and oid == ordem_id and qtd == qtd and ini == ini and fim == fim
+                for (oid, aid, pid, _, ini, fim, _) in self.ocupacoes
+            )
+        ]
+
+        logger.info(f"🔓 Liberadas ocupações da atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id} na {self.nome}.")
+
+    def liberar_por_ordem(self, ordem_id: int):
+        """
+        🔓 Libera todas as ocupações da ordem especificada, incluindo caixas, níveis e log de temperatura.
+        """
+        self.ocupacoes = [
+            (oid, pid, aid, qtd, ini, fim, temp)
+            for (oid, pid, aid, qtd, ini, fim, temp) in self.ocupacoes
             if oid != ordem_id
         ]
 
@@ -142,7 +196,7 @@ class CamaraRefrigerada(Equipamento):
             for (qtd, ini, fim) in self.ocupacao_niveis
             if not any(
                 oid == ordem_id and qtd == qtd and ini == ini and fim == fim
-                for (oid, _, _, ini, fim, _) in self.ocupacoes
+                for (oid, _, _, _, ini, fim, _) in self.ocupacoes
             )
         ]
 
@@ -151,41 +205,11 @@ class CamaraRefrigerada(Equipamento):
             for (qtd, ini, fim) in self.ocupacao_caixas
             if not any(
                 oid == ordem_id and qtd == qtd and ini == ini and fim == fim
-                for (oid, _, _, ini, fim, _) in self.ocupacoes
+                for (oid, _, _, _, ini, fim, _) in self.ocupacoes
             )
         ]
 
         logger.info(f"🧊 Liberadas todas as ocupações da ordem {ordem_id} na {self.nome}.")
-
-    def liberar_por_atividade(self, ordem_id: int, atividade_id: int):
-        """
-        ❄️ Libera ocupações específicas da atividade dentro da ordem.
-        """
-        self.ocupacoes = [
-            (oid, aid, qtd, ini, fim, temp)
-            for (oid, aid, qtd, ini, fim, temp) in self.ocupacoes
-            if not (oid == ordem_id and aid == atividade_id)
-        ]
-
-        self.ocupacao_niveis = [
-            (qtd, ini, fim)
-            for (qtd, ini, fim) in self.ocupacao_niveis
-            if not any(
-                oid == ordem_id and aid == atividade_id and qtd == qtd and ini == ini and fim == fim
-                for (oid, aid, _, ini, fim, _) in self.ocupacoes
-            )
-        ]
-
-        self.ocupacao_caixas = [
-            (qtd, ini, fim)
-            for (qtd, ini, fim) in self.ocupacao_caixas
-            if not any(
-                oid == ordem_id and aid == atividade_id and qtd == qtd and ini == ini and fim == fim
-                for (oid, aid, _, ini, fim, _) in self.ocupacoes
-            )
-        ]
-
-        logger.info(f"🧊 Liberadas ocupações da atividade {atividade_id} da ordem {ordem_id} na {self.nome}.")
 
 
     def liberar_todas_ocupacoes(self):
@@ -220,9 +244,9 @@ class CamaraRefrigerada(Equipamento):
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
 
-        for (ordem_id, atividade_id, quantidade, inicio, fim, temp) in self.ocupacoes:
+        for (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, temp) in self.ocupacoes:
             tipo = "Caixas" if (quantidade, inicio, fim) in self.ocupacao_caixas else "Níveis Tela"
             logger.info(
-                f"🧊 Ordem {ordem_id} | Atividade {atividade_id} | {tipo}: {quantidade} unidades | "
+                f"🧊 Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id} | {tipo}: {quantidade} unidades | "
                 f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Temperatura: {temp}°C"
             )

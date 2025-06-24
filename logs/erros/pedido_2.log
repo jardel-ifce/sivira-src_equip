@@ -1,0 +1,16 @@
+[2025-06-24 13:58:46.262783] Erro no pedido 2 - Ordem 1
+Traceback (most recent call last):
+  File "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/models/atividades/pedido_de_producao.py", line 109, in executar_atividades_em_ordem
+    ok, inicio_at, fim_at, tempo_max_de_espera_at = at.tentar_alocar_e_iniciar(self.inicio_jornada, current_fim)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/models/atividades/atividade_modular.py", line 140, in tentar_alocar_e_iniciar
+    inicio_atividade, fim_atividade = self._registrar_sucesso_equipamentos(
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/models/atividades/atividade_modular.py", line 189, in _registrar_sucesso_equipamentos
+    registrar_log_equipamentos(
+  File "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/utils/gerenciador_logs.py", line 91, in registrar_log_equipamentos
+    f"{equipamento.nome} | {inicio_eqp.strftime('%H:%M')} | {fim_eqp.strftime('%H:%M')} \n"
+       ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'nome'
+
+

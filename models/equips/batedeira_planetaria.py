@@ -12,11 +12,14 @@ logger = setup_logger('BatedeiraPlanetaria')
 class BatedeiraPlanetaria(Equipamento):
     """
     🪐 Representa uma Batedeira Planetária.
-    ✅ Controle de velocidade mínima e máxima.
-    ✅ Ocupação exclusiva no tempo.
-    ✅ Capacidade de mistura validada por peso.
+    ✔️ Controle de velocidade mínima e máxima.
+    ✔️ Ocupação exclusiva no tempo.
+    ✔️ Capacidade de mistura validada por peso.
     """
 
+    # ============================================
+    # 🔧 Inicialização
+    # ============================================
     def __init__(
         self,
         id: int,
@@ -41,8 +44,8 @@ class BatedeiraPlanetaria(Equipamento):
         self.velocidade_min = velocidade_min
         self.velocidade_max = velocidade_max
 
-        # 📦 Ocupações: (ordem_id, atividade_id, quantidade, inicio, fim, velocidade)
-        self.ocupacoes: List[Tuple[int, int, float, datetime, datetime, int]] = []
+        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, velocidade)
+        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime, int]] = []
 
     # ==========================================================
     # ✅ Validações
@@ -65,6 +68,7 @@ class BatedeiraPlanetaria(Equipamento):
     def ocupar(
         self,
         ordem_id: int,
+        pedido_id: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
@@ -95,11 +99,11 @@ class BatedeiraPlanetaria(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((ordem_id, atividade_id, quantidade_gramas, inicio, fim, velocidade))
+        self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade_gramas, inicio, fim, velocidade))
         logger.info(
             f"🪐 {self.nome} | Ocupação registrada: {quantidade_gramas}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Atividade {atividade_id}, Ordem {ordem_id}) com velocidade {velocidade}."
+            f"(Atividade {atividade_id}, Pedido {pedido_id}, Ordem {ordem_id}) com velocidade {velocidade}."
         )
         return True
 
@@ -119,28 +123,71 @@ class BatedeiraPlanetaria(Equipamento):
                 f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
             )
 
-
-    def liberar_por_atividade(self, atividade_id: int):
+    def liberar_por_atividade(self, atividade_id: int, pedido_id: int, ordem_id: int):
+        """
+        🔓 Libera ocupações da batedeira por atividade, pedido e ordem de produção específicos.
+        """
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd, ini, fim, vel)
-            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if aid != atividade_id
+            (oid, pid, aid, qtd, ini, fim, vel)
+            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            if not (aid == atividade_id and pid == pedido_id and oid == ordem_id)
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
-            logger.info(f"🟩 {self.nome} | Liberadas {liberadas} ocupações da atividade {atividade_id}.")
-
-    def liberar_por_ordem(self, ordem_id: int):
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
+                f"para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
+                f"para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}."
+            )
+    
+    def liberar_por_pedido(self, pedido_id: int, ordem_id: int):
+        """
+        🔓 Libera ocupações da batedeira por pedido e ordem de produção específicos
+        """
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd, ini, fim, vel)
-            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            (oid, pid, aid, qtd, ini, fim, vel)
+            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            if (pid != pedido_id and ordem_id != oid)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
+                f"do pedido {pedido_id} e ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
+                f"para o pedido {pedido_id} e ordem {ordem_id}."
+            )
+       
+    def liberar_por_ordem(self, ordem_id: int):
+        """
+        🔓 Libera ocupações da batedeira por ordem de produção específica.
+        """
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            (oid, pid, aid, qtd, ini, fim, vel)
+            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
             if oid != ordem_id
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
-            logger.info(f"🟩 {self.nome} | Liberadas {liberadas} ocupações da ordem {ordem_id}.")
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
+                f"da ordem {ordem_id}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
+                f"para a ordem {ordem_id}."
+            )
 
     # ==========================================================
     # 📅 Agenda
@@ -154,8 +201,8 @@ class BatedeiraPlanetaria(Equipamento):
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
 
-        for oid, aid, qtd, ini, fim, vel in self.ocupacoes:
+        for oid, pid, aid, qtd, ini, fim, vel in self.ocupacoes:
             logger.info(
-                f"🌀 Atividade ID {aid} | Ordem {oid} | Quantidade: {qtd}g | "
+                f"🌀 Atividade ID {aid} | Ordem {oid} | Pedido {pid} | Quantidade: {qtd}g | "
                 f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Velocidade: {vel}"
             )

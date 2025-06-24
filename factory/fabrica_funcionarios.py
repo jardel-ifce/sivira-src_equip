@@ -66,15 +66,62 @@ funcionario_4 = Funcionario(
 funcionario_5 = Funcionario(
     id=5,
     nome="Funcionário 5",
-    tipo_profissional=TipoProfissional.CONFEITEIRO,
+    tipo_profissional=TipoProfissional.PADEIRO,
     regras_folga=[
-        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEGUNDA)
+        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEXTA),
+        RegraFolga(TipoFolga.N_DIA_SEMANA_DO_MES, dia_semana=DiaSemana.DOMINGO, n_ocorrencia=2)
+    ],
+    ch_semanal=44,
+    horario_inicio=time(8, 0),
+    horario_final=time(18, 0),
+    horario_intervalo=(time(11, 0), timedelta(minutes=60)),
+    fip=2.0
+)
+
+funcionario_6 = Funcionario(
+    id=6,
+    nome="Funcionário 6",
+    tipo_profissional=TipoProfissional.PADEIRO,
+    regras_folga=[
+        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEXTA)
+    ],
+    ch_semanal=44,
+    horario_inicio=time(8, 0),
+    horario_final=time(18, 0),
+    horario_intervalo=(time(11, 0), timedelta(minutes=60)),
+    fip=1.0
+)
+
+
+funcionario_7 = Funcionario(
+    id=7,
+    nome="Funcionário 7",
+    tipo_profissional=TipoProfissional.AUXILIAR_DE_PADEIRO,
+    regras_folga=[
+        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.SEXTA)
+    ],
+    ch_semanal=44,
+    horario_inicio=time(8, 0),
+    horario_final=time(18, 0),
+    horario_intervalo=(time(11, 0), timedelta(minutes=60)),
+    fip=3.0
+)
+
+funcionario_8 = Funcionario(
+    id=8,
+    nome="Funcionário 8",
+    tipo_profissional=TipoProfissional.AUXILIAR_DE_PADEIRO,
+    regras_folga=[
+        RegraFolga(TipoFolga.DIA_FIXO_SEMANA, DiaSemana.QUINTA),
     ],
     ch_semanal=44,
     horario_inicio=time(8,0),
     horario_final=time(18,0),
     horario_intervalo=(time(11,0), timedelta(minutes=60)),
-    fip=1.0
+    fip=2.0
 )
 
-funcionarios_disponiveis = [funcionario_1, funcionario_2, funcionario_3, funcionario_4, funcionario_5]
+
+funcionarios_disponiveis = [funcionario_1, funcionario_2, funcionario_3, 
+                            funcionario_4, funcionario_5, funcionario_6, 
+                            funcionario_7, funcionario_8]

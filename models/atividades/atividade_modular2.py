@@ -1,12 +1,17 @@
 import os
 from enums.tipo_equipamento import TipoEquipamento
 from enums.tipo_item import TipoItem
+from enums.tipo_profissional import TipoProfissional
+from typing import List, Optional
 from services.mapa_gestor_equipamento import MAPA_GESTOR
+from services.gestor_funcionarios.gestor_funcionarios import GestorFuncionarios
 from utils.logger_factory import setup_logger
+from utils.conversores_temporais import converter_para_timedelta
+from utils.normalizador_de_nomes import normalizar_nome
 from models.atividade_base import Atividade
+from models.funcionarios.funcionario import Funcionario
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade
 from factory import fabrica_equipamentos
-import unicodedata
 from datetime import datetime, timedelta
 
 logger = setup_logger('Atividade_Modular')
@@ -15,6 +20,8 @@ logger = setup_logger('Atividade_Modular')
 class AtividadeModular(Atividade):
     def __init__(self, id, id_atividade: int, tipo_item: TipoItem, quantidade_produto: int, *args, **kwargs):
         self.ordem_id = kwargs.get("ordem_id")
+        id_produto_gerado = kwargs.get("id_produto")
+        self.log_path = f"logs/funcionarios_{self.ordem_id}.log"
 
         dados_atividade = kwargs.get("dados")
         if not dados_atividade:
@@ -24,6 +31,34 @@ class AtividadeModular(Atividade):
         else:
             self.nome_atividade = f"Atividade {id_atividade}"
             self.nome_item = "item_desconhecido"
+        
+        self.tipos_necessarios = set(
+            TipoProfissional[nome] for nome in dados_atividade.get("tipos_profissionais_permitidos",[])
+        )
+        # ================================================
+        # Lógica dos funcionários
+        # ================================================
+        self.funcionarios_elegiveis = kwargs.get("funcionarios_elegiveis", [])
+        self.funcionarios_necessarios: List[Funcionario] = []
+        self.qtd_profissionais_requeridos: int = int(dados_atividade.get("quantidade_funcionarios", 0))
+
+        # Seleciona somente os necessários para a atividade
+        self.funcionarios_necessarios = [
+            f for f in self.funcionarios_elegiveis if f.tipo_profissional in self.tipos_necessarios
+        ]
+        for f in self.funcionarios_necessarios:
+            print(f"✔️ {f.nome} - {f.tipo_profissional.name}")
+        
+        # Obtém fips dos profissionais permitidos
+        self.fips_profissionais_permitidos: dict[str, int] = dados_atividade.get(
+            "fips_profissionais_permitidos", {}
+        )
+
+        # Quantidade de profissionais requeridos para a atividade
+        self.qtd_profissionais_requeridos: int = int(dados_atividade.get("quantidade_funcionarios", 0))
+
+
+        self.tempo_maximo_de_espera = converter_para_timedelta(dados_atividade.get("tempo_maximo_de_espera"))
 
         nomes_equipamentos = dados_atividade.get("equipamentos_elegiveis", [])
         equipamentos_elegiveis = [getattr(fabrica_equipamentos, nome) for nome in nomes_equipamentos]
@@ -35,7 +70,7 @@ class AtividadeModular(Atividade):
             tipos_profissionais_permitidos=[],
             quantidade_funcionarios=0,
             equipamentos_elegiveis=equipamentos_elegiveis,
-            id_produto_gerado=None,
+            id_produto_gerado=id_produto_gerado,
             quantidade_produto=quantidade_produto
         )
 
@@ -96,11 +131,13 @@ class AtividadeModular(Atividade):
 
     def tentar_alocar_e_iniciar(self, inicio_jornada: datetime, fim_jornada: datetime) -> bool:
         horario_final = fim_jornada
+        atividades_nao_alocadas = []  # Lista para registrar as atividades não alocadas
 
         while horario_final - self.duracao >= inicio_jornada:
             sucesso = True
-            equipamentos_alocados = []
-            ocupacoes_efetuadas = []
+            equipamentos_alocados = []  # Lista para registrar os equipamentos alocados com sucesso
+            funcionarios_alocados = []  # Lista para registrar os funcionários alocados com sucesso
+            ocupacoes_efetuadas = []  # Lista para registrar as ocupações
             horario_fim_etapa = horario_final
 
             for tipo_eqp, _ in reversed(list(self._quantidade_por_tipo_equipamento.items())):
@@ -121,14 +158,11 @@ class AtividadeModular(Atividade):
                 metodo_alocacao = self._resolver_metodo_alocacao(tipo_eqp)
 
                 equipamento_exemplo = equipamentos[0]
-                nome_normalizado = self._normalizar_nome(equipamento_exemplo.nome)
+                nome_normalizado = normalizar_nome(equipamento_exemplo.nome)
                 config = self.configuracoes_equipamentos.get(nome_normalizado, {})
 
-                # 🔧 Corrigido: cálculo seguro de horário de início
+                # 🔧 Cálculo seguro de horário de início
                 inicio_previsto = horario_fim_etapa - self.duracao
-
-                if self.duracao.total_seconds() > 0 and inicio_previsto == horario_fim_etapa:
-                    inicio_previsto -= timedelta(self.duracao)
 
                 try:
                     resultado = metodo_alocacao(
@@ -143,11 +177,7 @@ class AtividadeModular(Atividade):
                         break
 
                     equipamentos_alocados.append(resultado)
-                    if hasattr(resultado[1], "ultimos_ids_ocupacao"):
-                        for ocupacao_id in resultado[1].ultimos_ids_ocupacao:
-                            ocupacoes_efetuadas.append((resultado[1], ocupacao_id))
-
-                    horario_fim_etapa = resultado[2]
+                    horario_fim_etapa = resultado[2]  # Atualiza o horário de fim da etapa
 
                 except Exception as e:
                     logger.error(f"❌ Erro ao alocar {tipo_eqp}: {e}")
@@ -155,13 +185,71 @@ class AtividadeModular(Atividade):
                     break
 
             if sucesso:
-                self._registrar_sucesso(equipamentos_alocados, horario_fim_etapa, horario_final)
-                return True
+                inicio_atividade, fim_atividade = self._registrar_sucesso_equipamentos(equipamentos_alocados, horario_fim_etapa, horario_final)
 
+                # Obtemos a alocação de funcionários
+                flag, selecionados_funcionarios = GestorFuncionarios.priorizar_funcionarios(
+                    ordem_id=self.ordem_id,
+                    nome_atividade=self.nome_atividade,
+                    inicio=inicio_atividade,
+                    fim=fim_atividade,
+                    qtd_profissionais_requeridos=self.qtd_profissionais_requeridos,
+                    tipos_necessarios=self.tipos_necessarios,
+                    fips_profissionais_permitidos=self.fips_profissionais_permitidos,
+                    funcionarios_elegiveis=self.funcionarios_elegiveis
+                )
+
+                #flag, selecionados_funcionarios = self._priorizar_funcionarios(inicio_atividade, fim_atividade)
+                if flag is False:
+                    logger.warning(f"⚠️ Não foi possível alocar funcionários para a atividade {self.id_atividade}.")
+                    # Rollback caso falha na alocação de qualquer equipamento
+                    for equipamento in [e[1] for e in equipamentos_alocados]:
+                        try:
+                            if hasattr(equipamento, "liberar_por_atividade"):
+                                equipamento.liberar_por_atividade(self.id_atividade, self.ordem_id)
+                                logger.info(f"↩️ Rollback: desalocada atividade {self.id} em {equipamento.nome}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Falha ao desalocar atividade {self.id} de {equipamento.nome}: {e}")
+
+                    # Rollback dos funcionários
+                    for funcionario in self.funcionarios_elegiveis:
+                        try:
+                            if hasattr(funcionario, "liberar_por_atividade"):
+                                funcionario.liberar_por_ordem(self.ordem_id)
+                                logger.info(f"↩️ Rollback: funcionário {funcionario.nome} liberado da ordem {self.ordem_id}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Falha ao liberar funcionário {funcionario.nome} da ordem {self.ordem_id}: {e}")
+                        try:
+                            if os.path.exists(self.log_path):
+                                os.remove(self.log_path)
+                                logger.info(f"🗑️ Arquivo de log removido: {self.log_path}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Falha ao remover log da ordem: {e}")
+
+                    raise ValueError(
+                        f"❌ Não foi possível alocar funcionários para a atividade {self.id_atividade}. "
+                        f"Verifique os requisitos de profissionais e disponibilidade."
+                    )
+                
+                else:
+                    for funcionario in selecionados_funcionarios:
+                        funcionario.registrar_ocupacao(
+                            ordem_id=self.ordem_id,
+                            id_atividade_modular=self.id,
+                            id_atividade_json=self.id_atividade,
+                            inicio=inicio_atividade,
+                            fim=fim_atividade
+                        )
+                        funcionarios_alocados.append(funcionario)  # Para controle de rollback
+                    self._registrar_sucesso_funcionarios(funcionarios_alocados, inicio_atividade, fim_atividade)
+
+                    return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera
+
+            # Rollback caso falha na alocação de qualquer equipamento
             for equipamento in [e[1] for e in equipamentos_alocados]:
                 try:
                     if hasattr(equipamento, "liberar_por_atividade"):
-                        equipamento.liberar_por_atividade(self.id)
+                        equipamento.liberar_por_atividade(self.id, self.ordem_id)
                         logger.info(f"↩️ Rollback: desalocada atividade {self.id} em {equipamento.nome}")
                 except Exception as e:
                     logger.warning(f"⚠️ Falha ao desalocar atividade {self.id} de {equipamento.nome}: {e}")
@@ -169,10 +257,35 @@ class AtividadeModular(Atividade):
             horario_final -= timedelta(minutes=1)
 
         logger.error(f"❌ Não foi possível alocar a atividade {self.id_atividade} dentro da jornada.")
-        return False
+        raise ValueError(
+            f"❌ Não foi possível alocar a atividade {self.id_atividade} dentro do intervalo de jornada "
+            f"de {inicio_jornada.strftime('%H:%M')} até {fim_jornada.strftime('%H:%M')}. "
+            f"Tente ajustar os horários ou a duração da atividade."
+        )
 
 
-    def _registrar_sucesso(self, equipamentos_alocados, inicio: datetime, fim: datetime, **kwargs):
+    def _registrar_sucesso_funcionarios(self, funcionarios_alocados: List[Funcionario], inicio: datetime, fim: datetime):
+        self.inicio_real = inicio
+        self.fim_real = fim
+        self.alocada = True
+
+        logger.info("✅ Atividade alocada com sucesso!")
+        for funcionario in funcionarios_alocados:
+            logger.info(f"👨‍🍳 {funcionario.nome} alocado de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}")
+
+        if self.ordem_id:
+            os.makedirs("logs", exist_ok=True)
+            caminho = f"logs/funcionarios_{self.ordem_id}.log"
+            with open(caminho, "a", encoding="utf-8") as arq:
+                for funcionario in funcionarios_alocados:
+                    linha = (
+                        f"{self.ordem_id} | "
+                        f"{self.id_atividade} | {self.nome_item} | {self.nome_atividade} | "
+                        f"{funcionario.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')} \n"
+                    )
+                    arq.write(linha)
+
+    def _registrar_sucesso_equipamentos(self, equipamentos_alocados, inicio: datetime, fim: datetime, **kwargs):
         self.equipamentos_selecionados = [dados[1] for dados in equipamentos_alocados]
         self.equipamento_alocado = self.equipamentos_selecionados
         self.inicio_real = inicio
@@ -194,9 +307,14 @@ class AtividadeModular(Atividade):
                     linha = (
                         f"{self.ordem_id} | "
                         f"{self.id_atividade} | {self.nome_item} | {self.nome_atividade} | "
-                        f"{equipamento.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')}\n"
+                        f"{equipamento.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')} \n"
                     )
                     arq.write(linha)
+        inicios = [i for _, _, i, _ in equipamentos_alocados if i]
+        fins = [f for _, _, _, f in equipamentos_alocados if f]
+        
+        # ✅ Retorna os extremos para alocação de funcionário
+        return min(inicios), max(fins)
 
     def _resolver_metodo_alocacao(self, tipo_equipamento):
         return {
@@ -238,7 +356,3 @@ class AtividadeModular(Atividade):
                 gestor.mostrar_agenda()
             else:
                 logger.warning(f"⚠️ Gestor de {tipo.name} não possui método 'mostrar_agenda'.")
-
-    @staticmethod
-    def _normalizar_nome(nome: str) -> str:
-        return unicodedata.normalize("NFKD", nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")

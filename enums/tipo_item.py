@@ -1,6 +1,6 @@
 from enum import Enum
 
 class TipoItem(Enum):
-    PRODUTO = "Produto"
-    SUBPRODUTO = "Subproduto"
-    INSUMO = "Insumo"
+    PRODUTO = "PRODUTO"
+    SUBPRODUTO = "SUBPRODUTO"
+    INSUMO = "INSUMO"

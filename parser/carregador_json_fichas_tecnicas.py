@@ -36,7 +36,7 @@ def buscar_ficha_tecnica_por_id(id_ficha_tecnica: int, tipo_item: TipoItem) -> T
             if not conteudo.strip():
                 raise ValueError(f"❌ Arquivo {nome_arquivo} está vazio.")
             dados = json.loads(conteudo)
-            logger.info(f"✅ Arquivo '{nome_arquivo}' carregado com {len(dados)} produtos/subprodutos.")
+            # logger.info(f"✅ Arquivo '{nome_arquivo}' carregado com {len(dados)} produtos/subprodutos.")
     except FileNotFoundError:
         raise FileNotFoundError(f"❌ Arquivo não encontrado: {caminho}")
     except json.JSONDecodeError as e:
@@ -44,7 +44,7 @@ def buscar_ficha_tecnica_por_id(id_ficha_tecnica: int, tipo_item: TipoItem) -> T
 
     for item in dados:
         if id_ficha_tecnica == item.get("id_ficha_tecnica"):
-            logger.info(f"🔍 Ficha técnica {id_ficha_tecnica} encontrada no '{item.get('nome')}'")
+            # logger.info(f"🔍 Ficha técnica {id_ficha_tecnica} encontrada no '{item.get('nome')}'")
             return item, item  # Retorna duas vezes o item (nome + ficha técnica)
 
     raise ValueError(f"❌ Ficha técnica com id_ficha_tecnica={id_ficha_tecnica} não encontrada em {nome_arquivo}.")

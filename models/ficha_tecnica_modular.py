@@ -18,7 +18,7 @@ class FichaTecnicaModular:
         self.peso_unitario = dados_ficha_tecnica["peso_unitario"]
         self.quantidade_base = dados_ficha_tecnica["quantidade_base"]
         self.perda = dados_ficha_tecnica["perda_percentual"]
-        self.politicas_producao = dados_ficha_tecnica["politicas_producao"]
+        self.politica_producao = dados_ficha_tecnica["politica_producao"]
         self.itens = dados_ficha_tecnica.get("itens", [])
         self.quantidade_requerida = quantidade_requerida
 
