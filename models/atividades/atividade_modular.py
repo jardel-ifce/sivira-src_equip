@@ -14,7 +14,7 @@ from utils.calculadora_duracao import consultar_duracao_por_faixas
 from utils.conversores_temporais import converter_para_timedelta
 from utils.logger_factory import setup_logger
 from utils.normalizador_de_nomes import normalizar_nome
-from utils.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios
+from utils.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
 import itertools
 
 
@@ -111,81 +111,23 @@ class AtividadeModular:
 
         return gestores_por_tipo
 
-    def tentar_alocar_e_iniciar(self, inicio_jornada: datetime, fim_jornada: datetime) -> Tuple[bool, datetime, datetime, Optional[timedelta]]:
-        equipamentos_alocados = []
-        funcionarios_alocados = []
-
-        horario_fim_etapa = fim_jornada
-
-        for tipo_eqp, _ in reversed(list(self._quantidade_por_tipo_equipamento.items())):
-            equipamentos = [eqp for eqp in self.equipamentos_elegiveis if eqp.tipo_equipamento == tipo_eqp]
-            classe_gestor = MAPA_GESTOR[tipo_eqp]
-            gestor = classe_gestor(equipamentos)
-            metodo_alocacao = self._resolver_metodo_alocacao(tipo_eqp)
-
-            nome_eqp = normalizar_nome(equipamentos[0].nome)
-            config = self.configuracoes_equipamentos.get(nome_eqp, {})
-
-            inicio_previsto = horario_fim_etapa - self.duracao
-            resultado = metodo_alocacao(
-                gestor=gestor,
-                inicio=inicio_previsto,
-                fim=horario_fim_etapa,
-                **config
-            )
-
-            equipamentos_alocados.append(resultado)
-            horario_fim_etapa = resultado[2]
-
-        inicio_atividade, fim_atividade = self._registrar_sucesso_equipamentos(
-            equipamentos_alocados,
-            horario_fim_etapa,
-            fim_jornada
-        )
-
-        flag, selecionados_funcionarios = GestorFuncionarios.priorizar_funcionarios(
-            ordem_id=self.ordem_id,
-            pedido_id=self.pedido_id,
-            inicio=inicio_atividade,
-            fim=fim_atividade,
-            qtd_profissionais_requeridos=self.qtd_profissionais_requeridos,
-            tipos_necessarios=self.tipos_necessarios,
-            fips_profissionais_permitidos=self.fips_profissionais_permitidos,
-            funcionarios_elegiveis=self.funcionarios_elegiveis
-        )
-
-        for funcionario in selecionados_funcionarios:
-            funcionario.registrar_ocupacao(
-                ordem_id=self.ordem_id,
-                pedido_id=self.pedido_id,
-                id_atividade_json=self.id_atividade,
-                inicio=inicio_atividade,
-                fim=fim_atividade
-            )
-            funcionarios_alocados.append(funcionario)
-
-        registrar_log_funcionarios(
-            ordem_id=self.ordem_id,
-            pedido_id=self.pedido_id,
-            id_atividade=self.id_atividade,
-            nome_item=self.nome_item,
-            nome_atividade=self.nome_atividade,
-            funcionarios_alocados=funcionarios_alocados,
-            inicio=inicio_atividade,
-            fim=fim_atividade
-        )
-
-        return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera
-
-
+    
     def _registrar_sucesso_equipamentos(self, equipamentos_alocados, inicio: datetime, fim: datetime, **kwargs):
         self.equipamentos_selecionados = [dados[1] for dados in equipamentos_alocados]
+        print(f"🛠️ Equipamentos alocados: {[eqp.nome for eqp in self.equipamentos_selecionados]}")
         self.equipamento_alocado = self.equipamentos_selecionados
         self.inicio_real = inicio
         self.fim_real = fim
         self.alocada = True
 
-        # Registro no log 
+        # DEBUG: verificar dados antes do log
+        logger.warning(f"📋 Registrando log de equipamentos: ordem={self.ordem_id}, pedido={self.pedido_id}, atividade={self.id_atividade}")
+        for i, (ocupacao_id, equipamento, inicio_eqp, fim_eqp) in enumerate(equipamentos_alocados):
+            logger.warning(
+                f"🔧 [{i}] Equipamento: {equipamento.nome}, Início: {inicio_eqp}, Fim: {fim_eqp}, Ocupação ID: {ocupacao_id}"
+            )
+
+        # Registro no log
         registrar_log_equipamentos(
             ordem_id=self.ordem_id,
             pedido_id=self.pedido_id,
@@ -195,7 +137,6 @@ class AtividadeModular:
             equipamentos_alocados=equipamentos_alocados
         )
 
-        # 
         inicios = [inicio_eqp for _, _, inicio_eqp, _ in equipamentos_alocados if inicio_eqp]
         fins = [fim_eqp for _, _, _, fim_eqp in equipamentos_alocados if fim_eqp]
 
@@ -203,6 +144,7 @@ class AtividadeModular:
         max_fim = max(fins)
 
         return min_inicio, max_fim
+
 
     def _resolver_metodo_alocacao(self, tipo_equipamento):
         def metodo_generico(gestor, inicio, fim, **kwargs):
@@ -244,26 +186,31 @@ class AtividadeModular:
             #     logger.warning(f"⚠️ Gestor de {tipo.name} não possui método 'mostrar_agenda'.")
 
 
-    def tentar_alocar_e_iniciar_v1(self, inicio_jornada: datetime, fim_jornada: datetime) -> bool:
+
+    def tentar_alocar_e_iniciar_equipamentos(
+        self,
+        inicio_jornada: datetime,
+        fim_jornada: datetime
+    ) -> Tuple[bool, Optional[datetime], Optional[datetime], Optional[timedelta], List[Tuple]]:
         horario_final = fim_jornada
+        equipamentos_alocados = []
 
         while horario_final - self.duracao >= inicio_jornada:
             sucesso = True
             equipamentos_alocados = []
-            funcionarios_alocados = []
             horario_fim_etapa = horario_final
 
             for tipo_eqp, _ in reversed(list(self._quantidade_por_tipo_equipamento.items())):
                 equipamentos = [eqp for eqp in self.equipamentos_elegiveis if eqp.tipo_equipamento == tipo_eqp]
 
                 if not equipamentos:
-                    logger.warning(f"⚠️ Nenhum equipamento do tipo {tipo_eqp} disponível.")
+                    logger.warning(f"⚠️ Nenhum equipamento disponível do tipo {tipo_eqp}.")
                     sucesso = False
                     break
 
                 classe_gestor = MAPA_GESTOR.get(tipo_eqp)
                 if not classe_gestor:
-                    logger.warning(f"⚠️ Nenhum gestor configurado para tipo {tipo_eqp}")
+                    logger.warning(f"⚠️ Nenhum gestor configurado para tipo {tipo_eqp}.")
                     sucesso = False
                     break
 
@@ -282,7 +229,8 @@ class AtividadeModular:
                         fim=horario_fim_etapa,
                         **config
                     )
-                    if not resultado[0]:
+
+                    if not resultado[0] or resultado[1] is None:
                         sucesso = False
                         break
 
@@ -294,29 +242,32 @@ class AtividadeModular:
                     sucesso = False
                     break
 
-            # 🧪 Validação sequencial entre equipamentos da MESMA atividade
             if sucesso:
-                equipamentos_ordenados = sorted(equipamentos_alocados, key=lambda x: x[2])  # ordena por início
-
+                equipamentos_ordenados = sorted(equipamentos_alocados, key=lambda x: x[2])
                 for i in range(1, len(equipamentos_ordenados)):
                     fim_anterior = equipamentos_ordenados[i - 1][3]
                     inicio_atual = equipamentos_ordenados[i][2]
 
                     if fim_anterior != inicio_atual:
-                        rollback_equipamentos(equipamentos_alocados=equipamentos_alocados, ordem_id=self.ordem_id, pedido_id=self.pedido_id)
-                        rollback_funcionarios(funcionarios=self.funcionarios_elegiveis, ordem_id=self.ordem_id, pedido_id=self.pedido_id)
-                        raise RuntimeError(
-                            f"❌ Equipamentos da atividade {self.id_atividade} foram alocados de forma não sequencial. "
-                            f"O equipamento '{equipamentos_ordenados[i - 1][1].nome}' terminou às {fim_anterior.strftime('%H:%M:%S')}, "
-                            f"mas '{equipamentos_ordenados[i][1].nome}' iniciou às {inicio_atual.strftime('%H:%M:%S')}."
+                        logger.warning(
+                            f"🔁 Equipamentos da atividade {self.id_atividade} não estão sequenciados corretamente. "
+                            f"'{equipamentos_ordenados[i - 1][1].nome}' terminou às {fim_anterior.strftime('%H:%M:%S')} "
+                            f"e '{equipamentos_ordenados[i][1].nome}' iniciou às {inicio_atual.strftime('%H:%M:%S')}."
                         )
+                        sucesso = False
+                        break
 
             if sucesso:
-                inicio_atividade, fim_atividade = self._registrar_sucesso_equipamentos(
-                    equipamentos_alocados, horario_fim_etapa, horario_final
+                inicio_atividade = equipamentos_ordenados[0][2]
+                fim_atividade = equipamentos_ordenados[-1][3]
+                self.inicio_real = inicio_atividade
+                self.fim_real = fim_atividade
+                self._registrar_sucesso_equipamentos(
+                    equipamentos_alocados,
+                     inicio_atividade, fim_atividade
                 )
 
-                flag, selecionados_funcionarios = GestorFuncionarios.priorizar_funcionarios(
+                flag, funcionarios_alocados = GestorFuncionarios.priorizar_funcionarios(
                     ordem_id=self.ordem_id,
                     pedido_id=self.pedido_id,
                     inicio=inicio_atividade,
@@ -327,14 +278,8 @@ class AtividadeModular:
                     funcionarios_elegiveis=self.funcionarios_elegiveis
                 )
 
-                if not flag:
-                    # logger.warning(f"⚠️ Não foi possível alocar funcionários para a atividade {self.id_atividade}.")
-                    rollback_equipamentos(equipamentos_alocados=equipamentos_alocados, ordem_id=self.ordem_id, pedido_id=self.pedido_id,atividade_id=self.id_atividade)
-                    rollback_funcionarios(funcionarios_alocados=self.funcionarios_elegiveis, ordem_id=self.ordem_id, pedido_id=self.pedido_id, atividade_id=self.id_atividade)
-                    horario_final -= timedelta(minutes=1)
-
-                else:
-                    for funcionario in selecionados_funcionarios:
+                if flag:
+                    for funcionario in funcionarios_alocados:
                         funcionario.registrar_ocupacao(
                             ordem_id=self.ordem_id,
                             pedido_id=self.pedido_id,
@@ -342,8 +287,6 @@ class AtividadeModular:
                             inicio=inicio_atividade,
                             fim=fim_atividade
                         )
-                        funcionarios_alocados.append(funcionario)
-
                     registrar_log_funcionarios(
                         ordem_id=self.ordem_id,
                         pedido_id=self.pedido_id,
@@ -352,17 +295,16 @@ class AtividadeModular:
                         nome_atividade=self.nome_atividade,
                         funcionarios_alocados=funcionarios_alocados,
                         inicio=inicio_atividade,
-                        fim=fim_atividade)
-                    return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera
+                        fim=fim_atividade
+                    )
 
-
-            rollback_equipamentos(equipamentos_alocados=equipamentos_alocados, ordem_id=self.ordem_id, pedido_id=self.pedido_id, atividade_id=self.id_atividade)
-            rollback_funcionarios(funcionarios_alocados=self.funcionarios_elegiveis, ordem_id=self.ordem_id, pedido_id=self.pedido_id, atividade_id=self.id_atividade)        
+                return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera, equipamentos_alocados
+            else:
+                rollback_equipamentos(equipamentos_alocados, self.ordem_id, self.pedido_id, self.id_atividade)
+                #rollback_funcionarios(self.funcionarios_elegiveis, self.ordem_id, self.pedido_id, self.id_atividade)
+               # remover_log_funcionarios(self.ordem_id, self.pedido_id, self.id_atividade)
+                remover_log_equipamentos(self.ordem_id, self.pedido_id)
             horario_final -= timedelta(minutes=1)
 
-        logger.error(f"❌ Não foi possível alocar a atividade {self.id_atividade} dentro da jornada.")
-        raise RuntimeError(
-            f"❌ Não foi possível alocar a atividade {self.id_atividade} dentro do intervalo de jornada "
-            f"de {inicio_jornada.strftime('%H:%M')} até {fim_jornada.strftime('%H:%M')}."
-        )
-    
+        logger.error(f"🛑 Limite da jornada atingido. Impossível alocar a atividade {self.id_atividade}.")
+        return False, None, None, self.tempo_maximo_de_espera, equipamentos_alocados

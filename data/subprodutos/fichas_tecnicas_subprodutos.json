@@ -16,6 +16,7 @@
         "descricao": "Farinha de trigo para pães",
         "nome": "farinha_de_trigo_para_paes",
         "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
         "proporcao": 100
       },
       {
@@ -23,6 +24,7 @@
         "descricao": "Gelo para alimentos",
         "nome": "gelo_para_alimentos",
         "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
         "proporcao": 60
       },
       {
@@ -30,6 +32,7 @@
         "descricao": "Sal refinado",
         "nome": "sal_refinado",
         "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
         "proporcao": 2
       },
       {
@@ -37,6 +40,7 @@
         "descricao": "Fermento biológico seco",
         "nome": "fermento_biologico_seco",
         "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
         "proporcao": 1
       }, 
       {
@@ -44,6 +48,7 @@
         "descricao": "Aditivo em pasta",
         "nome": "aditivo_em_pasta",
         "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
         "proporcao": 0.3
       }
     ]

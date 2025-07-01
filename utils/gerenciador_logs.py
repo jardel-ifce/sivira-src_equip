@@ -136,3 +136,35 @@ def apagar_logs_por_pedido_e_ordem(ordem_id: int, pedido_id: int):
         print(f"ℹ️ Nenhum log encontrado para ordem {ordem_id} e pedido {pedido_id}.")
     else:
         print(f"✅ Total de arquivos removidos: {arquivos_apagados}")
+
+def remover_log_equipamentos(ordem_id: int, pedido_id: int, id_atividade: int):
+    """
+    Remove as linhas de log de equipamentos associadas a uma atividade específica.
+    """
+    caminho = f"logs/equipamentos/ordem: {ordem_id} | pedido: {pedido_id}.log"
+    if not os.path.exists(caminho):
+        return
+
+    with open(caminho, "r", encoding="utf-8") as f:
+        linhas = f.readlines()
+
+    with open(caminho, "w", encoding="utf-8") as f:
+        for linha in linhas:
+            if f"{id_atividade} |" not in linha:
+                f.write(linha)
+
+def remover_log_funcionarios(ordem_id: int, pedido_id: int, id_atividade: int):
+    """
+    Remove as linhas de log de funcionários associadas a uma atividade específica.
+    """
+    caminho = f"logs/funcionarios/ordem: {ordem_id} | pedido: {pedido_id}.log"
+    if not os.path.exists(caminho):
+        return
+
+    with open(caminho, "r", encoding="utf-8") as f:
+        linhas = f.readlines()
+
+    with open(caminho, "w", encoding="utf-8") as f:
+        for linha in linhas:
+            if f"{id_atividade} |" not in linha:
+                f.write(linha)

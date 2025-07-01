@@ -1,6 +1,10 @@
 from enums.tipo_item import TipoItem
 from typing import Dict, List, Tuple, Union
 from parser.carregador_json_fichas_tecnicas import buscar_ficha_tecnica_por_id
+from datetime import datetime
+import logging
+logger = logging.getLogger("FichaTecnica")
+logger.setLevel(logging.INFO)
 
 
 class FichaTecnicaModular:
@@ -22,7 +26,13 @@ class FichaTecnicaModular:
         self.itens = dados_ficha_tecnica.get("itens", [])
         self.quantidade_requerida = quantidade_requerida
 
-    def calcular_quantidade_itens(self) -> List[Tuple[Dict[str, Union[str, int, float]], int]]:
+    
+    def calcular_quantidade_itens(self) -> List[Tuple[Dict[str, Union[str, int, float]], float]]:
+        """
+        Estima a quantidade de cada item necessário com base na ficha técnica,
+        considerando a quantidade requerida e a perda percentual.
+        Arredonda as quantidades para duas casas decimais.
+        """
         estimativas = []
         proporcoes = [item["proporcao"] for item in self.itens]
         soma_proporcoes = sum(proporcoes)
@@ -36,10 +46,22 @@ class FichaTecnicaModular:
             else:
                 base = (proporcao * self.peso_unitario * self.quantidade_requerida) / soma_proporcoes_com_perda
 
-            quantidade_final = round(base)
-            estimativas.append((item, quantidade_final))
+            quantidade_final = round(base, 2)
+
+            item_enriquecido = item.copy()
+            item_enriquecido["politica_producao"] = item.get("politica_producao")
+
+            print(
+                f"📦 Item: {item_enriquecido.get('descricao', 'N/D')} | "
+                f"ID: {item_enriquecido.get('id_item')} | "
+                f"Política: {item_enriquecido.get('politica_producao', 'N/D')}"
+            )
+
+            estimativas.append((item_enriquecido, quantidade_final))
 
         return estimativas
+
+
 
     def mostrar_estrutura(self, nivel: int = 0):
         """
@@ -62,7 +84,7 @@ class FichaTecnicaModular:
                     tipo_item=TipoItem.SUBPRODUTO
                 )
                 from models.ficha_tecnica_modular import FichaTecnicaModular
-                ficha_sub = FichaTecnicaModular(
+                ficha_sub = FichaTecnicaModular( 
                     dados_ficha_tecnica=dados_ficha_sub,
                     quantidade_requerida=quantidade
                 )

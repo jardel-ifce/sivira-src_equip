@@ -9,19 +9,10 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 10000,
     "estoque_max": 70000,
-    "estoque_atual": 50000,
+    "estoque_atual": 11788.12,
     "consumo_diario_estimado": 7000,
     "reabastecimento_previsto_em": "2025-06-28",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 3980
-      },
-      {
-        "data": "2025-06-25",
-        "quantidade_reservada": 3980
-      }
-    ]
+    "reservas_futuras": []
   },
   {
     "id_item": 4,
@@ -33,15 +24,10 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 8000,
     "estoque_max": 30000,
-    "estoque_atual": 24000,
+    "estoque_atual": 1072.88,
     "consumo_diario_estimado": 4000,
     "reabastecimento_previsto_em": "2025-06-26",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 2388
-      }
-    ]
+    "reservas_futuras": []
   },
   {
     "id_item": 5,
@@ -53,15 +39,10 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 5000,
-    "estoque_atual": 3000,
+    "estoque_atual": 2235.76,
     "consumo_diario_estimado": 160,
     "reabastecimento_previsto_em": "2025-06-30",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 80
-      }
-    ]
+    "reservas_futuras": []
   },
   {
     "id_item": 6,
@@ -73,15 +54,10 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 3000,
-    "estoque_atual": 2000,
+    "estoque_atual": 1617.88,
     "consumo_diario_estimado": 80,
     "reabastecimento_previsto_em": "2025-06-27",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 40
-      }
-    ]
+    "reservas_futuras": []
   },
   {
     "id_item": 7,
@@ -93,15 +69,10 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 300,
     "estoque_max": 1000,
-    "estoque_atual": 0,
+    "estoque_atual": -114.64,
     "consumo_diario_estimado": 24,
     "reabastecimento_previsto_em": "2025-06-25",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 12
-      }
-    ]
+    "reservas_futuras": []
   },
   {
     "id_item": 2,
@@ -113,7 +84,7 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 0,
     "estoque_max": 0,
-    "estoque_atual": 0,
+    "estoque_atual": -62400.0,
     "reservas_futuras": [],
     "ficha_tecnica": {
       "id_ficha_tecnica": 2
@@ -129,15 +100,10 @@
     "unidade_medida": "UNIDADE",
     "estoque_min": 200,
     "estoque_max": 1000,
-    "estoque_atual": 400,
+    "estoque_atual": -800.0,
     "consumo_diario_estimado": 120,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 100
-      }
-    ],
+    "reservas_futuras": [],
     "ficha_tecnica": {
       "id_ficha_tecnica": 1
     }

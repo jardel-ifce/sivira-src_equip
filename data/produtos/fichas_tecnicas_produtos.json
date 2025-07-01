@@ -16,6 +16,7 @@
         "descricao": "Massa Crocante",
         "nome": "massa_crocante",
         "tipo_item": "SUBPRODUTO",
+        "politica_producao": "SOB_DEMANDA",
         "proporcao": 100,
         "id_ficha_tecnica": 2
       }

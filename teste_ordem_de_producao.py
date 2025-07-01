@@ -1,17 +1,26 @@
 from datetime import datetime
 from models.atividades.pedido_de_producao import PedidoDeProducao
+from models.itens.almoxarifado import Almoxarifado
 from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
 from factory.fabrica_funcionarios import funcionarios_disponiveis
 from parser.carregador_json_itens_almoxarifado import carregar_itens_almoxarifado
 from utils.gerenciador_logs import limpar_todos_os_logs
+from modules.modulo_comandas import gerar_comanda_reserva
+from utils.limpador_comandas import apagar_todas_as_comandas
 
 # 1. Carregar os itens do almoxarifado
 itens = carregar_itens_almoxarifado("data/almoxarifado/itens_almoxarifado.json")
-gestor = GestorAlmoxarifado(itens)
-gestor.exibir_itens()
+apagar_todas_as_comandas()
+almox = Almoxarifado()
+for item in itens:
+    almox.adicionar_item(item) 
+
+gestor = GestorAlmoxarifado(almox)
+gestor.exibir_itens_estoque()
 limpar_todos_os_logs()
+
 # 2. Criar pedido de produção
-for i in range(1, 3):
+for i in range(1, 2):
     pedido = PedidoDeProducao(
         ordem_id=1,
         pedido_id=i,
@@ -22,10 +31,21 @@ for i in range(1, 3):
         todos_funcionarios=funcionarios_disponiveis
     )
 
-    # 3. Verificar estoque e montar estrutura
     try:
+        # 3. Montar ficha técnica
         pedido.montar_estrutura()
-        #pedido.verificar_disponibilidade_estoque(gestor, pedido.inicio_jornada)
+
+        # 4. Gerar comanda de reserva (módulo externo)
+        gerar_comanda_reserva(
+            ordem_id=pedido.ordem_id,
+            pedido_id=pedido.pedido_id,
+            ficha=pedido.ficha_tecnica_modular,
+            gestor=gestor,
+            data_execucao=pedido.inicio_jornada
+        )
+
+        # 5. Criar e executar atividades normalmente
+        pedido.mostrar_estrutura()
         pedido.criar_atividades_modulares_necessarias()
         pedido.executar_atividades_em_ordem()
         pedido.exibir_historico_de_funcionarios()

@@ -98,3 +98,5 @@ def _extrair_objetos_equipamento(equipamentos_alocados):
     if equipamentos_alocados and isinstance(equipamentos_alocados[0], tuple):
         return [e[1] for e in equipamentos_alocados]
     return equipamentos_alocados
+
+

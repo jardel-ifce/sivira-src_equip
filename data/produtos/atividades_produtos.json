@@ -104,7 +104,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["modeladora_de_paes_1", "bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:10:00",
+        "tempo_maximo_de_espera": "00:07:00",
         "fips_equipamentos": {
           "modeladora_de_paes_1": 1,
           "bancada_1": 1,

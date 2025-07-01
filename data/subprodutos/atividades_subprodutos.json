@@ -2,9 +2,10 @@
   {
     "id_item": 2,
     "nome": "massa_crocante",
+    "antecipacao_de_producao": "00:00:00",
     "atividades": [
       {
-        "id_atividade": 1,
+        "id_atividade": 201,
         "nome": "mistura_de_massas_crocantes",
         "tipo_atividade": "MISTURA_DE_MASSAS_CROCANTES",
         "tipo_equipamento": {
