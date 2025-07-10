@@ -3,7 +3,7 @@
 import copy
 from typing import List
 from models.atividades.pedido_de_producao import PedidoDeProducao
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("AvaliadorPedidos")
 

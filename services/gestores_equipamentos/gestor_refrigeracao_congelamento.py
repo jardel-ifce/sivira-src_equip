@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union, TYPE_CHECKING
-from models.equips.camara_refrigerada import CamaraRefrigerada
-from models.equips.freezer import Freezer
+from models.equipamentos.camara_refrigerada import CamaraRefrigerada
+from models.equipamentos.freezer import Freezer
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.conversores_ocupacao import gramas_para_caixas, gramas_para_niveis_tela
-from utils.logger_factory import setup_logger
+from utils.producao.conversores_ocupacao import gramas_para_caixas, gramas_para_niveis_tela
+from utils.logs.logger_factory import setup_logger
 import unicodedata
 
 # ❄️ Logger específico
@@ -72,6 +72,7 @@ class GestorRefrigeracaoCongelamento:
     # ==========================================================
     # 🎯 Alocação
     # ==========================================================
+
     def alocar(
         self,
         inicio: datetime,
@@ -84,6 +85,7 @@ class GestorRefrigeracaoCongelamento:
         Retorna (True, equipamento, inicio_real, fim_real) se sucesso.
         Caso contrário: (False, None, None, None)
         """
+        
         duracao = atividade.duracao
         atividade.quantidade_produto = quantidade_produto
 
@@ -128,7 +130,7 @@ class GestorRefrigeracaoCongelamento:
                 ):
                     continue
 
-                if not equipamento.selecionar_faixa_temperatura(temperatura_desejada):
+                if not equipamento.selecionar_faixa_temperatura(temperatura_desejada, horario_inicio_tentativa, horario_final_tentativa):
                     continue
 
                 if not getattr(equipamento, metodo_verificacao)(
@@ -155,9 +157,13 @@ class GestorRefrigeracaoCongelamento:
                         f"| {horario_inicio_tentativa.strftime('%H:%M')} → {horario_final_tentativa.strftime('%H:%M')} "
                         f"| Temp: {temperatura_desejada}°C"
                     )
+                    logger.info(f"🔍 Retornando: True, {equipamento}, {horario_inicio_tentativa}, {horario_final_tentativa}")
+                    logger.info(f"📦 Tipo do equipamento retornado: {type(equipamento)}")
+                    if isinstance(equipamento, list):
+                        logger.warning(f"⚠️ Foi retornada uma LISTA de equipamentos: {[e.nome for e in equipamento]}")
                     return True, equipamento, horario_inicio_tentativa, horario_final_tentativa
 
-            horario_final_tentativa -= timedelta(minutes=1)
+            horario_final_tentativa -= timedelta(minutes=300)
 
         logger.warning(
             f"❌ Nenhuma câmara pôde ser alocada para atividade {atividade.id} "
@@ -165,7 +171,8 @@ class GestorRefrigeracaoCongelamento:
         )
         return False, None, None, None
 
-    
+
+
     # ==========================================================
     # 🔓 Liberações
     # ==========================================================

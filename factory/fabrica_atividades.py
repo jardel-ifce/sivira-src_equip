@@ -3,7 +3,7 @@ from pathlib import Path
 from parser.parser_json_atividade import ParserAtividadeModular
 from models.atividade_generica import AtividadeGenerica
 from enums.tipo_atividade import TipoAtividade
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from typing import Optional
 import inflect
 

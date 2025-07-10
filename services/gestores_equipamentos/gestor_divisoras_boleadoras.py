@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple, List, TYPE_CHECKING
-from models.equips.divisora_de_massas import DivisoraDeMassas
+from models.equipamentos.divisora_de_massas import DivisoraDeMassas
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 import unicodedata
 
 logger = setup_logger('GestorDivisoras')

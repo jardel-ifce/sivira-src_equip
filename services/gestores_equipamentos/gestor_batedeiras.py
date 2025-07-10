@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple, List, Union, TYPE_CHECKING
-from models.equips.batedeira_industrial import BatedeiraIndustrial
-from models.equips.batedeira_planetaria import BatedeiraPlanetaria
+from models.equipamentos.batedeira_industrial import BatedeiraIndustrial
+from models.equipamentos.batedeira_planetaria import BatedeiraPlanetaria
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 import unicodedata
 
 # 🏭 Logger específico para o gestor de batedeiras

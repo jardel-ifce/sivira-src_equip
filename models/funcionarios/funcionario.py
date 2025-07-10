@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, date, time
 from typing import List, Optional, Tuple
-from utils.regras_folga import RegraFolga
-from utils.data_utils import mapa_dia_semana, formatar_hora_e_min
-from utils.logger_factory import setup_logger
-from enums.tipo_folga import TipoFolga
-from enums.tipo_profissional import TipoProfissional
+from utils.funcionarios.regras_folga import RegraFolga
+from utils.time.data_utils import mapa_dia_semana, formatar_hora_e_min
+from utils.logs.logger_factory import setup_logger
+from enums.funcionarios.tipo_folga import TipoFolga
+from enums.funcionarios.tipo_profissional import TipoProfissional
 
 logger = setup_logger('Funcionario')
 

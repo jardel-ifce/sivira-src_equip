@@ -1,9 +1,9 @@
 import json
 from typing import List
-from enums.tipo_item import TipoItem
-from enums.politica_producao import PoliticaProducao
-from enums.unidade_medida import UnidadeMedida
-from models.itens.item_almoxarifado import ItemAlmoxarifado
+from enums.producao.tipo_item import TipoItem
+from enums.producao.politica_producao import PoliticaProducao
+from enums.producao.unidade_medida import UnidadeMedida
+from models.almoxarifado.item_almoxarifado import ItemAlmoxarifado
 
 
 def carregar_itens_almoxarifado(caminho_json: str) -> List[ItemAlmoxarifado]:

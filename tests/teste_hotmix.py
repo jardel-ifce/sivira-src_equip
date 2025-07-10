@@ -1,8 +1,8 @@
 from datetime import datetime
 from services.mapa_gestor_equipamento import MAPA_GESTOR
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 from models.atividades.atividade_modular import AtividadeModular
-from enums.tipo_equipamento import TipoEquipamento
+from enums.equipamentos.tipo_equipamento import TipoEquipamento
 
 # 🔧 Logger principal
 logger = setup_logger("TesteHotMix")

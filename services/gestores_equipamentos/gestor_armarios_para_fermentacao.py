@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union, TYPE_CHECKING
-from models.equips.armario_esqueleto import ArmarioEsqueleto
-from models.equips.armario_fermentador import ArmarioFermentador
+from models.equipamentos.armario_esqueleto import ArmarioEsqueleto
+from models.equipamentos.armario_fermentador import ArmarioFermentador
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.conversores_ocupacao import gramas_para_niveis_tela
-from utils.logger_factory import setup_logger
+from utils.producao.conversores_ocupacao import gramas_para_niveis_tela
+from utils.logs.logger_factory import setup_logger
 
 # 🗄️ Logger exclusivo do gestor de Armários para Fermentação
 logger = setup_logger('GestorArmariosParaFermentacao')

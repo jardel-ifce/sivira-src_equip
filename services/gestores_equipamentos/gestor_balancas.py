@@ -1,8 +1,8 @@
 from typing import List, Tuple, Optional, TYPE_CHECKING
-from models.equips.balanca_digital import BalancaDigital
+from models.equipamentos.balanca_digital import BalancaDigital
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 from datetime import datetime
 
 # ⚖️ Logger específico para o gestor de balanças

@@ -1,8 +1,8 @@
 import json
 import os
-from enums.tipo_item import TipoItem
+from enums.producao.tipo_item import TipoItem
 from typing import Dict, Any, Tuple
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("CarregadorFichaTecnica")
 

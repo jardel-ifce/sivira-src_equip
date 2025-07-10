@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, TYPE_CHECKING
-from models.equips.fritadeira import Fritadeira
+from models.equipamentos.fritadeira import Fritadeira
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 import unicodedata
 
 # 🍟 Logger exclusivo para o gestor de fritadeiras

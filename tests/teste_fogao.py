@@ -3,9 +3,9 @@ sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip")  # ajuste par
 
 from datetime import datetime, timedelta
 from services.mapa_gestor_equipamento import MAPA_GESTOR
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 from models.atividades.atividade_modular import AtividadeModular
-from utils.gerador_ocupacao import GeradorDeOcupacaoID
+from utils.producao.gerador_ocupacao import GeradorDeOcupacaoID
 
 
 # 🔧 Logger principal

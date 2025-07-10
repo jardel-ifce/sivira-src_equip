@@ -5,7 +5,7 @@ import copy
 from typing import List
 from models.atividades.pedido_de_producao import PedidoDeProducao
 from services.otimizador_pedidos.avaliador_pedidos import avaliar_sequencia_de_pedidos
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("AlgoritmoGenetico")
 

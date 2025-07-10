@@ -1,7 +1,8 @@
 from datetime import datetime, date
-from typing import List, Tuple, Optional
-from models.itens.almoxarifado import Almoxarifado
-from models.itens.item_almoxarifado import ItemAlmoxarifado
+from typing import List, Tuple, Optional, Dict
+from models.almoxarifado.almoxarifado import Almoxarifado
+from models.almoxarifado.item_almoxarifado import ItemAlmoxarifado
+from enums.producao.politica_producao import PoliticaProducao
 
 class GestorAlmoxarifado:
     def __init__(self, almoxarifado: Almoxarifado):
@@ -104,3 +105,39 @@ class GestorAlmoxarifado:
                 f"   Reservado para {data.strftime('%Y-%m-%d')}: {reservado:.2f}\n"
                 f"   📉 Estoque projetado: {projetado:.2f} {item.unidade_medida.value}\n"
             )
+
+
+    def verificar_estoque_minimo(self) -> List[Dict]:
+        """
+        Retorna lista de itens com política ESTOCADO abaixo do estoque mínimo.
+        """
+        itens_em_alerta = []
+        print(f"\n📦 Total de itens carregados no almoxarifado: {len(self.almoxarifado.itens)}")
+        print("🔍 Verificando estoque mínimo apenas para itens com política ESTOCADO:\n")
+
+        for item in self.almoxarifado.itens:
+            print(f"🧪 {item.descricao} - política: {item.politica_producao}")
+
+            if item.politica_producao != PoliticaProducao.ESTOCADO:
+                continue
+
+            atual = item.estoque_atual
+            minimo = item.estoque_min
+            unidade = item.unidade_medida.value
+
+            print(f"🔸 {item.descricao} (ID {item.id_item}): {atual:.2f} / mínimo {minimo:.2f} {unidade} | política: {item.politica_producao}")
+
+            if atual < minimo:
+                print("   ❗ Abaixo do mínimo!")
+                itens_em_alerta.append({
+                    "id_item": item.id_item,
+                    "nome": item.descricao,
+                    "estoque_atual": round(atual, 2),
+                    "estoque_min": round(minimo, 2),
+                    "falta": round(minimo - atual, 2),
+                    "unidade": unidade
+                })
+            else:
+                print("   ✅ Estoque suficiente.")
+
+        return itens_em_alerta

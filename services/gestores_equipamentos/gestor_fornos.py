@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, TYPE_CHECKING
-from models.equips.forno import Forno
+from models.equipamentos.forno import Forno
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.conversores_ocupacao import gramas_para_niveis_tela
-from utils.logger_factory import setup_logger
+from utils.producao.conversores_ocupacao import gramas_para_niveis_tela
+from utils.logs.logger_factory import setup_logger
 import unicodedata
 
 # 🔥 Logger específico para o gestor de fornos

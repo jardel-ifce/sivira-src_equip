@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, List
-from models.equips.equipamento import Equipamento  # Base comum dos equipamentos
-from enums.tipo_profissional import TipoProfissional
+from models.equipamentos.equipamento import Equipamento  # Base comum dos equipamentos
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from models.funcionarios.funcionario import Funcionario
 
 

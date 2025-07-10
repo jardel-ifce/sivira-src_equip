@@ -1,7 +1,7 @@
 [
   {
-    "id_ficha_tecnica": 1,
-    "id_item": 1,
+    "id_ficha_tecnica": 1001,
+    "id_item": 1001,
     "nome": "pao_frances",
     "descricao": "Pão Francês",
     "tipo_item": "PRODUTO",
@@ -12,13 +12,13 @@
     "politica_producao": "SOB_DEMANDA",
     "itens": [
       {
-        "id_item": 2,
+        "id_item": 2001,
         "descricao": "Massa Crocante",
         "nome": "massa_crocante",
         "tipo_item": "SUBPRODUTO",
         "politica_producao": "SOB_DEMANDA",
         "proporcao": 100,
-        "id_ficha_tecnica": 2
+        "id_ficha_tecnica": 2001
       }
     ]
   }

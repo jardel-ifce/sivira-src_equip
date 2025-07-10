@@ -1,13 +1,13 @@
 import os
-from enums.tipo_equipamento import TipoEquipamento
+from enums.equipamentos.tipo_equipamento import TipoEquipamento
 from enums.tipo_item import TipoItem
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from typing import List, Optional
 from services.mapa_gestor_equipamento import MAPA_GESTOR
 from services.gestor_funcionarios.gestor_funcionarios import GestorFuncionarios
-from utils.logger_factory import setup_logger
-from utils.conversores_temporais import converter_para_timedelta
-from utils.normalizador_de_nomes import normalizar_nome
+from utils.logs.logger_factory import setup_logger
+from utils.commons.conversores_temporais import converter_para_timedelta
+from utils.commons.normalizador_de_nomes import normalizar_nome
 from models.atividade_base import Atividade
 from models.funcionarios.funcionario import Funcionario
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade

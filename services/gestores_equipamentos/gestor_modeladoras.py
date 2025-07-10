@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, TYPE_CHECKING
-from models.equips.modeladora_de_paes import ModeladoraDePaes
+from models.equipamentos.modeladora_de_paes import ModeladoraDePaes
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular 
-from utils.logger_factory import setup_logger
-import unicodedata
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("GestorModeladoras")
 

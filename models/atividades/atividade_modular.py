@@ -1,22 +1,22 @@
 import os
 from datetime import datetime, timedelta
-from enums.tipo_equipamento import TipoEquipamento
-from enums.tipo_item import TipoItem
-from enums.tipo_profissional import TipoProfissional
+from enums.equipamentos.tipo_equipamento import TipoEquipamento
+from enums.producao.tipo_item import TipoItem
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from factory import fabrica_equipamentos
 from models.funcionarios.funcionario import Funcionario
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade
 from services.gestor_funcionarios.gestor_funcionarios import GestorFuncionarios
-from services.mapa_gestor_equipamento import MAPA_GESTOR
-from services.rollback import rollback_equipamentos, rollback_funcionarios
+from services.mapas.mapa_gestor_equipamento import MAPA_GESTOR
+from services.rollback.rollback import rollback_equipamentos, rollback_funcionarios
 from typing import List, Tuple, Optional
-from utils.calculadora_duracao import consultar_duracao_por_faixas
-from utils.conversores_temporais import converter_para_timedelta
-from utils.logger_factory import setup_logger
-from utils.normalizador_de_nomes import normalizar_nome
-from utils.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
+from utils.producao.calculadora_duracao import consultar_duracao_por_faixas
+from utils.time.conversores_temporais import converter_para_timedelta
+from utils.logs.logger_factory import setup_logger
+from utils.commons.normalizador_de_nomes import normalizar_nome
+from utils.logs.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
 import itertools
-
+import traceback
 
 logger = setup_logger('Atividade_Modular')
 
@@ -121,11 +121,11 @@ class AtividadeModular:
         self.alocada = True
 
         # DEBUG: verificar dados antes do log
-        logger.warning(f"📋 Registrando log de equipamentos: ordem={self.ordem_id}, pedido={self.pedido_id}, atividade={self.id_atividade}")
-        for i, (ocupacao_id, equipamento, inicio_eqp, fim_eqp) in enumerate(equipamentos_alocados):
-            logger.warning(
-                f"🔧 [{i}] Equipamento: {equipamento.nome}, Início: {inicio_eqp}, Fim: {fim_eqp}, Ocupação ID: {ocupacao_id}"
-            )
+        # logger.warning(f"📋 Registrando log de equipamentos: ordem={self.ordem_id}, pedido={self.pedido_id}, atividade={self.id_atividade}")
+        # for i, (ocupacao_id, equipamento, inicio_eqp, fim_eqp) in enumerate(equipamentos_alocados):
+        #     logger.warning(
+        #         f"🔧 [{i}] Equipamento: {equipamento.nome}, Início: {inicio_eqp}, Fim: {fim_eqp}, Ocupação ID: {ocupacao_id}"
+        #     )
 
         # Registro no log
         registrar_log_equipamentos(
@@ -229,6 +229,7 @@ class AtividadeModular:
                         fim=horario_fim_etapa,
                         **config
                     )
+                    print(f"🔍 [DEBUG] Resultado retornado por gestor.alocar: {resultado} | Tipo: {type(resultado)} | Len: {len(resultado) if hasattr(resultado, '__len__') else '??'}")
 
                     if not resultado[0] or resultado[1] is None:
                         sucesso = False
@@ -238,9 +239,19 @@ class AtividadeModular:
                     horario_fim_etapa = resultado[2]
 
                 except Exception as e:
+                    
                     logger.error(f"❌ Erro ao alocar {tipo_eqp}: {e}")
+                    traceback.print_exc()
+                    
                     sucesso = False
                     break
+                 # Se possível, imprima o resultado bruto antes do unpack
+                try:
+                    continue
+                    # logger.debug(f"📦 Resultado bruto retornado por gestor.alocar({tipo_eqp}): {resultado}")
+                    # print(f"📦 Resultado bruto retornado por gestor.alocar({tipo_eqp}): {resultado} | Tipo: {type(resultado)} | Len: {len(resultado) if hasattr(resultado, '__len__') else 'n/a'}")
+                except Exception as inner:
+                    logger.warning(f"⚠️ Não foi possível imprimir resultado retornado: {inner}")
 
             if sucesso:
                 equipamentos_ordenados = sorted(equipamentos_alocados, key=lambda x: x[2])
@@ -275,7 +286,8 @@ class AtividadeModular:
                     qtd_profissionais_requeridos=self.qtd_profissionais_requeridos,
                     tipos_necessarios=self.tipos_necessarios,
                     fips_profissionais_permitidos=self.fips_profissionais_permitidos,
-                    funcionarios_elegiveis=self.funcionarios_elegiveis
+                    funcionarios_elegiveis=self.funcionarios_elegiveis,
+                    nome_atividade=self.nome_atividade
                 )
 
                 if flag:
@@ -297,6 +309,15 @@ class AtividadeModular:
                         inicio=inicio_atividade,
                         fim=fim_atividade
                     )
+                else:
+                    # bloco em testes, talvez não seja necessárioo rollback, vou deixar para a classe PedidoDeProducao
+                    #rollback_equipamentos(equipamentos_alocados, self.ordem_id, self.pedido_id)
+                    #rollback_funcionarios(self.funcionarios_elegiveis, self.ordem_id, self.pedido_id)
+                    raise RuntimeError(
+                        f"❌ Não foi possível alocar os funcionários necessários para a atividade {self.id_atividade}."
+                    )
+                   
+                    
 
                 return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera, equipamentos_alocados
             else:
@@ -304,7 +325,7 @@ class AtividadeModular:
                 #rollback_funcionarios(self.funcionarios_elegiveis, self.ordem_id, self.pedido_id, self.id_atividade)
                # remover_log_funcionarios(self.ordem_id, self.pedido_id, self.id_atividade)
                 remover_log_equipamentos(self.ordem_id, self.pedido_id)
-            horario_final -= timedelta(minutes=1)
+            horario_final -= timedelta(minutes=300)
 
         logger.error(f"🛑 Limite da jornada atingido. Impossível alocar a atividade {self.id_atividade}.")
         return False, None, None, self.tempo_maximo_de_espera, equipamentos_alocados

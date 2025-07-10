@@ -4,16 +4,16 @@ import os
 from factory.fabrica_funcionarios import funcionarios_disponiveis
 from models.funcionarios.funcionario import Funcionario
 from models.atividades.atividade_modular import AtividadeModular
-from parser.carregador_json_atividades import buscar_atividades_por_id_item
+from parser.carregador_json_atividades import buscar_atividades_por_id_item, buscar_dados_por_id_produto_ou_subproduto
 from parser.carregador_json_fichas_tecnicas import buscar_ficha_tecnica_por_id
 from parser.carregador_json_tipos_profissionais import buscar_tipos_profissionais_por_id_item
-from services.rollback import rollback_equipamentos, rollback_funcionarios
-from models.ficha_tecnica_modular import FichaTecnicaModular
-from enums.tipo_item import TipoItem
-from utils.logger_factory import setup_logger
-from utils.gerenciador_logs import registrar_erro_execucao_pedido, apagar_logs_por_pedido_e_ordem
+from services.rollback.rollback import rollback_equipamentos, rollback_funcionarios
+from models.ficha_tecnica.ficha_tecnica_modular import FichaTecnicaModular
+from enums.producao.tipo_item import TipoItem
+from utils.logs.logger_factory import setup_logger
+from utils.logs.gerenciador_logs import registrar_erro_execucao_pedido, apagar_logs_por_pedido_e_ordem
 from datetime import timedelta
-from modules.modulo_comandas import gerar_comanda_reserva as gerar_comanda_reserva_modulo
+from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva as gerar_comanda_reserva_modulo
 
 
 logger = setup_logger("PedidoDeProducao")
@@ -25,6 +25,7 @@ class PedidoDeProducao:
         ordem_id: int,
         pedido_id: int,
         id_produto: int,
+        tipo_item: TipoItem,
         quantidade: int,
         inicio_jornada: datetime,
         fim_jornada: datetime,
@@ -34,6 +35,7 @@ class PedidoDeProducao:
         self.ordem_id = ordem_id
         self.pedido_id = pedido_id
         self.id_produto = id_produto
+        self.tipo_item = tipo_item
         self.quantidade = quantidade
 
         # ⏱️ Janela de produção
@@ -52,7 +54,7 @@ class PedidoDeProducao:
         self.equipamentos_alocados = []  
 
     def montar_estrutura(self):
-        _, dados_ficha = buscar_ficha_tecnica_por_id(self.id_produto, TipoItem.PRODUTO)
+        _, dados_ficha = buscar_ficha_tecnica_por_id(self.id_produto, tipo_item=self.tipo_item)
         self.ficha_tecnica_modular = FichaTecnicaModular(
             dados_ficha_tecnica=dados_ficha,
             quantidade_requerida=self.quantidade
@@ -72,7 +74,9 @@ class PedidoDeProducao:
 
     def _criar_atividades_recursivas(self, ficha_modular: FichaTecnicaModular):
         try:
+            logger.info(f"🔄 Criando atividades para ID {ficha_modular.id_item} ({ficha_modular.tipo_item.name})")
             atividades = buscar_atividades_por_id_item(ficha_modular.id_item, ficha_modular.tipo_item)
+
             for dados_gerais, dados_atividade in atividades:
                 atividade = AtividadeModular(
                     ordem_id=self.ordem_id,
@@ -85,8 +89,11 @@ class PedidoDeProducao:
                     funcionarios_elegiveis=self.funcionarios_elegiveis
                 )
                 self.atividades_modulares.append(atividade)
-        except Exception:
-            pass  # Insumo puro
+
+            logger.info(f"✅ Total de atividades adicionadas: {len(atividades)}")
+
+        except Exception as e:
+            logger.warning(f"⚠️ Nenhuma atividade criada para ID {ficha_modular.id_item}: {e}")
 
         estimativas = ficha_modular.calcular_quantidade_itens()
         for item_dict, quantidade in estimativas:
@@ -102,53 +109,82 @@ class PedidoDeProducao:
         logger.info(f"🚀 Iniciando execução do pedido {self.pedido_id} com {len(self.atividades_modulares)} atividades")
         current_fim = self.fim_jornada
         inicio_prox_atividade = self.fim_jornada
+        atividade_sucessora = None
 
-        try:
-            atividades_produto = sorted(
-                [a for a in self.atividades_modulares if a.tipo_item == TipoItem.PRODUTO],
-                key=lambda a: a.id_atividade,
-                reverse=True
-            )
+        atividades_produto = sorted(
+            [a for a in self.atividades_modulares if a.tipo_item == TipoItem.PRODUTO],
+            key=lambda a: a.id_atividade,
+            reverse=True
+        )
 
-            for at in atividades_produto:
-                ok, inicio_atividade_atual, fim_atividade_atual, tempo_max_espera_atual, self.equipamentos_alocados = at.tentar_alocar_e_iniciar_equipamentos(self.inicio_jornada, current_fim)
-                print(f"Inicio da prox atividade: {inicio_prox_atividade}")
-                print(f"Fim da atividade atual: {fim_atividade_atual}")
-                print(f"Tempo máximo de espera atual: {tempo_max_espera_atual}")
-                print(f"Tempo de atraso: {inicio_prox_atividade - fim_atividade_atual}")
-                      
-                      
-                if inicio_prox_atividade - fim_atividade_atual > tempo_max_espera_atual:
-                    tempo_atraso = inicio_prox_atividade - fim_atividade_atual
-                    raise RuntimeError(f"Falha ao alocar atividade {at.id_atividade} {at.nome_atividade} - Excedeu o tempo máximo de espera em: {tempo_atraso}")
+        for at in atividades_produto:
+            try:
+                ok, inicio_atividade_atual, fim_atividade_atual, _, self.equipamentos_alocados = at.tentar_alocar_e_iniciar_equipamentos(
+                    self.inicio_jornada, current_fim
+                )
+
+                if atividade_sucessora:
+                    tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
+                    atraso = inicio_prox_atividade - fim_atividade_atual
+                    print(f"[⏱️] Comparando com tempo máximo da atividade sucessora {atividade_sucessora.id_atividade}: {tempo_max_espera}")
+                    print(f"Tempo de atraso: {atraso}")
+
+                    if atraso > tempo_max_espera:
+                        raise RuntimeError(
+                            f"Falha ao alocar atividade {at.id_atividade} {at.nome_atividade} - "
+                            f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.id_atividade} "
+                            f"em: {atraso}"
+                        )
 
                 inicio_prox_atividade = inicio_atividade_atual
+                atividade_sucessora = at
                 if not ok:
                     raise RuntimeError(f"Falha ao alocar atividade {at.nome_atividade} PRODUTO {at.id_atividade}")
                 current_fim = at.inicio_real
 
-            atividades_sub = [a for a in self.atividades_modulares if a.tipo_item == TipoItem.SUBPRODUTO]
+            except Exception as e:
+                logger.warning(f"⚠️ Atividade PRODUTO {at.id_atividade} falhou: {e}")
+                apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
+                self._rollback_pedido()
+                continue
 
-            for at in atividades_sub:
-                ok, inicio_atividade_atual, fim_atividade_atual, tempo_max_espera_atual, self.equipamentos_alocados = at.tentar_alocar_e_iniciar_equipamentos(self.inicio_jornada, current_fim)
-                print(f"Inicio da prox atividade: {inicio_prox_atividade}")
-                print(f"Fim da atividade atual: {fim_atividade_atual}")
-                print(f"Tempo máximo de espera atual: {tempo_max_espera_atual}")
-                print(f"Tempo de atraso: {inicio_prox_atividade - fim_atividade_atual}")
-                if inicio_prox_atividade - fim_atividade_atual > tempo_max_espera_atual:
-                    tempo_atraso = inicio_prox_atividade - fim_atividade_atual
-                    raise RuntimeError(f"Falha ao alocar atividade SUBPRODUTO {at.id_atividade} - Excedeu o tempo máximo de espera: {tempo_atraso}")
+        atividades_sub = [a for a in self.atividades_modulares if a.tipo_item == TipoItem.SUBPRODUTO]
+        atividade_sucessora = None
+        inicio_prox_atividade = self.fim_jornada  # reinicia para subprodutos
+
+        for at in atividades_sub:
+            try:
+                ok, inicio_atividade_atual, fim_atividade_atual, _, self.equipamentos_alocados = at.tentar_alocar_e_iniciar_equipamentos(
+                    self.inicio_jornada, current_fim
+                )
+
+                if atividade_sucessora:
+                    tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
+                    atraso = inicio_prox_atividade - fim_atividade_atual
+                    print(f"[⏱️] Comparando com tempo máximo da atividade sucessora {atividade_sucessora.id_atividade}: {tempo_max_espera}")
+                    print(f"Tempo de atraso: {atraso}")
+
+                    if atraso > tempo_max_espera:
+                        raise RuntimeError(
+                            f"Falha ao alocar atividade SUBPRODUTO {at.id_atividade} - "
+                            f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.id_atividade} "
+                            f"em: {atraso}"
+                        )
 
                 inicio_prox_atividade = inicio_atividade_atual
+                atividade_sucessora = at
                 if not ok:
                     raise RuntimeError(f"Falha ao alocar atividade SUBPRODUTO {at.id_atividade}")
+                current_fim = at.inicio_real
 
-            #logger.info("pedido finalizada com sucesso.")
-
-        except Exception as e:
-                registrar_erro_execucao_pedido(self.ordem_id,self.pedido_id, e)
+            except Exception as e:
+                logger.warning(f"⚠️ Atividade SUBPRODUTO {at.id_atividade} falhou: {e}")
                 apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
-                self.rollback_pedido()
+                self._rollback_pedido()
+                continue
+
+        logger.info(f"✅ Concluída execução do pedido {self.pedido_id}")
+
 
     def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
         tipos_necessarios = buscar_tipos_profissionais_por_id_item(id_item)
@@ -158,6 +194,26 @@ class PedidoDeProducao:
         rollback_funcionarios(funcionarios_alocados=self.funcionarios_elegiveis, ordem_id=self.ordem_id, pedido_id=self.pedido_id)
         rollback_equipamentos(equipamentos_alocados= self.equipamentos_alocados, ordem_id=self.ordem_id, pedido_id=self.pedido_id)
         
+    def _rollback_pedido(self):
+        logger.info(f"🔁 [PedidoDeProducao] Executando rollback do pedido {self.pedido_id} da ordem {self.ordem_id}")
+
+        # Libera equipamentos de TODAS as atividades que foram alocados
+        for atividade in self.atividades_modulares:
+            rollback_equipamentos(
+                equipamentos_alocados=atividade.equipamentos_selecionados,
+                ordem_id=self.ordem_id,
+                pedido_id=self.pedido_id
+            )
+
+        rollback_funcionarios(
+            funcionarios_alocados=self.funcionarios_elegiveis,
+            ordem_id=self.ordem_id,
+            pedido_id=self.pedido_id
+        )
+
+        apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
+
+
     def exibir_historico_de_funcionarios(self):
         for funcionario in funcionarios_disponiveis:
             funcionario.mostrar_agenda()

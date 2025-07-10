@@ -4,7 +4,7 @@ sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip")  # ajuste par
 import json
 import os
 
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from typing import Set
 
 

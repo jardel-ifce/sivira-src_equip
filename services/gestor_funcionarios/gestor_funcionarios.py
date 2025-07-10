@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from models.funcionarios.funcionario import Funcionario
 from typing import List, Tuple
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 logger = setup_logger("GestorFuncionarios")
 
 class GestorFuncionarios:
@@ -17,7 +17,8 @@ class GestorFuncionarios:
         qtd_profissionais_requeridos: int,
         tipos_necessarios: List[Enum],
         fips_profissionais_permitidos: dict,
-        funcionarios_elegiveis: List[Funcionario]
+        funcionarios_elegiveis: List[Funcionario],
+        nome_atividade: str,
     ) -> Tuple[bool, List[Funcionario]]:
         """
         Seleciona até N profissionais com base em:
@@ -41,7 +42,7 @@ class GestorFuncionarios:
         ]
 
         if not candidatos:
-            # logger.warning(f"⚠️ Nenhum funcionário compatível para {nome_atividade}")
+            logger.warning(f"⚠️ Nenhum funcionário compatível para {nome_atividade}")
             return False, []
 
         def chave_pedido(f: Funcionario):

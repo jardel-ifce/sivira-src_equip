@@ -1,29 +1,28 @@
-import sys
-sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
+
 
 # =========================================
 # 📦 Imports dos Equipamentos
 # =========================================
-from models.equips.camara_refrigerada import CamaraRefrigerada
-from models.equips.freezer import Freezer
-from models.equips.fogao import Fogao
-from models.equips.balanca_digital import BalancaDigital
-from models.equips.bancada import Bancada
-from models.equips.batedeira_industrial import BatedeiraIndustrial
-from models.equips.batedeira_planetaria import BatedeiraPlanetaria
-from models.equips.masseira import Masseira
-from models.equips.hot_mix import HotMix
-from models.equips.forno import Forno
-from models.equips.armario_esqueleto import ArmarioEsqueleto
-from models.equips.divisora_de_massas import DivisoraDeMassas
-from models.equips.modeladora_de_paes import ModeladoraDePaes
-from models.equips.armario_fermentador import ArmarioFermentador
-from enums.tipo_setor import TipoSetor
-from enums.tipo_chama import TipoChama
-from enums.tipo_pressao_chama import TipoPressaoChama
-from enums.tipo_mistura import TipoMistura
-from enums.tipo_velocidade import TipoVelocidade
-from enums.tipo_coccao import TipoCoccao
+from models.equipamentos.camara_refrigerada import CamaraRefrigerada
+from models.equipamentos.freezer import Freezer
+from models.equipamentos.fogao import Fogao
+from models.equipamentos.balanca_digital import BalancaDigital
+from models.equipamentos.bancada import Bancada
+from models.equipamentos.batedeira_industrial import BatedeiraIndustrial
+from models.equipamentos.batedeira_planetaria import BatedeiraPlanetaria
+from models.equipamentos.masseira import Masseira
+from models.equipamentos.hot_mix import HotMix
+from models.equipamentos.forno import Forno
+from models.equipamentos.armario_esqueleto import ArmarioEsqueleto
+from models.equipamentos.divisora_de_massas import DivisoraDeMassas
+from models.equipamentos.modeladora_de_paes import ModeladoraDePaes
+from models.equipamentos.armario_fermentador import ArmarioFermentador
+from enums.producao.tipo_setor import TipoSetor
+from enums.equipamentos.tipo_chama import TipoChama
+from enums.equipamentos.tipo_pressao_chama import TipoPressaoChama
+from enums.equipamentos.tipo_mistura import TipoMistura
+from enums.equipamentos.tipo_velocidade import TipoVelocidade
+from enums.equipamentos.tipo_coccao import TipoCoccao
 
 
 class FabricaEquipamentos:

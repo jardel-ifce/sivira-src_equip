@@ -1,8 +1,8 @@
 import json
 import os
-from enums.tipo_item import TipoItem
+from enums.producao.tipo_item import TipoItem
 from typing import Dict, Any, Tuple, List
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("CarregadorAtividades")
 
@@ -77,9 +77,30 @@ def buscar_dados_por_id_produto_ou_subproduto(id_produto_ou_subproduto: int, tip
 
     raise ValueError(f"❌ Produto/Subproduto com id_item={id_produto_ou_subproduto} não encontrado em {nome_arquivo}.")
 
+# def buscar_atividades_por_id_item(id_item: int, tipo_item: TipoItem) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
+#     """
+#     🔎 Retorna todas as atividades associadas ao id_item (subproduto ou produto).
+#     """
+#     if tipo_item not in MAPA_CAMINHO:
+#         raise ValueError(f"❌ TipoItem '{tipo_item.name}' não suportado.")
+
+#     nome_pasta = MAPA_CAMINHO[tipo_item]
+#     caminho = os.path.join("data", nome_pasta, f"atividades_{nome_pasta}.json")
+
+#     with open(caminho, encoding="utf-8") as f:
+#         dados_json = json.load(f)
+
+#     for entrada in dados_json:
+#         if entrada["id_item"] == id_item:
+#             atividades = entrada.get("atividades", [])
+#             # logger.info(f"🔎 {len(atividades)} atividades encontradas para item {entrada['nome']}")
+#             return [(entrada, atividade) for atividade in atividades]
+
+#     raise ValueError(f"❌ Nenhuma atividade encontrada para id_item={id_item} em {caminho}")
 def buscar_atividades_por_id_item(id_item: int, tipo_item: TipoItem) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
     """
     🔎 Retorna todas as atividades associadas ao id_item (subproduto ou produto).
+    Agora exibe o caminho de busca e as atividades encontradas.
     """
     if tipo_item not in MAPA_CAMINHO:
         raise ValueError(f"❌ TipoItem '{tipo_item.name}' não suportado.")
@@ -87,13 +108,19 @@ def buscar_atividades_por_id_item(id_item: int, tipo_item: TipoItem) -> List[Tup
     nome_pasta = MAPA_CAMINHO[tipo_item]
     caminho = os.path.join("data", nome_pasta, f"atividades_{nome_pasta}.json")
 
+    print(f"📂 Buscando atividades em: {caminho}")
+
     with open(caminho, encoding="utf-8") as f:
         dados_json = json.load(f)
 
     for entrada in dados_json:
-        if entrada["id_item"] == id_item:
+        if int(entrada["id_item"]) == int(id_item):
             atividades = entrada.get("atividades", [])
-            # logger.info(f"🔎 {len(atividades)} atividades encontradas para item {entrada['nome']}")
-            return [(entrada, atividade) for atividade in atividades]
+            print(f"✅ {len(atividades)} atividades encontradas para item '{entrada.get('nome')}' (ID: {id_item}):")
+            for a in atividades:
+                print(f"   🔹 ID: {a.get('id_atividade')} | Nome: {a.get('nome')}")
+            resultado = [(entrada, atividade) for atividade in atividades]
+            print(f"📦 Total de atividades retornadas: {len(resultado)}")
+            return resultado
 
     raise ValueError(f"❌ Nenhuma atividade encontrada para id_item={id_item} em {caminho}")

@@ -4,58 +4,74 @@
   "data_reserva": "2025-06-24",
   "itens": [
     {
-      "id_item": 1,
-      "nome": "Pão Francês",
+      "id_item": 2005,
+      "nome": "Massa para bolo de chocolate",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 240,
+      "quantidade_necessaria": 3000,
       "itens_necessarios": [
         {
-          "id_item": 2,
-          "nome": "Massa Crocante",
-          "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 15600.0,
-          "itens_necessarios": [
-            {
-              "id_item": 3,
-              "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 9552.97,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 4,
-              "nome": "Gelo para alimentos",
-              "quantidade_necessaria": 5731.78,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 5,
-              "nome": "Sal refinado",
-              "quantidade_necessaria": 191.06,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 6,
-              "nome": "Fermento biológico seco",
-              "quantidade_necessaria": 95.53,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 7,
-              "nome": "Aditivo em pasta",
-              "quantidade_necessaria": 28.66,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            }
-          ]
+          "id_item": 17,
+          "nome": "Farinha de trigo doméstica",
+          "quantidade_necessaria": 1431.98,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 18,
+          "nome": "Leite líquido integral",
+          "quantidade_necessaria": 572.79,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 19,
+          "nome": "Ovo de galinha",
+          "quantidade_necessaria": 286.4,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 20,
+          "nome": "Margarina sem sal",
+          "quantidade_necessaria": 143.2,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 21,
+          "nome": "Cacau em pó 50%",
+          "quantidade_necessaria": 214.8,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 23,
+          "nome": "Açúcar refinado",
+          "quantidade_necessaria": 286.4,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 24,
+          "nome": "Fermento químico",
+          "quantidade_necessaria": 57.28,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 25,
+          "nome": "Essência de baunilha",
+          "quantidade_necessaria": 7.16,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
         }
       ]
     }

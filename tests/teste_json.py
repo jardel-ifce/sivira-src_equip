@@ -6,11 +6,11 @@ import sys
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 
 from datetime import timedelta, datetime
-from enums.tipo_equipamento import TipoEquipamento
+from enums.equipamentos.tipo_equipamento import TipoEquipamento
 from enums.tipo_coccao import TipoCoccao
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from services.mapa_gestor_equipamento import MAPA_GESTOR
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 from models.atividade_base import Atividade
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade
 from factory import fabrica_equipamentos

@@ -7,9 +7,9 @@ from models.atividades.atividade_modular import AtividadeModular
 from parser.carregador_json_atividades import buscar_atividades_por_id_item
 from parser.carregador_json_fichas_tecnicas import buscar_ficha_tecnica_por_id
 from parser.carregador_json_tipos_profissionais import buscar_tipos_profissionais_por_id_item
-from models.ficha_tecnica_modular import FichaTecnicaModular
+from models.ficha_tecnica.ficha_tecnica_modular import FichaTecnicaModular
 from enums.tipo_item import TipoItem
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 from datetime import timedelta
 
 logger = setup_logger("OrdemDeProducao")

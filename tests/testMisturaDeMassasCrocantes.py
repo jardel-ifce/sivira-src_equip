@@ -5,9 +5,9 @@ sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip")  # ajuste par
 import unittest
 from datetime import timedelta
 from models.atividades.mistura_de_massas_crocantes import MisturaDeMassasCrocantes
-from models.equips.masseira import Masseira
-from enums.tipo_profissional import TipoProfissional
-from enums.tipo_equipamento import TipoEquipamento
+from models.equipamentos.masseira import Masseira
+from enums.funcionarios.tipo_profissional import TipoProfissional
+from enums.equipamentos.tipo_equipamento import TipoEquipamento
 
 class TestMisturaDeMassasCrocantes(unittest.TestCase):
 

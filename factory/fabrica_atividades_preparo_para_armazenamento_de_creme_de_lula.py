@@ -6,14 +6,14 @@ from datetime import datetime
 
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/")
 
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 from factory.fabrica_equipamentos import bancada_7, balanca_digital_1, balanca_digital_2
 from models.atividades.subproduto.preparoparaarmazenamentodecremedelula import (
     PreparoParaArmazenamentoDeCremeDeLula,
 )
 from enums.tipo_atividade import TipoAtividade
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from services.gestor_bancadas import GestorBancadas
 from services.gestor_balancas import GestorBalancas
 

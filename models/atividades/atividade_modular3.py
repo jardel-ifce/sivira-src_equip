@@ -1,20 +1,20 @@
 import os
 from datetime import datetime, timedelta
-from enums.tipo_equipamento import TipoEquipamento
+from enums.equipamentos.tipo_equipamento import TipoEquipamento
 from enums.tipo_item import TipoItem
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from factory import fabrica_equipamentos
 from models.funcionarios.funcionario import Funcionario
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade
 from services.gestor_funcionarios.gestor_funcionarios import GestorFuncionarios
 from services.mapa_gestor_equipamento import MAPA_GESTOR
-from services.rollback import rollback_equipamentos, rollback_funcionarios
+from services.rollback.rollback import rollback_equipamentos, rollback_funcionarios
 from typing import List, Tuple, Optional
-from utils.calculadora_duracao import consultar_duracao_por_faixas
-from utils.conversores_temporais import converter_para_timedelta
-from utils.logger_factory import setup_logger
-from utils.normalizador_de_nomes import normalizar_nome
-from utils.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
+from utils.producao.calculadora_duracao import consultar_duracao_por_faixas
+from utils.commons.conversores_temporais import converter_para_timedelta
+from utils.logs.logger_factory import setup_logger
+from utils.commons.normalizador_de_nomes import normalizar_nome
+from utils.logs.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
 import itertools
 
 

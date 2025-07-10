@@ -1,12 +1,12 @@
 import unicodedata
 from datetime import datetime, timedelta
 from typing import List, Tuple, Optional, TYPE_CHECKING
-from models.equips.masseira import Masseira
+from models.equipamentos.masseira import Masseira
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from enums.tipo_velocidade import TipoVelocidade
-from enums.tipo_mistura import TipoMistura
-from utils.logger_factory import setup_logger
+from enums.equipamentos.tipo_velocidade import TipoVelocidade
+from enums.equipamentos.tipo_mistura import TipoMistura
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger('GestorMisturadoras')
 

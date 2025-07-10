@@ -2,12 +2,12 @@ import unicodedata
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, TYPE_CHECKING
 from math import ceil
-from models.equips.fogao import Fogao
+from models.equipamentos.fogao import Fogao
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from enums.tipo_chama import TipoChama
-from enums.tipo_pressao_chama import TipoPressaoChama
-from utils.logger_factory import setup_logger
+from enums.equipamentos.tipo_chama import TipoChama
+from enums.equipamentos.tipo_pressao_chama import TipoPressaoChama
+from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("GestorFogoes")
 

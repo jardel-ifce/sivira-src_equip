@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, TYPE_CHECKING
-from models.equips.bancada import Bancada
+from models.equipamentos.bancada import Bancada
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 # 🪕 Logger específico para o gestor de bancadas
 logger = setup_logger('GestorBancadas')

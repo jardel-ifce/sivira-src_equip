@@ -11,9 +11,9 @@ from factory.fabrica_equipamentos import fogao_1, fogao_2
 from models.atividades.subproduto.creme_de_queijo.coccao_de_creme_de_queijo import CoccaoDeCremeDeQueijo
 from models.atividades.subproduto.carne_de_sol_refogada.coccao_de_carne_de_sol_cozida_pronta import CoccaoDeCarneDeSolCozidaPronta
 from enums.tipo_atividade import TipoAtividade
-from enums.tipo_profissional import TipoProfissional
+from enums.funcionarios.tipo_profissional import TipoProfissional
 from services.gestor_fogoes import GestorFogoes
-from utils.logger_factory import setup_logger
+from utils.logs.logger_factory import setup_logger
 
 
 # ============================================

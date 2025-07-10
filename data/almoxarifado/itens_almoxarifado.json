@@ -9,10 +9,17 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 10000,
     "estoque_max": 70000,
-    "estoque_atual": 11788.12,
+    "estoque_atual": -16870.79,
     "consumo_diario_estimado": 7000,
     "reabastecimento_previsto_em": "2025-06-28",
-    "reservas_futuras": []
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 9552.97,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
   },
   {
     "id_item": 4,
@@ -24,10 +31,17 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 8000,
     "estoque_max": 30000,
-    "estoque_atual": 1072.88,
+    "estoque_atual": -16122.46,
     "consumo_diario_estimado": 4000,
     "reabastecimento_previsto_em": "2025-06-26",
-    "reservas_futuras": []
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 5731.78,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
   },
   {
     "id_item": 5,
@@ -39,10 +53,17 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 5000,
-    "estoque_atual": 2235.76,
+    "estoque_atual": 1662.58,
     "consumo_diario_estimado": 160,
     "reabastecimento_previsto_em": "2025-06-30",
-    "reservas_futuras": []
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 191.06,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
   },
   {
     "id_item": 6,
@@ -54,10 +75,17 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 3000,
-    "estoque_atual": 1617.88,
+    "estoque_atual": 1331.29,
     "consumo_diario_estimado": 80,
     "reabastecimento_previsto_em": "2025-06-27",
-    "reservas_futuras": []
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 95.53,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
   },
   {
     "id_item": 7,
@@ -69,13 +97,20 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 300,
     "estoque_max": 1000,
-    "estoque_atual": -114.64,
+    "estoque_atual": -200.62,
     "consumo_diario_estimado": 24,
     "reabastecimento_previsto_em": "2025-06-25",
-    "reservas_futuras": []
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 28.66,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
   },
   {
-    "id_item": 2,
+    "id_item": 2001,
     "nome": "massa_crocante",
     "descricao": "Massa Crocante",
     "tipo_item": "SUBPRODUTO",
@@ -84,14 +119,21 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 0,
     "estoque_max": 0,
-    "estoque_atual": -62400.0,
-    "reservas_futuras": [],
+    "estoque_atual": -109200.0,
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 15600.0,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ],
     "ficha_tecnica": {
-      "id_ficha_tecnica": 2
+      "id_ficha_tecnica": 2001
     }
   },
   {
-    "id_item": 1,
+    "id_item": 1001,
     "nome": "pao_frances",
     "descricao": "Pão Francês",
     "tipo_item": "PRODUTO",
@@ -100,12 +142,238 @@
     "unidade_medida": "UNIDADE",
     "estoque_min": 200,
     "estoque_max": 1000,
-    "estoque_atual": -800.0,
+    "estoque_atual": -1520.0,
     "consumo_diario_estimado": 120,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 240,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1001
+    }
+  },
+  {
+    "id_item": 2004,
+    "nome": "massa_para_frituras",
+    "descricao": "Massa para Frituras",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
     "reservas_futuras": [],
     "ficha_tecnica": {
-      "id_ficha_tecnica": 1
+      "id_ficha_tecnica": 2004
     }
+  },
+  {
+    "id_item": 2005,
+    "nome": "massa_para_bolo_de_chocolate",
+    "descricao": "Massa para Bolo de Chocolate",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 6000,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2005
+    }
+  },
+  {
+    "id_item": 17,
+    "nome": "farinha_de_trigo_domestica",
+    "descricao": "Farinha de trigo doméstica",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 1431.98,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 18,
+    "nome": "leite_liquido_integral",
+    "descricao": "Leite líquido integral",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 572.79,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 19,
+    "nome": "ovo_de_galinha",
+    "descricao": "Ovo de galinha",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 286.4,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 20,
+    "nome": "margarina_sem_sal",
+    "descricao": "Margarina sem sal",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 143.2,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 21,
+    "nome": "cacau_em_po_50",
+    "descricao": "Cacau em pó 50%",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 214.8,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 23,
+    "nome": "acucar_refinado",
+    "descricao": "Açúcar refinado",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 286.4,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 24,
+    "nome": "fermento_quimico",
+    "descricao": "Fermento químico",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 57.28,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
+  },
+  {
+    "id_item": 25,
+    "nome": "essencia_de_baunilha",
+    "descricao": "Essência de baunilha",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      {
+        "data": "2025-06-24",
+        "quantidade_reservada": 7.16,
+        "ordem_id": 1,
+        "pedido_id": 1
+      }
+    ]
   }
 ]
