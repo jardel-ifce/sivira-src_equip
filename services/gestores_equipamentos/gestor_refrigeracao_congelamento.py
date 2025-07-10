@@ -163,7 +163,7 @@ class GestorRefrigeracaoCongelamento:
                         logger.warning(f"⚠️ Foi retornada uma LISTA de equipamentos: {[e.nome for e in equipamento]}")
                     return True, equipamento, horario_inicio_tentativa, horario_final_tentativa
 
-            horario_final_tentativa -= timedelta(minutes=300)
+            horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
             f"❌ Nenhuma câmara pôde ser alocada para atividade {atividade.id} "

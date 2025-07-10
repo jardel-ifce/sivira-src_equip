@@ -83,110 +83,110 @@ class ArmarioFermentador(Equipamento):
         )
         return True
 
-# ==========================================================
-# 🔓 Liberação
-# ==========================================================
-def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
-    antes = len(self.ocupacao_niveis)
-    self.ocupacao_niveis = [
-        (oid, pid, aid, qtd, ini, fim)
-        for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
-        if not (oid == ordem_id and pid == pedido_id and aid == atividade_id)
-    ]
-    liberadas = antes - len(self.ocupacao_niveis)
-    if liberadas > 0:
-        logger.info(
-            f"🔓 Liberadas {liberadas} ocupações do {self.nome} "
-            f"para Atividade {atividade_id}, Pedido {pedido_id}, Ordem {ordem_id}."
-        )
-    else:
-        logger.warning(
-            f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
-            f"para Atividade {atividade_id}, Pedido {pedido_id}, Ordem {ordem_id}."
-        )
+    # ==========================================================
+    # 🔓 Liberação
+    # ==========================================================
+    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if not (oid == ordem_id and pid == pedido_id and aid == atividade_id)
+        ]
+        liberadas = antes - len(self.ocupacao_niveis)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações do {self.nome} "
+                f"para Atividade {atividade_id}, Pedido {pedido_id}, Ordem {ordem_id}."
+            )
+        else:
+            logger.warning(
+                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
+                f"para Atividade {atividade_id}, Pedido {pedido_id}, Ordem {ordem_id}."
+            )
 
 
-def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
-    antes = len(self.ocupacao_niveis)
-    self.ocupacao_niveis = [
-        (oid, pid, aid, qtd, ini, fim)
-        for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
-        if not (oid == ordem_id and pid == pedido_id)
-    ]
-    liberadas = antes - len(self.ocupacao_niveis)
-    if liberadas > 0:
-        logger.info(
-            f"🔓 Liberadas {liberadas} ocupações do {self.nome} "
-            f"para Pedido {pedido_id}, Ordem {ordem_id}."
-        )
-    else:
-        logger.warning(
-            f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
-            f"para Pedido {pedido_id}, Ordem {ordem_id}."
-        )
+    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if not (oid == ordem_id and pid == pedido_id)
+        ]
+        liberadas = antes - len(self.ocupacao_niveis)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações do {self.nome} "
+                f"para Pedido {pedido_id}, Ordem {ordem_id}."
+            )
+        else:
+            logger.warning(
+                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
+                f"para Pedido {pedido_id}, Ordem {ordem_id}."
+            )
 
 
-def liberar_por_ordem(self, ordem_id: int):
-    antes = len(self.ocupacao_niveis)
-    self.ocupacao_niveis = [
-        (oid, pid, aid, qtd, ini, fim)
-        for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
-        if not (oid == ordem_id)
-    ]
-    liberadas = antes - len(self.ocupacao_niveis)
-    if liberadas > 0:
-        logger.info(
-            f"🔓 Liberadas {liberadas} ocupações do {self.nome} "
-            f"para Ordem {ordem_id}."
-        )
-    else:
-        logger.warning(
-            f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
-            f"para Ordem {ordem_id}."
-        )
+    def liberar_por_ordem(self, ordem_id: int):
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if not (oid == ordem_id)
+        ]
+        liberadas = antes - len(self.ocupacao_niveis)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações do {self.nome} "
+                f"para Ordem {ordem_id}."
+            )
+        else:
+            logger.warning(
+                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
+                f"para Ordem {ordem_id}."
+            )
 
 
-def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-    antes = len(self.ocupacao_niveis)
-    self.ocupacao_niveis = [
-        (oid, pid, aid, qtd, ini, fim)
-        for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
-        if not (fim <= horario_atual)
-    ]
-    liberadas = antes - len(self.ocupacao_niveis)
-    if liberadas > 0:
-        logger.info(
-            f"🔓 Liberadas {liberadas} ocupações do {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
-        )
-    else:
-        logger.warning(
-            f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%H:%M')}."
-        )
-    return liberadas
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if not (fim <= horario_atual)
+        ]
+        liberadas = antes - len(self.ocupacao_niveis)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações do {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+            )
+        else:
+            logger.warning(
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%H:%M')}."
+            )
+        return liberadas
 
 
-def liberar_todas_ocupacoes(self):
-    total = len(self.ocupacao_niveis)
-    self.ocupacao_niveis.clear()
-    logger.info(f"🔓 Todas as {total} ocupações do {self.nome} foram removidas.")
+    def liberar_todas_ocupacoes(self):
+        total = len(self.ocupacao_niveis)
+        self.ocupacao_niveis.clear()
+        logger.info(f"🔓 Todas as {total} ocupações do {self.nome} foram removidas.")
 
 
-def liberar_intervalo(self, inicio: datetime, fim: datetime):
-    antes = len(self.ocupacao_niveis)
-    self.ocupacao_niveis = [
-        (oid, pid, aid, qtd, ini, f)
-        for (oid, pid, aid, qtd, ini, f) in self.ocupacao_niveis
-        if not (ini < fim and f > inicio)  # remove qualquer sobreposição
-    ]
-    liberadas = antes - len(self.ocupacao_niveis)
-    if liberadas > 0:
-        logger.info(
-            f"🔓 Liberadas {liberadas} ocupações do {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-        )
-    else:
-        logger.warning(
-            f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-        )
+    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacao_niveis)
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, f)
+            for (oid, pid, aid, qtd, ini, f) in self.ocupacao_niveis
+            if not (ini < fim and f > inicio)  # remove qualquer sobreposição
+        ]
+        liberadas = antes - len(self.ocupacao_niveis)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações do {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            )
+        else:
+            logger.warning(
+                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            )
 
 
     # ==========================================================

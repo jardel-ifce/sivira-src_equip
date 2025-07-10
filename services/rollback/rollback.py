@@ -41,6 +41,7 @@ def rollback_equipamentos(
     - Se ordem_id, pedido_id e atividade_id forem fornecidos, libera por atividade.
     """
     for equipamento in _extrair_objetos_equipamento(equipamentos_alocados):
+        print(f"🔄 Liberando {equipamento.nome} ")
         try:
             if atividade_id is not None and pedido_id is not None:
                 if hasattr(equipamento, "liberar_por_atividade"):

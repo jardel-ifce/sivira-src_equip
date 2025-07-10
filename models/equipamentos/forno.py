@@ -169,7 +169,7 @@ class Forno(Equipamento):
             (oid, pid, aid, qtd, ini, fim, t)
             for (oid, pid, aid, qtd, ini, fim, t) in self.historico_temperatura
             if not (aid == atividade_id and pid == pedido_id and oid == ordem_id)
-        ] 
+        ]
 
         self.historico_vaporizacao = [
             (oid, pid, aid, qtd, ini, fim, v)
@@ -187,9 +187,9 @@ class Forno(Equipamento):
         liberadas = antes - depois
 
         if liberadas > 0:
-            logger.info(f"🔓 Liberou ocupação da atividade {atividade_id} do pedido {pedido_id} da ordem {ordem_id} ({liberadas} ocupações liberadas).")
+            logger.info(f"🔓 Liberadas ({liberadas} ocupações) do {self.nome} para pedido {pedido_id}, ordem {ordem_id}.")
         else:
-            logger.info(f"ℹ️ Nenhuma ocupação encontrada para liberar da atividade {atividade_id} do pedido {pedido_id} da ordem {ordem_id} no forno {self.nome}.")
+            logger.info(f"ℹ️ Nenhuma ocupação encontrada no {self.nome} para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}.")
 
         self._resetar_se_vazio()
 
@@ -225,9 +225,9 @@ class Forno(Equipamento):
         liberadas = antes - depois
 
         if liberadas > 0:
-            logger.info(f"🔓 Liberou ocupação do pedido {pedido_id} da ordem {ordem_id} ({liberadas} ocupações liberadas).")
+            logger.info(f"🔓 Liberadas ({liberadas} ocupações) do {self.nome} para pedido {pedido_id}, ordem {ordem_id}.")
         else:
-            logger.info(f"ℹ️ Nenhuma ocupação encontrada para liberar do pedido {pedido_id} da ordem {ordem_id} no forno {self.nome}.")
+            logger.info(f"ℹ️ Nenhuma ocupação encontrada no {self.nome} para pedido {pedido_id}, ordem {ordem_id}.")
 
         self._resetar_se_vazio()
 
@@ -260,26 +260,56 @@ class Forno(Equipamento):
         liberadas = antes - depois
 
         if liberadas > 0:
-            logger.info(f"🔓 Liberou ocupação de ordem {ordem_id} ({liberadas} ocupações liberadas).")
+            logger.info(f"🔓 Liberadas ({liberadas} ocupações) do {self.nome} para ordem {ordem_id}.")
         else:
-            logger.info(f"ℹ️ Nenhuma ocupação encontrada para liberar da ordem {ordem_id} no forno {self.nome}.")
+            logger.info(f"ℹ️ Nenhuma ocupação encontrada no {self.nome} para ordem {ordem_id}.")
 
         self._resetar_se_vazio()
-
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        self.ocupacao_niveis = [(oid, pid, aid, qtd, ini, fim) for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis if fim > horario_atual]
-        self.historico_temperatura = [(oid, pid, aid, qtd, ini, fim, t) for (oid, pid, aid, qtd, ini, fim, t) in self.historico_temperatura if fim > horario_atual]
-        self.historico_vaporizacao = [(oid, pid, aid, qtd, ini, fim, v) for (oid, pid, aid, qtd, ini, fim, v) in self.historico_vaporizacao if fim > horario_atual]
-        self.historico_velocidade = [(oid, pid, aid, qtd, ini, fim, v) for (oid, pid, aid, qtd, ini, fim, v) in self.historico_velocidade if fim > horario_atual]
+        ocupacoes_antes = len(self.ocupacao_niveis)
+
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if fim > horario_atual
+        ]
+        self.historico_temperatura = [
+            (oid, pid, aid, qtd, ini, fim, t)
+            for (oid, pid, aid, qtd, ini, fim, t) in self.historico_temperatura
+            if fim > horario_atual
+        ]
+        self.historico_vaporizacao = [
+            (oid, pid, aid, qtd, ini, fim, v)
+            for (oid, pid, aid, qtd, ini, fim, v) in self.historico_vaporizacao
+            if fim > horario_atual
+        ]
+        self.historico_velocidade = [
+            (oid, pid, aid, qtd, ini, fim, v)
+            for (oid, pid, aid, qtd, ini, fim, v) in self.historico_velocidade
+            if fim > horario_atual
+        ]
+
+        ocupacoes_depois = len(self.ocupacao_niveis)
+        liberadas = ocupacoes_antes - ocupacoes_depois
+
+        if liberadas > 0:
+            logger.info(f"⏳ Liberadas automaticamente ({liberadas} ocupações) finalizadas no {self.nome} com base no horário atual ({horario_atual.strftime('%H:%M:%S')}).")
+        else:
+            logger.info(f"🕓 Nenhuma ocupação finalizada para liberar no {self.nome} até {horario_atual.strftime('%H:%M:%S')}.")
+
         self._resetar_se_vazio()
 
+
     def liberar_todas_ocupacoes(self):
+        total = len(self.ocupacao_niveis)
         self.ocupacao_niveis.clear()
         self.historico_temperatura.clear()
         self.historico_vaporizacao.clear()
         self.historico_velocidade.clear()
         self._resetar_parametros()
+
+        logger.info(f"🧹 Liberadas todas as ocupações ({total}) do {self.nome} manualmente.")
 
     def _resetar_se_vazio(self):
         if not self.ocupacao_niveis:

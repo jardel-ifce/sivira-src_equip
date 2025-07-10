@@ -52,6 +52,7 @@ class PedidoDeProducao:
 
         # 🛠️ Equipamentos
         self.equipamentos_alocados = []  
+        self.equipamentos_alocados_no_pedido = []
 
     def montar_estrutura(self):
         _, dados_ficha = buscar_ficha_tecnica_por_id(self.id_produto, tipo_item=self.tipo_item)
@@ -126,31 +127,35 @@ class PedidoDeProducao:
                 if atividade_sucessora:
                     tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
                     atraso = inicio_prox_atividade - fim_atividade_atual
+
                     print(f"[⏱️] Comparando com tempo máximo da atividade sucessora {atividade_sucessora.id_atividade}: {tempo_max_espera}")
+                    print(f"Fim da atividade atual: {fim_atividade_atual.strftime('%H:%M:%S')}")
+                    print(f"Início da próxima (já alocada): {inicio_prox_atividade.strftime('%H:%M:%S')}")
                     print(f"Tempo de atraso: {atraso}")
 
                     if atraso > tempo_max_espera:
                         raise RuntimeError(
                             f"Falha ao alocar atividade {at.id_atividade} {at.nome_atividade} - "
                             f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.id_atividade} "
-                            f"em: {atraso}"
+                            f"em: {atraso - tempo_max_espera}"
                         )
 
                 inicio_prox_atividade = inicio_atividade_atual
                 atividade_sucessora = at
                 if not ok:
                     raise RuntimeError(f"Falha ao alocar atividade {at.nome_atividade} PRODUTO {at.id_atividade}")
+                self.equipamentos_alocados_no_pedido.extend(self.equipamentos_alocados)
                 current_fim = at.inicio_real
 
             except Exception as e:
                 logger.warning(f"⚠️ Atividade PRODUTO {at.id_atividade} falhou: {e}")
                 apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
                 self._rollback_pedido()
-                continue
+                return
 
         atividades_sub = [a for a in self.atividades_modulares if a.tipo_item == TipoItem.SUBPRODUTO]
         atividade_sucessora = None
-        inicio_prox_atividade = self.fim_jornada  # reinicia para subprodutos
+        inicio_prox_atividade = self.fim_jornada
 
         for at in atividades_sub:
             try:
@@ -161,14 +166,17 @@ class PedidoDeProducao:
                 if atividade_sucessora:
                     tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
                     atraso = inicio_prox_atividade - fim_atividade_atual
+
                     print(f"[⏱️] Comparando com tempo máximo da atividade sucessora {atividade_sucessora.id_atividade}: {tempo_max_espera}")
+                    print(f"Fim da atividade atual: {fim_atividade_atual.strftime('%H:%M:%S')}")
+                    print(f"Início da próxima (já alocada): {inicio_prox_atividade.strftime('%H:%M:%S')}")
                     print(f"Tempo de atraso: {atraso}")
 
                     if atraso > tempo_max_espera:
                         raise RuntimeError(
                             f"Falha ao alocar atividade SUBPRODUTO {at.id_atividade} - "
                             f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.id_atividade} "
-                            f"em: {atraso}"
+                            f"em: {atraso - tempo_max_espera}"
                         )
 
                 inicio_prox_atividade = inicio_atividade_atual
@@ -181,10 +189,9 @@ class PedidoDeProducao:
                 logger.warning(f"⚠️ Atividade SUBPRODUTO {at.id_atividade} falhou: {e}")
                 apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
                 self._rollback_pedido()
-                continue
+                return
 
         logger.info(f"✅ Concluída execução do pedido {self.pedido_id}")
-
 
     def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
         tipos_necessarios = buscar_tipos_profissionais_por_id_item(id_item)

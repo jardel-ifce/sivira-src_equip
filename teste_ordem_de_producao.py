@@ -23,13 +23,13 @@ limpar_todos_os_logs()
 
 # 2. Criar pedidos de produção
 pedidos = []
-for i in range(1, 2):  # ou qualquer número de pedidos
+for i in range(1, 3):  # ou qualquer número de pedidos
     pedido = PedidoDeProducao(
         ordem_id=1,
         pedido_id=i,
-        id_produto=2005,
-        tipo_item=TipoItem.SUBPRODUTO,
-        quantidade=3000,
+        id_produto=1001,
+        tipo_item=TipoItem.PRODUTO,
+        quantidade=240,
         inicio_jornada=datetime(2025, 6, 24, 8, 0),
         fim_jornada=datetime(2025, 6, 24, 18, 0),
         todos_funcionarios=funcionarios_disponiveis

@@ -229,7 +229,7 @@ class AtividadeModular:
                         fim=horario_fim_etapa,
                         **config
                     )
-                    print(f"🔍 [DEBUG] Resultado retornado por gestor.alocar: {resultado} | Tipo: {type(resultado)} | Len: {len(resultado) if hasattr(resultado, '__len__') else '??'}")
+                    #print(f"🔍 [DEBUG] Resultado retornado por gestor.alocar: {resultado} | Tipo: {type(resultado)} | Len: {len(resultado) if hasattr(resultado, '__len__') else '??'}")
 
                     if not resultado[0] or resultado[1] is None:
                         sucesso = False
@@ -325,7 +325,7 @@ class AtividadeModular:
                 #rollback_funcionarios(self.funcionarios_elegiveis, self.ordem_id, self.pedido_id, self.id_atividade)
                # remover_log_funcionarios(self.ordem_id, self.pedido_id, self.id_atividade)
                 remover_log_equipamentos(self.ordem_id, self.pedido_id)
-            horario_final -= timedelta(minutes=300)
+            horario_final -= timedelta(minutes=1)
 
         logger.error(f"🛑 Limite da jornada atingido. Impossível alocar a atividade {self.id_atividade}.")
         return False, None, None, self.tempo_maximo_de_espera, equipamentos_alocados
