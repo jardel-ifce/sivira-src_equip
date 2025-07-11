@@ -11,7 +11,7 @@ from services.rollback.rollback import rollback_equipamentos, rollback_funcionar
 from models.ficha_tecnica.ficha_tecnica_modular import FichaTecnicaModular
 from enums.producao.tipo_item import TipoItem
 from utils.logs.logger_factory import setup_logger
-from utils.logs.gerenciador_logs import registrar_erro_execucao_pedido, apagar_logs_por_pedido_e_ordem
+from utils.logs.gerenciador_logs import registrar_erro_execucao_pedido, apagar_logs_por_pedido_e_ordem, salvar_erro_em_log
 from datetime import timedelta
 from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva as gerar_comanda_reserva_modulo
 
@@ -136,7 +136,7 @@ class PedidoDeProducao:
                     if atraso > tempo_max_espera:
                         raise RuntimeError(
                             f"Falha ao alocar atividade {at.id_atividade} {at.nome_atividade} - "
-                            f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.id_atividade} "
+                            f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.nome_atividade} "
                             f"em: {atraso - tempo_max_espera}"
                         )
 
@@ -149,6 +149,7 @@ class PedidoDeProducao:
 
             except Exception as e:
                 logger.warning(f"⚠️ Atividade PRODUTO {at.id_atividade} falhou: {e}")
+                registrar_erro_execucao_pedido(self.ordem_id, self.pedido_id, e)
                 apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
                 self._rollback_pedido()
                 return
@@ -175,7 +176,7 @@ class PedidoDeProducao:
                     if atraso > tempo_max_espera:
                         raise RuntimeError(
                             f"Falha ao alocar atividade SUBPRODUTO {at.id_atividade} - "
-                            f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.id_atividade} "
+                            f"Excedeu o tempo máximo de espera para a próxima atividade {atividade_sucessora.nome_atividade} "
                             f"em: {atraso - tempo_max_espera}"
                         )
 
@@ -187,6 +188,7 @@ class PedidoDeProducao:
 
             except Exception as e:
                 logger.warning(f"⚠️ Atividade SUBPRODUTO {at.id_atividade} falhou: {e}")
+                salvar_erro_em_log(self.ordem_id, self.pedido_id, e)
                 apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
                 self._rollback_pedido()
                 return

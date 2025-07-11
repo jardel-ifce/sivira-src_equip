@@ -324,7 +324,7 @@ class AtividadeModular:
                 rollback_equipamentos(equipamentos_alocados, self.ordem_id, self.pedido_id, self.id_atividade)
                 #rollback_funcionarios(self.funcionarios_elegiveis, self.ordem_id, self.pedido_id, self.id_atividade)
                # remover_log_funcionarios(self.ordem_id, self.pedido_id, self.id_atividade)
-                remover_log_equipamentos(self.ordem_id, self.pedido_id)
+                remover_log_equipamentos(self.ordem_id, self.pedido_id, self.id_atividade)
             horario_final -= timedelta(minutes=1)
 
         logger.error(f"🛑 Limite da jornada atingido. Impossível alocar a atividade {self.id_atividade}.")

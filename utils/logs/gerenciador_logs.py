@@ -46,18 +46,18 @@ def remover_logs_pedido(pedido_id: int):
         except Exception as e:
             logger.warning(f"⚠️ Falha ao remover log {caminho}: {e}")
 
-import traceback
-
-
 def registrar_erro_execucao_pedido(ordem_id: int, pedido_id: int, erro: Exception):
+    """
+    🔥 Registra erro de execução no terminal e em arquivo de log (snapshot).
+    """
     logger.error(f"❌ Erro na execução do pedido {pedido_id}: {erro.__class__.__name__}: {erro}")
-
-    # Stack trace completo
+    
+    # Captura traceback da exceção atual
     traceback_str = traceback.format_exc()
     logger.error("🔍 Traceback completo abaixo:")
     logger.error(traceback_str)
 
-    # Informação do local exato do erro
+    # Localização exata do erro
     exc_type, exc_value, exc_traceback = sys.exc_info()
     if exc_traceback:
         ultima_chamada = traceback.extract_tb(exc_traceback)[-1]
@@ -66,16 +66,23 @@ def registrar_erro_execucao_pedido(ordem_id: int, pedido_id: int, erro: Exceptio
             f"linha {ultima_chamada.lineno}, função {ultima_chamada.name}"
         )
 
-    # Salva em arquivo
+    # Salva em arquivo detalhado
     try:
         os.makedirs("logs/erros", exist_ok=True)
-        caminho_log = f"logs/erros/pedido_{pedido_id}.log"
-        with open(caminho_log, "a", encoding="utf-8") as f:
-            f.write(f"[{datetime.now()}] Erro no pedido {pedido_id} - Ordem {ordem_id}\n")
+        nome_arquivo = f"logs/erros/ordem: {ordem_id} | pedido: {pedido_id}.log"
+        with open(nome_arquivo, "w", encoding="utf-8") as f:
+            f.write("==============================================\n")
+            f.write(f"📅 Data/Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"🧾 Ordem: {ordem_id} | Pedido: {pedido_id}\n")
+            f.write(f"❌ Erro: {erro.__class__.__name__}: {erro}\n")
+            if exc_traceback:
+                f.write(f"📍 Local: {ultima_chamada.filename}, linha {ultima_chamada.lineno}, função {ultima_chamada.name}\n")
+            f.write("--------------------------------------------------\n")
             f.write(traceback_str)
-            f.write("\n\n")
+            f.write("==============================================\n")
     except Exception as log_erro:
         logger.warning(f"⚠️ Falha ao registrar erro em arquivo: {log_erro}")
+
 
 def registrar_log_equipamentos(ordem_id: int, pedido_id: int, id_atividade: int, nome_item: str,
                                nome_atividade: str, equipamentos_alocados: list[tuple]): 
@@ -112,30 +119,25 @@ def registrar_log_funcionarios(ordem_id: int, pedido_id: int, id_atividade: int,
 
 def apagar_logs_por_pedido_e_ordem(ordem_id: int, pedido_id: int):
     """
-    Remove arquivos de log relacionados a uma ordem e pedido específicos
-    nas pastas definidas em PASTAS.
+    🔥 Remove logs de equipamentos e funcionários (mas mantém os logs de erros).
     """
-    padrao = f"ordem: {ordem_id} | pedido: {pedido_id}"
-    arquivos_apagados = 0
+    padrao = f"ordem: {ordem_id} | pedido: {pedido_id}.log"
+
+    PASTAS = [
+        "logs/equipamentos",
+        "logs/funcionarios",
+        # ❌ NÃO incluir "logs/erros"
+    ]
 
     for pasta in PASTAS:
-        if not os.path.exists(pasta):
-            continue
+        caminho = os.path.join(pasta, padrao)
+        if os.path.exists(caminho):
+            try:
+                os.remove(caminho)
+                print(f"🗑️ Apagado: {caminho}")
+            except Exception as e:
+                logger.warning(f"⚠️ Falha ao apagar {caminho}: {e}")
 
-        for arquivo in os.listdir(pasta):
-            if padrao in arquivo:
-                caminho_arquivo = os.path.join(pasta, arquivo)
-                try:
-                    os.remove(caminho_arquivo)
-                    arquivos_apagados += 1
-                    print(f"🗑️ Apagado: {caminho_arquivo}")
-                except Exception as e:
-                    print(f"❌ Erro ao apagar {caminho_arquivo}: {e}")
-
-    if arquivos_apagados == 0:
-        print(f"ℹ️ Nenhum log encontrado para ordem {ordem_id} e pedido {pedido_id}.")
-    else:
-        print(f"✅ Total de arquivos removidos: {arquivos_apagados}")
 
 
 def remover_log_equipamentos(ordem_id: int, pedido_id: int = None, id_atividade: int = None):
@@ -196,3 +198,21 @@ def remover_log_funcionarios(ordem_id: int, pedido_id: int, id_atividade: int):
         for linha in linhas:
             if f"{id_atividade} |" not in linha:
                 f.write(linha)
+
+def salvar_erro_em_log(ordem_id: int, pedido_id: int, excecao: Exception):
+    """
+    💾 Salva um snapshot do erro ocorrido durante a execução de um pedido.
+
+    O log é salvo em logs/erros/ com o nome: ordem: <id> | pedido: <id>.log
+    """
+    os.makedirs("logs/erros", exist_ok=True)
+    nome_arquivo = f"logs/erros/ordem: {ordem_id} | pedido: {pedido_id}.log"
+    
+    with open(nome_arquivo, "w", encoding="utf-8") as f:
+        f.write("==============================================\n")
+        f.write(f"📅 Data/Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"🧾 Ordem: {ordem_id} | Pedido: {pedido_id}\n")
+        f.write("❌ Motivo do erro:\n")
+        f.write("--------------------------------------------------\n")
+        f.write(traceback.format_exc())
+        f.write("==============================================\n")

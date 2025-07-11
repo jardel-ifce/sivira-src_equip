@@ -55,7 +55,7 @@
           "BANCADAS": 1
         },
         "equipamentos_elegiveis": ["divisora_de_massas_1", "divisora_de_massas_2", "bancada_1", "bancada_2", "bancada_3"],
-        "tempo_maximo_de_espera": "00:00:00",
+        "tempo_maximo_de_espera": "00:04:00",
         "fips_equipamentos": {
           "divisora_de_massas_1": 1,
           "divisora_de_massas_2": 1,
