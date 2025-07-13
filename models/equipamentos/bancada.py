@@ -66,7 +66,7 @@ class Bancada(Equipamento):
     ) -> bool:
         if self.fracoes_disponiveis(inicio, fim) < quantidade_fracoes:
             logger.warning(
-                f"❌ Frações insuficientes na bancada {self.nome} "
+                f"❌ Frações insuficientes na {self.nome} "
                 f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
             )
             return False
@@ -96,12 +96,12 @@ class Bancada(Equipamento):
 
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberou {liberadas} registros da bancada {self.nome} "
+                f"🔓 Liberou {liberadas} registros da {self.nome} "
                 f"relacionados à atividade {atividade_id} da ordem {ordem_id}."
             )
         else:
             logger.info(
-                f"ℹ️ Nenhuma fração da bancada {self.nome} estava associada à atividade {atividade_id} da ordem {ordem_id}."
+                f"ℹ️ Nenhuma fração da {self.nome} estava associada à atividade {atividade_id} da ordem {ordem_id}."
             )
 
     def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
@@ -114,11 +114,11 @@ class Bancada(Equipamento):
         liberadas = antes - len(self.fracoes_ocupadas)
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberou {liberadas} frações da bancada {self.nome} relacionadas ao pedido {pedido_id}."
+                f"🔓 Liberou {liberadas} frações da {self.nome} relacionadas ao pedido {pedido_id}."
             )
         else:
             logger.info(
-                f"ℹ️ Nenhuma fração da bancada {self.nome} estava associada ao pedido {pedido_id}."
+                f"ℹ️ Nenhuma fração da {self.nome} estava associada ao pedido {pedido_id}."
             )
     
     def liberar_por_ordem(self, ordem_id: int):
@@ -131,11 +131,11 @@ class Bancada(Equipamento):
         liberadas = antes - len(self.fracoes_ocupadas)
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberou {liberadas} frações da bancada {self.nome} relacionadas à ordem {ordem_id}."
+                f"🔓 Liberou {liberadas} frações da {self.nome} relacionadas à ordem {ordem_id}."
             )
         else:
             logger.info(
-                f"ℹ️ Nenhuma fração da bancada {self.nome} estava associada à ordem {ordem_id}."
+                f"ℹ️ Nenhuma fração da {self.nome} estava associada à ordem {ordem_id}."
             )
 
     def liberar_fracoes_terminadas(self, horario_atual: datetime):
@@ -148,15 +148,15 @@ class Bancada(Equipamento):
         liberadas = antes - len(self.fracoes_ocupadas)
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberou {liberadas} frações da bancada {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Liberou {liberadas} frações da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
             )
 
     def liberar_todas_fracoes(self):
         total = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas.clear()
-        logger.info(f"🔓 Liberou todas as {total} frações da bancada {self.nome}.")
+        logger.info(f"🔓 Liberou todas as {total} frações da {self.nome}.")
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         antes = len(self.fracoes_ocupadas)
         self.fracoes_ocupadas = [
             (oid, pid, aid, qtd, ini, f)

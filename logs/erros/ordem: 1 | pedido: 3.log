@@ -1,5 +1,5 @@
 ==============================================
-📅 Data/Hora: 2025-07-10 16:05:28
+📅 Data/Hora: 2025-07-11 13:34:30
 🧾 Ordem: 1 | Pedido: 3
 ❌ Erro: RuntimeError: Falha ao alocar atividade 10013 modelagem_de_paes_de_massa_crocante - Excedeu o tempo máximo de espera para a próxima atividade preparo_de_massas_crocantes_para_fermentacao em: 0:04:00
 📍 Local: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/models/atividades/pedido_de_producao.py, linha 137, função executar_atividades_em_ordem

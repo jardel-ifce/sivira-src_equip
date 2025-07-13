@@ -41,12 +41,12 @@ class Embaladora(Equipamento):
         self.lista_tipo_embalagem = lista_tipo_embalagem
 
         # ✉️ Ocupações: (ordem_id, pedido_id,atividade_id, quantidade, inicio, fim, lista_tipo_embalagem)
-        self.ocupacao: List[Tuple[int, int, int, float, datetime, datetime, List[TipoEmbalagem]]] = []
+        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime, List[TipoEmbalagem]]] = []
 
     # ==========================================
     # ✅ Validações
     # ============================================
-    def validar_capacidade(self, gramas: int) -> bool:
+    def validar_capacidade(self, gramas: float) -> bool:
         """
         Verifica se o peso está dentro da capacidade operacional da embaladora.
         """
@@ -69,7 +69,7 @@ class Embaladora(Equipamento):
             return False
 
 
-        self.ocupacao.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, lista_tipo_embalagem))
+        self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, lista_tipo_embalagem))
         logger.info(
             f"✉️ Ocupação registrada na {self.nome} para {quantidade}g entre {inicio} e {fim}."
         )
@@ -78,28 +78,16 @@ class Embaladora(Equipamento):
     # ============================================
     # 🔓 Liberação
     # ============================================
-    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
-        """
-        Libera a ocupação da embaladora por intervalo de tempo.
-        """
-        self.ocupacao = [
-            ocup for ocup in self.ocupacao
-            if not (ocup[4] < fim and ocup[5] > inicio)
-        ]
-        logger.info(
-            f"🔓 Ocupação liberada na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-        )
-
     def liberar_por_atividade(self, atividade_id: int, ordem_id: int, pedido_id: int):
         """
         Libera a ocupação da embaladora por atividade específica.
         """
-        anterior = len(self.ocupacao)
-        self.ocupacao = [
-            ocup for ocup in self.ocupacao
+        anterior = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocup for ocup in self.ocupacoes
             if not (ocup[2] == atividade_id and ocup[0] == ordem_id and ocup[1] == pedido_id)
         ]
-        if len(self.ocupacao) < anterior:
+        if len(self.ocupacoes) < anterior:
             logger.info(
                 f"🔓 Ocupação liberada na {self.nome} para atividade {atividade_id}, ordem {ordem_id}, pedido {pedido_id}."
             )
@@ -112,12 +100,12 @@ class Embaladora(Equipamento):
         """
         Libera todas as ocupações da embaladora para um pedido específico.
         """
-        anterior = len(self.ocupacao)
-        self.ocupacao = [
-            ocup for ocup in self.ocupacao
+        anterior = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocup for ocup in self.ocupacoes
             if not (ocup[0] == ordem_id and ocup[1] == pedido_id)
         ]
-        if len(self.ocupacao) < anterior:
+        if len(self.ocupacoes) < anterior:
             logger.info(
                 f"🔓 Ocupação liberada na {self.nome} para pedido {pedido_id}, ordem {ordem_id}."
             )
@@ -130,12 +118,12 @@ class Embaladora(Equipamento):
         """
         Libera todas as ocupações da embaladora para uma ordem específica.
         """
-        anterior = len(self.ocupacao)
-        self.ocupacao = [
-            ocup for ocup in self.ocupacao
+        anterior = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocup for ocup in self.ocupacoes
             if not ocup[0] == ordem_id
         ]
-        if len(self.ocupacao) < anterior:
+        if len(self.ocupacoes) < anterior:
             logger.info(
                 f"🔓 Ocupação liberada na {self.nome} para ordem {ordem_id}."
             )
@@ -143,7 +131,46 @@ class Embaladora(Equipamento):
             logger.warning(
                 f"⚠️ Nenhuma ocupação encontrada na {self.nome} para ordem {ordem_id}."
             )
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        """
+        Libera ocupações finalizadas até o horário atual.
+        """
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocup for ocup in self.ocupacoes
+            if ocup[5] > horario_atual
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações finalizadas na {self.nome} até {horario_atual.strftime('%H:%M')}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação finalizada encontrada na {self.nome} até {horario_atual.strftime('%H:%M')}."
+            )
+          
+    def liberar_todas_ocupacoes(self):
+        """
+        Libera todas as ocupações da embaladora.
+        """
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 Todas as {total} ocupações da {self.nome} foram liberadas.")
+          
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        """
+        Libera a ocupação da embaladora por intervalo de tempo.
+        """
+        self.ocupacoes = [
+            ocup for ocup in self.ocupacoes
+            if not (ocup[4] < fim and ocup[5] > inicio)
+        ]
+        logger.info(
+            f"🔓 Ocupação liberada na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+        )
 
+    
     # ============================================
     # 📅 Agenda
     # ============================================
@@ -154,11 +181,11 @@ class Embaladora(Equipamento):
         logger.info("==============================================")
         logger.info(f"📅 Agenda da {self.nome}")
         logger.info("==============================================")
-        if not self.ocupacao:
+        if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
 
-        for ocup in self.ocupacao:
+        for ocup in self.ocupacoes:
             ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, lista_tipo_embalagem = ocup
             logger.info(
                 f"🔸 Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_id}, "

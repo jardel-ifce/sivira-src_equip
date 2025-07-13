@@ -64,14 +64,14 @@ class BalancaDigital(Equipamento):
     ) -> bool:
         if not self.aceita_quantidade(quantidade):
             logger.error(
-                f"❌ Peso inválido na balança {self.nome}: {quantidade}g "
+                f"❌ Peso inválido na {self.nome}: {quantidade}g "
                 f"(Limites: {self.capacidade_gramas_min}g - {self.capacidade_gramas_max}g)."
             )
             return False
 
         self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim))
         logger.info(
-            f"⚖️ Ocupação registrada na balança {self.nome}: "
+            f"⚖️ Ocupação registrada na {self.nome}: "
             f"Ordem {ordem_id}, pedido {pedido_id}, atividade {atividade_id}, quantidade {quantidade}g, "
             f"início {inicio.strftime('%H:%M')}, fim {fim.strftime('%H:%M')}."
         )
@@ -88,7 +88,7 @@ class BalancaDigital(Equipamento):
         ]
     
         logger.info(
-            f"🔓 Liberadas ocupações da balança {self.nome} "
+            f"🔓 Liberadas ocupações da {self.nome} "
             f"relacionadas à atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id}."
         )
 
@@ -100,7 +100,7 @@ class BalancaDigital(Equipamento):
         ]
 
         logger.info(
-            f"🔓 Liberadas ocupações da balança {self.nome} "
+            f"🔓 Liberadas ocupações da {self.nome} "
             f"relacionadas à ordem {ordem_id} e pedido {pedido_id}."
         )
 
@@ -112,15 +112,39 @@ class BalancaDigital(Equipamento):
         ]
 
         logger.info(
-            f"🔓 Liberadas ocupações da balança {self.nome} "
+            f"🔓 Liberadas ocupações da {self.nome} "
             f"relacionadas à ordem {ordem_id}."
         )
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
+            if not (fim <= horario_atual)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        logger.info(
+            f"🔓 Liberadas {liberadas} ocupações finalizadas da {self.nome}."
+        )
+        return liberadas
 
     def liberar_todas_ocupacoes(self):
         total = len(self.ocupacoes)
         self.ocupacoes.clear()
-        logger.info(f"🔓 Liberou todas as {total} ocupações da balança {self.nome}.")
+        logger.info(f"🔓 Liberou todas as {total} ocupações da {self.nome}.")
 
+    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
+            if not (ini >= inicio and fim <= fim)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        logger.info(
+            f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
+            f"no intervalo de {inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+        )
     # ==========================================================
     # 📅 Agenda
     # ==========================================================

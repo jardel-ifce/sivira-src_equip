@@ -35,7 +35,7 @@ class ModeladoraDePaes(Equipamento):
         self.capacidade_min_unidades_por_minuto = capacidade_min_unidades_por_minuto
         self.capacidade_max_unidades_por_minuto = capacidade_max_unidades_por_minuto
 
-        # Ocupações registradas: (ordem_id, pedido_id, atividade_id, inicio, fim)
+        # Ocupações registradas: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim)
         self.ocupacoes: List[Tuple[int, int, int, int, datetime, datetime]] = []
     # ==========================================================
     # ✅ Validações
@@ -109,18 +109,36 @@ class ModeladoraDePaes(Equipamento):
         else:
             logger.warning(f"🚫 {self.nome} | Não há ocupações para liberar para a ordem {ordem_id}.")
     
-    def liberar_ocupacoes_anteriores_a(self, momento: datetime):
+    def liberar_todas_ocupacoes(self):
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 {self.nome} liberou todas as {total} ocupações.")
+    
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
             o for o in self.ocupacoes
-            if o[5] > momento
+            if not (o[5] <= horario_atual)
         ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🔓 {self.nome} | Ocupações anteriores a {momento.strftime('%H:%M')} removidas ({antes - depois} entradas).")
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(f"🔓 {self.nome} | Liberadas {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
         else:
-            logger.warning(f"🚫 {self.nome} | Não há ocupações anteriores a {momento.strftime('%H:%M')} para liberar.")
-   
+            logger.info(f"ℹ️ {self.nome} | Nenhuma ocupação finalizada encontrada para liberar até {horario_atual.strftime('%H:%M')}.")
+    
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[4] >= inicio and o[5] <= fim)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+
+        logger.info(
+            f"🔓 {self.nome} | Liberadas {liberadas} ocupações no intervalo de "
+            f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+        )
+    
     
     # ==========================================================
     # 📅 Agenda

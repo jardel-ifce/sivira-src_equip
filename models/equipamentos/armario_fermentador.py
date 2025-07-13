@@ -171,7 +171,7 @@ class ArmarioFermentador(Equipamento):
         logger.info(f"🔓 Todas as {total} ocupações do {self.nome} foram removidas.")
 
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         antes = len(self.ocupacao_niveis)
         self.ocupacao_niveis = [
             (oid, pid, aid, qtd, ini, f)

@@ -196,9 +196,9 @@ class GestorRefrigeracaoCongelamento:
         for equipamento in self.equipamentos:
             equipamento.liberar_todas_ocupacoes()
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         for equipamento in self.equipamentos:
-            equipamento.liberar_intervalo(inicio, fim)
+            equipamento.liberar_por_intervalo(inicio, fim)
 
     # ==========================================================
     # 📅 Agenda

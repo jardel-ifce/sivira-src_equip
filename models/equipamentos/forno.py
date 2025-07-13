@@ -48,9 +48,6 @@ class Forno(Equipamento):
         self.nivel_tela_max = nivel_tela_max
         self.capacidade_niveis_tela = nivel_tela_max
 
-        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, início, fim)
-        self.ocupacao_niveis: List[Tuple[int, int, int, float, datetime, datetime]] = []  
-
         # 🌡️ Controle de temperatura
         self.faixa_temperatura_min = faixa_temperatura_min
         self.faixa_temperatura_max = faixa_temperatura_max
@@ -76,6 +73,9 @@ class Forno(Equipamento):
         self.historico_temperatura: List[Tuple[int, int, int, float, datetime, datetime, Optional[int]]] = []
         self.historico_vaporizacao: List[Tuple[int, int, int, float, datetime, datetime, Optional[int]]] = []
         self.historico_velocidade: List[Tuple[int, int, int, float, datetime, datetime, Optional[int]]] = []
+
+        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, início, fim)
+        self.ocupacao_niveis: List[Tuple[int, int, int, float, datetime, datetime]] = []  
 
     # ==========================================================
     # 🌡️ Validação de temperatura
@@ -310,6 +310,35 @@ class Forno(Equipamento):
         self._resetar_parametros()
 
         logger.info(f"🧹 Liberadas todas as ocupações ({total}) do {self.nome} manualmente.")
+    
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacao_niveis)
+
+        self.ocupacao_niveis = [
+            (oid, pid, aid, qtd, ini, fim)
+            for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis
+            if not (ini >= inicio and fim <= fim)
+        ]
+        self.historico_temperatura = [
+            (oid, pid, aid, qtd, ini, fim, t)
+            for (oid, pid, aid, qtd, ini, fim, t) in self.historico_temperatura
+            if not (ini >= inicio and fim <= fim)
+        ]
+        self.historico_vaporizacao = [
+            (oid, pid, aid, qtd, ini, fim, v)
+            for (oid, pid, aid, qtd, ini, fim, v) in self.historico_vaporizacao
+            if not (ini >= inicio and fim <= fim)
+        ] if self.tem_vaporizacao else []
+        self.historico_velocidade = [
+            (oid, pid, aid, qtd, ini, fim, v)
+            for (oid, pid, aid, qtd, ini, fim, v) in self.historico_velocidade
+            if not (ini >= inicio and fim <= fim)
+        ] if self.tem_velocidade else []
+
+        depois = len(self.ocupacao_niveis)
+        liberadas = antes - depois
+
+        logger.info(f"🔓 Liberadas {liberadas} ocupações do {self.nome} no intervalo de {inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}.")
 
     def _resetar_se_vazio(self):
         if not self.ocupacao_niveis:

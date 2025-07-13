@@ -139,7 +139,7 @@ class ArmarioEsqueleto(Equipamento):
         logger.info(f"🧼 Todas as {total} ocupações do {self.nome} foram removidas.")
 
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         antes = len(self.ocupacao_niveis)
         self.ocupacao_niveis = [
             (oid, pid, aid, qtd, ini, f)
@@ -150,13 +150,22 @@ class ArmarioEsqueleto(Equipamento):
             f"🔓 Liberadas {antes - len(self.ocupacao_niveis)} ocupações do {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
 
+
     # ==========================================================
-    # 🔍 Status
+    # 📅 Agenda
     # ==========================================================
-    def __str__(self):
-        ocupadas = sum(qtd for (_, _, _, qtd, _, _) in self.ocupacao_niveis)
-        return (
-            f"\n🔳 Armário Esqueleto: {self.nome} (ID: {self.id})"
-            f"\nSetor: {self.setor.name} | Status: {'Ativo' if self.status_ativo else 'Inativo'}"
-            f"\nNíveis Ocupados: {ocupadas}/{self.nivel_tela_max}"
-        )
+    def mostrar_agenda(self):
+        logger.info("==============================================")
+        logger.info(f"📅 Agenda do {self.nome}")
+        logger.info("==============================================")
+
+        if not self.ocupacao_niveis:
+            logger.info("🔹 Nenhuma ocupação registrada.")
+            return
+
+        for (oid, pid, aid, qtd, ini, fim) in self.ocupacao_niveis:
+            logger.info(
+                f"🗂️ Ordem {oid} | Pedido {pid} |Atividade {aid} | {qtd} níveis | "
+                f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            )
+

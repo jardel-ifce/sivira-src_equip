@@ -69,10 +69,10 @@ class BatedeiraIndustrial(Equipamento):
         self,
         ordem_id: int,
         pedido_id: int,
+        atividade_id: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
-        atividade_id: int,
         velocidade: int
     ) -> bool:
         if not self.validar_capacidade(quantidade_gramas):
@@ -110,19 +110,7 @@ class BatedeiraIndustrial(Equipamento):
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            (oid, aid, qtd, ini, fim, vel)
-            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if fim > horario_atual
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(
-                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
-            )
-
+  
 
     def liberar_por_atividade(self, atividade_id: int, ordem_id: int, pedido_id: int):
         """
@@ -186,7 +174,50 @@ class BatedeiraIndustrial(Equipamento):
             logger.info(
                 f"ℹ️ Nenhuma ocupação da batedeira {self.nome} estava associada à ordem {ordem_id}."
             )
-    
+            
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            (oid, aid, qtd, ini, fim, vel)
+            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            if fim > horario_atual
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
+            )
+
+    def liberar_todas_ocupacoes(self):
+        """
+        Libera todas as ocupações registradas na batedeira.
+        """
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 {self.nome} | Liberou todas as {total} ocupações registradas.")
+        
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        """
+        Libera ocupações que estão completamente dentro do intervalo especificado.
+        """
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            (oid, pid, aid, qtd, ini, fim, vel)
+            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
+            if not (ini >= inicio and fim <= fim)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 {self.nome} | Liberou {liberadas} ocupações no intervalo de "
+                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} estava dentro do intervalo de "
+                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+            )
+        
     # ==========================================================
     # 📅 Agenda
     # ==========================================================

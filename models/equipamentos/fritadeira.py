@@ -96,7 +96,7 @@ class Fritadeira(Equipamento):
         )
 
         logger.info(
-            f"🍟 Fritadeira {self.nome} ocupada por atividade {atividade_id}"
+            f"🍟 {self.nome} ocupada por atividade {atividade_id}"
             f"com {quantidade_fracoes} frações, temperatura {temperatura}°C "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} (setup: {self.setup_minutos} min)."
         )
@@ -183,6 +183,25 @@ class Fritadeira(Equipamento):
             logger.info(
                 f"ℹ️ Nenhuma ocupação finalizada para liberar na fritadeira {self.nome} até {agora.strftime('%H:%M')}."
             )
+    
+    def liberar_todas_ocupacoes(self):
+        total = len(self.fracoes_ocupadas)
+        self.fracoes_ocupadas.clear()
+        logger.info(f"🔓 Liberou todas as {total} ocupações da fritadeira {self.nome}.")
+    
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.fracoes_ocupadas)
+        self.fracoes_ocupadas = [
+            (oid, pid, aid, qtd, ini, fim, temp, setup)
+            for (oid, pid, aid, qtd, ini, fim, temp, setup) in self.fracoes_ocupadas
+            if not (ini >= inicio and fim <= fim)
+        ]
+        liberadas = antes - len(self.fracoes_ocupadas)
+
+        logger.info(
+            f"🔓 Liberadas {liberadas} ocupações da fritadeira {self.nome} "
+            f"no intervalo de {inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+        )
 
     # ==========================================================
     # 📅 Agenda

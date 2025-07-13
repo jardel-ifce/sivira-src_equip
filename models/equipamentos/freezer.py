@@ -221,7 +221,7 @@ class Freezer(Equipamento):
         self.ocupacoes.clear()
         self.ocupacao_caixas.clear()
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         self.ocupacoes = [
             (oid, pid, aid, qtd, ini, f, temp)
             for (oid, pid,  aid, qtd, ini, f, temp) in self.ocupacoes

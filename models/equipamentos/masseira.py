@@ -95,7 +95,7 @@ class Masseira:
         )
 
         logger.info(
-            f"✅ Masseira {self.nome} ocupada para atividade {atividade_id} da ordem {ordem_id} "
+            f"✅ {self.nome} ocupada para atividade {atividade_id} da ordem {ordem_id} "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
         return True
@@ -152,7 +152,7 @@ class Masseira:
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
-            logger.info(f"🟩 Masseira {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
+            logger.info(f"🔓 {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
         else:
             logger.info(f"ℹ️ Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}.")
 

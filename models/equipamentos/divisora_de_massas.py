@@ -51,15 +51,15 @@ class DivisoraDeMassas(Equipamento):
     # ==========================================================
     # ✅ Validações
     # ==========================================================
-    def validar_capacidade(self, gramas: int) -> bool:
+    def validar_capacidade(self, gramas: float) -> bool:
         if gramas < self.capacidade_gramas_min:
             logger.warning(
-                f"⚠️ Quantidade {gramas}g abaixo da capacidade mínima ({self.capacidade_gramas_min}g) da divisora {self.nome}."
+                f"⚠️ Quantidade {gramas}g abaixo da capacidade mínima ({self.capacidade_gramas_min}g) da {self.nome}."
             )
             return False
         if gramas > self.capacidade_gramas_max:
             logger.warning(
-                f"⚠️ Quantidade {gramas}g acima da capacidade máxima ({self.capacidade_gramas_max}g) da divisora {self.nome}."
+                f"⚠️ Quantidade {gramas}g acima da capacidade máxima ({self.capacidade_gramas_max}g) da {self.nome}."
             )
             return False
         return True
@@ -68,7 +68,7 @@ class DivisoraDeMassas(Equipamento):
         for _, _, _, _, ocup_inicio, ocup_fim, _ in self.ocupacoes:
             if not (fim <= ocup_inicio or inicio >= ocup_fim):
                 logger.warning(
-                    f"⚠️ Divisora {self.nome} já está ocupada entre {ocup_inicio.strftime('%H:%M')} e {ocup_fim.strftime('%H:%M')}."
+                    f"⚠️ {self.nome} já está ocupada entre {ocup_inicio.strftime('%H:%M')} e {ocup_fim.strftime('%H:%M')}."
                 )
                 return False
         return True
@@ -81,7 +81,7 @@ class DivisoraDeMassas(Equipamento):
         ordem_id: int,
         pedido_id: int,
         atividade_id: int,
-        quantidade: int,
+        quantidade: float,
         inicio: datetime,
         fim: datetime
     ) -> bool:
@@ -97,7 +97,7 @@ class DivisoraDeMassas(Equipamento):
         )
 
         logger.info(
-            f"🔪 Ocupação registrada na divisora {self.nome}: "
+            f"🔪 Ocupação registrada na {self.nome}: "
             f"Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_id}, "
             f"Quantidade {quantidade}g, Início {inicio.strftime('%H:%M')}, Fim {fim.strftime('%H:%M')}, "
             f"Boleadora: {'Sim' if boleadora else 'Não'}."
@@ -107,19 +107,6 @@ class DivisoraDeMassas(Equipamento):
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
- 
-    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[4] < fim and o[5] > inicio)
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
-                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
     def liberar_por_atividade(self, atividade_id: int, pedido_id: int, ordem_id: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
@@ -129,13 +116,13 @@ class DivisoraDeMassas(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
                 f"para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}."
             )
         else:
             logger.info(
                 f"🔓 Nenhuma ocupação encontrada para atividade {atividade_id}, "
-                f"pedido {pedido_id}, ordem {ordem_id} na divisora {self.nome}."
+                f"pedido {pedido_id}, ordem {ordem_id} na {self.nome}."
             )
 
     def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
@@ -146,12 +133,12 @@ class DivisoraDeMassas(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
                 f"do pedido {pedido_id} da ordem {ordem_id}."
             )
         else:
             logger.info(
-                f"🔓 Nenhuma ocupação do pedido {pedido_id} da ordem {ordem_id} encontrada na divisora {self.nome}."
+                f"🔓 Nenhuma ocupação do pedido {pedido_id} da ordem {ordem_id} encontrada na {self.nome}."
             )
     
     def liberar_por_ordem(self, ordem_id: int):
@@ -162,20 +149,57 @@ class DivisoraDeMassas(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da divisora {self.nome} "
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
                 f"da ordem {ordem_id}."
             )
         else:
             logger.info(
-                f"🔓 Nenhuma ocupação da ordem {ordem_id} encontrada na divisora {self.nome}."
+                f"🔓 Nenhuma ocupação da ordem {ordem_id} encontrada na {self.nome}."
             )   
+            
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes if not o[5] <= horario_atual
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações finalizadas da {self.nome} "
+                f"até {horario_atual.strftime('%H:%M')}."
+            )
+        else:
+            logger.info(
+                f"🔓 Nenhuma ocupação finalizada encontrada na {self.nome} "
+                f"até {horario_atual.strftime('%H:%M')}."
+            )
+            
+    def liberar_todas_ocupacoes(self):
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 Liberadas todas as {total} ocupações da {self.nome}."
+                    )
+    
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            o for o in self.ocupacoes
+            if not (o[4] < fim and o[5] > inicio)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
+                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            )
+    
 
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
     def mostrar_agenda(self):
         print("==============================================")
-        print(f"📅 Agenda da Divisora {self.nome}")
+        print(f"📅 Agenda da {self.nome}")
         print("==============================================")
         if not self.ocupacao:
             print("🔸 Nenhuma ocupação registrada.")

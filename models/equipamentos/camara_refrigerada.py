@@ -156,12 +156,12 @@ class CamaraRefrigerada(Equipamento):
         )
         return (ocupadas + quantidade_caixas) <= self.capacidade_caixa_30kg
     
-    def verificar_espaco_niveis(self, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+    def verificar_espaco_niveis(self, quantidade_niveis: int, inicio: datetime, fim: datetime) -> bool:
         ocupadas = sum(
             qtd for (qtd, ini, f) in self.ocupacao_niveis
             if not (fim <= ini or inicio >= f)
         )
-        return (ocupadas + quantidade) <= self.capacidade_niveis_tela
+        return (ocupadas + quantidade_niveis) <= self.capacidade_niveis_tela
     
     # ==========================================================
     # 📦 | 🗂️  Ocupação
@@ -290,13 +290,43 @@ class CamaraRefrigerada(Equipamento):
 
         logger.info(f"🧊 Liberadas todas as ocupações da ordem {ordem_id} na {self.nome}.")
 
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        """
+        🔓 Libera todas as ocupações que já finalizaram até o horário atual,
+        incluindo ocupações padrão, por caixas e por níveis.
+        """
+        def filtrar_ocupacoes_finalizadas(lista):
+            antes = len(lista)
+            lista_filtrada = [
+                (oid, pid, aid, qtd, ini, fim, temp)
+                for (oid, pid, aid, qtd, ini, fim, temp) in lista
+                if not (fim <= horario_atual)
+            ]
+            return lista_filtrada, antes - len(lista_filtrada)
+
+        self.ocupacoes, liberadas_geral = filtrar_ocupacoes_finalizadas(self.ocupacoes)
+        self.ocupacao_caixas, liberadas_caixas = filtrar_ocupacoes_finalizadas(self.ocupacao_caixas)
+        self.ocupacao_niveis, liberadas_niveis = filtrar_ocupacoes_finalizadas(self.ocupacao_niveis)
+
+        total_liberadas = liberadas_geral + liberadas_caixas + liberadas_niveis
+
+        if total_liberadas > 0:
+            logger.info("🔓 Liberadas %d ocupações finalizadas na %s até %s. (Padrão: %d | Caixas: %d | Níveis: %d)",
+                        total_liberadas, self.nome, horario_atual.strftime('%H:%M'),
+                        liberadas_geral, liberadas_caixas, liberadas_niveis)
+        else:
+            logger.info("ℹ️ Nenhuma ocupação finalizada encontrada para liberar na %s até %s.",
+                        self.nome, horario_atual.strftime('%H:%M'))
+
+        return total_liberadas
+
 
     def liberar_todas_ocupacoes(self):
         self.ocupacao_niveis.clear()
         self.ocupacao_caixas.clear()
         self.ocupacoes.clear()
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         self.ocupacao_niveis = [
             (qtd, ini, f) for (qtd, ini, f) in self.ocupacao_niveis
             if not (ini >= inicio and f <= fim)

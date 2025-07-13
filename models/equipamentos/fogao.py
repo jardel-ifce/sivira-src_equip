@@ -29,10 +29,10 @@ class Fogao(Equipamento):
         nome: str,
         setor: TipoSetor,
         numero_operadores: int,
-        chamas_suportadas: List[TipoChama],
-        capacidade_por_boca_gramas_min: int,
-        capacidade_por_boca_gramas_max: int,
+        capacidade_por_boca_gramas_min: float,
+        capacidade_por_boca_gramas_max: float,
         numero_bocas: int,
+        chamas_suportadas: List[TipoChama],
         pressao_chamas_suportadas: List[TipoPressaoChama],
     ):
         super().__init__(
@@ -78,7 +78,7 @@ class Fogao(Equipamento):
         ordem_id: int,
         pedido_id: int,
         atividade_id: int,
-        quantidade: int,
+        quantidade: float,
         inicio: datetime,
         fim: datetime,
         tipo_chama: TipoChama,
@@ -101,7 +101,7 @@ class Fogao(Equipamento):
         pressoes_formatadas = ", ".join([p.value for p in pressao_chama])
 
         logger.info(
-            f"🔥 Ocupou a boca {boca + 1} do fogão {self.nome} com {quantidade}g "
+            f"🔥 Ocupou a boca {boca + 1} do {self.nome} com {quantidade}g "
             f"Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
             f"| Chama: {tipo_chama.value} | Pressão: {pressoes_formatadas}"
         )
@@ -110,20 +110,6 @@ class Fogao(Equipamento):
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_bocas_terminadas(self, horario_atual: datetime):
-        total_liberadas = 0
-        for i in range(self.numero_bocas):
-            antes = len(self.ocupacoes_por_boca[i])
-            self.ocupacoes_por_boca[i] = [
-                (oid, aid, qtd, ini, fim, chama, pressao)
-                for (oid, aid, qtd, ini, fim, chama, pressao) in self.ocupacoes_por_boca[i]
-                if fim > horario_atual
-            ]
-            total_liberadas += antes - len(self.ocupacoes_por_boca[i])
-
-        if total_liberadas > 0:
-            logger.info(f"🟩 Liberou {total_liberadas} ocupações finalizadas no fogão {self.nome}.")
-
     def liberar_por_atividade(self, ordem_id: int, atividade_id: int, pedido_id: int):
         liberadas = 0
         for i in range(self.numero_bocas):
@@ -135,9 +121,9 @@ class Fogao(Equipamento):
             ]
             liberadas += antes - len(self.ocupacoes_por_boca[i])
         if liberadas > 0:
-            logger.info(f"🔓 Liberou {liberadas} ocupações da atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id} no fogão {self.nome}.")
+            logger.info(f"🔓 Liberou {liberadas} ocupações da atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id} no {self.nome}.")
         else:
-            logger.info(f"🔓 Nenhuma ocupação encontrada para liberar da atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id} no fogão {self.nome}.")
+            logger.info(f"🔓 Nenhuma ocupação encontrada para liberar da atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id} no {self.nome}.")
 
     def liberar_por_pedido(self, pedido_id: int, ordem_id: int):
         liberadas = 0
@@ -150,9 +136,9 @@ class Fogao(Equipamento):
             ]
             liberadas += antes - len(self.ocupacoes_por_boca[i])
         if liberadas > 0:
-            logger.info(f"🔓 Liberou {liberadas} ocupações do pedido {pedido_id} e ordem {ordem_id} no fogão {self.nome}.")
+            logger.info(f"🔓 Liberou {liberadas} ocupações do pedido {pedido_id} e ordem {ordem_id} no {self.nome}.")
         else:
-            logger.info(f"🔓 Nenhuma ocupação encontrada para liberar do pedido {pedido_id} e ordem {ordem_id} no fogão {self.nome}.")
+            logger.info(f"🔓 Nenhuma ocupação encontrada para liberar do pedido {pedido_id} e ordem {ordem_id} no {self.nome}.")
         
 
     def liberar_por_ordem(self, ordem_id: int):
@@ -166,11 +152,27 @@ class Fogao(Equipamento):
             ]
             liberadas += antes - len(self.ocupacoes_por_boca[i])
         if liberadas > 0:
-            logger.info(f"🔓 Liberou {liberadas} ocupações da ordem {ordem_id} no fogão {self.nome}.")
+            logger.info(f"🔓 Liberou {liberadas} ocupações da ordem {ordem_id} no {self.nome}.")
         else:
-            logger.info(f"🔓 Nenhuma ocupação encontrada para liberar da ordem {ordem_id} no fogão {self.nome}.")
+            logger.info(f"🔓 Nenhuma ocupação encontrada para liberar da ordem {ordem_id} no {self.nome}.")
+            
+    def liberar_bocas_terminadas(self, horario_atual: datetime):
+        total_liberadas = 0
+        for i in range(self.numero_bocas):
+            antes = len(self.ocupacoes_por_boca[i])
+            self.ocupacoes_por_boca[i] = [
+                (oid, aid, qtd, ini, fim, chama, pressao)
+                for (oid, aid, qtd, ini, fim, chama, pressao) in self.ocupacoes_por_boca[i]
+                if fim > horario_atual
+            ]
+            total_liberadas += antes - len(self.ocupacoes_por_boca[i])
 
-    def liberar_boca(self, boca: int, ordem_id: int, pedido_id: int, atividade_id: int):
+        if total_liberadas > 0:
+            logger.info(f"🟩 Liberou {total_liberadas} ocupações finalizadas no {self.nome}.")
+
+    
+
+    def liberar_boca(self, boca: int, ordem_id: int, pedido_id: int, atividade_id: int): 
         antes = len(self.ocupacoes_por_boca[boca])
         self.ocupacoes_por_boca[boca] = [
             (oid, pid, aid, qtd, ini, fim, chama, pressao)
@@ -185,6 +187,22 @@ class Fogao(Equipamento):
         total = sum(len(ocupacoes) for ocupacoes in self.ocupacoes_por_boca)
         self.ocupacoes_por_boca = [[] for _ in range(self.numero_bocas)]
         logger.info(f"🔓 Liberou todas as {total} ocupações do fogão {self.nome}.")
+    
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        total_liberadas = 0
+        for i in range(self.numero_bocas):
+            antes = len(self.ocupacoes_por_boca[i])
+            self.ocupacoes_por_boca[i] = [
+                (oid, pid, aid, qtd, ini, fim, chama, pressao)
+                for (oid, pid, aid, qtd, ini, fim, chama, pressao) in self.ocupacoes_por_boca[i]
+                if not (ini < fim and inicio < fim)
+            ]
+            total_liberadas += antes - len(self.ocupacoes_por_boca[i])
+        
+        if total_liberadas > 0:
+            logger.info(f"🔓 Liberou {total_liberadas} ocupações no intervalo de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} no {self.nome}.")
+        else:
+            logger.info(f"ℹ️ Nenhuma ocupação encontrada para liberar no intervalo de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} no {self.nome}.")
 
     # ==========================================================
     # 📅 Agenda

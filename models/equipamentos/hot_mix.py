@@ -70,7 +70,7 @@ class HotMix(Equipamento):
         ordem_id: int,
         pedido_id: int,
         atividade_id: int,
-        quantidade: int,
+        quantidade: float,
         inicio: datetime,
         fim: datetime,
         velocidade: TipoVelocidade,
@@ -78,11 +78,11 @@ class HotMix(Equipamento):
         pressao_chamas: List[TipoPressaoChama]
     ) -> bool:
         if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
-            logger.warning(f"❌ Quantidade {quantidade}g fora dos limites do HotMix {self.nome}.")
+            logger.warning(f"❌ Quantidade {quantidade}g fora dos limites do {self.nome}.")
             return False
 
         if not self.esta_disponivel(inicio, fim):
-            logger.warning(f"❌ HotMix {self.nome} já ocupado entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}.")
+            logger.warning(f"❌ {self.nome} já ocupado entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}.")
             return False
 
         if velocidade not in self.velocidades_suportadas:
@@ -110,7 +110,7 @@ class HotMix(Equipamento):
         ))
 
         logger.info(
-            f"🍳 HotMix {self.nome} ocupado | Ordem {ordem_id} | Pedido {pedido_id} |Atividade {atividade_id} | {quantidade}g | "
+            f"🍳 {self.nome} ocupado | Ordem {ordem_id} | Pedido {pedido_id} |Atividade {atividade_id} | {quantidade}g | "
             f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
             f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
             f"Pressões: {[p.name for p in pressao_chamas]}"
@@ -129,7 +129,7 @@ class HotMix(Equipamento):
 
         if len(self.ocupacoes) < ocupacoes_iniciais:
             logger.info(
-                f"🔓 HotMix {self.nome} liberado | Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id}."
+                f"🔓 {self.nome} liberado | Ordem {ordem_id} | Pedido {pedido_id} | Atividade {atividade_id}."
             )
         else:
             logger.warning(
@@ -145,7 +145,7 @@ class HotMix(Equipamento):
 
         if len(self.ocupacoes) < ocupacoes_iniciais:
             logger.info(
-                f"🔓 HotMix {self.nome} liberado | Ordem {ordem_id} | Pedido {pedido_id}."
+                f"🔓 {self.nome} liberado | Ordem {ordem_id} | Pedido {pedido_id}."
             )
         else:
             logger.warning(
@@ -160,7 +160,7 @@ class HotMix(Equipamento):
         ]
 
         if len(self.ocupacoes) < ocupacoes_iniciais:
-            logger.info(f"🔓 HotMix {self.nome} liberado | Ordem {ordem_id}.")
+            logger.info(f"🔓 {self.nome} liberado | Ordem {ordem_id}.")
         else:
             logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar | Ordem {ordem_id}.")
 
@@ -172,10 +172,33 @@ class HotMix(Equipamento):
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
-            logger.info(f"🔓 HotMix {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
+            logger.info(f"🔓 {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
         else:
             logger.warning(f"⚠️ Nenhuma ocupação finalizada encontrada para liberar | Até {horario_atual.strftime('%H:%M')}.")
 
+    def liberar_todas_ocupacoes(self):
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 {self.nome} liberou todas as {total} ocupações.")
+        
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[4] >= inicio and ocupacao[5] <= fim)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+
+        if liberadas > 0:
+            logger.info(
+                f"🔓 {self.nome} liberou {liberadas} ocupações no intervalo de "
+                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+            )
+        else:
+            logger.info(
+                f"ℹ️ Nenhuma ocupação encontrada para liberar no intervalo de "
+                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+            )
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
