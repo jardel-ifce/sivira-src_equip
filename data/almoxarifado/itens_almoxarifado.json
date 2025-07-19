@@ -375,5 +375,22 @@
         "pedido_id": 1
       }
     ]
+  },
+  {
+    "id_item": 26,
+    "nome": "queijo_parmesao",
+    "descricao": "Queijo Parmesão",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [
+      
+    ]
   }
 ]

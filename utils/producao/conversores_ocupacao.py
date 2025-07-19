@@ -30,3 +30,13 @@ def gramas_para_bocas_fogao(quantidade_gramas: int, capacidade_por_boca_max: int
     if capacidade_por_boca_max <= 0:
         raise ValueError("Capacidade por boca deve ser maior que zero.")
     return ceil(quantidade_gramas / capacidade_por_boca_max)
+
+def unidades_para_niveis_tela(quantidade_unidades: int, unidades_por_nivel: int = 30) -> int:
+    """
+    Converte quantidade de unidades para número de níveis de tela.
+    Cada nível suporta 'unidades_por_nivel' unidades.
+    """
+    if quantidade_unidades <= 0:
+        raise ValueError("Quantidade de unidades deve ser maior que zero.")
+    print(f"Quantidade de unidades: {quantidade_unidades}, Unidades por nível: {unidades_por_nivel}")
+    return ceil(quantidade_unidades / unidades_por_nivel)

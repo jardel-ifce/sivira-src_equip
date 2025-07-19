@@ -15,63 +15,38 @@ class GestorMisturadoras:
     def __init__(self, masseiras: List[Masseira]):
         self.masseiras = masseiras
 
-    # ==========================================================
-    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
-    # ==========================================================  
     def _ordenar_por_fip(self, atividade: "AtividadeModular") -> List[Masseira]:
-        ordenadas = sorted(
-            self.masseiras,
-            key=lambda m: atividade.fips_equipamentos.get(m, 999)
-        )
-        # logger.info("📊 Ordem das masseiras por FIP (prioridade):")
-        # for m in ordenadas:
-        #     fip = atividade.fips_equipamentos.get(m, 999)
-        #     logger.info(f"🔹 {m.nome} (FIP: {fip})")
-        return ordenadas
-    
-    # ==========================================================
-    # 🔍 Leitura dos parâmetros via JSON
-    # ==========================================================    
+        return sorted(self.masseiras, key=lambda m: atividade.fips_equipamentos.get(m, 999))
+
     def _obter_velocidades_para_masseira(self, atividade: "AtividadeModular", masseira: Masseira) -> List[TipoVelocidade]:
         chave = self._normalizar_nome(masseira.nome)
         config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave, {})
-
         velocidades_raw = config.get("velocidade", [])
         if isinstance(velocidades_raw, str):
             velocidades_raw = [velocidades_raw]
-
-        velocidades: List[TipoVelocidade] = []
+        velocidades = []
         for v in velocidades_raw:
             try:
                 velocidades.append(TipoVelocidade[v.strip().upper()])
             except KeyError:
                 logger.warning(f"⚠️ Velocidade inválida: '{v}' para masseira {masseira.nome}")
-
         if not velocidades:
             logger.warning(f"⚠️ Nenhuma velocidade definida para masseira {masseira.nome}")
-        # else:
-        #     logger.info(f"⚙️ Velocidades para {masseira.nome}: {[v.name for v in velocidades]}")
         return velocidades
 
     def _obter_tipo_mistura_para_masseira(self, atividade: "AtividadeModular", masseira: Masseira) -> Optional[TipoMistura]:
         chave = self._normalizar_nome(masseira.nome)
         config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave, {})
-
         raw = config.get("tipo_mistura")
         if raw is None:
             logger.warning(f"⚠️ Tipo de mistura não definido para masseira {masseira.nome}")
             return None
-
         if isinstance(raw, list):
-            if not raw:
-                logger.warning(f"⚠️ Lista vazia de tipo_mistura para masseira {masseira.nome}")
-                return None
-            raw = raw[0]
-
+            raw = raw[0] if raw else None
+        if raw is None:
+            return None
         try:
-            tipo = TipoMistura[raw.strip().upper()]
-            # logger.info(f"⚙️ Tipo de mistura para {masseira.nome}: {tipo.name}")
-            return tipo
+            return TipoMistura[raw.strip().upper()]
         except KeyError:
             logger.warning(f"⚠️ Tipo de mistura inválido: '{raw}' para masseira {masseira.nome}")
             return None
@@ -84,10 +59,7 @@ class GestorMisturadoras:
             .decode()
             .replace(" ", "_")
         )
-    
-    # ==========================================================
-    # 🎯 Alocação
-    # ==========================================================    
+
     def alocar(
         self,
         inicio: datetime,
@@ -97,16 +69,8 @@ class GestorMisturadoras:
         **kwargs
     ) -> Tuple[bool, Optional[Masseira], Optional[datetime], Optional[datetime]]:
 
-    
         duracao = atividade.duracao
         horario_final_tentativa = fim
-
-        # logger.info(
-        #     f"🎯 Tentando alocar atividade {atividade.id} (Ordem {atividade.ordem_id}) "
-        #     f"(duração: {duracao}, quantidade: {quantidade}g) "
-        #     f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-        # )
-
         masseiras_ordenadas = self._ordenar_por_fip(atividade)
 
         while horario_final_tentativa - duracao >= inicio:
@@ -114,7 +78,7 @@ class GestorMisturadoras:
 
             masseiras_disponiveis = [
                 m for m in masseiras_ordenadas
-                if m.esta_disponivel(horario_inicio_tentativa, horario_final_tentativa)
+                if m.esta_disponivel(horario_inicio_tentativa, horario_final_tentativa, atividade_id=atividade.id_atividade)
             ]
 
             capacidade_total = sum(m.capacidade_gramas_max for m in masseiras_disponiveis)
@@ -132,7 +96,7 @@ class GestorMisturadoras:
                     sucesso = masseira.ocupar(
                         ordem_id=atividade.ordem_id,
                         pedido_id=atividade.pedido_id,
-                        atividade_id=atividade.id,
+                        atividade_id=atividade.id_atividade,
                         quantidade_gramas=alocar,
                         inicio=horario_inicio_tentativa,
                         fim=horario_final_tentativa,
@@ -150,8 +114,8 @@ class GestorMisturadoras:
                         atividade.fim_planejado = horario_final_tentativa
                         atividade.alocada = True
                         logger.info(
-                            f"✅ Atividade {atividade.id} da ordem {atividade.ordem_id} alocada em "
-                            f"{len(equipamentos_usados)} masseira(s) "
+                            f"✅ Atividade {atividade.id_atividade} da ordem {atividade.ordem_id} alocada em "
+                            f"{len(equipamentos_usados)} masseira(s) | Quantidade {quantidade} "
                             f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}"
                         )
                         return True, equipamentos_usados[0], horario_inicio_tentativa, horario_final_tentativa
@@ -159,17 +123,14 @@ class GestorMisturadoras:
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Atividade {atividade.id} da ordem {atividade.ordem_id} não pôde ser alocada "
+            f"❌ Atividade {atividade.id_atividade} da ordem {atividade.ordem_id} não pôde ser alocada "
             f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
-    
-    # ==========================================================
-    # 🔓 Liberações
-    # ==========================================================
+
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for masseira in self.masseiras:
-            masseira.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            masseira.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
 
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for masseira in self.masseiras:
@@ -186,10 +147,7 @@ class GestorMisturadoras:
     def liberar_todas_ocupacoes(self):
         for masseira in self.masseiras:
             masseira.ocupacoes.clear()
-   
-    # ==========================================================
-    # 📅 Agenda
-    # ==========================================================
+
     def mostrar_agenda(self):
         logger.info("==============================================")
         logger.info("📅 Agenda das Masseiras")

@@ -9,6 +9,7 @@ from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva
 from utils.comandas.limpador_comandas import apagar_todas_as_comandas
 from utils.ordenador.ordenador_pedidos import ordenar_pedidos_por_restricoes
 from enums.producao.tipo_item import TipoItem
+from datetime import timedelta
 
 # 1. Carregar os itens do almoxarifado
 itens = carregar_itens_almoxarifado("data/almoxarifado/itens_almoxarifado.json")
@@ -23,15 +24,39 @@ limpar_todos_os_logs()
 
 # 2. Criar pedidos de produção
 pedidos = []
-for i in range(1, 2):  # ou qualquer número de pedidos
+
+dados_pedidos = [
+    (1001, 450, "07:00"),
+    (1002, 120, "07:00"),
+    (1003, 20,  "07:00"),
+    (1004, 20,  "07:00"),
+    (1005, 10,  "07:00"),
+    (1001, 300, "09:00"),
+    (1004, 10,  "09:00"),
+    (1005, 10,  "09:00"),
+    (1001, 450, "15:00"),
+    (1002,  60, "15:00"),
+    (1003,  10, "15:00"),
+    (1004,  20, "15:00"),
+    (1005,  10, "15:00"),
+    (1001, 300, "17:00"),
+    (1004,  30, "17:00"),
+    (1005,  10, "17:00"),
+]
+
+for i, (id_produto, quantidade, hora_str) in enumerate(dados_pedidos, start=1):
+    hora, minuto = map(int, hora_str.split(":"))
+    fim = datetime(2025, 7, 20, hora, minuto)
+    inicio = fim - timedelta(hours=72)
+
     pedido = PedidoDeProducao(
         ordem_id=1,
         pedido_id=i,
-        id_produto=1001,
+        id_produto=id_produto,
         tipo_item=TipoItem.PRODUTO,
-        quantidade=91,
-        inicio_jornada=datetime(2025, 6, 23, 8, 0),
-        fim_jornada=datetime(2025, 6, 24, 18, 0),
+        quantidade=quantidade,
+        inicio_jornada=inicio,
+        fim_jornada=fim,
         todos_funcionarios=funcionarios_disponiveis
     )
     try:
@@ -56,6 +81,6 @@ for pedido in pedidos_ordenados:
         pedido.mostrar_estrutura()
         pedido.criar_atividades_modulares_necessarias()
         pedido.executar_atividades_em_ordem()
-        pedido.exibir_historico_de_funcionarios()
+        #pedido.exibir_historico_de_funcionarios()
     except RuntimeError as e:
         print(f"⚠️ Falha ao processar a ordem: {e}")

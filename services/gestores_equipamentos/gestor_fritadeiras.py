@@ -81,7 +81,7 @@ class GestorFritadeiras:
                 sucesso = fritadeira.ocupar(
                     ordem_id=atividade.ordem_id,
                     pedido_id=atividade.pedido_id,
-                    atividade_id=atividade.id,
+                    atividade_id=atividade.id_atividade,
                     quantidade_fracoes=quantidade_fracoes,
                     inicio=horario_inicial_tentativa,
                     fim=horario_final_tentativa,
@@ -93,7 +93,7 @@ class GestorFritadeiras:
                     atividade.alocada = True
 
                     logger.info(
-                        f"✅ Fritadeira {fritadeira.nome} alocada para Atividade {atividade.id} de "
+                        f"✅ Fritadeira {fritadeira.nome} alocada para Atividade {atividade.id_atividade} de "
                         f"{horario_inicial_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')} | "
                         f"Temp: {temperatura}°C | Frações: {quantidade_fracoes}"
                     )
@@ -102,7 +102,7 @@ class GestorFritadeiras:
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Nenhuma fritadeira disponível para a atividade {atividade.id} "
+            f"❌ Nenhuma fritadeira disponível para a atividade {atividade.id_atividade} "
             f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
@@ -112,7 +112,7 @@ class GestorFritadeiras:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for fritadeira in self.fritadeiras:
-            fritadeira.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            fritadeira.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
                 
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for fritadeira in self.fritadeiras:
@@ -120,7 +120,7 @@ class GestorFritadeiras:
 
     def liberar_por_ordem(self, atividade: "AtividadeModular"):
         for fritadeira in self.fritadeiras:
-            fritadeira.liberar_por_ordem(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            fritadeira.liberar_por_ordem(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         for fritadeira in self.fritadeiras:

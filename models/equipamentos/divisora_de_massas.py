@@ -201,7 +201,7 @@ class DivisoraDeMassas(Equipamento):
         print("==============================================")
         print(f"📅 Agenda da {self.nome}")
         print("==============================================")
-        if not self.ocupacao:
+        if not self.ocupacoes:
             print("🔸 Nenhuma ocupação registrada.")
             return
         

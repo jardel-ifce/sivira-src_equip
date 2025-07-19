@@ -4,7 +4,7 @@ from models.equipamentos.modeladora_de_paes import ModeladoraDePaes
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular 
 from utils.logs.logger_factory import setup_logger
-
+import unicodedata
 logger = setup_logger("GestorModeladoras")
 
 
@@ -30,7 +30,31 @@ class GestorModeladoras:
         #     fip = atividade.fips_equipamentos.get(m, 999)
         #     logger.info(f"🔹 {m.nome} (FIP: {fip})")
         return ordenadas
-
+    # ==========================================================
+    # 🔍 Leitura dos parâmetros via JSON
+    # ==========================================================
+    def _obter_capacidade_unidade_por_minuto_explicita_do_json(self, atividade: "AtividadeModular") -> Optional[float]:
+        """
+        🔍 Verifica se há um valor explícito de 'capacidade_unidade_por_minuto' no JSON da atividade
+        para a chave 
+        para alguma chave que contenha 'modeladora' no nome. Se houver, retorna esse valor.
+        """
+        try:
+            config = atividade.configuracoes_equipamentos or {}
+            for chave, conteudo in config.items():
+                chave_normalizada = unicodedata.normalize("NFKD", chave).encode("ASCII", "ignore").decode("utf-8").lower()
+                if "modeladora" in chave_normalizada:
+                    capacidade_gramas = conteudo.get("capacidade_unidade_por_minuto")
+                    if capacidade_gramas is not None:
+                        logger.info(
+                            f"📦 JSON da atividade {atividade.id_atividade} define capacidade_unidade_por_minuto = {atividade.quantidade_unidades}g para o equipamento '{chave}'"
+                        )
+                        return capacidade_gramas
+            logger.info(f"ℹ️ Nenhuma capacidade_unidade_por_minuto definida no JSON da atividade {atividade.id_atividade}.")
+            return None
+        except Exception as e:
+            logger.error(f"❌ Erro ao buscar capacidade_unidade_por_minuto no JSON da atividade: {e}")
+            return None
     # ==========================================================
     # 🎯 Alocação
     # ==========================================================    
@@ -59,7 +83,7 @@ class GestorModeladoras:
                     sucesso = modeladora.ocupar(
                         ordem_id=atividade.ordem_id,
                         pedido_id=atividade.pedido_id,
-                        atividade_id=atividade.id,
+                        atividade_id=atividade.id_atividade,
                         quantidade=quantidade_unidades,
                         inicio=horario_inicio,
                         fim=horario_final,
@@ -74,7 +98,7 @@ class GestorModeladoras:
                         atividade.alocada = True
 
                         logger.info(
-                            f"✅ Atividade {atividade.id} alocada na modeladora {modeladora.nome} "
+                            f"✅ Atividade {atividade.id_atividade} alocada na modeladora {modeladora.nome} | Quantidade {quantidade_unidades} "
                             f"de {horario_inicio.strftime('%H:%M')} até {horario_final.strftime('%H:%M')}."
                         )
                         return True, modeladora, horario_inicio, horario_final
@@ -82,7 +106,7 @@ class GestorModeladoras:
             horario_final -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Falha ao alocar atividade {atividade.id} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            f"❌ Falha ao alocar atividade {atividade.id_atividade} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
 
@@ -95,7 +119,7 @@ class GestorModeladoras:
 
     def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade: "AtividadeModular"):
         for modeladora in self.modeladoras:
-            modeladora.liberar_por_atividade(ordem_id, pedido_id, atividade.id)
+            modeladora.liberar_por_atividade(ordem_id, pedido_id, atividade.id_atividade)
     
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for modeladora in self.modeladoras:

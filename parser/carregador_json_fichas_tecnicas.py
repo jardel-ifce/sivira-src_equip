@@ -48,3 +48,33 @@ def buscar_ficha_tecnica_por_id(id_ficha_tecnica: int, tipo_item: TipoItem) -> T
             return item, item  # Retorna duas vezes o item (nome + ficha técnica)
 
     raise ValueError(f"❌ Ficha técnica com id_ficha_tecnica={id_ficha_tecnica} não encontrada em {nome_arquivo}.")
+
+def buscar_ficha_tecnica_subproduto_por_nome(nome_subproduto: str) -> Dict[str, Any]:
+    """
+    Busca a ficha técnica de um subproduto pelo campo 'nome'.
+    """
+    from enums.producao.tipo_item import TipoItem
+
+    if TipoItem.SUBPRODUTO not in MAPA_CAMINHO:
+        raise ValueError("❌ TipoItem.SUBPRODUTO não suportado.")
+
+    nome_pasta = MAPA_CAMINHO[TipoItem.SUBPRODUTO]
+    nome_arquivo = f"fichas_tecnicas_{nome_pasta}.json"
+    caminho = os.path.join("data", nome_pasta, nome_arquivo)
+
+    try:
+        with open(caminho, "r", encoding="utf-8") as f:
+            conteudo = f.read()
+            if not conteudo.strip():
+                raise ValueError(f"❌ Arquivo {nome_arquivo} está vazio.")
+            dados = json.loads(conteudo)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"❌ Arquivo não encontrado: {caminho}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"❌ Erro ao decodificar JSON: {e}")
+
+    for item in dados:
+        if item.get("nome") == nome_subproduto:
+            return item
+
+    raise ValueError(f"❌ Subproduto com nome '{nome_subproduto}' não encontrado em {nome_arquivo}.")

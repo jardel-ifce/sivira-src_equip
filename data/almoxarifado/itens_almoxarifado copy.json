@@ -90,7 +90,7 @@
     "descricao": "Pão Francês",
     "tipo_item": "PRODUTO",
     "politica_producao": "SOB_DEMANDA",
-    "peso": 60,
+    "peso": 65,
     "unidade_medida": "UNIDADE",
     "estoque_min": 200,
     "estoque_max": 1000,

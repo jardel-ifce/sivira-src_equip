@@ -100,7 +100,7 @@ class GestorRefrigeracaoCongelamento:
                 tipo_armazenamento = self._obter_tipo_armazenamento(atividade, equipamento)
 
                 logger.info(
-                    f"🌟 Tentando alocar Atividade {atividade.id} em {equipamento.nome} "
+                    f"🌟 Tentando alocar Atividade {atividade.id_atividade} em {equipamento.nome} "
                     f"({quantidade_produto}g | {duracao}) entre "
                     f"{horario_inicio_tentativa.strftime('%H:%M')} e {horario_final_tentativa.strftime('%H:%M')} "
                     f"| Temp: {temperatura_desejada if temperatura_desejada is not None else 'N/A'}°C"
@@ -141,7 +141,7 @@ class GestorRefrigeracaoCongelamento:
                 sucesso = getattr(equipamento, metodo_ocupar)(
                     ordem_id=atividade.ordem_id,
                     pedido_id=atividade.pedido_id,
-                    atividade_id=atividade.id,
+                    atividade_id=atividade.id_atividade,
                     quantidade=quantidade_ocupacao,
                     inicio=horario_inicio_tentativa,
                     fim=horario_final_tentativa,
@@ -153,7 +153,7 @@ class GestorRefrigeracaoCongelamento:
                     atividade.alocada = True
 
                     logger.info(
-                        f"✅ Atividade {atividade.id} alocada na {equipamento.nome} "
+                        f"✅ Atividade {atividade.id_atividade} alocada na {equipamento.nome} "
                         f"| {horario_inicio_tentativa.strftime('%H:%M')} → {horario_final_tentativa.strftime('%H:%M')} "
                         f"| Temp: {temperatura_desejada}°C"
                     )
@@ -166,7 +166,7 @@ class GestorRefrigeracaoCongelamento:
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Nenhuma câmara pôde ser alocada para atividade {atividade.id} "
+            f"❌ Nenhuma câmara pôde ser alocada para atividade {atividade.id_atividade} "
             f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
@@ -178,7 +178,7 @@ class GestorRefrigeracaoCongelamento:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for equipamento in self.equipamentos:
-            equipamento.liberar_por_atividade(atividade_id=atividade.id, pedido_id=atividade.pedido_id, ordem_id=atividade.ordem_id)
+            equipamento.liberar_por_atividade(atividade_id=atividade.id_atividade, pedido_id=atividade.pedido_id, ordem_id=atividade.ordem_id)
 
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for equipamento in self.equipamentos:

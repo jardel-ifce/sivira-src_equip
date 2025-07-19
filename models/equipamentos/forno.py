@@ -28,6 +28,8 @@ class Forno(Equipamento):
         faixa_temperatura_min: int,
         faixa_temperatura_max: int,
         setup_min: int,
+        capacidade_niveis_min: int,
+        capacidade_niveis_max: int,
         tipo_coccao: TipoCoccao,
         vaporizacao_seg_min: Optional[int] = None,
         vaporizacao_seg_max: Optional[int] = None,
@@ -44,9 +46,8 @@ class Forno(Equipamento):
         )
 
         # 🗂️ Ocupação por níveis
-        self.nivel_tela_min = nivel_tela_min
-        self.nivel_tela_max = nivel_tela_max
-        self.capacidade_niveis_tela = nivel_tela_max
+        
+        self.capacidade_niveis_tela_total = nivel_tela_max * capacidade_niveis_max
 
         # 🌡️ Controle de temperatura
         self.faixa_temperatura_min = faixa_temperatura_min
@@ -69,12 +70,12 @@ class Forno(Equipamento):
         self.setup_min = setup_min
         self.tipo_coccao = tipo_coccao
 
-        # 🧾 Históricos de parâmetros aplicados por atividade: (ordem_id, pedido_id, atividade_id, quantidade, início, fim, parâmetro)
+        # 🧾 Históricos de parâmetros aplicados por atividade: (ordem_id, pedido_id, atividade_id, quantidade_niveis, início, fim, parâmetro)
         self.historico_temperatura: List[Tuple[int, int, int, float, datetime, datetime, Optional[int]]] = []
         self.historico_vaporizacao: List[Tuple[int, int, int, float, datetime, datetime, Optional[int]]] = []
         self.historico_velocidade: List[Tuple[int, int, int, float, datetime, datetime, Optional[int]]] = []
 
-        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, início, fim)
+        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade_niveis, início, fim)
         self.ocupacao_niveis: List[Tuple[int, int, int, float, datetime, datetime]] = []  
 
     # ==========================================================
@@ -136,19 +137,20 @@ class Forno(Equipamento):
     # ==========================================================
     # 🗂️ Ocupação
     # ==========================================================
-    def verificar_espaco_niveis(self, quantidade: int, inicio: datetime, fim: datetime) -> bool:
+    def verificar_espaco_niveis(self, quantidade_niveis: int, inicio: datetime, fim: datetime) -> bool:
         ocupados = sum(qtd for (_, _, _, qtd, ini, f) in self.ocupacao_niveis if not (fim <= ini or inicio >= f))
-        return (ocupados + quantidade) <= self.capacidade_niveis_tela
+        print(f" {self.nome} - 🔍 Ocupações atuais: {ocupados}, Capacidade total: {self.capacidade_niveis_tela_total}")
+        return (ocupados + quantidade_niveis) <= self.capacidade_niveis_tela_total
 
-    def ocupar_niveis(self, ordem_id: int, pedido_id: int, atividade_id: int, quantidade: int, inicio: datetime, fim: datetime) -> bool:
-        if not self.verificar_espaco_niveis(quantidade, inicio, fim):
+    def ocupar_niveis(self, ordem_id: int, pedido_id: int, atividade_id: int, quantidade_niveis: float, inicio: datetime, fim: datetime) -> bool:
+        if not self.verificar_espaco_niveis(quantidade_niveis, inicio, fim):
             return False
-        self.ocupacao_niveis.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim))
-        self.historico_temperatura.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, self.temperatura_atual))
+        self.ocupacao_niveis.append((ordem_id, pedido_id, atividade_id, quantidade_niveis, inicio, fim))
+        self.historico_temperatura.append((ordem_id, pedido_id, atividade_id, quantidade_niveis, inicio, fim, self.temperatura_atual))
         if self.tem_vaporizacao:
-            self.historico_vaporizacao.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, self.vaporizacao_atual))
+            self.historico_vaporizacao.append((ordem_id, pedido_id, atividade_id, quantidade_niveis, inicio, fim, self.vaporizacao_atual))
         if self.tem_velocidade:
-            self.historico_velocidade.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, self.velocidade_atual))
+            self.historico_velocidade.append((ordem_id, pedido_id, atividade_id, quantidade_niveis, inicio, fim, self.velocidade_atual))
         
         return True
 

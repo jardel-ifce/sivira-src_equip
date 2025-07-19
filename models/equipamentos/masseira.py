@@ -12,9 +12,10 @@ logger = setup_logger("Masseira")
 class Masseira:
     """🥣 Classe que representa uma Masseira.
     ✔️ Controle de capacidade por peso.
-    ✔️ Ocupação exclusiva no tempo.
-    ✔️ Suporta múltiplas velocidades e tipos de mistura.
+    ✔️ Suporte a múltiplas velocidades e tipos de mistura.
+    ✔️ Agora permite ocupações simultâneas se forem da mesma atividade_id.
     """
+
     def __init__(
         self,
         id: int,
@@ -34,7 +35,6 @@ class Masseira:
         self.velocidades_suportadas = velocidades_suportadas or []
         self.tipos_de_mistura_suportados = tipos_de_mistura_suportados or []
 
-        # Lista de ocupações (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, velocidades, tipo_mistura)
         self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime, List[TipoVelocidade], TipoMistura]] = []
 
     # ==========================================================
@@ -49,15 +49,17 @@ class Masseira:
             return False
         return True
 
-    def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for _, _, _, _, ocup_inicio, ocup_fim, *_ in self.ocupacoes:
+    def esta_disponivel(self, inicio: datetime, fim: datetime, atividade_id: Optional[int] = None) -> bool:
+        for _, _, a_id, _, ocup_inicio, ocup_fim, *_ in self.ocupacoes:
+            if atividade_id is not None and a_id == atividade_id:
+                continue
             if not (fim <= ocup_inicio or inicio >= ocup_fim):
                 logger.warning(
                     f"⚠️ Masseira {self.nome} não disponível entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
                 )
                 return False
         return True
-    
+
     # ==========================================================
     # 🥣 Ocupação
     # ==========================================================
@@ -72,7 +74,26 @@ class Masseira:
         velocidades: Optional[List[TipoVelocidade]] = None,
         tipo_mistura: Optional[TipoMistura] = None
     ) -> bool:
-        if not self.validar_capacidade(quantidade_gramas):
+        # 💡 Verifica se a quantidade é individualmente válida
+        if quantidade_gramas < self.capacidade_gramas_min:
+            logger.warning(
+                f"⚠️ Quantidade {quantidade_gramas}g abaixo do mínimo permitido pela {self.nome} "
+                f"({self.capacidade_gramas_min}g)"
+            )
+            return False
+
+        # 📦 Soma total já alocada com a mesma atividade e janela sobreposta
+        soma_ocupacoes_ativas = sum(
+            qtd for _, _, a_id, qtd, ocup_inicio, ocup_fim, *_ in self.ocupacoes
+            if a_id == atividade_id and not (fim <= ocup_inicio or inicio >= ocup_fim)
+        )
+
+        if soma_ocupacoes_ativas + quantidade_gramas > self.capacidade_gramas_max:
+            logger.warning(
+                f"❌ Capacidade excedida na {self.nome}: já há {soma_ocupacoes_ativas:.2f}g ocupados "
+                f"para atividade {atividade_id} nessa janela. Tentando alocar +{quantidade_gramas:.2f}g "
+                f"(Limite: {self.capacidade_gramas_max}g)"
+            )
             return False
 
         if velocidades:
@@ -85,7 +106,6 @@ class Masseira:
             if not isinstance(tipo_mistura, TipoMistura):
                 logger.error(f"❌ tipo_mistura inválido recebido: {tipo_mistura} ({type(tipo_mistura)})")
                 return False
-
             if tipo_mistura not in self.tipos_de_mistura_suportados:
                 logger.warning(f"⚠️ Tipo de mistura {tipo_mistura.name} não suportado pela {self.nome}.")
                 return False
@@ -99,6 +119,8 @@ class Masseira:
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
         )
         return True
+
+
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
@@ -130,7 +152,7 @@ class Masseira:
         if antes != depois:
             logger.info(f"🔓 Ocupação liberada na {self.nome} para pedido {pedido_id}, ordem {ordem_id}.")
         else:
-            logger.warning(f"⚠️ Nenhuma ocupação encontrada na {self.nome} para pedido {pedido_id}, ordem {ordem_id}.") 
+            logger.warning(f"⚠️ Nenhuma ocupação encontrada na {self.nome} para pedido {pedido_id}, ordem {ordem_id}.")
 
     def liberar_por_ordem(self, ordem_id: int):
         antes = len(self.ocupacoes)
@@ -143,7 +165,7 @@ class Masseira:
             logger.info(f"🔓 Ocupação liberada na {self.nome} para ordem {ordem_id}.")
         else:
             logger.warning(f"⚠️ Nenhuma ocupação encontrada na {self.nome} para ordem {ordem_id}.")
-    
+
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [

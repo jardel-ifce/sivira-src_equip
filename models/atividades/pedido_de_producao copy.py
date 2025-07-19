@@ -87,8 +87,7 @@ class PedidoDeProducao:
                     quantidade=ficha_modular.quantidade_requerida,
                     pedido_id=self.pedido_id,
                     id_produto=self.id_produto,
-                    funcionarios_elegiveis=self.funcionarios_elegiveis,
-                    peso_unitario=ficha_modular.peso_unitario,
+                    funcionarios_elegiveis=self.funcionarios_elegiveis
                 )
                 self.atividades_modulares.append(atividade)
 
@@ -290,7 +289,7 @@ class PedidoDeProducao:
         A lógica completa está delegada ao módulo externo.
         """
         if not self.ficha_tecnica_modular:
-            raise ValueError("Ficha técnica ainda não foi montada.")
+            raise ValueError(" técnica ainda não foi montada.")
 
         gerar_comanda_reserva_modulo(
             ordem_id=self.ordem_id,

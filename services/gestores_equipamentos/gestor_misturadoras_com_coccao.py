@@ -106,7 +106,7 @@ class GestorMisturadorasComCoccao:
                 sucesso = hotmix.ocupar(
                     ordem_id=atividade.ordem_id,
                     pedido_id=atividade.pedido_id,
-                    atividade_id=atividade.id,
+                    atividade_id=atividade.id_atividade,
                     quantidade=quantidade_gramas,
                     inicio=horario_inicio,
                     fim=horario_final,
@@ -120,7 +120,7 @@ class GestorMisturadorasComCoccao:
                     atividade.equipamentos_selecionados = [hotmix]
         
                     logger.info(
-                        f"✅ Atividade {atividade.id} (Ordem {atividade.ordem_id}) alocada de "
+                        f"✅ Atividade {atividade.id_atividade} (Ordem {atividade.ordem_id}) alocada de "
                         f"{horario_inicio.strftime('%H:%M')} até {horario_final.strftime('%H:%M')} no HotMix {hotmix.nome}"
                     )
                     return True, hotmix, horario_inicio, horario_final
@@ -128,7 +128,7 @@ class GestorMisturadorasComCoccao:
             horario_final -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Atividade {atividade.id} (Ordem {atividade.ordem_id}) não alocada entre "
+            f"❌ Atividade {atividade.id_atividade} (Ordem {atividade.ordem_id}) não alocada entre "
             f"{inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
@@ -138,7 +138,7 @@ class GestorMisturadorasComCoccao:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for hotmix in self.hotmixes:
-            hotmix.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            hotmix.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
     
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for hotmix in self.hotmixes:

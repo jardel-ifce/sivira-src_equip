@@ -156,7 +156,7 @@ class Fogao(Equipamento):
         else:
             logger.info(f"🔓 Nenhuma ocupação encontrada para liberar da ordem {ordem_id} no {self.nome}.")
             
-    def liberar_bocas_terminadas(self, horario_atual: datetime):
+    def liberar_bocas_finalizadas(self, horario_atual: datetime):
         total_liberadas = 0
         for i in range(self.numero_bocas):
             antes = len(self.ocupacoes_por_boca[i])

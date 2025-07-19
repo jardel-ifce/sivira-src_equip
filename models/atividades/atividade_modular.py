@@ -23,7 +23,7 @@ logger = setup_logger('Atividade_Modular')
 TIPOS_SEM_QUANTIDADE = {TipoEquipamento.BANCADAS}
 
 class AtividadeModular:
-    def __init__(self, id, id_atividade: int, tipo_item: TipoItem, quantidade_produto: int, *args, **kwargs):
+    def __init__(self, id, id_atividade: int, tipo_item: TipoItem, quantidade: float, *args, **kwargs):
         # 🆔 Identificadores principais
         self.id = id
         self.id_atividade = id_atividade
@@ -31,9 +31,11 @@ class AtividadeModular:
         self.ordem_id = kwargs.get("ordem_id")
         self.id_produto_gerado = kwargs.get("id_produto")
         self.tipo_item = tipo_item
-        self.quantidade_produto = quantidade_produto
+        self.quantidade = quantidade
+        print(f"🆔 Atividade {self.id_atividade} | Tipo: {self.tipo_item.name} | Quantidade: {self.quantidade} u")
         self.alocada = False
-
+        self.peso_unitario = kwargs.get("peso_unitario")
+        print(f"Peso unitário da atividade {self.id_atividade}: {self.peso_unitario}g | Tipo produto: {self.tipo_item}")
         # 📄 Carregamento dos dados da atividade (direto ou via parser)
         dados_atividade = kwargs.get("dados")
         if not dados_atividade:
@@ -86,7 +88,7 @@ class AtividadeModular:
         self.configuracoes_equipamentos = dados_atividade.get("configuracoes_equipamentos", {})
 
         # ⏳ Tempo da atividade
-        self.duracao: timedelta = consultar_duracao_por_faixas(dados_atividade, self.quantidade_produto)
+        self.duracao: timedelta = consultar_duracao_por_faixas(dados_atividade, self.quantidade)
 
 
 
@@ -145,34 +147,6 @@ class AtividadeModular:
 
         return min_inicio, max_fim
 
-
-    def _resolver_metodo_alocacao(self, tipo_equipamento):
-        def metodo_generico(gestor, inicio, fim, **kwargs):
-            try:
-                if tipo_equipamento in TIPOS_SEM_QUANTIDADE:
-                    return gestor.alocar(inicio, fim, self)
-                return gestor.alocar(inicio, fim, self, self.quantidade_produto)
-            except TypeError as e:
-                raise RuntimeError(f"🚨 Erro de chamada em gestor {gestor.__class__.__name__} para {tipo_equipamento.name}: {e}")
-
-
-        if tipo_equipamento not in [
-            TipoEquipamento.REFRIGERACAO_CONGELAMENTO,
-            TipoEquipamento.BANCADAS,
-            TipoEquipamento.FOGOES,
-            TipoEquipamento.BATEDEIRAS,
-            TipoEquipamento.BALANCAS,
-            TipoEquipamento.FORNOS,
-            TipoEquipamento.MISTURADORAS,
-            TipoEquipamento.MISTURADORAS_COM_COCCAO,
-            TipoEquipamento.ARMARIOS_PARA_FERMENTACAO,
-            TipoEquipamento.MODELADORAS,
-            TipoEquipamento.DIVISORAS_BOLEADORAS,
-        ]:
-            raise ValueError(f"❌ Nenhum método de alocação definido para {tipo_equipamento}")
-
-        return metodo_generico
-
     def mostrar_agendas_dos_gestores(self):
         try:
             gestores = self._criar_gestores_por_tipo()
@@ -192,6 +166,52 @@ class AtividadeModular:
         inicio_jornada: datetime,
         fim_jornada: datetime
     ) -> Tuple[bool, Optional[datetime], Optional[datetime], Optional[timedelta], List[Tuple]]:
+        if not self._quantidade_por_tipo_equipamento:
+            logger.info(f"ℹ️ Atividade {self.id_atividade} não requer equipamentos. Iniciando apenas alocação de funcionários.")
+            
+            inicio_atividade = fim_jornada - self.duracao
+            fim_atividade = fim_jornada
+            self.inicio_real = inicio_atividade
+            self.fim_real = fim_atividade
+
+            flag, funcionarios_alocados = GestorFuncionarios.priorizar_funcionarios(
+                ordem_id=self.ordem_id,
+                pedido_id=self.pedido_id,
+                inicio=inicio_atividade,
+                fim=fim_atividade,
+                qtd_profissionais_requeridos=self.qtd_profissionais_requeridos,
+                tipos_necessarios=self.tipos_necessarios,
+                fips_profissionais_permitidos=self.fips_profissionais_permitidos,
+                funcionarios_elegiveis=self.funcionarios_elegiveis,
+                nome_atividade=self.nome_atividade
+            )
+
+            if flag:
+                for funcionario in funcionarios_alocados:
+                    funcionario.registrar_ocupacao(
+                        ordem_id=self.ordem_id,
+                        pedido_id=self.pedido_id,
+                        id_atividade_json=self.id_atividade,
+                        inicio=inicio_atividade,
+                        fim=fim_atividade
+                    )
+                registrar_log_funcionarios(
+                    ordem_id=self.ordem_id,
+                    pedido_id=self.pedido_id,
+                    id_atividade=self.id_atividade,
+                    nome_item=self.nome_item,
+                    nome_atividade=self.nome_atividade,
+                    funcionarios_alocados=funcionarios_alocados,
+                    inicio=inicio_atividade,
+                    fim=fim_atividade
+                )
+
+                return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera, []  # sem equipamentos
+            else:
+                raise RuntimeError(
+                    f"❌ Não foi possível alocar os funcionários necessários para a atividade {self.id_atividade}."
+                )
+
         horario_final = fim_jornada
         equipamentos_alocados = []
 
@@ -325,7 +345,41 @@ class AtividadeModular:
                 #rollback_funcionarios(self.funcionarios_elegiveis, self.ordem_id, self.pedido_id, self.id_atividade)
                # remover_log_funcionarios(self.ordem_id, self.pedido_id, self.id_atividade)
                 remover_log_equipamentos(self.ordem_id, self.pedido_id, self.id_atividade)
-            horario_final -= timedelta(minutes=1)
+            horario_final -= timedelta(minutes=60)
 
         logger.error(f"🛑 Limite da jornada atingido. Impossível alocar a atividade {self.id_atividade}.")
         return False, None, None, self.tempo_maximo_de_espera, equipamentos_alocados
+    
+    
+    def _resolver_metodo_alocacao(self, tipo_equipamento):
+        
+        return {
+            TipoEquipamento.REFRIGERACAO_CONGELAMENTO: self._alocar_camara,
+            TipoEquipamento.BANCADAS: self._alocar_bancada,
+            TipoEquipamento.FOGOES: self._alocar_fogao,
+            TipoEquipamento.BATEDEIRAS: self._alocar_batedeira,
+            TipoEquipamento.BALANCAS: self._alocar_balanca,
+            TipoEquipamento.FORNOS: self._alocar_forno,
+            TipoEquipamento.MISTURADORAS: self._alocar_misturadora,
+            TipoEquipamento.MISTURADORAS_COM_COCCAO: self._alocar_misturadora_com_coccao,
+            TipoEquipamento.ARMARIOS_PARA_FERMENTACAO: self._alocar_armario_fermentacao,
+            TipoEquipamento.MODELADORAS: self._alocar_modeladora,
+            TipoEquipamento.DIVISORAS_BOLEADORAS: self._alocar_divisora_boleadora,
+            TipoEquipamento.EMBALADORAS: self._alocar_embaladora,
+        }.get(tipo_equipamento, lambda *args, **kwargs: (_ for _ in ()).throw(
+            ValueError(f"❌ Nenhum método de alocação definido para {tipo_equipamento}")
+        ))
+
+
+    def _alocar_camara(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_bancada(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self)
+    def _alocar_fogao(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_batedeira(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_balanca(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_forno(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_misturadora(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_misturadora_com_coccao(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_armario_fermentacao(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_modeladora(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_divisora_boleadora(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)
+    def _alocar_embaladora(self, gestor, inicio, fim, **kwargs): return gestor.alocar(inicio, fim, self, self.quantidade)

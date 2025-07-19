@@ -17,6 +17,7 @@ from models.equipamentos.armario_esqueleto import ArmarioEsqueleto
 from models.equipamentos.divisora_de_massas import DivisoraDeMassas
 from models.equipamentos.modeladora_de_paes import ModeladoraDePaes
 from models.equipamentos.armario_fermentador import ArmarioFermentador
+from models.equipamentos.embaladora import Embaladora
 from enums.producao.tipo_setor import TipoSetor
 from enums.equipamentos.tipo_chama import TipoChama
 from enums.equipamentos.tipo_pressao_chama import TipoPressaoChama
@@ -243,7 +244,7 @@ class FabricaEquipamentos:
             id=20,
             nome="Masseira 1",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=50000,
             tipos_de_mistura_suportados=[TipoMistura.SEMI_RAPIDA],
             velocidades_suportadas=[
@@ -258,7 +259,7 @@ class FabricaEquipamentos:
             id=21,
             nome="Masseira 2",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=30000,
             tipos_de_mistura_suportados=[TipoMistura.RAPIDA],
             velocidades_suportadas=[
@@ -272,7 +273,7 @@ class FabricaEquipamentos:
             id=22,
             nome="Masseira 3",
             setor=TipoSetor.CONFEITARIA,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=20000,
             tipos_de_mistura_suportados=TipoMistura.LENTA,
             velocidades_suportadas=[
@@ -385,6 +386,8 @@ class FabricaEquipamentos:
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=15,
+            capacidade_niveis_min=1,
+            capacidade_niveis_max=15,
             tipo_coccao=TipoCoccao.TURBO,
             vaporizacao_seg_min=1,
             vaporizacao_seg_max=5,
@@ -404,6 +407,8 @@ class FabricaEquipamentos:
             faixa_temperatura_min=120,
             faixa_temperatura_max=200,
             setup_min=20,
+            capacidade_niveis_min=1,
+            capacidade_niveis_max=2,
             tipo_coccao=TipoCoccao.LASTRO,
             vaporizacao_seg_min=1,
             vaporizacao_seg_max=5,
@@ -423,6 +428,8 @@ class FabricaEquipamentos:
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=20,
+            capacidade_niveis_min=1,
+            capacidade_niveis_max=4,
             tipo_coccao=TipoCoccao.LASTRO,
             vaporizacao_seg_min=1,
             vaporizacao_seg_max=10,
@@ -442,6 +449,8 @@ class FabricaEquipamentos:
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=20,
+            capacidade_niveis_min=1,
+            capacidade_niveis_max=4,
             tipo_coccao=TipoCoccao.LASTRO,
             vaporizacao_seg_min=None,
             vaporizacao_seg_max=None,
@@ -568,6 +577,25 @@ class FabricaEquipamentos:
         )
         
         
+    @staticmethod
+    def criar_embaladora_1():
+        return Embaladora(
+            id=114,
+            nome="Embaladora 1",
+            setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
+            capacidade_gramas=500,
+            lista_tipo_embalagem=["SIMPLES", "SELADORA"]
+        )
+    def criar_embaladora_2():
+        return Embaladora(
+            id=115,
+            nome="Embaladora 2",
+            setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
+            capacidade_gramas=500,
+            lista_tipo_embalagem=["VACUO", "SELADORA"]
+        )
 
 # ✅ Instâncias prontas para importação
 camara_refrigerada_1 = FabricaEquipamentos.criar_camara_refrigerada_1()
@@ -624,6 +652,9 @@ divisora_de_massas_2 = FabricaEquipamentos.criar_divisora_de_massas_2()
 modeladora_de_paes_1 = FabricaEquipamentos.criar_modeladora_de_paes_1()
 modeladora_de_paes_2 = FabricaEquipamentos.criar_modeladora_de_paes_2()
 
+embaladora_1 = FabricaEquipamentos.criar_embaladora_1()  
+embaladora_2 = FabricaEquipamentos.criar_embaladora_2()
+
 equipamentos_por_nome = {
     "Bancada 7": bancada_7,
     "Balança Digital 1": balanca_digital_1,
@@ -672,4 +703,6 @@ equipamentos_disponiveis = [
     divisora_de_massas_2,
     modeladora_de_paes_1,
     modeladora_de_paes_2,
+    embaladora_1,
+    embaladora_2
 ]

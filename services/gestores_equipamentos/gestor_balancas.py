@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
 from utils.logs.logger_factory import setup_logger
 from datetime import datetime
+import unicodedata
 
 # ⚖️ Logger específico para o gestor de balanças
 logger = setup_logger('GestorBalancas')
@@ -32,6 +33,24 @@ class GestorBalancas:
         #     fip = atividade.fips_equipamentos.get(b, 999)
         #     logger.info(f"🔹 {b.nome} (FIP: {fip})")
         return ordenadas
+    
+    # ==========================================================
+    # 🔍 Leitura dos parâmetros via JSON
+    # ==========================================================
+    def _obter_peso_explicito_do_json(self, atividade: "AtividadeModular") -> Optional[float]:
+        try:
+            config = atividade.configuracoes_equipamentos or {}
+            for chave, conteudo in config.items():
+                chave_normalizada = unicodedata.normalize("NFKD", chave).encode("ASCII", "ignore").decode("utf-8").lower()
+                if "balanca" in chave_normalizada:
+                    peso_gramas = conteudo.get("peso_gramas")
+                    if peso_gramas is not None:
+                        return peso_gramas
+            return None
+        except Exception as e:
+            logger.error(f"❌ Erro ao buscar peso_gramas no JSON da atividade: {e}")
+            return None
+
 
     # ==========================================================
     # 🎯 Alocação
@@ -41,24 +60,33 @@ class GestorBalancas:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        quantidade_gramas: float
+        quantidade_gramas: float | None = None
     ) -> Tuple[bool, Optional[BalancaDigital], Optional[datetime], Optional[datetime]]:
-        
+
+        peso_json = self._obter_peso_explicito_do_json(atividade)
+        if peso_json is not None:
+            quantidade_final = peso_json
+        else:
+            quantidade_final = quantidade_gramas
+
+        if quantidade_final is None:
+            logger.error("❌ Nenhuma quantidade definida para balança.")
+            return False, None, None, None
+
         balancas_ordenadas = self._ordenar_por_fip(atividade)
 
         for balanca in balancas_ordenadas:
-            if not balanca.aceita_quantidade(quantidade_gramas):
+            if not balanca.aceita_quantidade(quantidade_final):
                 logger.info(
-                    f"🚫 Balança {balanca.nome} não aceita {quantidade_gramas}g. Ignorando."
+                    f"🚫 Balança {balanca.nome} não aceita {quantidade_final}g. Ignorando."
                 )
                 continue
 
-            # Aloca informando início e fim
             sucesso = balanca.ocupar(
                 ordem_id=atividade.ordem_id,
                 pedido_id=atividade.pedido_id,
-                atividade_id=atividade.id,
-                quantidade=quantidade_gramas,
+                atividade_id=atividade.id_atividade,
+                quantidade=quantidade_final,
                 inicio=inicio,
                 fim=fim
             )
@@ -69,19 +97,19 @@ class GestorBalancas:
                 atividade.alocada = True
 
                 logger.info(
-                    f"✅ Atividade {atividade.id} alocada na balança {balanca.nome} | "
-                        f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} "
+                    f"✅ Atividade {atividade.id_atividade} alocada na {balanca.nome} | "
+                    f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} "
                 )
                 return True, balanca, inicio, fim
 
             else:
                 logger.warning(
-                    f"⚠️ Falha ao registrar ocupação na balança {balanca.nome} "
+                    f"⚠️ Falha ao registrar ocupação na {balanca.nome} "
                     f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
                 )
 
         logger.error(
-            f"❌ Nenhuma balança disponível ou compatível com {quantidade_gramas}g para atividade {atividade.id}."
+            f"❌ Nenhuma balança disponível ou compatível com {quantidade_final}g para atividade {atividade.id_atividade}."
         )
         return False, None, None, None
 
@@ -90,7 +118,7 @@ class GestorBalancas:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for balanca in self.balancas:
-            balanca.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            balanca.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
 
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for balanca in self.balancas:

@@ -133,7 +133,7 @@ class BalancaDigital(Equipamento):
         self.ocupacoes.clear()
         logger.info(f"🔓 Liberou todas as {total} ocupações da {self.nome}.")
 
-    def liberar_intervalo(self, inicio: datetime, fim: datetime):
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
             (oid, pid, aid, qtd, ini, fim)

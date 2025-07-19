@@ -94,7 +94,7 @@ class GestorBancadas:
                     sucesso = bancada.ocupar(
                         ordem_id=atividade.ordem_id,  
                         pedido_id=atividade.pedido_id,
-                        atividade_id=atividade.id,
+                        atividade_id=atividade.id_atividade,
                         quantidade_fracoes=fracoes_necessarias,
                         inicio=horario_inicio_tentativa,
                         fim=horario_final_tentativa
@@ -106,7 +106,7 @@ class GestorBancadas:
                         atividade.alocada = True
 
                         logger.info(
-                            f"✅ Atividade {atividade.id} alocada na bancada {bancada.nome} "
+                            f"✅ Atividade {atividade.id_atividade} alocada na bancada {bancada.nome} "
                             f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
                         )
                         return True, bancada, horario_inicio_tentativa, horario_final_tentativa
@@ -114,7 +114,7 @@ class GestorBancadas:
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada "
+            f"❌ Atividade {atividade.id_atividade} não pôde ser alocada "
             f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
@@ -124,7 +124,7 @@ class GestorBancadas:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular") -> None:
         for bancada in self.bancadas:
-            bancada.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            bancada.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
 
     def liberar_por_pedido(self, atividade: "AtividadeModular") -> None:
         for bancada in self.bancadas:

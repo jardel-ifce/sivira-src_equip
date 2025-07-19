@@ -1,24 +1,24 @@
 {
   "ordem_id": 1,
   "pedido_id": 1,
-  "data_reserva": "2025-06-24",
+  "data_reserva": "2025-06-23",
   "itens": [
     {
       "id_item": 1001,
       "nome": "Pão Francês",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 240,
+      "quantidade_necessaria": 91,
       "itens_necessarios": [
         {
           "id_item": 2001,
           "nome": "Massa Crocante",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 15600.0,
+          "quantidade_necessaria": 5915.0,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 9552.97,
+              "quantidade_necessaria": 3622.17,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -26,7 +26,7 @@
             {
               "id_item": 4,
               "nome": "Gelo para alimentos",
-              "quantidade_necessaria": 5731.78,
+              "quantidade_necessaria": 2173.3,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -34,7 +34,7 @@
             {
               "id_item": 5,
               "nome": "Sal refinado",
-              "quantidade_necessaria": 191.06,
+              "quantidade_necessaria": 72.44,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -42,7 +42,7 @@
             {
               "id_item": 6,
               "nome": "Fermento biológico seco",
-              "quantidade_necessaria": 95.53,
+              "quantidade_necessaria": 36.22,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -50,7 +50,7 @@
             {
               "id_item": 7,
               "nome": "Aditivo em pasta",
-              "quantidade_necessaria": 28.66,
+              "quantidade_necessaria": 10.87,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"

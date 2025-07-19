@@ -84,39 +84,51 @@ def registrar_erro_execucao_pedido(ordem_id: int, pedido_id: int, erro: Exceptio
         logger.warning(f"⚠️ Falha ao registrar erro em arquivo: {log_erro}")
 
 
+
 def registrar_log_equipamentos(ordem_id: int, pedido_id: int, id_atividade: int, nome_item: str,
                                nome_atividade: str, equipamentos_alocados: list[tuple]): 
-        if pedido_id:
-            os.makedirs("logs/equipamentos", exist_ok=True)
-            caminho = f"logs/equipamentos/ordem: {ordem_id} | pedido: {pedido_id}.log"
-            with open(caminho, "a", encoding="utf-8") as arq:
-                for _, equipamento, inicio_eqp, fim_eqp in equipamentos_alocados:
-                    linha = (
-                        f"{ordem_id} | "
-                        f"{pedido_id} | "
-                        f"{id_atividade} | {nome_item} | {nome_atividade} | "
-                        f"{equipamento.nome} | {inicio_eqp.strftime('%H:%M')} | {fim_eqp.strftime('%H:%M')} \n"
-                    )
-                    arq.write(linha)
+    """
+    🔥 Registra os logs de equipamentos.
+    """
+    if pedido_id:
+        os.makedirs("logs/equipamentos", exist_ok=True)
+        caminho = f"logs/equipamentos/ordem: {ordem_id} | pedido: {pedido_id}.log"
+        with open(caminho, "a", encoding="utf-8") as arq:
+            for _, equipamento, inicio_eqp, fim_eqp in equipamentos_alocados:
+                str_inicio = inicio_eqp.strftime('%H:%M') + f" [{inicio_eqp.strftime('%d/%m')}]"
+                str_fim = fim_eqp.strftime('%H:%M') + f" [{fim_eqp.strftime('%d/%m')}]"
+
+                linha = (
+                    f"{ordem_id} | "
+                    f"{pedido_id} | "
+                    f"{id_atividade} | {nome_item} | {nome_atividade} | "
+                    f"{equipamento.nome} | {str_inicio} | {str_fim} \n"
+                )
+                arq.write(linha)
 
 
 def registrar_log_funcionarios(ordem_id: int, pedido_id: int, id_atividade: int, 
                                funcionarios_alocados: list[tuple], nome_item: str, 
                                nome_atividade: str, inicio: datetime, fim: datetime):
-        if pedido_id:
-            os.makedirs("logs/funcionarios", exist_ok=True)
-            caminho = f"logs/funcionarios/ordem: {ordem_id} | pedido: {pedido_id}.log"
-            with open(caminho, "a", encoding="utf-8") as arq:
-                for funcionario in funcionarios_alocados:
-                    linha = (
-                        f"{ordem_id} | "
-                        f"{pedido_id} | "
-                        f"{id_atividade} | {nome_item} | {nome_atividade} | "
-                        f"{funcionario.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')} \n"
-                    )
-                    arq.write(linha)
+    """
+    🔥 Registra os logs de funcionários.
+    """
+    if pedido_id:
+        os.makedirs("logs/funcionarios", exist_ok=True)
+        caminho = f"logs/funcionarios/ordem: {ordem_id} | pedido: {pedido_id}.log"
+        with open(caminho, "a", encoding="utf-8") as arq:
+            str_inicio = inicio.strftime('%H:%M') + f" [{inicio.strftime('%d/%m')}]"
+            str_fim = fim.strftime('%H:%M') + f" [{fim.strftime('%d/%m')}]"
 
-
+            for funcionario in funcionarios_alocados:
+                linha = (
+                    f"{ordem_id} | "
+                    f"{pedido_id} | "
+                    f"{id_atividade} | {nome_item} | {nome_atividade} | "
+                    f"{funcionario.nome} | {str_inicio} | {str_fim} \n"
+                )
+                arq.write(linha)
+                
 def apagar_logs_por_pedido_e_ordem(ordem_id: int, pedido_id: int):
     """
     🔥 Remove logs de equipamentos e funcionários (mas mantém os logs de erros).

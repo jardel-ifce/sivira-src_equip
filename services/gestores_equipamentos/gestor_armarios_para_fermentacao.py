@@ -4,8 +4,9 @@ from models.equipamentos.armario_esqueleto import ArmarioEsqueleto
 from models.equipamentos.armario_fermentador import ArmarioFermentador
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
-from utils.producao.conversores_ocupacao import gramas_para_niveis_tela
+from utils.producao.conversores_ocupacao import gramas_para_niveis_tela, unidades_para_niveis_tela
 from utils.logs.logger_factory import setup_logger
+from enums.producao.tipo_item import TipoItem
 
 # 🗄️ Logger exclusivo do gestor de Armários para Fermentação
 logger = setup_logger('GestorArmariosParaFermentacao')
@@ -42,11 +43,11 @@ class GestorArmariosParaFermentacao:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        quantidade_gramas: int
+        quantidade: int
     ) -> Tuple[bool, Optional[ArmarioEsqueleto], Optional[datetime], Optional[datetime]]:
         """
         🗄️ Faz a alocação utilizando backward scheduling por FIP.
-        Converte a quantidade de gramas para níveis de tela automaticamente.
+        Converte a quantidade para níveis de tela automaticamente.
         Retorna (True, equipamento, inicio_real, fim_real) se sucesso.
         Caso contrário: (False, None, None, None)
         """
@@ -54,8 +55,13 @@ class GestorArmariosParaFermentacao:
         armarios_ordenados = self._ordenar_por_fip(atividade)
         horario_final_tentativa = fim
 
-        niveis_necessarios = gramas_para_niveis_tela(quantidade_gramas)
+    
+        if atividade.tipo_item is TipoItem.SUBPRODUTO:
+            niveis_necessarios = gramas_para_niveis_tela(quantidade)
+        elif atividade.tipo_item is TipoItem.PRODUTO:
+            niveis_necessarios = unidades_para_niveis_tela(quantidade)
 
+        print(f"🔍 Níveis necessários para {quantidade}: {niveis_necessarios}")
         while horario_final_tentativa - duracao >= inicio:
             horario_inicio_tentativa = horario_final_tentativa - duracao
 
@@ -66,7 +72,7 @@ class GestorArmariosParaFermentacao:
                 sucesso = armario.ocupar_niveis(
                     ordem_id=atividade.ordem_id,
                     pedido_id=atividade.pedido_id,
-                    atividade_id=atividade.id,
+                    atividade_id=atividade.id_atividade,
                     quantidade=niveis_necessarios,
                     inicio=horario_inicio_tentativa,
                     fim=horario_final_tentativa
@@ -78,7 +84,7 @@ class GestorArmariosParaFermentacao:
                     atividade.alocada = True
 
                     logger.info(
-                        f"✅ Atividade {atividade.id} alocada no armário {armario.nome} | "
+                        f"✅ Atividade {atividade.id_atividade} alocada no {armario.nome}"
                         f"{horario_inicio_tentativa.strftime('%H:%M')} → {horario_final_tentativa.strftime('%H:%M')} | "
                         f"{niveis_necessarios} níveis"
                     )
@@ -88,7 +94,7 @@ class GestorArmariosParaFermentacao:
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.error(
-            f"❌ Atividade {atividade.id} não alocada entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}"
+            f"❌ Atividade {atividade.id_atividade} não alocada entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}"
         )
         return False, None, None, None
 
@@ -97,7 +103,7 @@ class GestorArmariosParaFermentacao:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular") -> None:
         for armario in self.armarios:
-            armario.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            armario.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
 
     def liberar_por_pedido(self, atividade: "AtividadeModular") -> None:
         for armario in self.armarios:

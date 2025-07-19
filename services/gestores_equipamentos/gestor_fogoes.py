@@ -125,7 +125,7 @@ class GestorFogoes:
                 fogao.ocupar_boca(
                     ordem_id=atividade.ordem_id,
                     pedido_id=atividade.pedido_id,
-                    atividade_id=atividade.id,
+                    atividade_id=atividade.id_atividade,
                     quantidade=quantidade_por_boca,
                     inicio=horario_inicio,
                     fim=horario_final,
@@ -136,18 +136,18 @@ class GestorFogoes:
 
             fogao_usado = bocas_possiveis[0][0]
             logger.info(
-                f"✅ Atividade {atividade.id} alocada de {horario_inicio.strftime('%H:%M')} "
+                f"✅ Atividade {atividade.id_atividade} alocada de {horario_inicio.strftime('%H:%M')} "
                 f"até {horario_final.strftime('%H:%M')} usando {len(bocas_possiveis)} bocas."
             )
             return True, fogao_usado, horario_inicio, horario_final
 
 
     # ==========================================================
-    # 🧹 Liberação de ocupações
+    # 🔓 Liberação
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular", ordem_id: int):
         for fogao in self.fogoes:
-            fogao.liberar_por_atividade(ordem_id=ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id)
+            fogao.liberar_por_atividade(ordem_id=ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
     
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for fogao in self.fogoes:

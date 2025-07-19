@@ -98,7 +98,7 @@ class GestorBatedeiras:
                     sucesso = batedeira.ocupar(
                         ordem_id=atividade.ordem_id,
                         pedido_id=atividade.pedido_id,
-                        atividade_id=atividade.id,
+                        atividade_id=atividade.id_atividade,
                         quantidade_gramas=quantidade,
                         inicio=horario_inicio_tentativa,
                         fim=horario_final_tentativa,
@@ -110,7 +110,7 @@ class GestorBatedeiras:
                         atividade.alocada = True
 
                         logger.info(
-                            f"✅ Atividade {atividade.id} alocada na batedeira {batedeira.nome} "
+                            f"✅ Atividade {atividade.id_atividade} alocada na batedeira {batedeira.nome} "
                             f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
                         )
                         return True, batedeira, horario_inicio_tentativa, horario_final_tentativa
@@ -118,7 +118,7 @@ class GestorBatedeiras:
             horario_final_tentativa -= timedelta(minutes=1)
 
         logger.warning(
-            f"❌ Atividade {atividade.id} não pôde ser alocada em nenhuma batedeira "
+            f"❌ Atividade {atividade.id_atividade} não pôde ser alocada em nenhuma batedeira "
             f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
         )
         return False, None, None, None
@@ -132,7 +132,7 @@ class GestorBatedeiras:
 
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for batedeira in self.batedeiras:
-            batedeira.liberar_por_atividade(atividade_id=atividade.id, pedido_id=atividade.pedido_id, ordem_id=atividade.ordem_id)
+            batedeira.liberar_por_atividade(atividade_id=atividade.id_atividade, pedido_id=atividade.pedido_id, ordem_id=atividade.ordem_id)
     
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for batedeira in self.batedeiras:

@@ -1,4 +1,3 @@
-
 from enums.equipamentos.tipo_equipamento import TipoEquipamento
 from services.gestores_equipamentos.gestor_armarios_para_fermentacao import GestorArmariosParaFermentacao
 from services.gestores_equipamentos.gestor_balancas import GestorBalancas
@@ -11,6 +10,7 @@ from services.gestores_equipamentos.gestor_misturadoras import GestorMisturadora
 from services.gestores_equipamentos.gestor_refrigeracao_congelamento import GestorRefrigeracaoCongelamento
 from services.gestores_equipamentos.gestor_modeladoras import GestorModeladoras
 from services.gestores_equipamentos.gestor_divisoras_boleadoras import GestorDivisorasBoleadoras
+from services.gestores_equipamentos.gestor_embaladoras import GestorEmbaladoras
 
 
 # Adicione mais gestores conforme necessário
@@ -26,5 +26,6 @@ MAPA_GESTOR = {
     TipoEquipamento.MISTURADORAS: GestorMisturadoras,
     TipoEquipamento.REFRIGERACAO_CONGELAMENTO: GestorRefrigeracaoCongelamento,
     TipoEquipamento.MODELADORAS: GestorModeladoras,
-    TipoEquipamento.DIVISORAS_BOLEADORAS: GestorDivisorasBoleadoras
+    TipoEquipamento.DIVISORAS_BOLEADORAS: GestorDivisorasBoleadoras,
+    TipoEquipamento.EMBALADORAS: GestorEmbaladoras
 }

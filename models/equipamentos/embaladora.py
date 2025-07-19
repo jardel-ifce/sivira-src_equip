@@ -189,6 +189,6 @@ class Embaladora(Equipamento):
             ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, lista_tipo_embalagem = ocup
             logger.info(
                 f"🔸 Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_id}, "
-                f"Quantidade {quantidade}g, Início {inicio.strftime('%H:%M')}, Fim {fim.strftime('%H:%M')}, "
+                f"Quantidade {quantidade}un., Início {inicio.strftime('%H:%M')}, Fim {fim.strftime('%H:%M')}, "
                 f"Embalagens: {[emb.name for emb in lista_tipo_embalagem]}."
             )
