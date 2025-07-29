@@ -18,14 +18,14 @@ logger = setup_logger("OrdemDeProducao")
 class OrdemDeProducao:
     def __init__(
         self,
-        ordem_id: int,
+        id_ordem: int,
         id_produto: int,
         quantidade: int,
         inicio_jornada: datetime,
         fim_jornada: datetime,
         todos_funcionarios: List[Funcionario] = funcionarios_disponiveis
     ):
-        self.ordem_id = ordem_id
+        self.id_ordem = id_ordem
         self.id_produto = id_produto
         self.quantidade = quantidade
         self.inicio_jornada = inicio_jornada
@@ -61,7 +61,7 @@ class OrdemDeProducao:
                     id_atividade=dados_atividade["id_atividade"],
                     tipo_item=ficha_modular.tipo_item,
                     quantidade_produto=ficha_modular.quantidade_requerida,
-                    ordem_id=self.ordem_id,
+                    id_ordem=self.id_ordem,
                     id_produto=self.id_produto,
                     funcionarios_elegiveis=self.funcionarios_elegiveis
                 )
@@ -80,7 +80,7 @@ class OrdemDeProducao:
                 self._criar_atividades_recursivas(ficha_sub)
 
     def executar_atividades_em_ordem(self):
-        logger.info(f"\ud83d\ude80 Iniciando execu\u00e7\u00e3o da Ordem {self.ordem_id} com {len(self.atividades_modulares)} atividades")
+        logger.info(f"\ud83d\ude80 Iniciando execu\u00e7\u00e3o da Ordem {self.id_ordem} com {len(self.atividades_modulares)} atividades")
         current_fim = self.fim_jornada
         inicio_anterior = datetime(2025, 6, 17, 18, 1)
 
@@ -121,10 +121,10 @@ class OrdemDeProducao:
             logger.info("\u2705 Ordem finalizada com sucesso.")
 
         except Exception as e:
-            logger.error(f"\ud83d\uded1 Erro na execu\u00e7\u00e3o da ordem {self.ordem_id}: {e}")
+            logger.error(f"\ud83d\uded1 Erro na execu\u00e7\u00e3o da ordem {self.id_ordem}: {e}")
             try:
                 os.makedirs("logs/erros", exist_ok=True)
-                with open(f"logs/erros/ordem_{self.ordem_id}.log", "a") as f:
+                with open(f"logs/erros/ordem_{self.id_ordem}.log", "a") as f:
                     f.write(f"[{datetime.now()}] {str(e)}\n")
             except Exception as log_erro:
                 logger.warning(f"\u26a0\ufe0f Falha ao registrar erro em arquivo: {log_erro}")
@@ -135,34 +135,34 @@ class OrdemDeProducao:
         return [f for f in self.todos_funcionarios if f.tipo_profissional in tipos_necessarios]
 
     def rollback(self):
-        logger.warning(f"\ud83e\ude9d Iniciando rollback da ordem {self.ordem_id}...")
+        logger.warning(f"\ud83e\ude9d Iniciando rollback da ordem {self.id_ordem}...")
 
         for atividade in self.atividades_modulares:
             if atividade.alocada:
                 for equipamento in atividade.equipamentos_selecionados:
                     try:
                         if hasattr(equipamento, "liberar_por_atividade"):
-                            equipamento.liberar_por_atividade(atividade.id, ordem_id=atividade.ordem_id)
+                            equipamento.liberar_por_atividade(atividade.id, id_ordem=atividade.id_ordem)
                             logger.info(f"\u21a9\ufe0f Liberado: Atividade {atividade.id} em {equipamento.nome}")
                     except Exception as e:
                         logger.warning(f"\u26a0\ufe0f Falha ao liberar {equipamento.nome}: {e}")
                 for funcionario in self.funcionarios_elegiveis:
                     try:
                         if hasattr(funcionario, "liberar_por_atividade"):
-                            funcionario.liberar_por_ordem(self.ordem_id)
-                            logger.info(f"\u21a9\ufe0f Rollback: funcion\u00e1rio {funcionario.nome} liberado da ordem {self.ordem_id}")
+                            funcionario.liberar_por_ordem(self.id_ordem)
+                            logger.info(f"\u21a9\ufe0f Rollback: funcion\u00e1rio {funcionario.nome} liberado da ordem {self.id_ordem}")
                     except Exception as e:
-                        logger.warning(f"\u26a0\ufe0f Falha ao liberar funcion\u00e1rio {funcionario.nome} da ordem {self.ordem_id}: {e}")
+                        logger.warning(f"\u26a0\ufe0f Falha ao liberar funcion\u00e1rio {funcionario.nome} da ordem {self.id_ordem}: {e}")
 
-                self._remover_logs_ordem(atividade.ordem_id)
+                self._remover_logs_ordem(atividade.id_ordem)
 
     def exibir_historico_de_funcionarios(self):
         for funcionario in funcionarios_disponiveis:
             funcionario.exibir_historico()
 
-    def _remover_logs_ordem(self, ordem_id: int):
-        log_path = f"logs/ordem_{ordem_id}.log"
-        log_path_f = f"logs/funcionarios_{ordem_id}.log"
+    def _remover_logs_ordem(self, id_ordem: int):
+        log_path = f"logs/ordem_{id_ordem}.log"
+        log_path_f = f"logs/funcionarios_{id_ordem}.log"
 
         try:
             if os.path.exists(log_path):
@@ -172,4 +172,4 @@ class OrdemDeProducao:
                 os.remove(log_path_f)
                 logger.info(f"\ud83d\uddd1\ufe0f Arquivo de log removido: {log_path_f}")
         except Exception as e:
-            logger.warning(f"\u26a0\ufe0f Falha ao remover logs da ordem {ordem_id}: {e}")
+            logger.warning(f"\u26a0\ufe0f Falha ao remover logs da ordem {id_ordem}: {e}")

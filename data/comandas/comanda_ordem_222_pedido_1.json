@@ -1,0 +1,55 @@
+{
+  "id_ordem": 222,
+  "id_pedido": 1,
+  "data_reserva": "2025-06-23",
+  "itens": [
+    {
+      "id_item": 2010,
+      "nome": "Creme de queijo",
+      "politica_producao": "SOB_DEMANDA",
+      "quantidade_necessaria": 2500,
+      "itens_necessarios": [
+        {
+          "id_item": 34,
+          "nome": "Queijo do reino",
+          "quantidade_necessaria": 656.17,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 35,
+          "nome": "Queijo gorgonzola",
+          "quantidade_necessaria": 656.17,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 36,
+          "nome": "Queijo prato",
+          "quantidade_necessaria": 656.17,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 37,
+          "nome": "Requeijão cremoso",
+          "quantidade_necessaria": 524.93,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 38,
+          "nome": "Pimenta rosa",
+          "quantidade_necessaria": 6.56,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        }
+      ]
+    }
+  ]
+}

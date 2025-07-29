@@ -9,7 +9,7 @@ def otimizar_pedidos_com_pulp(pedidos: List[PedidoDeProducao]):
     problema = LpProblem("Maximizacao_Pedidos", LpMaximize)
 
     variaveis = {
-        pedido.pedido_id: LpVariable(f"x_{pedido.pedido_id}", cat=LpBinary)
+        pedido.id_pedido: LpVariable(f"x_{pedido.id_pedido}", cat=LpBinary)
         for pedido in pedidos
     }
 
@@ -22,19 +22,19 @@ def otimizar_pedidos_com_pulp(pedidos: List[PedidoDeProducao]):
             copia.criar_atividades_modulares_necessarias()
             copia.executar_atividades_em_ordem()
         except Exception as e:
-            problema += variaveis[pedido.pedido_id] == 0, f"Restricao_Falha_{pedido.pedido_id}"
-            print(f"❌ Pedido {pedido.pedido_id} não viável isoladamente: {e}")
+            problema += variaveis[pedido.id_pedido] == 0, f"Restricao_Falha_{pedido.id_pedido}"
+            print(f"❌ Pedido {pedido.id_pedido} não viável isoladamente: {e}")
 
     status = problema.solve()
     print(f"\n📈 Status da otimização: {LpStatus[status]}")
     print("Pedidos selecionados:")
-    for pedido_id, var in variaveis.items():
+    for id_pedido, var in variaveis.items():
         if value(var) == 1.0:
-            print(f"✅ Pedido {pedido_id} será atendido")
+            print(f"✅ Pedido {id_pedido} será atendido")
         else:
-            print(f"❌ Pedido {pedido_id} será descartado")
+            print(f"❌ Pedido {id_pedido} será descartado")
 
     resultado = {
-        pedido_id: int(value(var)) for pedido_id, var in variaveis.items()
+        id_pedido: int(value(var)) for id_pedido, var in variaveis.items()
     }
     return resultado

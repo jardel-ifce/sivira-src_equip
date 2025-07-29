@@ -1,0 +1,50 @@
+[
+  {
+    "id_item": 1001,
+    "nome": "pao_frances",
+    "atividades": [
+      {
+        "id_atividade": 10021,
+        "nome": "teste_de_divisao_de_carga_em_fornos",
+        "tipo_atividade": "TESTE_DE_DIVISAO_DE_CARGA_EM_FORNOS",
+        "tipo_equipamento": {
+          "FORNOS": 1
+        },
+        "equipamentos_elegiveis": ["forno_1", "forno_2"],
+        "tempo_maximo_de_espera": "00:05:00",
+        "fips_equipamentos": {
+          "forno_1": 1,
+          "forno_2": 2
+        },
+        "configuracoes_equipamentos": {
+          "forno_1": {
+            "faixa_temperatura": 220,
+            "setup_min": 15,
+            "tipo_coccao": ["TURBO"],
+            "vaporizacao": 3,
+            "unidades_por_nivel": 20
+          },
+          "forno_2": {
+            "faixa_temperatura": 220,
+            "setup_min": 15,
+            "tipo_coccao": ["TURBO"],
+            "vaporizacao": 3,
+            "unidades_por_nivel": 20
+          }
+        },
+        "tipos_profissionais_permitidos": ["PADEIRO"],
+        "fips_profissionais_permitidos": {
+          "PADEIRO": 1
+        },
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          {
+            "quantidade_min": 1,
+            "quantidade_max": 9999,
+            "duracao": "00:10:00"
+          }
+        ]
+      }
+    ]
+  }
+]

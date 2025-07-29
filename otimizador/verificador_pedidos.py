@@ -15,7 +15,7 @@ def verificar_pedido_viavel(pedido: PedidoDeProducao) -> bool:
         pedido_simulado.executar_atividades_em_ordem()
         return True
     except Exception as e:
-        print(f"❌ Pedido {pedido.pedido_id} falhou na verificação: {e}")
+        print(f"❌ Pedido {pedido.id_pedido} falhou na verificação: {e}")
         return False
 
 

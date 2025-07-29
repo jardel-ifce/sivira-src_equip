@@ -19,7 +19,7 @@ class AgrupadorSubprodutosGlobal:
 
         for pedido in self.pedidos:
             if not pedido.ficha_tecnica_modular:
-                logger.warning(f"Pedido {pedido.pedido_id} ainda não possui ficha técnica montada.")
+                logger.warning(f"Pedido {pedido.id_pedido} ainda não possui ficha técnica montada.")
                 continue
 
             ficha = pedido.ficha_tecnica_modular

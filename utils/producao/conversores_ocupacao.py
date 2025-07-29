@@ -10,14 +10,14 @@ def gramas_para_caixas(quantidade_gramas: int, peso_por_caixa: int = 20000) -> i
     return ceil(quantidade_gramas / peso_por_caixa)
 
 
-def gramas_para_niveis_tela(quantidade_gramas: int, peso_por_nivel: int = 1000) -> int:
+def gramas_para_niveis_tela(quantidade_gramas: int, gramas_por_nivel: float) -> int:
     """
     Converte quantidade de gramas para número de níveis de tela.
     Cada nível suporta 'peso_por_nivel' gramas (default = 1000g).
     """
     if quantidade_gramas <= 0:
         raise ValueError("Quantidade de gramas deve ser maior que zero.")
-    return ceil(quantidade_gramas / peso_por_nivel)
+    return ceil(quantidade_gramas / gramas_por_nivel)
 
 
 def gramas_para_bocas_fogao(quantidade_gramas: int, capacidade_por_boca_max: int) -> int:

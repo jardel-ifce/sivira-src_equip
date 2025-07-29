@@ -22,6 +22,6 @@ def avaliar_sequencia_de_pedidos(sequencia: List[PedidoDeProducao]) -> int:
             pedido.executar_atividades_em_ordem()
             total_sucesso += 1
         except Exception as e:
-            logger.warning(f"❌ Pedido {pedido.pedido_id} falhou: {e}")
+            logger.warning(f"❌ Pedido {pedido.id_pedido} falhou: {e}")
 
     return total_sucesso

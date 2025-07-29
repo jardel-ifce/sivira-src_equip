@@ -10,7 +10,7 @@ class FabricaAtividadesSubproduto:
     @staticmethod
     def criar_atividades(
         subprodutos_agrupados: Dict[str, float],
-        ordem_id: int,
+        id_ordem: int,
         funcionarios_elegiveis: List[Funcionario]
     ) -> List[AtividadeModular]:
         atividades: List[AtividadeModular] = []
@@ -31,8 +31,8 @@ class FabricaAtividadesSubproduto:
                         id_atividade=dados_atividade["id_atividade"],
                         tipo_item=TipoItem.SUBPRODUTO,
                         quantidade_produto=quantidade,
-                        ordem_id=ordem_id,
-                        pedido_id=None,  # Atividade agrupada, não pertence a 1 pedido específico
+                        id_ordem=id_ordem,
+                        id_pedido=None,  # Atividade agrupada, não pertence a 1 pedido específico
                         id_produto=id_item,
                         funcionarios_elegiveis=funcionarios_elegiveis,
                         dados=dados_atividade

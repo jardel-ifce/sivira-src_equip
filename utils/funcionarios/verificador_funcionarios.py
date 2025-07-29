@@ -33,7 +33,7 @@ def verificar_agenda_funcionarios(funcionarios, fips_por_tipo_profissional):
                     conflitos.append((nome, fim.strftime("%H:%M"), prox_inicio.strftime("%H:%M")))
 
     # 🔁 Verificar se o melhor FIP foi utilizado em cada pedido
-    for ordem_id, lista in funcionarios_por_pedido.items():
+    for id_ordem, lista in funcionarios_por_pedido.items():
         # tipo: {nome, tipo, fip}
         lista_ordenada = sorted(lista, key=lambda x: x[2])  # menor FIP primeiro
         melhor_fip = lista_ordenada[0][2]
@@ -41,7 +41,7 @@ def verificar_agenda_funcionarios(funcionarios, fips_por_tipo_profissional):
 
         for nome, _, fip in lista_ordenada:
             if fip > melhor_fip:
-                uso_incorreto_de_fip.append((ordem_id, nome, fip, melhor_fip))
+                uso_incorreto_de_fip.append((id_ordem, nome, fip, melhor_fip))
 
     # 🔍 Resultados
     if conflitos:
@@ -53,8 +53,8 @@ def verificar_agenda_funcionarios(funcionarios, fips_por_tipo_profissional):
 
     if uso_incorreto_de_fip:
         print("\n🚨 Uso incorreto de FIP (profissionais com FIP maior foram alocados):")
-        for ordem_id, nome, fip_usado, fip_esperado in uso_incorreto_de_fip:
-            print(f"  - Ordem {ordem_id}: {nome} com FIP {fip_usado}, deveria ser {fip_esperado}")
+        for id_ordem, nome, fip_usado, fip_esperado in uso_incorreto_de_fip:
+            print(f"  - Ordem {id_ordem}: {nome} com FIP {fip_usado}, deveria ser {fip_esperado}")
     else:
         print("✅ Todos os profissionais alocados com menor FIP permitido.")
 

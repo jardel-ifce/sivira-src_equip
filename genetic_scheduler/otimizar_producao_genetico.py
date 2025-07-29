@@ -33,13 +33,13 @@ class GeneticScheduler:
         
         # Agrupa atividades por pedido
         for i, atividade in enumerate(self.atividades):
-            pedido_id = atividade.pedido_id
-            if pedido_id not in atividades_por_pedido:
-                atividades_por_pedido[pedido_id] = []
-            atividades_por_pedido[pedido_id].append(i)
+            id_pedido = atividade.id_pedido
+            if id_pedido not in atividades_por_pedido:
+                atividades_por_pedido[id_pedido] = []
+            atividades_por_pedido[id_pedido].append(i)
         
         # Gera ordem respeitando precedências dentro de cada pedido
-        for pedido_id, indices in atividades_por_pedido.items():
+        for id_pedido, indices in atividades_por_pedido.items():
             # Ordena por tipo (PRODUTO depois SUBPRODUTO) e ID da atividade
             indices_ordenados = sorted(indices, key=lambda i: (
                 self.atividades[i].tipo_item.value,
@@ -82,13 +82,13 @@ class GeneticScheduler:
         # Agrupa por pedido
         for gene in cromossomo:
             atividade = self.atividades[gene]
-            pedido_id = atividade.pedido_id
-            if pedido_id not in atividades_por_pedido:
-                atividades_por_pedido[pedido_id] = []
-            atividades_por_pedido[pedido_id].append(gene)
+            id_pedido = atividade.id_pedido
+            if id_pedido not in atividades_por_pedido:
+                atividades_por_pedido[id_pedido] = []
+            atividades_por_pedido[id_pedido].append(gene)
         
         # Ordena cada pedido respeitando precedências
-        for pedido_id, genes in atividades_por_pedido.items():
+        for id_pedido, genes in atividades_por_pedido.items():
             genes_ordenados = sorted(genes, key=lambda g: (
                 self.atividades[g].tipo_item.value,
                 -self.atividades[g].id_atividade
@@ -441,7 +441,7 @@ class GeneticScheduler:
             "viabilidade": self.melhor_solucao.viabilidade,
             "cromossomo_otimo": self.melhor_solucao.cromossomo,
             "ordem_atividades": [
-                f"Atividade {self.atividades[gene].id_atividade} (Pedido {self.atividades[gene].pedido_id})"
+                f"Atividade {self.atividades[gene].id_atividade} (Pedido {self.atividades[gene].id_pedido})"
                 for gene in self.melhor_solucao.cromossomo
             ],
             "configuracao": {

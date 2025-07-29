@@ -13,13 +13,11 @@ class BatedeiraPlanetaria(Equipamento):
     """
     🪐 Representa uma Batedeira Planetária.
     ✔️ Controle de velocidade mínima e máxima.
-    ✔️ Ocupação exclusiva no tempo.
-    ✔️ Capacidade de mistura validada por peso.
+    ✔️ Ocupação com soma de quantidades para mesmo id_item.
+    ✔️ REGRA: Mesmo item só pode ocupar no mesmo horário (início e fim exatos).
+    ✔️ Capacidade de mistura validada por peso com intervalos flexíveis.
     """
 
-    # ============================================
-    # 🔧 Inicialização
-    # ============================================
     def __init__(
         self,
         id: int,
@@ -44,16 +42,48 @@ class BatedeiraPlanetaria(Equipamento):
         self.velocidade_min = velocidade_min
         self.velocidade_max = velocidade_max
 
-        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim, velocidade)
-        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime, int]] = []
+        # 📦 Ocupações: (id_ordem, id_pedido, id_atividade, id_item, quantidade, velocidade, inicio, fim)
+        self.ocupacoes: List[Tuple[int, int, int, int, float, int, datetime, datetime]] = []
 
     # ==========================================================
     # ✅ Validações
     # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for _, _, _, ocup_inicio, ocup_fim, _ in self.ocupacoes:
-            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+        for ocupacao in self.ocupacoes:
+            if not (fim <= ocupacao[6] or inicio >= ocupacao[7]):
                 return False
+        return True
+
+    def esta_disponivel_para_item(self, inicio: datetime, fim: datetime, id_item: int) -> bool:
+        """
+        Verifica se a batedeira pode receber uma nova ocupação do item especificado.
+        Uma batedeira ocupada só pode receber nova ocupação se:
+        - Mesmo id_item E mesmo horário (início e fim exatos)
+        """
+        for ocupacao in self.ocupacoes:
+            ocupacao_id_item = ocupacao[3]
+            ocupacao_inicio = ocupacao[6]  # início  
+            ocupacao_fim = ocupacao[7]     # fim
+            
+            # Se é o mesmo item E mesmo horário, permite
+            if ocupacao_id_item == id_item and ocupacao_inicio == inicio and ocupacao_fim == fim:
+                continue
+            
+            # Para qualquer outra situação, não pode haver sobreposição temporal
+            if not (fim <= ocupacao_inicio or inicio >= ocupacao_fim):
+                if ocupacao_id_item == id_item:
+                    logger.warning(
+                        f"⚠️ {self.nome}: Item {id_item} só pode ocupar no mesmo horário. "
+                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                    )
+                else:
+                    logger.warning(
+                        f"⚠️ {self.nome} ocupada por item diferente (ID: {ocupacao_id_item}) "
+                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
+                    )
+                return False
+        
         return True
 
     def validar_capacidade(self, quantidade_gramas: float) -> bool:
@@ -62,32 +92,54 @@ class BatedeiraPlanetaria(Equipamento):
     def validar_velocidade(self, velocidade: int) -> bool:
         return self.velocidade_min <= velocidade <= self.velocidade_max
 
+    def obter_quantidade_maxima_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> float:
+        """
+        Calcula a quantidade máxima de um item que estará sendo processado
+        simultaneamente na batedeira durante qualquer momento do período especificado.
+        Com a nova regra, só soma ocupações com horário exato.
+        """
+        quantidade_total = 0.0
+        
+        # Com a nova regra, só considera ocupações com horário EXATO
+        for ocupacao in self.ocupacoes:
+            if ocupacao[3] == id_item and ocupacao[6] == inicio and ocupacao[7] == fim:
+                quantidade_total += ocupacao[4]
+        
+        return quantidade_total
+
+    def validar_nova_ocupacao_item(self, id_item: int, quantidade_nova: float, 
+                                  inicio: datetime, fim: datetime) -> bool:
+        """
+        Simula uma nova ocupação e verifica se a capacidade máxima será respeitada.
+        Com a nova regra, só verifica ocupações com horário exato.
+        """
+        quantidade_atual = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        quantidade_total = quantidade_atual + quantidade_nova
+        
+        if not self.validar_capacidade(quantidade_total):
+            logger.debug(
+                f"❌ {self.nome} | Item {id_item}: Capacidade excedida "
+                f"({quantidade_total}g > {self.capacidade_gramas_max}g)"
+            )
+            return False
+        
+        return True
+
     # ==========================================================
     # 🏗️ Ocupação
     # ==========================================================
     def ocupar(
         self,
-        ordem_id: int,
-        pedido_id: int,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
         quantidade_gramas: float,
         inicio: datetime,
         fim: datetime,
-        atividade_id: int,
         velocidade: int
     ) -> bool:
-        if not self.validar_capacidade(quantidade_gramas):
-            logger.error(
-                f"❌ {self.nome} | {quantidade_gramas}g fora dos limites "
-                f"({self.capacidade_gramas_min}g - {self.capacidade_gramas_max}g)."
-            )
-            return False
-
-        if not self.esta_disponivel(inicio, fim):
-            logger.warning(
-                f"❌ {self.nome} | Ocupada entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
-            return False
-
+        
         if velocidade is None:
             logger.error(f"❌ Velocidade não fornecida para ocupação da batedeira {self.nome}.")
             return False
@@ -99,134 +151,105 @@ class BatedeiraPlanetaria(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade_gramas, inicio, fim, velocidade))
+        if not self.esta_disponivel_para_item(inicio, fim, id_item):
+            logger.warning(
+                f"❌ {self.nome} | Não disponível para item {id_item} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+            )
+            return False
+
+        if not self.validar_nova_ocupacao_item(id_item, quantidade_gramas, inicio, fim):
+            quantidade_atual = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+            logger.error(
+                f"❌ {self.nome} | Item {id_item}: Nova quantidade {quantidade_gramas}g + "
+                f"atual {quantidade_atual}g excederia capacidade máxima ({self.capacidade_gramas_max}g)"
+            )
+            return False
+
+        self.ocupacoes.append((id_ordem, id_pedido, id_atividade, id_item, quantidade_gramas, velocidade, inicio, fim))
+        
+        quantidade_total_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim) + quantidade_gramas
         logger.info(
-            f"🪐 {self.nome} | Ocupação registrada: {quantidade_gramas}g "
+            f"🪐 {self.nome} | Item {id_item}: Nova ocupação {quantidade_gramas}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Atividade {atividade_id}, Pedido {pedido_id}, Ordem {ordem_id}) com velocidade {velocidade}."
+            f"(Total do item no horário: {quantidade_total_apos}g) "
+            f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}), "
+            f"velocidade {velocidade}."
         )
+        
         return True
 
     # ==========================================================
-    # 🔓 Liberação
+    # 🔓 Liberação (métodos idênticos à BatedeiraIndustrial)
     # ==========================================================
-
-    def liberar_por_atividade(self, atividade_id: int, pedido_id: int, ordem_id: int):
-        """
-        🔓 Libera ocupações da batedeira por atividade, pedido e ordem de produção específicos.
-        """
+    def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim, vel)
-            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if not (aid == atividade_id and pid == pedido_id and oid == ordem_id)
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
                 f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
-                f"para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
-                f"para atividade {atividade_id}, pedido {pedido_id}, ordem {ordem_id}."
+                f"para atividade {id_atividade}, pedido {id_pedido}, ordem {id_ordem}."
             )
     
-    def liberar_por_pedido(self, pedido_id: int, ordem_id: int):
-        """
-        🔓 Libera ocupações da batedeira por pedido e ordem de produção específicos
-        """
+    def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim, vel)
-            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if not (pid == pedido_id and oid == ordem_id)
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
                 f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
-                f"do pedido {pedido_id} e ordem {ordem_id}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
-                f"para o pedido {pedido_id} e ordem {ordem_id}."
+                f"do pedido {id_pedido} e ordem {id_ordem}."
             )
 
-    def liberar_por_ordem(self, ordem_id: int):
-        """
-        🔓 Libera ocupações da batedeira por ordem de produção específica.
-        """
+    def liberar_por_ordem(self, id_ordem: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim, vel)
-            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if not oid == ordem_id
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[0] != id_ordem
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
                 f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
-                f"da ordem {ordem_id}."
+                f"da ordem {id_ordem}."
             )
-        else:
+
+    def liberar_por_item(self, id_item: int):
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[3] != id_item
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        if liberadas > 0:
             logger.info(
-                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
-                f"para a ordem {ordem_id}."
+                f"🔓 {self.nome} | Liberadas {liberadas} ocupações do item {id_item}."
             )
+
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, aid, qtd, ini, fim, vel)
-            for (oid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if fim > horario_atual
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[7] > horario_atual
         ]
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
                 f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
             )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da {self.nome} foi liberada "
-                f"até {horario_atual.strftime('%H:%M')}."
-            )
+        return liberadas
+
     def liberar_todas_ocupacoes(self):
-        """
-        🔓 Libera todas as ocupações da batedeira.
-        """
         total = len(self.ocupacoes)
         self.ocupacoes.clear()
-        logger.info(f"🔓 Liberou todas as {total} ocupações da batedeira {self.nome}."
-                    )
+        logger.info(f"🔓 Liberou todas as {total} ocupações da batedeira {self.nome}.")
     
-    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
-        """
-        🔓 Libera ocupações da batedeira dentro de um intervalo de tempo específico.
-        """
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim, vel)
-            for (oid, pid, aid, qtd, ini, fim, vel) in self.ocupacoes
-            if not (ini < fim and inicio < fim and inicio < ini)
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da batedeira {self.nome} "
-                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
-        else:
-            logger.info(
-                f"ℹ️ Nenhuma ocupação da batedeira {self.nome} foi liberada "
-                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
-    
-    # ==========================================================
-    # 📅 Agenda
-    # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
         logger.info(f"📅 Agenda da {self.nome}")
@@ -236,8 +259,9 @@ class BatedeiraPlanetaria(Equipamento):
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
 
-        for oid, pid, aid, qtd, ini, fim, vel in self.ocupacoes:
+        for ocupacao in self.ocupacoes:
             logger.info(
-                f"🌀 Atividade ID {aid} | Ordem {oid} | Pedido {pid} | Quantidade: {qtd}g | "
-                f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | Velocidade: {vel}"
+                f"🌀 Ordem: {ocupacao[0]} | Pedido: {ocupacao[1]} | Atividade: {ocupacao[2]} | Item: {ocupacao[3]} | "
+                f"Quantidade: {ocupacao[4]}g | {ocupacao[6].strftime('%H:%M')} → {ocupacao[7].strftime('%H:%M')} | "
+                f"Velocidade: {ocupacao[5]}"
             )

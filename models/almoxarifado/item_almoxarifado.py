@@ -47,29 +47,29 @@ class ItemAlmoxarifado:
             reservas_convertidas.append({
                 "data": datetime.strptime(r["data"], "%Y-%m-%d"),
                 "quantidade": r["quantidade_reservada"],
-                "ordem_id": r.get("ordem_id", 0),
-                "pedido_id": r.get("pedido_id", 0),
-                "atividade_id": r.get("atividade_id")
+                "id_ordem": r.get("id_ordem", 0),
+                "id_pedido": r.get("id_pedido", 0),
+                "id_atividade": r.get("id_atividade")
             })
         return reservas_convertidas
 
-    def reservar(self, data: datetime, quantidade: float, ordem_id: int, pedido_id: int, atividade_id: Optional[int] = None):
+    def reservar(self, data: datetime, quantidade: float, id_ordem: int, id_pedido: int, id_atividade: Optional[int] = None):
         self.reservas_futuras.append({
             "data": data,
             "quantidade": quantidade,
-            "ordem_id": ordem_id,
-            "pedido_id": pedido_id,
-            "atividade_id": atividade_id
+            "id_ordem": id_ordem,
+            "id_pedido": id_pedido,
+            "id_atividade": id_atividade
         })
 
-    def cancelar_reserva(self, data: datetime, quantidade: float, ordem_id: int, pedido_id: int):
+    def cancelar_reserva(self, data: datetime, quantidade: float, id_ordem: int, id_pedido: int):
         self.reservas_futuras = [
             r for r in self.reservas_futuras
             if not (
                 r["data"] == data and
                 r["quantidade"] == quantidade and
-                r["ordem_id"] == ordem_id and
-                r["pedido_id"] == pedido_id
+                r["id_ordem"] == id_ordem and
+                r["id_pedido"] == id_pedido
             )
         ]
 
@@ -99,13 +99,13 @@ class ItemAlmoxarifado:
             return True
         return self.estoque_projetado_em(data) >= quantidade
 
-    def consumir(self, data: datetime, quantidade: float, ordem_id: int, pedido_id: int):
+    def consumir(self, data: datetime, quantidade: float, id_ordem: int, id_pedido: int):
         if not self.tem_estoque_para(data, quantidade):
             raise ValueError(
                 f"❌ Estoque insuficiente para {self.nome} na data {data.strftime('%Y-%m-%d')}."
             )
         self.estoque_atual -= quantidade
-        self.cancelar_reserva(data, quantidade, ordem_id, pedido_id)
+        self.cancelar_reserva(data, quantidade, id_ordem, id_pedido)
 
     def __repr__(self):
         return f"<ItemAlmoxarifado {self.nome} | Estoque Atual: {self.estoque_atual} {self.unidade_medida.value}>"

@@ -23,13 +23,13 @@ limpar_todos_os_logs()
 
 # 2. Criar pedidos de produção
 pedidos = []
-for i in range(1, 2):  # ou qualquer número de pedidos
+for i in range(1, 3):  # ou qualquer número de pedidos
     pedido = PedidoDeProducao(
-        ordem_id=1,
-        pedido_id=i,
-        id_produto=1001,
-        tipo_item=TipoItem.PRODUTO,
-        quantidade=91,
+        id_ordem=1,
+        id_pedido=i,
+        id_produto=2003,
+        tipo_item=TipoItem.SUBPRODUTO,
+        quantidade=10000,
         inicio_jornada=datetime(2025, 6, 23, 8, 0),
         fim_jornada=datetime(2025, 6, 24, 18, 0),
         todos_funcionarios=funcionarios_disponiveis
@@ -47,8 +47,8 @@ pedidos_ordenados = ordenar_pedidos_por_restricoes(pedidos)
 for pedido in pedidos_ordenados:
     try:
         gerar_comanda_reserva(
-            ordem_id=pedido.ordem_id,
-            pedido_id=pedido.pedido_id,
+            id_ordem=pedido.id_ordem,
+            id_pedido=pedido.id_pedido,
             ficha=pedido.ficha_tecnica_modular,
             gestor=gestor,
             data_execucao=pedido.inicio_jornada

@@ -22,8 +22,8 @@ logger = setup_logger("PedidoDeProducao")
 class PedidoDeProducao:
     def __init__(
         self,
-        ordem_id: int,
-        pedido_id: int,
+        id_ordem: int,
+        id_pedido: int,
         id_produto: int,
         tipo_item: TipoItem,
         quantidade: int,
@@ -32,8 +32,8 @@ class PedidoDeProducao:
         todos_funcionarios: Optional[List[Funcionario]] = None
     ):
         # 🔢 Identificação
-        self.ordem_id = ordem_id
-        self.pedido_id = pedido_id
+        self.id_ordem = id_ordem
+        self.id_pedido = id_pedido
         self.id_produto = id_produto
         self.tipo_item = tipo_item
         self.quantidade = quantidade
@@ -80,12 +80,12 @@ class PedidoDeProducao:
 
             for dados_gerais, dados_atividade in atividades:
                 atividade = AtividadeModular(
-                    ordem_id=self.ordem_id,
+                    id_ordem=self.id_ordem,
                     id=len(self.atividades_modulares) + 1,
                     id_atividade=dados_atividade["id_atividade"],
                     tipo_item=ficha_modular.tipo_item,
                     quantidade=ficha_modular.quantidade_requerida,
-                    pedido_id=self.pedido_id,
+                    id_pedido=self.id_pedido,
                     id_produto=self.id_produto,
                     funcionarios_elegiveis=self.funcionarios_elegiveis,
                     peso_unitario=ficha_modular.peso_unitario,
@@ -108,7 +108,7 @@ class PedidoDeProducao:
                 self._criar_atividades_recursivas(ficha_sub)
 
     def executar_atividades_em_ordem(self):
-        logger.info(f"🚀 Iniciando execução do pedido {self.pedido_id} com {len(self.atividades_modulares)} atividades")
+        logger.info(f"🚀 Iniciando execução do pedido {self.id_pedido} com {len(self.atividades_modulares)} atividades")
         current_fim = self.fim_jornada
         inicio_prox_atividade = self.fim_jornada
         atividade_sucessora = None
@@ -121,9 +121,13 @@ class PedidoDeProducao:
 
         for at in atividades_produto:
             try:
+
+
                 ok, inicio_atividade_atual, fim_atividade_atual, _, self.equipamentos_alocados = at.tentar_alocar_e_iniciar_equipamentos(
                     self.inicio_jornada, current_fim
                 )
+                print("📦 DEBUG - equipamentos retornados na alocação:")
+                print(f"   - {self.equipamentos_alocados}")
 
                 if atividade_sucessora:
                     tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
@@ -150,8 +154,8 @@ class PedidoDeProducao:
 
             except Exception as e:
                 logger.warning(f"⚠️ Atividade PRODUTO {at.id_atividade} falhou: {e}")
-                registrar_erro_execucao_pedido(self.ordem_id, self.pedido_id, e)
-                apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
+                registrar_erro_execucao_pedido(self.id_ordem, self.id_pedido, e)
+                apagar_logs_por_pedido_e_ordem(self.id_ordem, self.id_pedido)
                 self._rollback_pedido()
                 return
 
@@ -189,39 +193,39 @@ class PedidoDeProducao:
 
             except Exception as e:
                 logger.warning(f"⚠️ Atividade SUBPRODUTO {at.id_atividade} falhou: {e}")
-                salvar_erro_em_log(self.ordem_id, self.pedido_id, e)
-                apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
+                salvar_erro_em_log(self.id_ordem, self.id_pedido, e)
+                apagar_logs_por_pedido_e_ordem(self.id_ordem, self.id_pedido)
                 self._rollback_pedido()
                 return
 
-        logger.info(f"✅ Concluída execução do pedido {self.pedido_id}")
+        logger.info(f"✅ Concluída execução do pedido {self.id_pedido}")
 
     def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
         tipos_necessarios = buscar_tipos_profissionais_por_id_item(id_item)
         return [f for f in self.todos_funcionarios if f.tipo_profissional in tipos_necessarios]
 
     def rollback_pedido(self):
-        rollback_funcionarios(funcionarios_alocados=self.funcionarios_elegiveis, ordem_id=self.ordem_id, pedido_id=self.pedido_id)
-        rollback_equipamentos(equipamentos_alocados= self.equipamentos_alocados, ordem_id=self.ordem_id, pedido_id=self.pedido_id)
+        rollback_funcionarios(funcionarios_alocados=self.funcionarios_elegiveis, id_ordem=self.id_ordem, id_pedido=self.id_pedido)
+        rollback_equipamentos(equipamentos_alocados= self.equipamentos_alocados, id_ordem=self.id_ordem, id_pedido=self.id_pedido)
         
     def _rollback_pedido(self):
-        logger.info(f"🔁 [PedidoDeProducao] Executando rollback do pedido {self.pedido_id} da ordem {self.ordem_id}")
+        logger.info(f"🔁 [PedidoDeProducao] Executando rollback do pedido {self.id_pedido} da ordem {self.id_ordem}")
 
         # Libera equipamentos de TODAS as atividades que foram alocados
         for atividade in self.atividades_modulares:
             rollback_equipamentos(
                 equipamentos_alocados=atividade.equipamentos_selecionados,
-                ordem_id=self.ordem_id,
-                pedido_id=self.pedido_id
+                id_ordem=self.id_ordem,
+                id_pedido=self.id_pedido
             )
 
         rollback_funcionarios(
             funcionarios_alocados=self.funcionarios_elegiveis,
-            ordem_id=self.ordem_id,
-            pedido_id=self.pedido_id
+            id_ordem=self.id_ordem,
+            id_pedido=self.id_pedido
         )
 
-        apagar_logs_por_pedido_e_ordem(self.ordem_id, self.pedido_id)
+        apagar_logs_por_pedido_e_ordem(self.id_ordem, self.id_pedido)
 
 
     def exibir_historico_de_funcionarios(self):
@@ -282,7 +286,7 @@ class PedidoDeProducao:
                     f"❌ Estoque insuficiente para o item '{item['descricao']}' (ID {item['id']}): "
                     f"Necessário {item['quantidade_necessaria']}, Disponível {item['disponivel']}"
                 )
-            raise RuntimeError(f"Pedido {self.pedido_id} não pode ser montada. Itens com estoque insuficiente.")
+            raise RuntimeError(f"Pedido {self.id_pedido} não pode ser montada. Itens com estoque insuficiente.")
 
     def gerar_comanda_de_reserva(self, data_execucao: datetime, gestor_almoxarifado):
         """
@@ -293,8 +297,8 @@ class PedidoDeProducao:
             raise ValueError("Ficha técnica ainda não foi montada.")
 
         gerar_comanda_reserva_modulo(
-            ordem_id=self.ordem_id,
-            pedido_id=self.pedido_id,
+            id_ordem=self.id_ordem,
+            id_pedido=self.id_pedido,
             ficha=self.ficha_tecnica_modular,
             gestor=gestor_almoxarifado,
             data_execucao=data_execucao

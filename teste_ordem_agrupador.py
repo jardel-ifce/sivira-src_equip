@@ -50,8 +50,8 @@ for i, (id_produto, quantidade, hora_str) in enumerate(dados_pedidos, start=1):
     inicio = fim - timedelta(hours=72)
 
     pedido = PedidoDeProducao(
-        ordem_id=1,
-        pedido_id=i,
+        id_ordem=1,
+        id_pedido=i,
         id_produto=id_produto,
         tipo_item=TipoItem.PRODUTO,
         quantidade=quantidade,
@@ -72,8 +72,8 @@ pedidos_ordenados = ordenar_pedidos_por_restricoes(pedidos)
 for pedido in pedidos_ordenados:
     try:
         gerar_comanda_reserva(
-            ordem_id=pedido.ordem_id,
-            pedido_id=pedido.pedido_id,
+            id_ordem=pedido.id_ordem,
+            id_pedido=pedido.id_pedido,
             ficha=pedido.ficha_tecnica_modular,
             gestor=gestor,
             data_execucao=pedido.inicio_jornada

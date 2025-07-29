@@ -11,10 +11,10 @@ from utils.logs.gerenciador_logs import limpar_todos_os_logs
 limpar_todos_os_logs()
 
 pedidos = []
-for i in range(1, 4):  # ou qualquer número de pedidos
+for i in range(1, 3):  # ou qualquer número de pedidos
     pedido = PedidoDeProducao(
-        ordem_id=1,
-        pedido_id=i,
+        id_ordem=1,
+        id_pedido=i,
         id_produto=1001,
         tipo_item=TipoItem.PRODUTO,
         quantidade=240,

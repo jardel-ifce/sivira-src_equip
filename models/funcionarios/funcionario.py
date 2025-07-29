@@ -40,14 +40,14 @@ class Funcionario:
 
 
 
-        # (ordem_id, pedido_id, atividade_id, inicio, fim)
+        # (id_ordem, id_pedido, id_atividade, inicio, fim)
         self.ocupacoes: List[tuple[int, int, int, datetime, datetime]] = []
 
         self.regras_folga = regras_folga
         self.folga_semanal = None
         self.folga_mensal = []
 
-        # (ordem_id, pedido_id, atividade_id, atividade_nome, inicio, fim)
+        # (id_ordem, id_pedido, id_atividade, atividade_nome, inicio, fim)
         self.historico_alocacoes: List[Tuple[int, int, int, str, datetime, datetime]] = []
 
         for regra in regras_folga:
@@ -82,10 +82,10 @@ class Funcionario:
 
         return False
     
-    def ja_esta_no_pedido(self, pedido_id: int, ordem_id: int) -> bool:
+    def ja_esta_no_pedido(self, id_pedido: int, id_ordem: int) -> bool:
         for ocupacao in self.ocupacoes:
             oid, pid, *_ = ocupacao
-            if pid == pedido_id and oid == ordem_id:
+            if pid == id_pedido and oid == id_ordem:
                 return True
         return False
     def verificar_disponibilidade_no_intervalo(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
@@ -127,15 +127,15 @@ class Funcionario:
 
     def registrar_ocupacao(
         self,
-        ordem_id: int,
-        pedido_id: int,
+        id_ordem: int,
+        id_pedido: int,
         id_atividade_json: int,
         inicio: datetime,
         fim: datetime
     ):
         disponivel, motivo = self.verificar_disponibilidade_no_intervalo(inicio, fim)
         if disponivel:
-            self.ocupacoes.append((ordem_id, pedido_id, id_atividade_json, inicio, fim))
+            self.ocupacoes.append((id_ordem, id_pedido, id_atividade_json, inicio, fim))
             logger.info(
                 f"✅ {self.nome} | Ocupação registrada: {id_atividade_json} de {inicio.strftime('%H:%M')} "
                 f"até {fim.strftime('%H:%M')}."
@@ -150,42 +150,42 @@ class Funcionario:
     # ==========================================================
     # 🔒 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
+    def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
             o for o in self.ocupacoes
-            if not (o[0] == ordem_id and o[1] == pedido_id and o[2] == atividade_id)
+            if not (o[0] == id_ordem and o[1] == id_pedido and o[2] == id_atividade)
         ]
         depois = len(self.ocupacoes)
         if antes != depois:
-            logger.info(f"🔓 Ocupação do {self.nome} liberada para a atividade {atividade_id} do pedido {pedido_id} da ordem {ordem_id}.")
+            logger.info(f"🔓 Ocupação do {self.nome} liberada para a atividade {id_atividade} do pedido {id_pedido} da ordem {id_ordem}.")
         # else:
-        #     logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar o {self.nome} da atividade {atividade_id} do pedido {pedido_id} da ordem {ordem_id}.")
+        #     logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar o {self.nome} da atividade {id_atividade} do pedido {id_pedido} da ordem {id_ordem}.")
 
-    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+    def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
             o for o in self.ocupacoes
-            if not (o[0] == ordem_id and o[1] == pedido_id)
+            if not (o[0] == id_ordem and o[1] == id_pedido)
         ]
         depois = len(self.ocupacoes)
         if antes != depois:
-            logger.info(f"🔓 Ocupação do {self.nome} liberada para o pedido {pedido_id} da ordem {ordem_id}.")
+            logger.info(f"🔓 Ocupação do {self.nome} liberada para o pedido {id_pedido} da ordem {id_ordem}.")
         #else:
-            #logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar o {self.nome} do pedido {pedido_id} da ordem {ordem_id}.")
+            #logger.warning(f"⚠️ Nenhuma ocupação encontrada para liberar o {self.nome} do pedido {id_pedido} da ordem {id_ordem}.")
        
     
-    def liberar_por_ordem(self, ordem_id: int):
+    def liberar_por_ordem(self, id_ordem: int):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
             o for o in self.ocupacoes
-            if o[0] != ordem_id
+            if o[0] != id_ordem
         ]
         depois = len(self.ocupacoes)
         if antes != depois:
-            logger.info(f"🔓 Ocupação do {self.nome} liberada da ordem {ordem_id}.")
+            logger.info(f"🔓 Ocupação do {self.nome} liberada da ordem {id_ordem}.")
         #else:
-            #logger.warning(f"⚠️ Nenhuma ocupação encontrada do {self.nome} para liberar da ordem {ordem_id}.")
+            #logger.warning(f"⚠️ Nenhuma ocupação encontrada do {self.nome} para liberar da ordem {id_ordem}.")
 
     # ==========================================================
     # 📅 Agenda 
@@ -196,9 +196,9 @@ class Funcionario:
         logger.info("==============================================")
         
         for ocupacao in self.ocupacoes:
-            ordem_id, pedido_id, atividade_json_id, inicio, fim = ocupacao
+            id_ordem, id_pedido, atividade_json_id, inicio, fim = ocupacao
             logger.info(
-                f"🗓️ Ocupação: Ordem {ordem_id}, Pedido {pedido_id}, Atividade {atividade_json_id} "
+                f"🗓️ Ocupação: Ordem {id_ordem}, Pedido {id_pedido}, Atividade {atividade_json_id} "
                 f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}"
             )
 

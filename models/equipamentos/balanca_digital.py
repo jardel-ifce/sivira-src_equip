@@ -38,8 +38,8 @@ class BalancaDigital(Equipamento):
         self.capacidade_gramas_min = capacidade_gramas_min
         self.capacidade_gramas_max = capacidade_gramas_max
 
-        # 📦 Ocupações: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim)
-        self.ocupacoes: List[Tuple[int, int, int, float, datetime, datetime]] = []
+        # 📦 Ocupações: (id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim)
+        self.ocupacoes: List[Tuple[int, int, int, int, float, datetime, datetime]] = []
 
     # ==========================================================
     # ✅ Validação de quantidade
@@ -55,9 +55,10 @@ class BalancaDigital(Equipamento):
     # ==========================================================
     def ocupar(
         self,
-        ordem_id: int,
-        pedido_id: int,
-        atividade_id: int,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
         quantidade: float,
         inicio: datetime,
         fim: datetime
@@ -69,10 +70,10 @@ class BalancaDigital(Equipamento):
             )
             return False
 
-        self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim))
+        self.ocupacoes.append((id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim))
         logger.info(
             f"⚖️ Ocupação registrada na {self.nome}: "
-            f"Ordem {ordem_id}, pedido {pedido_id}, atividade {atividade_id}, quantidade {quantidade}g, "
+            f"Ordem {id_ordem}, pedido {id_pedido}, atividade {id_atividade}, item {id_item}, quantidade {quantidade}g, "
             f"início {inicio.strftime('%H:%M')}, fim {fim.strftime('%H:%M')}."
         )
         return True
@@ -80,47 +81,48 @@ class BalancaDigital(Equipamento):
     # ==========================================================
     # 🔓 Liberação
     # ==========================================================
-    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
+    def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim)
-            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
-            if not (oid == ordem_id and pid == pedido_id and aid == atividade_id)
+            ocupacao
+            for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
         ]
     
         logger.info(
             f"🔓 Liberadas ocupações da {self.nome} "
-            f"relacionadas à atividade {atividade_id} da ordem {ordem_id} e pedido {pedido_id}."
+            f"relacionadas à atividade {id_atividade} da ordem {id_ordem} e pedido {id_pedido}."
         )
 
-    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
+    def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim)
-            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
-            if not (oid == ordem_id and pid == pedido_id)
+            ocupacao
+            for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
         ]
 
         logger.info(
             f"🔓 Liberadas ocupações da {self.nome} "
-            f"relacionadas à ordem {ordem_id} e pedido {pedido_id}."
+            f"relacionadas à ordem {id_ordem} e pedido {id_pedido}."
         )
 
-    def liberar_por_ordem(self, ordem_id: int):
+    def liberar_por_ordem(self, id_ordem: int):
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim)
-            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
-            if not (oid == ordem_id)
+            ocupacao
+            for ocupacao in self.ocupacoes
+            if ocupacao[0] != id_ordem
         ]
 
         logger.info(
             f"🔓 Liberadas ocupações da {self.nome} "
-            f"relacionadas à ordem {ordem_id}."
+            f"relacionadas à ordem {id_ordem}."
         )
+    
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim)
-            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
-            if not (fim <= horario_atual)
+            ocupacao
+            for ocupacao in self.ocupacoes
+            if ocupacao[6] > horario_atual  # fim > horario_atual
         ]
         liberadas = antes - len(self.ocupacoes)
         logger.info(
@@ -136,15 +138,16 @@ class BalancaDigital(Equipamento):
     def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            (oid, pid, aid, qtd, ini, fim)
-            for (oid, pid, aid, qtd, ini, fim) in self.ocupacoes
-            if not (ini >= inicio and fim <= fim)
+            ocupacao
+            for ocupacao in self.ocupacoes
+            if not (ocupacao[5] < fim and ocupacao[6] > inicio)  # remove qualquer sobreposição
         ]
         liberadas = antes - len(self.ocupacoes)
         logger.info(
             f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
             f"no intervalo de {inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
         )
+
     # ==========================================================
     # 📅 Agenda
     # ==========================================================
@@ -155,10 +158,10 @@ class BalancaDigital(Equipamento):
         if not self.ocupacoes:
             logger.info("🔹 Nenhuma ocupação registrada.")
             return
-        for i, (oid, pid, aid, qtd, ini, fim) in enumerate(self.ocupacoes, start=1):
+        for i, ocupacao in enumerate(self.ocupacoes, start=1):
             logger.info(
-                f"⚖️ Ordem: {oid} | Pedido: {pid} | Atividade: {aid} | Quantidade: {qtd}g | "
-                f"Início: {ini.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')}"
+                f"⚖️ Ordem: {ocupacao[0]} | Pedido: {ocupacao[1]} | Atividade: {ocupacao[2]} | Item: {ocupacao[3]} | "
+                f"Quantidade: {ocupacao[4]}g | Início: {ocupacao[5].strftime('%H:%M')} | Fim: {ocupacao[6].strftime('%H:%M')}"
             )
 
     # ==========================================================

@@ -40,9 +40,12 @@ class FabricaEquipamentos:
             id=1,
             nome="Câmara Refrigerada 1",
             setor=TipoSetor.ALMOXARIFADO,
-            capacidade_niveis_tela=25,
-            capacidade_caixa_30kg=200,
-            faixa_temperatura_min=0,
+            capacidade_caixa_min=1,
+            capacidade_caixa_max=20,
+            nivel_tela=25,
+            capacidade_niveis_min=1,
+            capacidade_niveis_max=25,
+            faixa_temperatura_min=-18,
             faixa_temperatura_max=4,
         )
 
@@ -52,11 +55,15 @@ class FabricaEquipamentos:
             id=2,
             nome="Câmara Refrigerada 2",
             setor=TipoSetor.ALMOXARIFADO,
-            capacidade_niveis_tela=25,
-            capacidade_caixa_30kg=20,
+            capacidade_caixa_min=1,
+            capacidade_caixa_max=20,
+            nivel_tela=25,
+            capacidade_niveis_min=1,
+            capacidade_niveis_max=1,
             faixa_temperatura_min=-18,
             faixa_temperatura_max=-7,
         )
+
 
     # =======================
     # 🔥 Fogões
@@ -167,8 +174,8 @@ class FabricaEquipamentos:
             id=14,
             nome="Bancada 6",
             setor=TipoSetor.CONFEITARIA,
-            numero_operadores=6,
-            numero_fracoes=6
+            numero_operadores=3,
+            numero_fracoes=3
         )
 
     @staticmethod
@@ -177,8 +184,8 @@ class FabricaEquipamentos:
             id=15,
             nome="Bancada 7",
             setor=TipoSetor.COZINHA,
-            numero_operadores=6,
-            numero_fracoes=6
+            numero_operadores=3,
+            numero_fracoes=3
         )
 
     @staticmethod
@@ -244,8 +251,9 @@ class FabricaEquipamentos:
             id=20,
             nome="Masseira 1",
             setor=TipoSetor.PANIFICACAO,
+            numero_operadores=1,
             capacidade_gramas_min=1,
-            capacidade_gramas_max=50000,
+            capacidade_gramas_max=15000,
             tipos_de_mistura_suportados=[TipoMistura.SEMI_RAPIDA],
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA,
@@ -260,7 +268,8 @@ class FabricaEquipamentos:
             nome="Masseira 2",
             setor=TipoSetor.PANIFICACAO,
             capacidade_gramas_min=1,
-            capacidade_gramas_max=30000,
+            capacidade_gramas_max=15000,
+            numero_operadores=1,
             tipos_de_mistura_suportados=[TipoMistura.RAPIDA],
             velocidades_suportadas=[
                 TipoVelocidade.ALTA
@@ -275,6 +284,7 @@ class FabricaEquipamentos:
             setor=TipoSetor.CONFEITARIA,
             capacidade_gramas_min=1,
             capacidade_gramas_max=20000,
+            numero_operadores=1,
             tipos_de_mistura_suportados=TipoMistura.LENTA,
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA
@@ -344,7 +354,8 @@ class FabricaEquipamentos:
             id=25,
             nome="Freezer 1",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_caixa_30kg=6,
+            capacidade_caixa_min=1,
+            capacidade_caixa_max=6,
             faixa_temperatura_min=0,
             faixa_temperatura_max=4
         )
@@ -355,7 +366,8 @@ class FabricaEquipamentos:
             id=26,
             nome="Freezer 2",
             setor=TipoSetor.CONFEITARIA,
-            capacidade_caixa_30kg=6,
+            capacidade_caixa_min=1,
+            capacidade_caixa_max=6,
             faixa_temperatura_min=0,
             faixa_temperatura_max=4
         )
@@ -366,7 +378,8 @@ class FabricaEquipamentos:
             id=27,
             nome="Freezer 3",
             setor=TipoSetor.COZINHA,
-            capacidade_caixa_30kg=6,
+            capacidade_caixa_min=1,
+            capacidade_caixa_max=6,
             faixa_temperatura_min=0,
             faixa_temperatura_max=4
         )
@@ -424,17 +437,17 @@ class FabricaEquipamentos:
             nome="Forno 3",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
-            nivel_tela_max=4,
+            nivel_tela_max=2,
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=20,
             capacidade_niveis_min=1,
-            capacidade_niveis_max=4,
+            capacidade_niveis_max=10,
             tipo_coccao=TipoCoccao.LASTRO,
             vaporizacao_seg_min=1,
             vaporizacao_seg_max=10,
-            velocidade_mps_min=2,
-            velocidade_mps_max=5
+            velocidade_mps_min=1,
+            velocidade_mps_max=4
         )
 
 
@@ -445,15 +458,15 @@ class FabricaEquipamentos:
             nome="Forno 4",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
-            nivel_tela_max=4,
+            nivel_tela_max=2,
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=20,
             capacidade_niveis_min=1,
-            capacidade_niveis_max=4,
+            capacidade_niveis_max=10,
             tipo_coccao=TipoCoccao.LASTRO,
-            vaporizacao_seg_min=None,
-            vaporizacao_seg_max=None,
+            vaporizacao_seg_min=1,
+            vaporizacao_seg_max=10,
             velocidade_mps_min=1,
             velocidade_mps_max=4
         )
@@ -467,7 +480,8 @@ class FabricaEquipamentos:
             nome="Armário Esqueleto 1",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
-            nivel_tela_max=25
+            nivel_tela_max=25,
+            capacidade_niveis=1
         )
     
     @staticmethod
@@ -477,7 +491,8 @@ class FabricaEquipamentos:
             nome="Armário Esqueleto 2",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
-            nivel_tela_max=25
+            nivel_tela_max=25,
+            capacidade_niveis=1
         )
 
 
@@ -536,7 +551,6 @@ class FabricaEquipamentos:
     # =========================================
     # 🗄️ Armário Fermentador
     # =========================================
-
     @staticmethod
     def criar_armario_fermentador_1():
         return ArmarioFermentador(
@@ -544,7 +558,8 @@ class FabricaEquipamentos:
             nome="Armário Fermentador 1",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=25
+            nivel_tela_max=30,
+            capacidade_niveis=1
         )
     
     @staticmethod
@@ -554,7 +569,8 @@ class FabricaEquipamentos:
             nome="Armário Fermentador 2",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=25
+            nivel_tela_max=30,
+            capacidade_niveis=1
         )
 
     @staticmethod
@@ -564,7 +580,8 @@ class FabricaEquipamentos:
             nome="Armário Fermentador 3",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=25
+            nivel_tela_max=15,
+            capacidade_niveis=1
         )
     @staticmethod
     def criar_armario_fermentador_4():
@@ -573,7 +590,8 @@ class FabricaEquipamentos:
             nome="Armário Fermentador 4",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=25
+            nivel_tela_max=15,
+            capacidade_niveis=1
         )
         
         

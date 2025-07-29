@@ -51,8 +51,8 @@ class GestorAlmoxarifado:
 
     def separar_itens_para_producao(
         self,
-        ordem_id: int,
-        pedido_id: int,
+        id_ordem: int,
+        id_pedido: int,
         funcionario_id: int,
         itens: List[Tuple[int, float, datetime]]
     ):
@@ -63,11 +63,11 @@ class GestorAlmoxarifado:
         for id_item, quantidade, data in itens:
             item = self.almoxarifado.buscar_por_id(id_item)
             if item:
-                item.consumir(data, quantidade, ordem_id, pedido_id)
+                item.consumir(data, quantidade, id_ordem, id_pedido)
 
         # Registrar separação
         print(
-            f"📦 Estoque separado para Ordem {ordem_id}, Pedido {pedido_id} "
+            f"📦 Estoque separado para Ordem {id_ordem}, Pedido {id_pedido} "
             f"por Funcionário {funcionario_id} em {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         )
 

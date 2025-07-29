@@ -7,8 +7,8 @@ from parser.gerenciador_json_comandas import salvar_comanda_em_json
 
 
 def gerar_comanda_reserva(
-    ordem_id: int,
-    pedido_id: int,
+    id_ordem: int,
+    id_pedido: int,
     ficha: FichaTecnicaModular,
     gestor,
     data_execucao: datetime
@@ -26,14 +26,14 @@ def gerar_comanda_reserva(
             ficha,
             gestor,
             data_execucao,
-            ordem_id,
-            pedido_id
+            id_ordem,
+            id_pedido
         )
     }
 
     salvar_comanda_em_json(
-        ordem_id=ordem_id,
-        pedido_id=pedido_id,
+        id_ordem=id_ordem,
+        id_pedido=id_pedido,
         data_reserva=data_execucao,
         itens=[produto_dict]
     )
@@ -43,8 +43,8 @@ def _montar_itens_para_comanda_recursivo(
     ficha: FichaTecnicaModular,
     gestor,
     data_execucao: datetime,
-    ordem_id: int,
-    pedido_id: int
+    id_ordem: int,
+    id_pedido: int
 ) -> List[Dict[str, Union[int, str, float, List]]]:
     """
     🔁 Monta recursivamente os itens a serem reservados (subprodutos e insumos).
@@ -85,8 +85,8 @@ def _montar_itens_para_comanda_recursivo(
                     ficha_sub,
                     gestor,
                     data_execucao,
-                    ordem_id,
-                    pedido_id
+                    id_ordem,
+                    id_pedido
                 )
                 subproduto_dict["itens_necessarios"] = sub_itens
 

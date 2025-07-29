@@ -10,8 +10,8 @@ class GestorFuncionarios:
 
     @staticmethod
     def priorizar_funcionarios(
-        ordem_id: int,
-        pedido_id: int,
+        id_ordem: int,
+        id_pedido: int,
         inicio: datetime,
         fim: datetime,
         qtd_profissionais_requeridos: int,
@@ -47,7 +47,7 @@ class GestorFuncionarios:
 
         def chave_pedido(f: Funcionario):
             fip_json = fips_profissionais_permitidos.get(f.tipo_profissional.name, 0)
-            engajado = f.ja_esta_no_pedido(pedido_id=pedido_id, ordem_id=ordem_id)
+            engajado = f.ja_esta_no_pedido(id_pedido=id_pedido, id_ordem=id_ordem)
             return (-int(engajado), -fip_json, -f.fip)
 
         candidatos_ordenados = sorted(candidatos, key=chave_pedido)

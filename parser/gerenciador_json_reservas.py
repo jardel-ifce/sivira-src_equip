@@ -9,7 +9,7 @@ def registrar_reservas_em_itens_almoxarifado(reservas: List[Dict], caminho: str 
     """
     📝 Atualiza o JSON de itens do almoxarifado com as novas reservas vindas das comandas.
     Apenas reservas com tipo 'CONSUMO' são registradas.
-    Inclui os campos: data, quantidade_reservada, ordem_id, pedido_id, atividade_id (opcional).
+    Inclui os campos: data, quantidade_reservada, id_ordem, id_pedido, id_atividade (opcional).
     """
     if not os.path.exists(caminho):
         print(f"❌ Arquivo de itens não encontrado: {caminho}")
@@ -27,9 +27,9 @@ def registrar_reservas_em_itens_almoxarifado(reservas: List[Dict], caminho: str 
         id_item = reserva["id_item"]
         data = reserva["data_reserva"]
         quantidade = reserva["quantidade_necessaria"]
-        ordem_id = reserva.get("ordem_id", 0)
-        pedido_id = reserva.get("pedido_id", 0)
-        atividade_id = reserva.get("atividade_id")
+        id_ordem = reserva.get("id_ordem", 0)
+        id_pedido = reserva.get("id_pedido", 0)
+        id_atividade = reserva.get("id_atividade")
 
         item = mapa_itens.get(id_item)
         if item is None:
@@ -45,7 +45,7 @@ def registrar_reservas_em_itens_almoxarifado(reservas: List[Dict], caminho: str 
         existente = next(
             (
                 r for r in reservas_item
-                if r["data"] == data and r.get("ordem_id") == ordem_id and r.get("pedido_id") == pedido_id
+                if r["data"] == data and r.get("id_ordem") == id_ordem and r.get("id_pedido") == id_pedido
             ),
             None
         )
@@ -56,11 +56,11 @@ def registrar_reservas_em_itens_almoxarifado(reservas: List[Dict], caminho: str 
             nova_reserva = {
                 "data": data,
                 "quantidade_reservada": round(quantidade, 2),
-                "ordem_id": ordem_id,
-                "pedido_id": pedido_id,
+                "id_ordem": id_ordem,
+                "id_pedido": id_pedido,
             }
-            if atividade_id is not None:
-                nova_reserva["atividade_id"] = atividade_id
+            if id_atividade is not None:
+                nova_reserva["id_atividade"] = id_atividade
 
             reservas_item.append(nova_reserva)
 
@@ -71,14 +71,14 @@ def registrar_reservas_em_itens_almoxarifado(reservas: List[Dict], caminho: str 
 
 def descontar_estoque_por_reservas(
     data: Optional[Union[str, date, datetime]] = None,
-    ordem_id: Optional[int] = None,
-    pedido_id: Optional[int] = None,
+    id_ordem: Optional[int] = None,
+    id_pedido: Optional[int] = None,
     caminho: str = CAMINHO_ITENS
 ) -> None:
     """
     🔻 Desconta o estoque_atual dos itens com base nas reservas_futuras.
     Se nenhum parâmetro for passado, todas as reservas serão consumidas.
-    Parâmetros opcionais permitem filtrar por data (str, date ou datetime), ordem_id e pedido_id.
+    Parâmetros opcionais permitem filtrar por data (str, date ou datetime), id_ordem e id_pedido.
     """
     if not os.path.exists(caminho):
         print(f"❌ Arquivo não encontrado: {caminho}")
@@ -110,8 +110,8 @@ def descontar_estoque_por_reservas(
 
         for reserva in reservas:
             cond_data = (data is None or reserva["data"] == data)
-            cond_ordem = (ordem_id is None or reserva.get("ordem_id") == ordem_id)
-            cond_pedido = (pedido_id is None or reserva.get("pedido_id") == pedido_id)
+            cond_ordem = (id_ordem is None or reserva.get("id_ordem") == id_ordem)
+            cond_pedido = (id_pedido is None or reserva.get("id_pedido") == id_pedido)
 
             if cond_data and cond_ordem and cond_pedido:
                 total_descontado += reserva["quantidade_reservada"]

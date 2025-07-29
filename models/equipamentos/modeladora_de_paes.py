@@ -1,7 +1,9 @@
+# =============== CLASSE MODELADORA DE PÃES ===============
+
 from models.equipamentos.equipamento import Equipamento
 from enums.producao.tipo_setor import TipoSetor
 from enums.equipamentos.tipo_equipamento import TipoEquipamento
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 from datetime import datetime
 from utils.logs.logger_factory import setup_logger
 
@@ -10,8 +12,9 @@ logger = setup_logger('ModeladoraDePaes')
 class ModeladoraDePaes(Equipamento):
     """
     🍞 Classe que representa uma Modeladora de Pães.
-    ✔️ Capacidade de produção por minuto validada.
-    ✔️ Ocupação exclusiva por atividade, sem sobreposição.
+    ✔️ Sempre disponível para alocação (sem ocupação exclusiva).
+    ✔️ Registro simples de atividades para controle e histórico.
+    ✔️ Capacidade de produção por minuto para referência.
     """
 
     def __init__(
@@ -35,127 +38,161 @@ class ModeladoraDePaes(Equipamento):
         self.capacidade_min_unidades_por_minuto = capacidade_min_unidades_por_minuto
         self.capacidade_max_unidades_por_minuto = capacidade_max_unidades_por_minuto
 
-        # Ocupações registradas: (ordem_id, pedido_id, atividade_id, quantidade, inicio, fim)
-        self.ocupacoes: List[Tuple[int, int, int, int, datetime, datetime]] = []
+        # Histórico de ocupações: (id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim)
+        self.ocupacoes: List[Tuple[int, int, int, int, int, datetime, datetime]] = []
+
     # ==========================================================
-    # ✅ Validações
-    # ==========================================================
-    def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
-        for ocupacao in self.ocupacoes:
-            if not (fim <= ocupacao[4] or inicio >= ocupacao[5]):
-                logger.warning(f"❌ {self.nome} | Ocupação conflitante: entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}")
-                return False
-        return True
-    
-    # ==========================================================
-    # 🔒 Ocupação
+    # 🔒 Ocupação (Sempre Aceita)
     # ==========================================================
     def ocupar(
         self,
-        ordem_id: int,
-        pedido_id: int,
-        atividade_id: int,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
         quantidade: int,
         inicio: datetime,
         fim: datetime,
         **kwargs
     ) -> bool:
-       
-        if not self.esta_disponivel(inicio, fim):
-            logger.warning(f"🚫 {self.nome} | Ocupação não disponível para {atividade_id} entre {inicio} e {fim}.")
-            return False
-        
-        else: 
-            self.ocupacoes.append((ordem_id, pedido_id, atividade_id, quantidade, inicio, fim))
-            logger.info(f"✅ {self.nome} | Ocupação registrada: {atividade_id} de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}.")
-            return True
+        """
+        Registra uma ocupação na modeladora.
+        Sempre retorna True pois modeladoras estão sempre disponíveis.
+        """
+        self.ocupacoes.append((id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim))
+        logger.info(
+            f"✅ {self.nome} | Atividade {id_atividade} (Item {id_item}) registrada | "
+            f"Quantidade {quantidade} unidades | "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
+        )
+        return True
 
     # ==========================================================
     # 🔓 Liberações
     # ==========================================================
-    def liberar_por_atividade(self, ordem_id: int, pedido_id: int, atividade_id: int):
+    def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
+        """Remove registros específicos por atividade."""
         antes = len(self.ocupacoes)
         self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[0] == ordem_id and o[1] == pedido_id and o[2] == atividade_id)
-        ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🔓 {self.nome} | Ocupações da atividade {atividade_id} removidas ({antes - depois} entradas).")
-        else:
-            logger.warning(f"🚫 {self.nome} | Não há ocupações para liberar para a atividade {atividade_id}.")
-
-    def liberar_por_pedido(self, ordem_id: int, pedido_id: int):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[0] == ordem_id and o[1] == pedido_id)
-        ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🔓 {self.nome} | Ocupações do pedido {pedido_id} removidas ({antes - depois} entradas).")
-        else:
-            logger.warning(f"🚫 {self.nome} | Não há ocupações para liberar para o pedido {pedido_id}.")
-
-    def liberar_por_ordem(self, ordem_id: int):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[0] == ordem_id)
-        ]
-        depois = len(self.ocupacoes)
-        if antes != depois:
-            logger.info(f"🔓 {self.nome} | Ocupações da ordem {ordem_id} removidas ({antes - depois} entradas).")
-        else:
-            logger.warning(f"🚫 {self.nome} | Não há ocupações para liberar para a ordem {ordem_id}.")
-    
-    def liberar_todas_ocupacoes(self):
-        total = len(self.ocupacoes)
-        self.ocupacoes.clear()
-        logger.info(f"🔓 {self.nome} liberou todas as {total} ocupações.")
-    
-    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[5] <= horario_atual)
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
         ]
         liberadas = antes - len(self.ocupacoes)
-        if liberadas > 0:
-            logger.info(f"🔓 {self.nome} | Liberadas {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
-        else:
-            logger.info(f"ℹ️ {self.nome} | Nenhuma ocupação finalizada encontrada para liberar até {horario_atual.strftime('%H:%M')}.")
-    
-    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            o for o in self.ocupacoes
-            if not (o[4] >= inicio and o[5] <= fim)
-        ]
-        liberadas = antes - len(self.ocupacoes)
-
-        logger.info(
-            f"🔓 {self.nome} | Liberadas {liberadas} ocupações no intervalo de "
-            f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
-        )
-    
-    
-    # ==========================================================
-    # 📅 Agenda
-    # ==========================================================
-    def mostrar_agenda(self):
-        logger.info("==============================================")
-        logger.info(f"📅 Agenda da {self.nome}")
-        logger.info("==============================================")
-        if not self.ocupacoes:
-            logger.info("Nenhuma ocupação registrada.")
-            return
         
-        for ocupacao in self.ocupacoes:
-            ordem_id, pedido_id, atividade_id, quantidade, inicio, fim = ocupacao
+        if liberadas > 0:
             logger.info(
-                f"Atividade {atividade_id} | Pedido {pedido_id} | Ordem {ordem_id} | "
-                f"Quantidade: {quantidade} | Início: {inicio.strftime('%H:%M')} | Fim: {fim.strftime('%H:%M')}"
+                f"🔓 {self.nome} | Removidos {liberadas} registros da atividade {id_atividade} "
+                f"(Ordem {id_ordem}, Pedido {id_pedido})."
             )
 
+    def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
+        """Remove registros específicos por pedido."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(
+                f"🔓 {self.nome} | Removidos {liberadas} registros do pedido {id_pedido} "
+                f"(Ordem {id_ordem})."
+            )
+
+    def liberar_por_ordem(self, id_ordem: int):
+        """Remove registros específicos por ordem."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[0] != id_ordem
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(f"🔓 {self.nome} | Removidos {liberadas} registros da ordem {id_ordem}.")
+
+    def liberar_por_item(self, id_item: int):
+        """Remove registros específicos por item."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[3] != id_item
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(f"🔓 {self.nome} | Removidos {liberadas} registros do item {id_item}.")
+
+    def liberar_todas_ocupacoes(self):
+        """Limpa todos os registros da modeladora."""
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 {self.nome} removeu todos os {total} registros.")
+
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        """Remove registros que já finalizaram."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[6] > horario_atual  # fim > horario_atual
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(
+                f"🔓 {self.nome} | Removidos {liberadas} registros finalizados até {horario_atual.strftime('%H:%M')}."
+            )
+        return liberadas
+
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        """Remove registros que se sobrepõem ao intervalo especificado."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[5] < fim and ocupacao[6] > inicio)  # remove qualquer sobreposição
+        ]
+        liberadas = antes - len(self.ocupacoes)
+
+        if liberadas > 0:
+            logger.info(
+                f"🔓 {self.nome} | Removidos {liberadas} registros no intervalo de "
+                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+            )
+
+    # ==========================================================
+    # 📅 Agenda e Consultas
+    # ==========================================================
+    def mostrar_agenda(self):
+        """Mostra histórico detalhado da modeladora."""
+        logger.info("==============================================")
+        logger.info(f"📅 Histórico da {self.nome}")
+        logger.info(f"🔧 Capacidade: {self.capacidade_min_unidades_por_minuto}-{self.capacidade_max_unidades_por_minuto} unidades/min")
+        logger.info("==============================================")
+        
+        if not self.ocupacoes:
+            logger.info("🔹 Nenhum registro encontrado.")
+            return
+        
+        # Ordenar registros por horário de início
+        ocupacoes_ordenadas = sorted(self.ocupacoes, key=lambda x: x[5])  # ordenar por inicio
+        
+        for ocupacao in ocupacoes_ordenadas:
+            logger.info(
+                f"🍞 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
+                f"Quantidade: {ocupacao[4]} unidades | "
+                f"{ocupacao[5].strftime('%H:%M')} → {ocupacao[6].strftime('%H:%M')}"
+            )
+
+    def obter_ocupacoes_periodo(self, inicio: datetime, fim: datetime) -> List[Tuple[int, int, int, int, int, datetime, datetime]]:
+        """Retorna registros que se sobrepõem ao período especificado."""
+        ocupacoes_periodo = []
+        for ocupacao in self.ocupacoes:
+            if not (fim <= ocupacao[5] or inicio >= ocupacao[6]):  # há sobreposição temporal
+                ocupacoes_periodo.append(ocupacao)
+        return ocupacoes_periodo
+
+    def obter_ocupacoes_item(self, id_item: int) -> List[Tuple[int, int, int, int, int, datetime, datetime]]:
+        """Retorna todos os registros de um item específico."""
+        return [ocupacao for ocupacao in self.ocupacoes if ocupacao[3] == id_item]
 

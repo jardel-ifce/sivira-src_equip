@@ -4,8 +4,8 @@ from datetime import datetime
 from typing import List, Dict, Union
 
 def salvar_comanda_em_json(
-    ordem_id: int,
-    pedido_id: int,
+    id_ordem: int,
+    id_pedido: int,
     data_reserva: datetime,
     itens: List[Dict[str, Union[int, str, float]]]
 ) -> None:
@@ -15,12 +15,12 @@ def salvar_comanda_em_json(
     pasta_saida = "data/comandas"
     os.makedirs(pasta_saida, exist_ok=True)
 
-    nome_arquivo = f"comanda_ordem_{ordem_id}_pedido_{pedido_id}.json"
+    nome_arquivo = f"comanda_ordem_{id_ordem}_pedido_{id_pedido}.json"
     caminho = os.path.join(pasta_saida, nome_arquivo)
 
     dados = {
-        "ordem_id": ordem_id,
-        "pedido_id": pedido_id,
+        "id_ordem": id_ordem,
+        "id_pedido": id_pedido,
         "data_reserva": data_reserva.strftime("%Y-%m-%d"),
         "itens": itens
     }
@@ -42,8 +42,8 @@ def ler_comandas_em_pasta(
 
     def extrair_reservas_recursivas(
         item: Dict[str, Union[int, str, float, List]],
-        ordem_id: int,
-        pedido_id: int,
+        id_ordem: int,
+        id_pedido: int,
         data_reserva: str
     ) -> List[Dict[str, Union[int, float, str]]]:
         """
@@ -57,19 +57,19 @@ def ler_comandas_em_pasta(
 
         if id_item is not None:
             reservas_extraidas.append({
-                "ordem_id": ordem_id,
-                "pedido_id": pedido_id,
+                "id_ordem": id_ordem,
+                "id_pedido": id_pedido,
                 "id_item": id_item,
                 "quantidade_necessaria": quantidade,
                 "data_reserva": data_reserva,
                 "tipo": "CONSUMO",
-                "atividade_id": None
+                "id_atividade": None
             })
 
         # Processa filhos recursivamente
         for subitem in item.get("itens_necessarios", []):
             reservas_extraidas.extend(
-                extrair_reservas_recursivas(subitem, ordem_id, pedido_id, data_reserva)
+                extrair_reservas_recursivas(subitem, id_ordem, id_pedido, data_reserva)
             )
 
         return reservas_extraidas
@@ -87,13 +87,13 @@ def ler_comandas_em_pasta(
             with open(caminho_arquivo, "r", encoding="utf-8") as f:
                 comanda = json.load(f)
 
-            ordem_id = comanda["ordem_id"]
-            pedido_id = comanda["pedido_id"]
+            id_ordem = comanda["id_ordem"]
+            id_pedido = comanda["id_pedido"]
             data_reserva = comanda["data_reserva"]
 
             for item in comanda.get("itens", []):
                 reservas.extend(
-                    extrair_reservas_recursivas(item, ordem_id, pedido_id, data_reserva)
+                    extrair_reservas_recursivas(item, id_ordem, id_pedido, data_reserva)
                 )
 
             print(f"✅ Comanda processada: {arquivo}")

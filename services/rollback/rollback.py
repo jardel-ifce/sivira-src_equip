@@ -6,97 +6,126 @@ from utils.logs.gerenciador_logs import remover_logs_pedido
 logger = setup_logger("Rollback")
 
 
-def rollback_pedido(ordem_id: int, pedido_id: int, atividades_modulares: List[Any], funcionarios: List[Funcionario]):
+def rollback_pedido(id_ordem: int, id_pedido: int, atividades_modulares: List[Any], funcionarios: List[Funcionario]):
     """
     🔄 Executa rollback completo do pedido: libera equipamentos, funcionários e remove logs.
     """
-    logger.info(f"🔄 Iniciando rollback do pedido {pedido_id} da ordem {ordem_id}.")
+    logger.info(f"🔄 Iniciando rollback do pedido {id_pedido} da ordem {id_ordem}.")
     for atividade in atividades_modulares:
         rollback_equipamentos(
             equipamentos_alocados=atividade.equipamentos_selecionados,
-            ordem_id=ordem_id,
-            pedido_id=pedido_id,
+            id_ordem=id_ordem,
+            id_pedido=id_pedido,
         )
 
     rollback_funcionarios(
         funcionarios_alocados=funcionarios,
-        ordem_id=ordem_id,
-        pedido_id=pedido_id,
+        id_ordem=id_ordem,
+        id_pedido=id_pedido,
     )
 
-    remover_logs_pedido(pedido_id)
+    remover_logs_pedido(id_pedido)
 
 
 def rollback_equipamentos(
     equipamentos_alocados: List[Union[Tuple[str, object], object]],
-    ordem_id: int,
-    pedido_id: Optional[int] = None,
-    atividade_id: Optional[int] = None,
+    id_ordem: int,
+    id_pedido: Optional[int] = None,
+    id_atividade: Optional[int] = None,
 ):
     """
     🔄 Libera todos os equipamentos alocados para uma ordem, pedido ou atividade.
 
-    - Se apenas ordem_id for fornecido, libera por ordem.
-    - Se ordem_id e pedido_id forem fornecidos, libera por pedido.
-    - Se ordem_id, pedido_id e atividade_id forem fornecidos, libera por atividade.
+    - Se apenas id_ordem for fornecido, libera por ordem.
+    - Se id_ordem e id_pedido forem fornecidos, libera por pedido.
+    - Se id_ordem, id_pedido e id_atividade forem fornecidos, libera por atividade.
     """
-    for equipamento in _extrair_objetos_equipamento(equipamentos_alocados):
-        print(f"🔄 Liberando {equipamento.nome} ")
+    print("🔍 DEBUG - equipamentos_alocados RECEBIDO:")
+    print(repr(equipamentos_alocados))
+
+    equipamentos_extraidos = _extrair_objetos_equipamento(equipamentos_alocados)
+
+    print("🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:")
+    for i, equipamento in enumerate(equipamentos_extraidos):
+        print(f"  [{i}] Tipo: {type(equipamento)} | Valor: {repr(equipamento)}")
+
+    for equipamento in equipamentos_extraidos:
         try:
-            if atividade_id is not None and pedido_id is not None:
+            print(f"🔄 Liberando {equipamento.nome} ")
+
+            if id_atividade is not None and id_pedido is not None:
                 if hasattr(equipamento, "liberar_por_atividade"):
-                    equipamento.liberar_por_atividade(ordem_id=ordem_id, pedido_id=pedido_id, atividade_id=atividade_id)
-            elif pedido_id is not None:
+                    equipamento.liberar_por_atividade(id_ordem=id_ordem, id_pedido=id_pedido, id_atividade=id_atividade)
+            elif id_pedido is not None:
                 if hasattr(equipamento, "liberar_por_pedido"):
-                    equipamento.liberar_por_pedido(ordem_id=ordem_id, pedido_id=pedido_id)
+                    equipamento.liberar_por_pedido(id_ordem=id_ordem, id_pedido=id_pedido)
             else:
                 if hasattr(equipamento, "liberar_por_ordem"):
-                    equipamento.liberar_por_ordem(ordem_id=ordem_id)
+                    equipamento.liberar_por_ordem(id_ordem=id_ordem)
         except Exception as e:
             logger.warning(
-                f"⚠️ Erro ao liberar {equipamento.nome} "
-                f"{'da atividade ' + str(atividade_id) if atividade_id is not None else ''} "
-                f"{'do pedido ' + str(pedido_id) if pedido_id is not None else ''} "
-                f"da ordem {ordem_id}: {e}"
+                f"⚠️ Erro ao liberar {equipamento} "
+                f"{'da atividade ' + str(id_atividade) if id_atividade is not None else ''} "
+                f"{'do pedido ' + str(id_pedido) if id_pedido is not None else ''} "
+                f"da ordem {id_ordem}: {e}"
             )
 
 
-def _extrair_objetos_equipamento(lista):
+
+def _extrair_objetos_equipamento(equipamentos_alocados):
     """
-    🧰 Aceita lista com equipamentos ou tuplas (nome, equipamento), retornando só os objetos.
+    Garante extração de objetos de equipamento mesmo se forem:
+    - tuplas: (nome, equipamento)
+    - listas de listas: [[equipamento1, equipamento2]]
+    - tuplas de alocação: (True, [equipamentos], inicio, fim)
     """
-    return [equip[1] if isinstance(equip, tuple) else equip for equip in lista]
+    resultado = []
+    
+    for item in equipamentos_alocados:
+        if isinstance(item, tuple):
+            # Caso especial: (True, [equipamentos], inicio, fim)
+            if len(item) == 4 and isinstance(item[1], list):
+                resultado.extend(item[1])
+            elif len(item) == 2:
+                resultado.append(item[1])
+        elif isinstance(item, list):
+            resultado.extend(_extrair_objetos_equipamento(item))  # recursivo
+        else:
+            resultado.append(item)
+
+    return resultado
+
 
 
 
 def rollback_funcionarios(
     funcionarios_alocados: List[Funcionario],
-    ordem_id: int,
-    pedido_id: Optional[int] = None,
-    atividade_id: Optional[int] = None,
+    id_ordem: int,
+    id_pedido: Optional[int] = None,
+    id_atividade: Optional[int] = None,
 ):
     """
      🔄 Libera todos os funcionários envolvidos na ordem, pedido ou atividade.
 
-    - Se apenas ordem_id for fornecido, libera por ordem.
-    - Se ordem_id e pedido_id forem fornecidos, libera por pedido.
-    - Se ordem_id, pedido_id e atividade_id forem fornecidos, libera por atividade.
+    - Se apenas id_ordem for fornecido, libera por ordem.
+    - Se id_ordem e id_pedido forem fornecidos, libera por pedido.
+    - Se id_ordem, id_pedido e id_atividade forem fornecidos, libera por atividade.
     """
     for funcionario in funcionarios_alocados:
         try:
-            if atividade_id is not None and pedido_id is not None:
-                funcionario.liberar_por_atividade(ordem_id=ordem_id, pedido_id=pedido_id, atividade_id=atividade_id)
-            elif pedido_id is not None:
-                funcionario.liberar_por_pedido(ordem_id=ordem_id, pedido_id=pedido_id)
+            if id_atividade is not None and id_pedido is not None:
+                funcionario.liberar_por_atividade(id_ordem=id_ordem, id_pedido=id_pedido, id_atividade=id_atividade)
+            elif id_pedido is not None:
+                funcionario.liberar_por_pedido(id_ordem=id_ordem, id_pedido=id_pedido)
             else:
-                funcionario.liberar_por_ordem(ordem_id=ordem_id)
+                funcionario.liberar_por_ordem(id_ordem=id_ordem)
             
         except Exception as e:
             logger.warning(
                 f"⚠️ Falha ao liberar {funcionario.nome} "
-                f"{'da atividade ' + str(atividade_id) if atividade_id is not None else ''} "
-                f"{'do pedido ' + str(pedido_id) if pedido_id is not None else ''} "
-                f"da ordem {ordem_id}: {e}"
+                f"{'da atividade ' + str(id_atividade) if id_atividade is not None else ''} "
+                f"{'do pedido ' + str(id_pedido) if id_pedido is not None else ''} "
+                f"da ordem {id_ordem}: {e}"
             )
 def _extrair_objetos_equipamento(equipamentos_alocados):
     """

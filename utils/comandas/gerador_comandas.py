@@ -6,8 +6,8 @@ from typing import List, Dict, Union
 PASTA_COMANDAS = "data/comandas"
 
 def gerar_comanda_reserva_em_json(
-    ordem_id: int,
-    pedido_id: int,
+    id_ordem: int,
+    id_pedido: int,
     data_reserva: datetime,
     itens: List[Dict[str, Union[int, str, float]]]
 ):
@@ -18,13 +18,13 @@ def gerar_comanda_reserva_em_json(
         os.makedirs(PASTA_COMANDAS)
 
     comanda = {
-        "ordem_id": ordem_id,
-        "pedido_id": pedido_id,
+        "id_ordem": id_ordem,
+        "id_pedido": id_pedido,
         "data_reserva": data_reserva.strftime("%Y-%m-%d"),
         "itens": itens
     }
 
-    nome_arquivo = f"ordem_{ordem_id}_pedido_{pedido_id}.json"
+    nome_arquivo = f"ordem_{id_ordem}_pedido_{id_pedido}.json"
     caminho = os.path.join(PASTA_COMANDAS, nome_arquivo)
 
     with open(caminho, "w", encoding="utf-8") as f:

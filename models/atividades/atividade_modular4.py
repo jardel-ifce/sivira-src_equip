@@ -19,9 +19,9 @@ logger = setup_logger('Atividade_Modular')
 
 class AtividadeModular(Atividade):
     def __init__(self, id, id_atividade: int, tipo_item: TipoItem, quantidade_produto: int, *args, **kwargs):
-        self.ordem_id = kwargs.get("ordem_id")
+        self.id_ordem = kwargs.get("id_ordem")
         id_produto_gerado = kwargs.get("id_produto")
-        self.log_path = f"logs/funcionarios_{self.ordem_id}.log"
+        self.log_path = f"logs/funcionarios_{self.id_ordem}.log"
 
         dados_atividade = kwargs.get("dados")
         if not dados_atividade:
@@ -189,7 +189,7 @@ class AtividadeModular(Atividade):
 
                 # Obtemos a alocação de funcionários
                 flag, selecionados_funcionarios = GestorFuncionarios.priorizar_funcionarios(
-                    ordem_id=self.ordem_id,
+                    id_ordem=self.id_ordem,
                     nome_atividade=self.nome_atividade,
                     inicio=inicio_atividade,
                     fim=fim_atividade,
@@ -206,7 +206,7 @@ class AtividadeModular(Atividade):
                     for equipamento in [e[1] for e in equipamentos_alocados]:
                         try:
                             if hasattr(equipamento, "liberar_por_atividade"):
-                                equipamento.liberar_por_atividade(self.id_atividade, self.ordem_id)
+                                equipamento.liberar_por_atividade(self.id_atividade, self.id_ordem)
                                 logger.info(f"↩️ Rollback: desalocada atividade {self.id} em {equipamento.nome}")
                         except Exception as e:
                             logger.warning(f"⚠️ Falha ao desalocar atividade {self.id} de {equipamento.nome}: {e}")
@@ -215,10 +215,10 @@ class AtividadeModular(Atividade):
                     for funcionario in self.funcionarios_elegiveis:
                         try:
                             if hasattr(funcionario, "liberar_por_atividade"):
-                                funcionario.liberar_por_ordem(self.ordem_id)
-                                logger.info(f"↩️ Rollback: funcionário {funcionario.nome} liberado da ordem {self.ordem_id}")
+                                funcionario.liberar_por_ordem(self.id_ordem)
+                                logger.info(f"↩️ Rollback: funcionário {funcionario.nome} liberado da ordem {self.id_ordem}")
                         except Exception as e:
-                            logger.warning(f"⚠️ Falha ao liberar funcionário {funcionario.nome} da ordem {self.ordem_id}: {e}")
+                            logger.warning(f"⚠️ Falha ao liberar funcionário {funcionario.nome} da ordem {self.id_ordem}: {e}")
                         try:
                             if os.path.exists(self.log_path):
                                 os.remove(self.log_path)
@@ -234,7 +234,7 @@ class AtividadeModular(Atividade):
                 else:
                     for funcionario in selecionados_funcionarios:
                         funcionario.registrar_ocupacao(
-                            ordem_id=self.ordem_id,
+                            id_ordem=self.id_ordem,
                             id_atividade_modular=self.id,
                             id_atividade_json=self.id_atividade,
                             inicio=inicio_atividade,
@@ -249,7 +249,7 @@ class AtividadeModular(Atividade):
             for equipamento in [e[1] for e in equipamentos_alocados]:
                 try:
                     if hasattr(equipamento, "liberar_por_atividade"):
-                        equipamento.liberar_por_atividade(self.id, self.ordem_id)
+                        equipamento.liberar_por_atividade(self.id, self.id_ordem)
                         logger.info(f"↩️ Rollback: desalocada atividade {self.id} em {equipamento.nome}")
                 except Exception as e:
                     logger.warning(f"⚠️ Falha ao desalocar atividade {self.id} de {equipamento.nome}: {e}")
@@ -273,13 +273,13 @@ class AtividadeModular(Atividade):
         for funcionario in funcionarios_alocados:
             logger.info(f"👨‍🍳 {funcionario.nome} alocado de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}")
 
-        if self.ordem_id:
+        if self.id_ordem:
             os.makedirs("logs", exist_ok=True)
-            caminho = f"logs/funcionarios_{self.ordem_id}.log"
+            caminho = f"logs/funcionarios_{self.id_ordem}.log"
             with open(caminho, "a", encoding="utf-8") as arq:
                 for funcionario in funcionarios_alocados:
                     linha = (
-                        f"{self.ordem_id} | "
+                        f"{self.id_ordem} | "
                         f"{self.id_atividade} | {self.nome_item} | {self.nome_atividade} | "
                         f"{funcionario.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')} \n"
                     )
@@ -299,13 +299,13 @@ class AtividadeModular(Atividade):
             else:
                 logger.info(f"🔧 {equipamento.nome} alocado (sem janela de tempo)")
 
-        if self.ordem_id:
+        if self.id_ordem:
             os.makedirs("logs", exist_ok=True)
-            caminho = f"logs/ordem_{self.ordem_id}.log"
+            caminho = f"logs/ordem_{self.id_ordem}.log"
             with open(caminho, "a", encoding="utf-8") as arq:
                 for _, equipamento, inicio, fim in equipamentos_alocados:
                     linha = (
-                        f"{self.ordem_id} | "
+                        f"{self.id_ordem} | "
                         f"{self.id_atividade} | {self.nome_item} | {self.nome_atividade} | "
                         f"{equipamento.nome} | {inicio.strftime('%H:%M')} | {fim.strftime('%H:%M')} \n"
                     )

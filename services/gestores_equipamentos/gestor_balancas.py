@@ -83,9 +83,9 @@ class GestorBalancas:
                 continue
 
             sucesso = balanca.ocupar(
-                ordem_id=atividade.ordem_id,
-                pedido_id=atividade.pedido_id,
-                atividade_id=atividade.id_atividade,
+                id_ordem=atividade.id_ordem,
+                id_pedido=atividade.id_pedido,
+                id_atividade=atividade.id_atividade,
                 quantidade=quantidade_final,
                 inicio=inicio,
                 fim=fim
@@ -118,15 +118,15 @@ class GestorBalancas:
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for balanca in self.balancas:
-            balanca.liberar_por_atividade(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id, atividade_id=atividade.id_atividade)
+            balanca.liberar_por_atividade(id_ordem=atividade.id_ordem, id_pedido=atividade.id_pedido, id_atividade=atividade.id_atividade)
 
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         for balanca in self.balancas:
-            balanca.liberar_por_pedido(ordem_id=atividade.ordem_id, pedido_id=atividade.pedido_id)
+            balanca.liberar_por_pedido(id_ordem=atividade.id_ordem, id_pedido=atividade.id_pedido)
 
     def liberar_por_ordem(self, atividade: "AtividadeModular"):
         for balanca in self.balancas:
-            balanca.liberar_por_ordem(ordem_id=atividade.ordem_id)
+            balanca.liberar_por_ordem(id_ordem=atividade.id_ordem)
 
     def liberar_todas_ocupacoes(self):
         for balanca in self.balancas:
