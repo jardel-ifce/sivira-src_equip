@@ -16,6 +16,7 @@ class DivisoraDeMassas(Equipamento):
     ✔️ Ocupação com soma de quantidades para mesmo id_item.
     ✔️ Capacidade validada por peso com intervalos flexíveis.
     ✔️ Gestor controla capacidades via JSON.
+    ✅ CORRIGIDO: Lógica inteligente para mesmo item vs item diferente.
     """
 
     # ============================================
@@ -52,7 +53,7 @@ class DivisoraDeMassas(Equipamento):
         self.ocupacoes: List[Tuple[int, int, int, int, float, Optional[bool], datetime, datetime]] = []
 
     # ==========================================================
-    # ✅ Validações - ATUALIZADAS PARA SOBREPOSIÇÃO POR ITEM
+    # ✅ Validações - CORRIGIDAS PARA LÓGICA INTELIGENTE
     # ==========================================================
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
         """
@@ -66,34 +67,72 @@ class DivisoraDeMassas(Equipamento):
 
     def esta_disponivel_para_item(self, inicio: datetime, fim: datetime, id_item: int) -> bool:
         """
-        Verifica se a divisora pode receber uma nova ocupação do item especificado.
-        Uma divisora ocupada só pode receber nova ocupação se:
-        - Mesmo id_item E mesmo horário (início e fim exatos)
+        ✅ VERSÃO CORRIGIDA - Lógica inteligente para mesmo item vs item diferente.
+        
+        Lógica:
+        1. MESMO ITEM: Sempre permite tentar (validação de capacidade é feita separadamente)
+        2. ITEM DIFERENTE: Bloqueia se houver sobreposição temporal
+        3. O backward scheduling se encarrega de encontrar janela anterior se capacidade insuficiente
         """
         for ocupacao in self.ocupacoes:
             ocupacao_id_item = ocupacao[3]
             ocupacao_inicio = ocupacao[6]  # início
             ocupacao_fim = ocupacao[7]     # fim
             
-            # Se é o mesmo item E mesmo horário, permite
-            if ocupacao_id_item == id_item and ocupacao_inicio == inicio and ocupacao_fim == fim:
-                continue
-            
-            # Para qualquer outra situação, não pode haver sobreposição temporal
+            # Verifica se há sobreposição temporal
             if not (fim <= ocupacao_inicio or inicio >= ocupacao_fim):
+                # Há sobreposição temporal
+                
                 if ocupacao_id_item == id_item:
+                    # ✅ MESMO ITEM: Sempre permite tentar
+                    # A validação de capacidade será feita pelos métodos específicos
+                    logger.debug(
+                        f"✅ {self.nome}: Item {id_item} pode tentar sobrepor. "
+                        f"Novo: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
+                        f"Existente: {ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')} "
+                        f"(validação de capacidade será feita pelo gestor)"
+                    )
+                    continue  # Permite, mas continua verificando outras ocupações
+                else:
+                    # ❌ ITEM DIFERENTE: Bloqueia sobreposição
                     logger.warning(
-                        f"⚠️ {self.nome}: Item {id_item} só pode ocupar no mesmo horário. "
+                        f"❌ {self.nome}: Item {id_item} bloqueado por item diferente ({ocupacao_id_item}). "
                         f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
                         f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
                     )
-                else:
-                    logger.warning(
-                        f"⚠️ {self.nome} ocupada por item diferente (ID: {ocupacao_id_item}) "
-                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
-                    )
-                return False
+                    return False
         
+        # ✅ Nenhum item diferente em conflito - pode tentar
+        return True
+
+    def verificar_disponibilidade_com_capacidade(self, quantidade: float, inicio: datetime, fim: datetime, id_item: int) -> bool:
+        """
+        ✅ MÉTODO COMPLETO - Verifica disponibilidade + capacidade em uma só chamada.
+        
+        Este método faz a verificação completa:
+        1. Verifica se pode alocar (mesmo item ou sem conflitos)
+        2. Valida se a capacidade comporta a nova quantidade
+        
+        Retorna True apenas se AMBAS as condições forem atendidas.
+        """
+        # Primeira verificação: pode alocar neste horário?
+        if not self.esta_disponivel_para_item(inicio, fim, id_item):
+            return False
+        
+        # Segunda verificação: capacidade comporta a nova quantidade?
+        if not self.validar_nova_ocupacao_item(id_item, quantidade, inicio, fim):
+            logger.debug(
+                f"❌ {self.nome}: Item {id_item} pode sobrepor temporalmente, "
+                f"mas capacidade insuficiente para {quantidade}g no período "
+                f"{inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+            )
+            return False
+        
+        # ✅ Ambas validações passaram
+        logger.debug(
+            f"✅ {self.nome}: Item {id_item} aprovado para {quantidade}g "
+            f"no período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+        )
         return True
 
     def validar_capacidade(self, quantidade_gramas: float) -> bool:
@@ -288,7 +327,7 @@ class DivisoraDeMassas(Equipamento):
         )
 
         # Log informativo
-        quantidade_maxima_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim) + quantidade
+        quantidade_maxima_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
         logger.info(
             f"🔪 {self.nome} | Item {id_item}: Nova ocupação {quantidade}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "

@@ -1,0 +1,70 @@
+{
+  "id_ficha_tecnica": 2011,
+  "id_item": 2011,
+  "nome": "creme_de_camarao",
+  "descricao": "Creme de camarão",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 39,
+      "nome": "camarao_medio_descascado",
+      "descricao": "Camarão médio descascado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 40,
+      "nome": "molho_de_tomate",
+      "descricao": "Molho de tomate",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 20
+    },
+    {
+      "id_item": 37,
+      "nome": "requeijao_cremoso",
+      "descricao": "Requeijão cremoso",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 20
+    },
+    {
+      "id_item": 41,
+      "nome": "azeite_de_oliva_extra_virgem",
+      "descricao": "Azeite de oliva extra virgem",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 8
+    },
+    {
+      "id_item": 5,
+      "nome": "sal_refinado",
+      "descricao": "Sal refinado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 1
+    },
+    {
+      "id_item": 42,
+      "nome": "salsa_crespa",
+      "descricao": "Salsa crespa",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 2
+    },
+    {
+      "id_item": 33,
+      "nome": "pimenta_do_reino",
+      "descricao": "Pimenta do reino",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 0.5
+    }
+  ]
+}

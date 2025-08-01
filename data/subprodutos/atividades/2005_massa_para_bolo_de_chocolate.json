@@ -1,0 +1,53 @@
+{
+  "id_item": 2005,
+  "nome": "massa_para_bolo_de_chocolate",
+  "antecipacao_de_producao": "00:00:00",
+  "atividades": [
+    {
+      "id_atividade": 20051,
+      "nome": "preparo_para_coccao_de_massa_para_bolo_de_chocolate",
+      "tipo_atividade": "PREPARO_PARA_COCCAO_DE_MASSA_PARA_BOLO_DE_CHOCOLATE",
+      "tipo_equipamento": {
+        "BANCADAS": 1,
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6", "armario_esqueleto_1", "armario_esqueleto_2"],
+      "fips_equipamentos": {
+        "bancada_4": 1,
+        "bancada_5": 2,
+        "bancada_6": 3,
+        "armario_esqueleto_1": 1,
+        "armario_esqueleto_2": 2
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "bancada_4": {
+          "fracoes_necessarias": 1
+        },
+        "bancada_5": {
+          "fracoes_necessarias": 1
+        },
+        "bancada_6": {
+          "fracoes_necessarias": 1
+        },
+        "armario_esqueleto_1": {
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        },
+        "armario_esqueleto_2": {
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 3000, "quantidade_max": 6000, "duracao": "00:08:00" },
+        { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:16:00" },
+        { "quantidade_min": 13001, "quantidade_max": 20000, "duracao": "00:24:00" }
+      ]
+    }
+  ]
+}

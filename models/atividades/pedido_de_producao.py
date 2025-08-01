@@ -60,8 +60,30 @@ class PedidoDeProducao:
             dados_ficha_tecnica=dados_ficha,
             quantidade_requerida=self.quantidade
         )
-        self.funcionarios_elegiveis = self._filtrar_funcionarios_por_item(self.id_produto)
-
+        # ✅ CORREÇÃO: Usar todos os funcionários ou filtro abrangente
+        self.funcionarios_elegiveis = self._filtrar_funcionarios_abrangente()
+        
+    def _filtrar_funcionarios_abrangente(self) -> List[Funcionario]:
+        """Filtra funcionários considerando produto principal E subprodutos"""
+        if not self.ficha_tecnica_modular:
+            return self.todos_funcionarios
+            
+        tipos_necessarios = set()
+        
+        # Produto principal
+        tipos_necessarios.update(buscar_tipos_profissionais_por_id_item(self.id_produto))
+        
+        # Subprodutos
+        estimativas = self.ficha_tecnica_modular.calcular_quantidade_itens()
+        for item_dict, _ in estimativas:
+            if item_dict.get("tipo_item") == "SUBPRODUTO":
+                sub_id = item_dict.get("id_ficha_tecnica") 
+                if sub_id:
+                    tipos_necessarios.update(
+                        buscar_tipos_profissionais_por_id_item(sub_id)
+                    )
+        
+        return [f for f in self.todos_funcionarios if f.tipo_profissional in tipos_necessarios]
 
     def criar_atividades_modulares_necessarias(self):
         """

@@ -1,0 +1,111 @@
+{
+  "id_item": 2013,
+  "nome": "creme_chantilly",
+  "antecipacao_de_producao": "00:00:00",
+  "atividades": [
+    {
+      "id_atividade": 20131,
+      "nome": "mistura_de_creme_chantilly",
+      "tipo_atividade": "MISTURA_DE_CREME_CHANTILLY",
+      "tipo_equipamento": {
+        "BATEDEIRAS": 1
+      },
+      "equipamentos_elegiveis": ["batedeira_planetaria_1", "batedeira_planetaria_2"],
+      "fips_equipamentos": {
+        "batedeira_planetaria_1": 1,
+        "batedeira_planetaria_2": 1
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "batedeira_planetaria_1": {
+          "velocidade": 10
+        },
+        "batedeira_planetaria_2": {
+          "velocidade": 10
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 2000, "duracao": "00:05:00" },
+        { "quantidade_min": 2001, "quantidade_max": 4000, "duracao": "00:08:00" },
+        { "quantidade_min": 4001, "quantidade_max": 5000, "duracao": "00:10:00" }
+      ]
+    },
+    {
+      "id_atividade": 20132,
+      "nome": "preparo_para_armazenamento_creme_chantilly",
+      "tipo_atividade": "PREPARO_PARA_ARMAZENAMENTO_CREME_CHANTILLY",
+      "tipo_equipamento": {
+        "BANCADAS": 1,
+        "BALANCAS": 1
+      },
+      "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6", "balanca_digital_2"],
+      "fips_equipamentos": {
+        "bancada_4": 3,
+        "bancada_5": 1,
+        "bancada_6": 2,
+        "balanca_digital_2": 1
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "bancada_4": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "bancada_5": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "bancada_6": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 2000, "duracao": "00:06:00" },
+        { "quantidade_min": 2001, "quantidade_max": 4000, "duracao": "00:10:00" },
+        { "quantidade_min": 4001, "quantidade_max": 5000, "duracao": "00:12:00" }
+      ]
+    },
+    {
+      "id_atividade": 20133,
+      "nome": "armazenamento_sob_temperatura_para_creme_chantilly",
+      "tipo_atividade": "ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CREME_CHANTILLY",
+      "tipo_equipamento": {
+        "REFRIGERACAO_CONGELAMENTO": 1
+      },
+      "equipamentos_elegiveis": ["camara_refrigerada_1"],
+      "fips_equipamentos": {
+        "camara_refrigerada_1": 1
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "camara_refrigerada_1": {
+          "faixa_temperatura": 4,
+          "tipo_de_armazenamento": "CAIXAS"
+        }
+      },
+      "tipos_profissionais_permitidos": ["ALMOXARIFE"],
+      "fips_profissionais_permitidos": {
+        "ALMOXARIFE": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 2000, "duracao": "00:03:00" },
+        { "quantidade_min": 2001, "quantidade_max": 4000, "duracao": "00:05:00" },
+        { "quantidade_min": 4001, "quantidade_max": 5000, "duracao": "00:06:00" }
+      ]
+    }
+  ]
+}

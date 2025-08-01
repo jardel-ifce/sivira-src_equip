@@ -1,0 +1,47 @@
+
+{
+  "id_ficha_tecnica": 2003,
+  "id_item": 2003,
+  "nome": "massa_para_frituras",
+  "descricao": "Massa para frituras",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 3,
+      "descricao": "Farinha de trigo para pães",
+      "nome": "farinha_de_trigo_para_paes",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 10,
+      "descricao": "Água mineral",
+      "nome": "agua_mineral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 95
+    },
+    {
+      "id_item": 11,
+      "descricao": "Tempero pronto sabor frango",
+      "nome": "tempero_pronto_sabor_frango",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    },
+    {
+      "id_item": 12,
+      "descricao": "Leite em pó integral",
+      "nome": "leite_em_po_integral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    }
+  ]
+}

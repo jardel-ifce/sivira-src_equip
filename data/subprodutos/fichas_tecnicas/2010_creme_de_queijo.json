@@ -1,0 +1,54 @@
+{
+  "id_ficha_tecnica": 2010,
+  "id_item": 2010,
+  "nome": "creme_de_queijo",
+  "descricao": "Creme de queijo",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 34,
+      "nome": "queijo_do_reino",
+      "descricao": "Queijo do reino",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 35,
+      "nome": "queijo_gorgonzola",
+      "descricao": "Queijo gorgonzola",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 36,
+      "nome": "queijo_prato",
+      "descricao": "Queijo prato",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 37,
+      "nome": "requeijao_cremoso",
+      "descricao": "Requeijão cremoso",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 80
+    },
+    {
+      "id_item": 38,
+      "nome": "pimenta_rosa",
+      "descricao": "Pimenta rosa",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 1
+    }
+  ]
+}

@@ -1,0 +1,304 @@
+{
+  "id_item": 1004,
+  "nome": "pao_baguete",
+  "atividades": [
+    {
+      "id_atividade": 10041,
+      "nome": "pesagem_de_massas_para_pao_baguete",
+      "tipo_atividade": "PESAGEM_DE_MASSAS_PARA_PAO_BAGUETE",
+      "tipo_equipamento": {
+        "BALANCAS": 1,
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["balanca_digital_1", "bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "balanca_digital_1": 1, 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "balanca_digital_1": {
+          "peso_gramas": 350
+        },
+        "bancada_1": { 
+          "fracoes_necessarias": 1, 
+          "numero_operadores": 1 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 1, 
+          "numero_operadores": 1 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 1, 
+          "numero_operadores": 1 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1 
+      },
+      "quantidade_funcionarios": 2,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+      ]
+    },
+    {
+      "id_atividade": 10042,
+      "nome": "divisao_de_massas_para_pao_baguete",
+      "tipo_atividade": "DIVISAO_DE_MASSAS_PARA_PAO_BAGUETE",
+      "tipo_equipamento": {
+        "DIVISORAS": 1,
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["divisora_1", "bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "divisora_1": 1, 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "bancada_1": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1 
+      },
+      "quantidade_funcionarios": 2,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:04:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:08:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:12:00" }
+      ]
+    },
+    {
+      "id_atividade": 10043,
+      "nome": "modelagem_de_paes_baguete",
+      "tipo_atividade": "MODELAGEM_DE_PAES_BAGUETE",
+      "tipo_equipamento": {
+        "MODELADORAS": 1,
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["modeladora_de_paes_1", "bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "modeladora_de_paes_1": 1, 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "bancada_1": { 
+          "fracoes_necessarias": 3, 
+          "numero_operadores": 3 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 3, 
+          "numero_operadores": 3 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 3, 
+          "numero_operadores": 3 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1 
+      },
+      "quantidade_funcionarios": 3,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:10:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:20:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:30:00" }
+      ]
+    },
+    {
+      "id_atividade": 10044,
+      "nome": "preparo_de_pao_baguete_para_fermentacao",
+      "tipo_atividade": "PREPARO_DE_PAO_BAGUETE_PARA_FERMENTACAO",
+      "tipo_equipamento": {
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "bancada_1": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+      ]
+    },
+    {
+      "id_atividade": 10045,
+      "nome": "fermentacao_biologica_de_paes_baguete",
+      "tipo_atividade": "FERMENTACAO_BIOLOGICA_DE_PAES_BAGUETE",
+      "tipo_equipamento": {
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "armario_fermentador_1": 1,
+        "armario_fermentador_2": 1,
+        "armario_fermentador_3": 1,
+        "armario_fermentador_4": 1
+      },
+      "configuracoes_equipamentos": {},
+      "tipos_profissionais_permitidos": [],
+      "fips_profissionais_permitidos": {},
+      "quantidade_funcionarios": 0,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "02:30:00" }
+      ]
+    },
+    {
+      "id_atividade": 10046,
+      "nome": "corte_de_pestana_para_paes_baguete",
+      "tipo_atividade": "CORTE_DE_PESTANA_PARA_PAES_BAGUETE",
+      "tipo_equipamento": {
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "bancada_1": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:04:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:08:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:12:00" }
+      ]
+    },
+    {
+      "id_atividade": 10047,
+      "nome": "coccao_de_paes_baguete",
+      "tipo_atividade": "COCCAO_DE_PAES_BAGUETE",
+      "tipo_equipamento": {
+        "FORNOS": 1
+      },
+      "equipamentos_elegiveis": ["forno_1", "forno_2"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "forno_1": 1,
+        "forno_2": 2
+      },
+      "configuracoes_equipamentos": {
+        "forno_1": {
+          "faixa_temperatura": 220,
+          "setup_min": 15,
+          "tipo_coccao": ["TURBO"],
+          "tem_vaporizacao": "True",
+          "vaporizacao": 3,
+          "unidades_por_nivel": 24
+        },
+        "forno_2": {
+          "faixa_temperatura": 240,
+          "setup_min": 20,
+          "tipo_coccao": ["LASTRO"],
+          "tem_vaporizacao": "True",
+          "vaporizacao": 3,
+          "unidades_por_nivel": 24
+        }
+      },
+      "tipos_profissionais_permitidos": [],
+      "fips_profissionais_permitidos": {},
+      "quantidade_funcionarios": 0,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "00:20:00" }
+      ]
+    },
+    {
+      "id_atividade": 10048,
+      "nome": "retirada_de_paes_baguete_da_coccao",
+      "tipo_atividade": "RETIRADA_DE_PAES_BAGUETE_DA_COCCAO",
+      "tipo_equipamento": {
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "armario_fermentador_1": 2,
+        "armario_fermentador_2": 2,
+        "armario_fermentador_3": 1,
+        "armario_fermentador_4": 1
+      },
+      "configuracoes_equipamentos": {},
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+      ]
+    }
+  ]
+}

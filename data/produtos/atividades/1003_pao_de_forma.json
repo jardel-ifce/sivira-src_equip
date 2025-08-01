@@ -1,0 +1,334 @@
+{
+  "id_item": 1003,
+  "nome": "pao_de_forma",
+  "atividades": [
+    {
+      "id_atividade": 10031,
+      "nome": "pesagem_e_divisao_de_massas_para_pao_de_forma",
+      "tipo_atividade": "PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_DE_FORMA",
+      "tipo_equipamento": {
+        "BALANCAS": 1,
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["balanca_digital_1", "bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "balanca_digital_1": 1, 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "balanca_digital_1": {
+          "peso_gramas": 400
+        },
+        "bancada_1": { 
+          "fracoes_necessarias": 1, 
+          "numero_operadores": 1 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 1, 
+          "numero_operadores": 1 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 1, 
+          "numero_operadores": 1 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1 
+      },
+      "quantidade_funcionarios": 2,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+      ]
+    },
+    {
+      "id_atividade": 10032,
+      "nome": "modelagem_de_paes_de_forma",
+      "tipo_atividade": "MODELAGEM_DE_PAES_DE_FORMA",
+      "tipo_equipamento": {
+        "MODELADORAS": 1,
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["modeladora_de_paes_1", "bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "modeladora_de_paes_1": 1, 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "bancada_1": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1 
+      },
+      "quantidade_funcionarios": 2,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:04:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:08:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:12:00" }
+      ]
+    },
+    {
+      "id_atividade": 10033,
+      "nome": "preparo_de_paes_de_forma_para_fermentacao",
+      "tipo_atividade": "PREPARO_DE_PAES_DE_FORMA_PARA_FERMENTACAO",
+      "tipo_equipamento": {
+        "BANCADAS": 1
+      },
+      "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "bancada_1": 1,
+        "bancada_2": 2,
+        "bancada_3": 3
+      },
+      "configuracoes_equipamentos": {
+        "bancada_1": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_2": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        },
+        "bancada_3": { 
+          "fracoes_necessarias": 2, 
+          "numero_operadores": 2 
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+      ]
+    },
+    {
+      "id_atividade": 10034,
+      "nome": "fermentacao_biologica_de_paes_de_forma",
+      "tipo_atividade": "FERMENTACAO_BIOLOGICA_DE_PAES_DE_FORMA",
+      "tipo_equipamento": {
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "armario_fermentador_1": 1,
+        "armario_fermentador_2": 1,
+        "armario_fermentador_3": 1,
+        "armario_fermentador_4": 1
+      },
+      "configuracoes_equipamentos": {
+        "armario_fermentador_1": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_2": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_3": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_4": { 
+          "unidades_por_nivel": 5
+        }
+      },
+      "tipos_profissionais_permitidos": [],
+      "fips_profissionais_permitidos": {},
+      "quantidade_funcionarios": 0,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "02:30:00" }
+      ]
+    },
+    {
+      "id_atividade": 10035,
+      "nome": "preparo_de_paes_de_forma_para_coccao",
+      "tipo_atividade": "PREPARO_DE_PAES_DE_FORMA_PARA_COCCAO",
+      "tipo_equipamento": {},
+      "equipamentos_elegiveis": [],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": {},
+      "configuracoes_equipamentos": {},
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2, 
+        "AUXILIAR_DE_PADEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:04:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:08:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:12:00" }
+      ]
+    },
+    {
+      "id_atividade": 10036,
+      "nome": "coccao_de_paes_de_forma",
+      "tipo_atividade": "COCCAO_DE_PAES_DE_FORMA",
+      "tipo_equipamento": {
+        "FORNOS": 1
+      },
+      "equipamentos_elegiveis": ["forno_1", "forno_2"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "forno_1": 1,
+        "forno_2": 2
+      },
+      "configuracoes_equipamentos": {
+        "forno_1": {
+          "faixa_temperatura": 180,
+          "setup_min": 15,
+          "tipo_coccao": ["TURBO"],
+          "tem_vaporizacao": "False",
+          "vaporizacao": 0,
+          "unidades_por_nivel": 30
+        },
+        "forno_2": {
+          "faixa_temperatura": 200,
+          "setup_min": 20,
+          "tipo_coccao": ["LASTRO"],
+          "tem_vaporizacao": "False",
+          "vaporizacao": 0,
+          "unidades_por_nivel": 30
+        }
+      },
+      "tipos_profissionais_permitidos": [],
+      "fips_profissionais_permitidos": {},
+      "quantidade_funcionarios": 0,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "00:20:00" }
+      ]
+    },
+    {
+      "id_atividade": 10037,
+      "nome": "retirada_de_paes_de_forma_da_coccao",
+      "tipo_atividade": "RETIRADA_DE_PAES_DE_FORMA_DA_COCCAO",
+      "tipo_equipamento": {
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "armario_fermentador_1": 2,
+        "armario_fermentador_2": 2,
+        "armario_fermentador_3": 1,
+        "armario_fermentador_4": 1
+      },
+      "configuracoes_equipamentos": {
+        "armario_fermentador_1": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_2": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_3": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_4": { 
+          "unidades_por_nivel": 5
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+      ]
+    },
+    {
+      "id_atividade": 10038,
+      "nome": "resfriamento_de_paes_de_forma",
+      "tipo_atividade": "RESFRIAMENTO_DE_PAES_DE_FORMA",
+      "tipo_equipamento": {
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "tempo_maximo_de_espera": "05:00:00",
+      "fips_equipamentos": { 
+        "armario_fermentador_1": 2,
+        "armario_fermentador_2": 2,
+        "armario_fermentador_3": 1,
+        "armario_fermentador_4": 1
+      },
+      "configuracoes_equipamentos": {
+        "armario_fermentador_1": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_2": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_3": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_4": { 
+          "unidades_por_nivel": 5
+        }
+      },
+      "tipos_profissionais_permitidos": [],
+      "fips_profissionais_permitidos": {},
+      "quantidade_funcionarios": 0,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "24:00:00" }
+      ]
+    },
+    {
+      "id_atividade": 10039,
+      "nome": "embalamento_de_paes_de_forma",
+      "tipo_atividade": "EMBALAMENTO_DE_PAES_DE_FORMA",
+      "tipo_equipamento": {
+        "EMBALADORAS": 1
+      },
+      "equipamentos_elegiveis": ["embaladora_1"],
+      "tempo_maximo_de_espera": "00:00:00",
+      "fips_equipamentos": { 
+        "embaladora_1": 1 
+      },
+      "configuracoes_equipamentos": {
+        "embaladora_1": { 
+          "tipo_embalagem": ["SIMPLES", "SELADORA"]
+        }
+      },
+      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "fips_profissionais_permitidos": { 
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1 
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:05:00" },
+        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:10:00" },
+        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:15:00" }
+      ]
+    }
+  ]
+}

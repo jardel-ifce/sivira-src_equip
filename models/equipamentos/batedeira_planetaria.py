@@ -167,16 +167,20 @@ class BatedeiraPlanetaria(Equipamento):
 
         self.ocupacoes.append((id_ordem, id_pedido, id_atividade, id_item, quantidade_gramas, velocidade, inicio, fim))
         
-        quantidade_total_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim) + quantidade_gramas
+        # ✅ CORREÇÃO: Calcula total atual que já inclui a nova ocupação
+        quantidade_total_atual = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        
+        # Log informativo com quantidade correta
         logger.info(
             f"🪐 {self.nome} | Item {id_item}: Nova ocupação {quantidade_gramas}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Total do item no horário: {quantidade_total_apos}g) "
+            f"(Total do item no horário: {quantidade_total_atual}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}), "
             f"velocidade {velocidade}."
         )
         
         return True
+
 
     # ==========================================================
     # 🔓 Liberação (métodos idênticos à BatedeiraIndustrial)

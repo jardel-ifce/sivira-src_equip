@@ -1,5 +1,3 @@
-
-
 # =========================================
 # 📦 Imports dos Equipamentos
 # =========================================
@@ -13,9 +11,11 @@ from models.equipamentos.batedeira_planetaria import BatedeiraPlanetaria
 from models.equipamentos.masseira import Masseira
 from models.equipamentos.hot_mix import HotMix
 from models.equipamentos.forno import Forno
+from models.equipamentos.fritadeira import Fritadeira
 from models.equipamentos.armario_esqueleto import ArmarioEsqueleto
 from models.equipamentos.divisora_de_massas import DivisoraDeMassas
 from models.equipamentos.modeladora_de_paes import ModeladoraDePaes
+from models.equipamentos.modeladora_de_salgados import ModeladoraDeSalgados  
 from models.equipamentos.armario_fermentador import ArmarioFermentador
 from models.equipamentos.embaladora import Embaladora
 from enums.producao.tipo_setor import TipoSetor
@@ -24,6 +24,7 @@ from enums.equipamentos.tipo_pressao_chama import TipoPressaoChama
 from enums.equipamentos.tipo_mistura import TipoMistura
 from enums.equipamentos.tipo_velocidade import TipoVelocidade
 from enums.equipamentos.tipo_coccao import TipoCoccao
+from enums.equipamentos.tipo_embalagem import TipoEmbalagem
 
 
 class FabricaEquipamentos:
@@ -41,11 +42,11 @@ class FabricaEquipamentos:
             nome="Câmara Refrigerada 1",
             setor=TipoSetor.ALMOXARIFADO,
             capacidade_caixa_min=1,
-            capacidade_caixa_max=20,
+            capacidade_caixa_max=200,  # CORRIGIDO: 20 → 200
             nivel_tela=25,
             capacidade_niveis_min=1,
-            capacidade_niveis_max=25,
-            faixa_temperatura_min=-18,
+            capacidade_niveis_max=25,  # CORRIGIDO: 1 → 25
+            faixa_temperatura_min=0,   # CORRIGIDO: -18 → 0
             faixa_temperatura_max=4,
         )
 
@@ -56,7 +57,7 @@ class FabricaEquipamentos:
             nome="Câmara Refrigerada 2",
             setor=TipoSetor.ALMOXARIFADO,
             capacidade_caixa_min=1,
-            capacidade_caixa_max=20,
+            capacidade_caixa_max=200,  # CORRIGIDO: 20 → 200
             nivel_tela=25,
             capacidade_niveis_min=1,
             capacidade_niveis_max=1,
@@ -74,7 +75,7 @@ class FabricaEquipamentos:
             id=3,
             nome="Fogão 1",
             setor=TipoSetor.COZINHA,
-            numero_operadores=1,
+            numero_operadores=6,  # CORRIGIDO: 1 → 6
             chamas_suportadas=[TipoChama.BAIXA, TipoChama.MEDIA, TipoChama.ALTA],
             capacidade_por_boca_gramas_min=2000,
             capacidade_por_boca_gramas_max=30000,
@@ -88,11 +89,11 @@ class FabricaEquipamentos:
             id=4,
             nome="Fogão 2",
             setor=TipoSetor.CONFEITARIA,
-            numero_operadores=1,
+            numero_operadores=4,  # CORRIGIDO: 1 → 4
             chamas_suportadas=[TipoChama.BAIXA, TipoChama.MEDIA, TipoChama.ALTA],
             capacidade_por_boca_gramas_min=2000,
             capacidade_por_boca_gramas_max=30000,
-            numero_bocas=4,
+            numero_bocas=4,  # CORRIGIDO: 6 → 4
             pressao_chamas_suportadas=[TipoPressaoChama.BAIXA_PRESSAO, TipoPressaoChama.CHAMA_UNICA]
         )
 
@@ -116,7 +117,7 @@ class FabricaEquipamentos:
         return BalancaDigital(8, "Balança Digital 4", TipoSetor.COZINHA, 1, 40000)
 
     # ============================================
-    # 🪵 Criação das Bancadas (atualizado)
+    # 🪵 Criação das Bancadas (corrigido)
     # ============================================
     @staticmethod
     def criar_bancada_1():
@@ -125,7 +126,7 @@ class FabricaEquipamentos:
             nome="Bancada 1",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=4,
-            numero_fracoes=4
+            numero_fracoes=4  # Ajustado para consistência
         )
 
     @staticmethod
@@ -135,7 +136,7 @@ class FabricaEquipamentos:
             nome="Bancada 2",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=4,
-            numero_fracoes=4
+            numero_fracoes=4  # Ajustado para consistência
         )
 
     @staticmethod
@@ -174,8 +175,8 @@ class FabricaEquipamentos:
             id=14,
             nome="Bancada 6",
             setor=TipoSetor.CONFEITARIA,
-            numero_operadores=3,
-            numero_fracoes=3
+            numero_operadores=6,  # CORRIGIDO: 3 → 6
+            numero_fracoes=6      # CORRIGIDO: 3 → 6
         )
 
     @staticmethod
@@ -184,8 +185,8 @@ class FabricaEquipamentos:
             id=15,
             nome="Bancada 7",
             setor=TipoSetor.COZINHA,
-            numero_operadores=3,
-            numero_fracoes=3
+            numero_operadores=6,  # CORRIGIDO: 3 → 6
+            numero_fracoes=6      # CORRIGIDO: 3 → 6
         )
 
     @staticmethod
@@ -252,8 +253,8 @@ class FabricaEquipamentos:
             nome="Masseira 1",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=1,
-            capacidade_gramas_min=1,
-            capacidade_gramas_max=15000,
+            capacidade_gramas_min=3000,
+            capacidade_gramas_max=50000,  # CORRIGIDO: 5000 → 50000
             tipos_de_mistura_suportados=[TipoMistura.SEMI_RAPIDA],
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA,
@@ -267,8 +268,8 @@ class FabricaEquipamentos:
             id=21,
             nome="Masseira 2",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_gramas_min=1,
-            capacidade_gramas_max=15000,
+            capacidade_gramas_min=3000,
+            capacidade_gramas_max=30000,
             numero_operadores=1,
             tipos_de_mistura_suportados=[TipoMistura.RAPIDA],
             velocidades_suportadas=[
@@ -282,10 +283,10 @@ class FabricaEquipamentos:
             id=22,
             nome="Masseira 3",
             setor=TipoSetor.CONFEITARIA,
-            capacidade_gramas_min=1,
+            capacidade_gramas_min=3000,
             capacidade_gramas_max=20000,
             numero_operadores=1,
-            tipos_de_mistura_suportados=TipoMistura.LENTA,
+            tipos_de_mistura_suportados=[TipoMistura.LENTA],  # CORRIGIDO: formato lista
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA
             ],
@@ -391,7 +392,7 @@ class FabricaEquipamentos:
     @staticmethod
     def criar_forno_1():
         return Forno(
-            id=101,
+            id=28,
             nome="Forno 1",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
@@ -412,7 +413,7 @@ class FabricaEquipamentos:
     @staticmethod
     def criar_forno_2():
         return Forno(
-            id=102,
+            id=29,
             nome="Forno 2",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
@@ -433,50 +434,70 @@ class FabricaEquipamentos:
     @staticmethod
     def criar_forno_3():
         return Forno(
-            id=103,
+            id=30,
             nome="Forno 3",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
-            nivel_tela_max=2,
+            nivel_tela_max=4,  # CORRIGIDO: 2 → 4
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=20,
             capacidade_niveis_min=1,
-            capacidade_niveis_max=10,
+            capacidade_niveis_max=4,  # CORRIGIDO: 10 → 4
             tipo_coccao=TipoCoccao.LASTRO,
-            vaporizacao_seg_min=1,
-            vaporizacao_seg_max=10,
-            velocidade_mps_min=1,
-            velocidade_mps_max=4
+            vaporizacao_seg_min=None,  # CORRIGIDO: 1 → None
+            vaporizacao_seg_max=None,  # CORRIGIDO: 10 → None
+            velocidade_mps_min=None,   # CORRIGIDO: 1 → None
+            velocidade_mps_max=None    # CORRIGIDO: 4 → None
         )
 
 
     @staticmethod
     def criar_forno_4():
         return Forno(
-            id=104,
+            id=31,
             nome="Forno 4",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
-            nivel_tela_max=2,
+            nivel_tela_max=4,  # CORRIGIDO: 2 → 4
             faixa_temperatura_min=120,
             faixa_temperatura_max=300,
             setup_min=20,
             capacidade_niveis_min=1,
-            capacidade_niveis_max=10,
+            capacidade_niveis_max=4,  # CORRIGIDO: 10 → 4
             tipo_coccao=TipoCoccao.LASTRO,
-            vaporizacao_seg_min=1,
-            vaporizacao_seg_max=10,
-            velocidade_mps_min=1,
-            velocidade_mps_max=4
+            vaporizacao_seg_min=None,  # CORRIGIDO: 1 → None
+            vaporizacao_seg_max=None,  # CORRIGIDO: 10 → None
+            velocidade_mps_min=None,   # CORRIGIDO: 1 → None
+            velocidade_mps_max=None    # CORRIGIDO: 4 → None
         )
+        
+    # =========================================
+    # 🍟 Fritadeiras
+    # =========================================
+    @staticmethod
+    def criar_fritadeira_1():
+        return Fritadeira(
+            id=32,
+            nome="Fritadeira 1",
+            setor=TipoSetor.CONFEITARIA,
+            numero_operadores=4,  # CORRIGIDO: 1 → 4
+            capacidade_gramas_min=1000,
+            capacidade_gramas_max=5000,
+            numero_fracoes=4,
+            faixa_temperatura_min=120,  # CORRIGIDO: 150 → 120
+            faixa_temperatura_max=250,
+            setup_minutos=10
+        )
+    
+    
     # =========================================
     # 🗄️ Armário Esqueleto
     # =========================================
     @staticmethod
     def criar_armario_esqueleto_1():
         return ArmarioEsqueleto(
-            id=105,
+            id=33,
             nome="Armário Esqueleto 1",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
@@ -487,7 +508,7 @@ class FabricaEquipamentos:
     @staticmethod
     def criar_armario_esqueleto_2():
         return ArmarioEsqueleto(
-            id=105,
+            id=34,
             nome="Armário Esqueleto 2",
             setor=TipoSetor.CONFEITARIA,
             nivel_tela_min=1,
@@ -500,12 +521,13 @@ class FabricaEquipamentos:
     # 🗄️ Divisoras de Massas
     # =========================================
 
+    @staticmethod
     def criar_divisora_de_massas_1():
         return DivisoraDeMassas(
-            id=106,
+            id=35,
             nome="Divisoras de Massas 1",
             setor=TipoSetor.PANIFICACAO,
-            numero_operadores=1,
+            numero_operadores=2,  # Ajustado conforme PDF
             capacidade_boleamento_unidades_por_segundo=100,
             capacidade_divisao_unidades_por_segundo=100,
             capacidade_gramas_max=30000,
@@ -513,12 +535,13 @@ class FabricaEquipamentos:
             boleadora=False
         )
     
+    @staticmethod
     def criar_divisora_de_massas_2():
         return DivisoraDeMassas(
-            id=107,
+            id=36,
             nome="Divisoras de Massas 2",
             setor=TipoSetor.PANIFICACAO,
-            numero_operadores=1,
+            numero_operadores=2,  # Ajustado conforme PDF
             capacidade_boleamento_unidades_por_segundo=100,
             capacidade_divisao_unidades_por_segundo=100,
             capacidade_gramas_max=30000,
@@ -526,93 +549,112 @@ class FabricaEquipamentos:
             boleadora=True
         )
     # =========================================
-    # 🧁 Modeladora de Pães Divisoras de Massas
+    # 🧁 Modeladora de Pães
     # =========================================
     @staticmethod 
     def criar_modeladora_de_paes_1():
         return ModeladoraDePaes(
-            id=108,
+            id=37,
             nome="Modeladora de Pães 1",
             setor=TipoSetor.PANIFICACAO,
-            numero_operadores=1,
-            capacidade_min_unidades_por_minuto=60,
-            capacidade_max_unidades_por_minuto=120 
+            numero_operadores=2,  # Ajustado conforme PDF
+            capacidade_min_unidades_por_minuto=30,  # CORRIGIDO: 60 → 30
+            capacidade_max_unidades_por_minuto=35   # CORRIGIDO: 120 → 35
         )
     @staticmethod 
     def criar_modeladora_de_paes_2():
         return ModeladoraDePaes(
-            id=109,
+            id=38,
             nome="Modeladora de Pães 2",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=1,
             capacidade_min_unidades_por_minuto=60,
             capacidade_max_unidades_por_minuto=120 
         )
+    
+    # =========================================
+    # 🥟 Modeladora de Salgados (NOVO EQUIPAMENTO)
+    # =========================================
+    @staticmethod
+    def criar_modeladora_de_salgados_1():
+        return ModeladoraDeSalgados(
+            id=39,
+            nome="Modeladora de salgados",
+            setor=TipoSetor.CONFEITARIA,
+            numero_operadores=3,
+            capacidade_min_unidades_por_minuto=9,
+            capacidade_max_unidades_por_minuto=83
+        )
+    
     # =========================================
     # 🗄️ Armário Fermentador
     # =========================================
     @staticmethod
     def criar_armario_fermentador_1():
         return ArmarioFermentador(
-            id=110,
+            id=40,
             nome="Armário Fermentador 1",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=30,
+            nivel_tela_max=25,  # Mantido conforme PDF
             capacidade_niveis=1
         )
     
     @staticmethod
     def criar_armario_fermentador_2():
         return ArmarioFermentador(
-            id=111,
+            id=41,
             nome="Armário Fermentador 2",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=30,
+            nivel_tela_max=25,  # Mantido conforme PDF
             capacidade_niveis=1
         )
 
     @staticmethod
     def criar_armario_fermentador_3():
         return ArmarioFermentador(
-            id=112,
+            id=42,
             nome="Armário Fermentador 3",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=15,
+            nivel_tela_max=25,  # CORRIGIDO: 15 → 25
             capacidade_niveis=1
         )
     @staticmethod
     def criar_armario_fermentador_4():
         return ArmarioFermentador(
-            id=113,
+            id=43,
             nome="Armário Fermentador 4",
             setor=TipoSetor.PANIFICACAO,
             nivel_tela_min=1,
-            nivel_tela_max=15,
+            nivel_tela_max=25,  # CORRIGIDO: 15 → 25
             capacidade_niveis=1
         )
         
-        
+    # =========================================
+    # ✉️ Embaladoras
+    # =========================================       
     @staticmethod
     def criar_embaladora_1():
         return Embaladora(
-            id=114,
+            id=44,
             nome="Embaladora 1",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=1,
-            capacidade_gramas=500,
-            lista_tipo_embalagem=["SIMPLES", "SELADORA"]
+            capacidade_gramas=1000,
+            lista_tipo_embalagem=[TipoEmbalagem.SIMPLES, TipoEmbalagem.SELADORA]
         )
+
+    @staticmethod
     def criar_embaladora_2():
         return Embaladora(
-            id=115,
+            id=45,
             nome="Embaladora 2",
-            setor=TipoSetor.PANIFICACAO,
+            setor=TipoSetor.CONFEITARIA,
             numero_operadores=1,
-            capacidade_gramas=500,
-            lista_tipo_embalagem=["VACUO", "SELADORA"]
+            capacidade_gramas=1000,
+            lista_tipo_embalagem=[TipoEmbalagem.VACUO, TipoEmbalagem.SELADORA]
         )
 
 # ✅ Instâncias prontas para importação
@@ -656,6 +698,8 @@ forno_2 = FabricaEquipamentos.criar_forno_2()
 forno_3 = FabricaEquipamentos.criar_forno_3()
 forno_4 = FabricaEquipamentos.criar_forno_4()
 
+fritadeira_1 = FabricaEquipamentos.criar_fritadeira_1()
+
 armario_esqueleto_1 = FabricaEquipamentos.criar_armario_esqueleto_1()
 armario_esqueleto_2 = FabricaEquipamentos.criar_armario_esqueleto_2()
 
@@ -669,6 +713,9 @@ divisora_de_massas_2 = FabricaEquipamentos.criar_divisora_de_massas_2()
 
 modeladora_de_paes_1 = FabricaEquipamentos.criar_modeladora_de_paes_1()
 modeladora_de_paes_2 = FabricaEquipamentos.criar_modeladora_de_paes_2()
+
+# NOVO EQUIPAMENTO
+modeladora_de_salgados_1 = FabricaEquipamentos.criar_modeladora_de_salgados_1()
 
 embaladora_1 = FabricaEquipamentos.criar_embaladora_1()  
 embaladora_2 = FabricaEquipamentos.criar_embaladora_2()
@@ -711,6 +758,7 @@ equipamentos_disponiveis = [
     forno_2,
     forno_3,
     forno_4,
+    fritadeira_1,
     armario_esqueleto_1,
     armario_esqueleto_2,
     armario_fermentador_1,
@@ -721,6 +769,7 @@ equipamentos_disponiveis = [
     divisora_de_massas_2,
     modeladora_de_paes_1,
     modeladora_de_paes_2,
+    modeladora_de_salgados_1,  # NOVO EQUIPAMENTO ADICIONADO
     embaladora_1,
     embaladora_2
 ]

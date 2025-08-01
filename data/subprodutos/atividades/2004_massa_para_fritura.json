@@ -1,0 +1,44 @@
+{
+  "id_item": 2004,
+  "nome": "massa_para_fritura",
+  "antecipacao_de_producao": "00:00:00",
+  "atividades": [
+    {
+      "id_atividade": 20041,
+      "nome": "mistura_de_massas_para_fritura",
+      "tipo_atividade": "MISTURA_DE_MASSAS_PARA_FRITURA",
+      "tipo_equipamento": {
+        "MISTURADORAS_COM_COCCAO": 1
+      },
+      "equipamentos_elegiveis": ["hotmix_1", "hotmix_2"],
+      "fips_equipamentos": {
+        "hotmix_1": 1,
+        "hotmix_2": 1
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "hotmix_1": {
+          "velocidade": "BAIXA",
+          "tipo_chama": "ALTA",
+          "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+        },
+        "hotmix_2": {
+          "velocidade": "BAIXA",
+          "tipo_chama": "ALTA",
+          "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 2000, "quantidade_max": 10000, "duracao": "00:12:00" },
+        { "quantidade_min": 10001, "quantidade_max": 20000, "duracao": "00:16:00" },
+        { "quantidade_min": 20001, "quantidade_max": 30000, "duracao": "00:20:00" }
+      ]
+    }
+  ]
+}

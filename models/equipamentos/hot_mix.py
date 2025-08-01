@@ -17,7 +17,7 @@ class HotMix(Equipamento):
     🍳 Equipamento HotMix — Misturadora com Cocção de Alta Performance.
     ✔️ Controle de ocupação por ordem, pedido, atividade, item e quantidade.
     ✔️ Suporta múltiplas velocidades, chamas e pressões de chama.
-    ✔️ Permite sobreposição do mesmo id_item com intervalos flexíveis.
+    ✔️ JANELAS SIMULTÂNEAS: Permite sobreposição do mesmo id_item apenas com períodos idênticos ou distintos.
     ✔️ Validação dinâmica de capacidade considerando picos de sobreposição.
     ✔️ Ocupação exclusiva para itens diferentes.
     """
@@ -55,7 +55,7 @@ class HotMix(Equipamento):
         ] = []
 
     # ==========================================================
-    # 🔍 Validação Dinâmica de Capacidade (CORRIGIDO)
+    # 🔍 Validação Dinâmica de Capacidade (ORIGINAL - Mantido)
     # ==========================================================
     def obter_quantidade_maxima_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> int:
         """
@@ -176,6 +176,165 @@ class HotMix(Equipamento):
         capacidade_disponivel = self.capacidade_gramas_max - quantidade_ocupada_maxima
         return max(0, capacidade_disponivel)
 
+    # ==========================================================
+    # 🎯 NOVOS MÉTODOS PARA JANELAS SIMULTÂNEAS
+    # ==========================================================
+    def esta_disponivel_para_item_janelas_simultaneas(self, inicio: datetime, fim: datetime, id_item: int) -> bool:
+        """
+        🎯 JANELAS SIMULTÂNEAS: Verifica se o HotMix pode receber uma nova ocupação considerando regras de janelas simultâneas.
+        - Simultaneidade exata: mesmo início E mesmo fim (permitido)
+        - Períodos distintos: sem sobreposição temporal (permitido)
+        - Sobreposições parciais: conflitos temporais (bloqueado)
+        """
+        for ocupacao in self.ocupacoes:
+            inicio_existente = ocupacao[8]
+            fim_existente = ocupacao[9]
+            id_item_existente = ocupacao[3]
+            
+            # Para itens diferentes, não pode haver sobreposição
+            if id_item_existente != id_item:
+                if not (fim <= inicio_existente or inicio >= fim_existente):
+                    logger.debug(f"❌ {self.nome}: Ocupado por item diferente ({id_item_existente}) no período")
+                    return False
+            else:
+                # Para o mesmo item, aplicar regra de janelas simultâneas
+                simultaneidade_exata = (inicio == inicio_existente and fim == fim_existente)
+                periodos_distintos = (fim <= inicio_existente or inicio >= fim_existente)
+                
+                if not (simultaneidade_exata or periodos_distintos):
+                    logger.debug(f"❌ {self.nome}: Sobreposição temporal inválida para item {id_item} - período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} conflita com {inicio_existente.strftime('%H:%M')}-{fim_existente.strftime('%H:%M')}")
+                    return False
+        
+        return True
+
+    def obter_capacidade_disponivel_item_simultaneo(self, id_item: int, inicio: datetime, fim: datetime) -> int:
+        """
+        🎯 JANELAS SIMULTÂNEAS: Retorna a capacidade disponível para um item específico no período considerando janelas simultâneas.
+        """
+        # Para janelas simultâneas, precisamos verificar ocupações no período exato
+        quantidade_ocupada_simultanea = 0
+        
+        for ocupacao in self.ocupacoes:
+            if ocupacao[3] == id_item:  # mesmo item
+                inicio_existente = ocupacao[8]
+                fim_existente = ocupacao[9]
+                
+                # Se há simultaneidade exata, soma a ocupação
+                if inicio == inicio_existente and fim == fim_existente:
+                    quantidade_ocupada_simultanea += ocupacao[4]
+        
+        capacidade_disponivel = self.capacidade_gramas_max - quantidade_ocupada_simultanea
+        return max(0, capacidade_disponivel)
+
+    def validar_nova_ocupacao_item_simultaneo(self, id_item: int, quantidade_nova: int, 
+                                            inicio: datetime, fim: datetime) -> bool:
+        """
+        🎯 JANELAS SIMULTÂNEAS: Simula uma nova ocupação e verifica se a capacidade máxima será respeitada
+        considerando apenas ocupações simultâneas do mesmo item.
+        """
+        quantidade_ocupada_simultanea = 0
+        
+        for ocupacao in self.ocupacoes:
+            if ocupacao[3] == id_item:  # mesmo item
+                inicio_existente = ocupacao[8]
+                fim_existente = ocupacao[9]
+                
+                # Se há simultaneidade exata, soma a ocupação
+                if inicio == inicio_existente and fim == fim_existente:
+                    quantidade_ocupada_simultanea += ocupacao[4]
+        
+        quantidade_total_prevista = quantidade_ocupada_simultanea + quantidade_nova
+        
+        if quantidade_total_prevista > self.capacidade_gramas_max:
+            logger.debug(
+                f"❌ {self.nome} | Item {id_item}: Capacidade excedida com janelas simultâneas "
+                f"({quantidade_total_prevista}g > {self.capacidade_gramas_max}g)"
+            )
+            return False
+        
+        return True
+
+    def obter_quantidade_maxima_item_periodo_simultaneo(self, id_item: int, inicio: datetime, fim: datetime) -> int:
+        """
+        🎯 JANELAS SIMULTÂNEAS: Calcula a quantidade máxima de um item considerando apenas ocupações simultâneas.
+        """
+        quantidade_maxima_simultanea = 0
+        
+        for ocupacao in self.ocupacoes:
+            if ocupacao[3] == id_item:  # mesmo item
+                inicio_existente = ocupacao[8]
+                fim_existente = ocupacao[9]
+                
+                # Se há simultaneidade exata ou sobreposição temporal
+                if not (fim <= inicio_existente or inicio >= fim_existente):
+                    # Para janelas simultâneas, consideramos apenas períodos exatos
+                    if inicio == inicio_existente and fim == fim_existente:
+                        quantidade_maxima_simultanea += ocupacao[4]
+        
+        return quantidade_maxima_simultanea
+
+    def ocupar_janelas_simultaneas(
+        self,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
+        quantidade: int,
+        velocidade: TipoVelocidade,
+        chama: TipoChama,
+        pressao_chamas: List[TipoPressaoChama],
+        inicio: datetime,
+        fim: datetime
+    ) -> bool:
+        """
+        🎯 JANELAS SIMULTÂNEAS: Ocupa o equipamento com validação de janelas simultâneas.
+        """
+        # Validação 1: Capacidade individual
+        if not self.validar_capacidade(quantidade):
+            return False
+
+        # Validação 2: Disponibilidade com janelas simultâneas
+        if not self.esta_disponivel_para_item_janelas_simultaneas(inicio, fim, id_item):
+            logger.warning(
+                f"❌ {self.nome} | Indisponível para item {id_item} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} (janelas simultâneas)."
+            )
+            return False
+
+        # Validação 3: Capacidade com janelas simultâneas
+        if not self.validar_nova_ocupacao_item_simultaneo(id_item, quantidade, inicio, fim):
+            quantidade_atual = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
+            logger.error(
+                f"❌ {self.nome} | Item {id_item}: Nova quantidade {quantidade}g + "
+                f"máximo simultâneo atual {quantidade_atual}g excederia capacidade máxima ({self.capacidade_gramas_max}g) (janelas simultâneas)"
+            )
+            return False
+
+        # Adicionar ocupação
+        self.ocupacoes.append((
+            id_ordem,
+            id_pedido,
+            id_atividade,
+            id_item,
+            quantidade,
+            velocidade,
+            chama,
+            pressao_chamas,
+            inicio,
+            fim
+        ))
+
+        # Log informativo com cálculo de janelas simultâneas
+        quantidade_maxima_simultanea_apos = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
+        logger.info(
+            f"🍳 {self.nome} | Item {id_item}: Nova ocupação {quantidade}g "
+            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"(Pico simultâneo do item: {quantidade_maxima_simultanea_apos}g) "
+            f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
+            f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
+            f"Pressões: {[p.name for p in pressao_chamas]} | [JANELAS SIMULTÂNEAS]"
+        )
+        return True
+
     def debug_capacidade_item(self, id_item: int, inicio: datetime, fim: datetime) -> dict:
         """
         NOVO: Método de debug para análise detalhada da capacidade de um item.
@@ -183,20 +342,25 @@ class HotMix(Equipamento):
         """
         ocupacoes_item = [oc for oc in self.ocupacoes if oc[3] == id_item]
         quantidade_maxima = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        quantidade_maxima_simultanea = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
         capacidade_disponivel = self.obter_capacidade_disponivel_item(id_item, inicio, fim)
+        capacidade_disponivel_simultanea = self.obter_capacidade_disponivel_item_simultaneo(id_item, inicio, fim)
         
         return {
             'id_item': id_item,
             'periodo': f"{inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')}",
             'ocupacoes_existentes': len(ocupacoes_item),
             'quantidade_maxima_periodo': quantidade_maxima,
+            'quantidade_maxima_simultanea': quantidade_maxima_simultanea,
             'capacidade_disponivel': capacidade_disponivel,
+            'capacidade_disponivel_simultanea': capacidade_disponivel_simultanea,
             'capacidade_hotmix_max': self.capacidade_gramas_max,
             'ocupacoes_detalhes': [
                 {
                     'ordem': oc[0], 'pedido': oc[1], 'atividade': oc[2],
                     'quantidade': oc[4],
-                    'periodo': f"{oc[8].strftime('%H:%M')} - {oc[9].strftime('%H:%M')}"
+                    'periodo': f"{oc[8].strftime('%H:%M')} - {oc[9].strftime('%H:%M')}",
+                    'simultaneidade': 'EXATA' if (oc[8] == inicio and oc[9] == fim) else 'DIFERENTE'
                 }
                 for oc in ocupacoes_item
                 if not (fim <= oc[8] or inicio >= oc[9])  # sobreposição com período analisado
@@ -204,7 +368,7 @@ class HotMix(Equipamento):
         }
 
     # ==========================================================
-    # ✅ Validações
+    # ✅ Validações (MANTIDAS)
     # ==========================================================
     def validar_capacidade(self, quantidade: int) -> bool:
         """Valida se a quantidade está dentro dos limites de capacidade."""
@@ -247,7 +411,7 @@ class HotMix(Equipamento):
         return (self.capacidade_gramas_min <= quantidade_total <= self.capacidade_gramas_max)
     
     # ==========================================================
-    # 🍳 Ocupações
+    # 🍳 Ocupações (MÉTODO ORIGINAL MANTIDO)
     # ==========================================================
     def ocupar(
         self,
@@ -265,6 +429,7 @@ class HotMix(Equipamento):
         """
         Ocupa o equipamento com validação de capacidade considerando intervalos flexíveis.
         Permite sobreposição do mesmo id_item, impede itens diferentes.
+        ⚠️ MÉTODO ORIGINAL - Para compatibilidade. Use ocupar_janelas_simultaneas() para novo comportamento.
         """
         # Validação 1: Capacidade individual
         if not self.validar_capacidade(quantidade):
@@ -340,7 +505,7 @@ class HotMix(Equipamento):
         return False
 
     # ==========================================================
-    # 🔓 Liberação
+    # 🔓 Liberação (MANTIDAS)
     # ==========================================================
     def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
         """Libera ocupações específicas por atividade."""
@@ -460,12 +625,12 @@ class HotMix(Equipamento):
             )
 
     # ==========================================================
-    # 📅 Agenda e Relatórios
+    # 📅 Agenda e Relatórios (MANTIDAS)
     # ==========================================================
     def mostrar_agenda(self):
         """Mostra agenda detalhada do equipamento."""
         logger.info("==============================================")
-        logger.info(f"📅 Agenda do {self.nome}")
+        logger.info(f"📅 Agenda do {self.nome} - JANELAS SIMULTÂNEAS")
         logger.info(f"🔧 Capacidade: {self.capacidade_gramas_min}-{self.capacidade_gramas_max}g")
         logger.info("==============================================")
         

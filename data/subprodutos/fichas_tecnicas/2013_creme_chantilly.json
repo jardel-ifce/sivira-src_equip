@@ -1,0 +1,38 @@
+{
+  "id_ficha_tecnica": 2013,
+  "id_item": 2013,
+  "nome": "creme_chantilly",
+  "descricao": "Creme chantilly",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 46,
+      "nome": "mistura_pronta_para_chantilly",
+      "descricao": "Mistura pronta para chantilly",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 47,
+      "nome": "leite_condensado",
+      "descricao": "Leite condensado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 10
+    },
+    {
+      "id_item": 12,
+      "nome": "leite_em_po_integral",
+      "descricao": "Leite em pó integral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 10
+    }
+  ]
+}

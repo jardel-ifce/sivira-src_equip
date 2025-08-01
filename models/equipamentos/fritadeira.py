@@ -28,8 +28,8 @@ class Fritadeira(Equipamento):
         setor: TipoSetor,
         numero_operadores: int,
         numero_fracoes: int,
-        capacidade_min: int,
-        capacidade_max: int,
+        capacidade_gramas_min: int,
+        capacidade_gramas_max: int,
         faixa_temperatura_min: int,
         faixa_temperatura_max: int,
         setup_minutos: int
@@ -44,8 +44,8 @@ class Fritadeira(Equipamento):
         )
 
         self.numero_fracoes = numero_fracoes
-        self.capacidade_min = capacidade_min
-        self.capacidade_max = capacidade_max
+        self.capacidade_gramas_min = capacidade_gramas_min
+        self.capacidade_gramas_max = capacidade_gramas_max
         self.faixa_temperatura_min = faixa_temperatura_min
         self.faixa_temperatura_max = faixa_temperatura_max
         self.setup_minutos = setup_minutos
@@ -169,17 +169,17 @@ class Fritadeira(Equipamento):
         quantidade_maxima_atual = self.calcular_quantidade_maxima_periodo(inicio, fim)
         quantidade_final_maxima = quantidade_maxima_atual + nova_quantidade
         
-        if quantidade_final_maxima < self.capacidade_min:
+        if quantidade_final_maxima < self.capacidade_gramas_min:
             logger.warning(
                 f"❌ Quantidade total {quantidade_final_maxima} ficará abaixo do mínimo "
-                f"({self.capacidade_min}) do equipamento {self.nome}"
+                f"({self.capacidade_gramas_min}) do equipamento {self.nome}"
             )
             return False
         
-        if quantidade_final_maxima > self.capacidade_max:
+        if quantidade_final_maxima > self.capacidade_gramas_max:
             logger.warning(
                 f"❌ Quantidade total {quantidade_final_maxima} excederá o máximo "
-                f"({self.capacidade_max}) do equipamento {self.nome}"
+                f"({self.capacidade_gramas_max}) do equipamento {self.nome}"
             )
             return False
         
@@ -332,7 +332,7 @@ class Fritadeira(Equipamento):
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
             f"Quantidade: {quantidade} | Temp: {temperatura}°C | Setup: {setup_minutos}min | "
             f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
-            f"Capacidade total após: {quantidade_total_apos}/{self.capacidade_max}"
+            f"Capacidade total após: {quantidade_total_apos}/{self.capacidade_gramas_max}"
         )
         return True
 
@@ -413,12 +413,12 @@ class Fritadeira(Equipamento):
                 return False
             
             quantidade_maxima = self.calcular_quantidade_maxima_periodo(ini, fim_ocup)
-            if quantidade_maxima < self.capacidade_min or quantidade_maxima > self.capacidade_max:
+            if quantidade_maxima < self.capacidade_gramas_min or quantidade_maxima > self.capacidade_gramas_max:
                 # Rollback
                 self.ocupacoes_por_fracao[fracao_index] = ocupacoes_backup
                 logger.error(
                     f"❌ Capacidade total do equipamento ({quantidade_maxima}) "
-                    f"ficará fora dos limites ({self.capacidade_min}-{self.capacidade_max}) "
+                    f"ficará fora dos limites ({self.capacidade_gramas_min}-{self.capacidade_gramas_max}) "
                     f"no período {ini}-{fim_ocup}"
                 )
                 return False
@@ -625,7 +625,7 @@ class Fritadeira(Equipamento):
         """Mostra agenda detalhada por fração."""
         logger.info("==============================================")
         logger.info(f"📅 Agenda da {self.nome}")
-        logger.info(f"🔧 Capacidade: {self.capacidade_min}-{self.capacidade_max} | Frações: {self.numero_fracoes}")
+        logger.info(f"🔧 Capacidade: {self.capacidade_gramas_min}-{self.capacidade_gramas_max} | Frações: {self.numero_fracoes}")
         logger.info("==============================================")
 
         tem_ocupacao = False
@@ -645,7 +645,7 @@ class Fritadeira(Equipamento):
                         f"   🍟 Ordem {id_o} | Pedido {id_p} | Atividade {id_a} | Item {id_i} | "
                         f"Qtd: {qtd} | Temp: {temp}°C | Setup: {setup}min | "
                         f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
-                        f"Total equipamento: {qtd_total}/{self.capacidade_max}"
+                        f"Total equipamento: {qtd_total}/{self.capacidade_gramas_max}"
                     )
 
         if not tem_ocupacao:
@@ -679,7 +679,7 @@ class Fritadeira(Equipamento):
         
         taxa_utilizacao_fracoes = (fracoes_utilizadas / self.numero_fracoes * 100) if self.numero_fracoes > 0 else 0.0
         quantidade_maxima_periodo = self.calcular_quantidade_maxima_periodo(inicio, fim)
-        taxa_utilizacao_capacidade = (quantidade_maxima_periodo / self.capacidade_max * 100) if self.capacidade_max > 0 else 0.0
+        taxa_utilizacao_capacidade = (quantidade_maxima_periodo / self.capacidade_gramas_max * 100) if self.capacidade_gramas_max > 0 else 0.0
         
         return {
             'fracoes_utilizadas': fracoes_utilizadas,
@@ -688,7 +688,7 @@ class Fritadeira(Equipamento):
             'total_ocupacoes': total_ocupacoes,
             'quantidade_total': total_quantidade,
             'quantidade_maxima_simultanea': quantidade_maxima_periodo,
-            'capacidade_maxima': self.capacidade_max,
+            'capacidade_gramas_maxima': self.capacidade_gramas_max,
             'taxa_utilizacao_capacidade': taxa_utilizacao_capacidade,
             'quantidade_media_por_ocupacao': total_quantidade / total_ocupacoes if total_ocupacoes > 0 else 0.0,
             'temperaturas_utilizadas': list(temperaturas_utilizadas),
@@ -807,9 +807,9 @@ class Fritadeira(Equipamento):
             fim_max = max(ocupacao[8] for ocupacao in todas_ocupacoes)     # fim=[8]
             
             quantidade_maxima = self.calcular_quantidade_maxima_periodo(inicio_min, fim_max)
-            if quantidade_maxima > self.capacidade_max:
+            if quantidade_maxima > self.capacidade_gramas_max:
                 inconsistencias.append(
-                    f"Capacidade total excedida: {quantidade_maxima} > {self.capacidade_max}"
+                    f"Capacidade total excedida: {quantidade_maxima} > {self.capacidade_gramas_max}"
                 )
             
             # 🆕 Verifica conflitos de temperatura simultânea

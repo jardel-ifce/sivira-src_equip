@@ -1,6 +1,7 @@
 import unicodedata
+import math
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Dict, TYPE_CHECKING
+from typing import List, Optional, Tuple, Dict, TYPE_CHECKING, Union
 from models.equipamentos.hot_mix import HotMix
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular
@@ -14,19 +15,307 @@ logger = setup_logger("GestorMisturadorasComCoccao")
 
 class GestorMisturadorasComCoccao:
     """
-    🍳 Gestor especializado no controle de misturadoras com cocção (HotMix).
+    🍳 Gestor otimizado para controle de misturadoras com cocção (HotMix).
+    
+    Baseado em:
+    - Multiple Knapsack Problem para distribuição ótima
+    - First Fit Decreasing (FFD) com restrições de capacidade mínima
+    - Binary Space Partitioning para divisão eficiente
+    - Backward scheduling com janelas de tempo simultâneas
     
     Funcionalidades:
-    - Permite sobreposição do mesmo id_item com intervalos flexíveis
-    - Validação dinâmica de capacidade considerando picos de sobreposição
-    - Prioriza uso de uma HotMix, múltiplas se necessário
-    - Respeita capacidade mínima na divisão de pedidos
-    - Ordenação por FIP para priorização
+    - Verificação prévia de viabilidade total
+    - Distribuição otimizada respeitando capacidades mín/máx
+    - Algoritmo de redistribuição com balanceamento de carga
+    - JANELAS SIMULTÂNEAS: Mesmo id_item só pode ocupar períodos idênticos ou distintos
+    - Priorização por FIP com backward scheduling
+    - Otimização inteligente: evita tentativas individuais quando distribuição é obrigatória
     """
 
     def __init__(self, hotmixes: List[HotMix]):
         self.hotmixes = hotmixes
     
+    # ==========================================================
+    # 📊 Análise de Viabilidade e Capacidades
+    # ==========================================================
+    def _calcular_capacidade_total_sistema(self, atividade: "AtividadeModular", id_item: int, 
+                                          inicio: datetime, fim: datetime) -> Tuple[float, float]:
+        """
+        Calcula capacidade total disponível do sistema para um item específico.
+        Retorna: (capacidade_total_disponivel, capacidade_maxima_teorica)
+        """
+        capacidade_disponivel_total = 0.0
+        capacidade_maxima_teorica = 0.0
+        
+        for hotmix in self.hotmixes:
+            # Capacidade máxima da HotMix
+            cap_max = hotmix.capacidade_gramas_max
+            capacidade_maxima_teorica += cap_max
+            
+            # Verifica se pode receber o item no período (janelas simultâneas)
+            if hotmix.esta_disponivel_para_item_janelas_simultaneas(inicio, fim, id_item):
+                # Calcula capacidade disponível considerando ocupações simultâneas do mesmo item
+                capacidade_disponivel = hotmix.obter_capacidade_disponivel_item_simultaneo(id_item, inicio, fim)
+                capacidade_disponivel_total += max(0, capacidade_disponivel)
+        
+        return capacidade_disponivel_total, capacidade_maxima_teorica
+
+    def _verificar_viabilidade_quantidade(self, atividade: "AtividadeModular", quantidade_total: float,
+                                        id_item: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        📚 Multiple Knapsack Problem (MKP): Problema clássico de otimização combinatória onde
+        múltiplos "recipientes" (knapsacks) têm capacidades limitadas e devem acomodar itens
+        com restrições. Usado aqui para verificar se o conjunto de HotMixes pode teoricamente 
+        comportar a demanda antes de tentar algoritmos de alocação mais custosos computacionalmente.
+        
+        Verifica se é teoricamente possível alocar a quantidade solicitada com janelas simultâneas.
+        """
+        cap_disponivel, cap_teorica = self._calcular_capacidade_total_sistema(
+            atividade, id_item, inicio, fim
+        )
+        
+        if quantidade_total > cap_teorica:
+            return False, f"Quantidade {quantidade_total}g excede capacidade máxima teórica do sistema ({cap_teorica}g)"
+        
+        if quantidade_total > cap_disponivel:
+            return False, f"Quantidade {quantidade_total}g excede capacidade disponível ({cap_disponivel}g) no período"
+        
+        # Verifica se existem HotMixes disponíveis para janelas simultâneas
+        hotmixes_disponiveis = [
+            h for h in self.hotmixes 
+            if h.esta_disponivel_para_item_janelas_simultaneas(inicio, fim, id_item)
+        ]
+        
+        if not hotmixes_disponiveis:
+            return False, "Nenhuma HotMix disponível para o item no período (considerando janelas simultâneas)"
+        
+        # Verifica viabilidade com capacidades mínimas
+        capacidade_minima_total = sum(h.capacidade_gramas_min for h in hotmixes_disponiveis)
+        if quantidade_total < min(h.capacidade_gramas_min for h in hotmixes_disponiveis):
+            if len(hotmixes_disponiveis) == 1:
+                return True, "Viável com uma HotMix"
+        elif quantidade_total >= capacidade_minima_total:
+            return True, "Viável com múltiplas HotMixes"
+        else:
+            return False, f"Quantidade {quantidade_total}g insuficiente para capacidades mínimas ({capacidade_minima_total}g)"
+        
+        return True, "Quantidade viável"
+
+    # ==========================================================
+    # 🧮 Algoritmos de Distribuição Otimizada
+    # ==========================================================
+    def _algoritmo_distribuicao_balanceada(self, quantidade_total: float, 
+                                          hotmixes_disponiveis: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]) -> List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]:
+        """
+        Algoritmo de distribuição baseado em Binary Space Partitioning adaptado.
+        
+        📚 Binary Space Partitioning: Técnica que divide recursivamente o espaço de soluções,
+        originalmente usada em computação gráfica. Aqui adaptada para dividir a quantidade total
+        proporcionalmente entre HotMixes, considerando suas capacidades disponíveis.
+        ⚡ OTIMIZADO PARA BACKWARD SCHEDULING: Evita operações lentas que conflitam com tentativas rápidas.
+        
+        Estratégia:
+        1. Ordena HotMixes por capacidade disponível (maior primeiro)
+        2. Aplica divisão proporcional otimizada
+        3. Ajuste único e direto (sem iterações)
+        """
+        if not hotmixes_disponiveis:
+            return []
+        
+        # Ordena por capacidade disponível (maior primeiro)
+        hotmixes_ordenadas = sorted(hotmixes_disponiveis, key=lambda x: x[1], reverse=True)
+        
+        # Capacidade total disponível
+        capacidade_total_disponivel = sum(cap for _, cap, _, _, _ in hotmixes_ordenadas)
+        
+        if capacidade_total_disponivel < quantidade_total:
+            return []
+        
+        # ⚡ DISTRIBUIÇÃO PROPORCIONAL DIRETA - Sem ajustes iterativos posteriores
+        distribuicao = []
+        quantidade_restante = quantidade_total
+        
+        for i, (hotmix, cap_disponivel, velocidade, chama, pressoes) in enumerate(hotmixes_ordenadas):
+            if quantidade_restante <= 0:
+                break
+                
+            if i == len(hotmixes_ordenadas) - 1:
+                # Última HotMix: recebe todo o restante (se couber)
+                quantidade_hotmix = min(quantidade_restante, cap_disponivel)
+            else:
+                # Distribuição proporcional direta
+                proporcao = cap_disponivel / capacidade_total_disponivel
+                quantidade_proporcional = quantidade_total * proporcao
+                
+                # ⚡ AJUSTE DIRETO: Garante limites sem iterações
+                quantidade_hotmix = max(
+                    hotmix.capacidade_gramas_min,
+                    min(quantidade_proporcional, cap_disponivel, quantidade_restante)
+                )
+            
+            # Só adiciona se atende capacidade mínima
+            if quantidade_hotmix >= hotmix.capacidade_gramas_min:
+                distribuicao.append((hotmix, quantidade_hotmix, velocidade, chama, pressoes))
+                quantidade_restante -= quantidade_hotmix
+        
+        # ⚡ VERIFICAÇÃO FINAL RÁPIDA: Se sobrou quantidade significativa, falha rápido
+        if quantidade_restante > 1.0:  # Tolerância de 1g
+            return []  # Falha rápida para backward scheduling tentar próxima janela
+        
+        return distribuicao
+
+    def _redistribuir_excedentes(self, distribuicao: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]], 
+                                quantidade_target: float) -> List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]:
+        """
+        📚 Fast Load Balancing: Versão otimizada para backward scheduling que evita iterações longas.
+        Aplica ajuste direto em uma única passada para ser compatível com tentativas rápidas
+        de janelas temporais. Prioriza velocidade sobre precisão absoluta na distribuição.
+        
+        Redistribui quantidades para atingir o target exato respeitando limites - OTIMIZADO PARA SPEED.
+        """
+        quantidade_atual = sum(qtd for _, qtd, _, _, _ in distribuicao)
+        diferenca = quantidade_target - quantidade_atual
+        
+        # Tolerância mais flexível para evitar iterações desnecessárias
+        if abs(diferenca) < 1.0:  # Tolerância de 1g para speed
+            return distribuicao
+        
+        # 🚀 AJUSTE ÚNICO E DIRETO - Sem iterações que conflitem com backward scheduling
+        if diferenca > 0:
+            # Precisa adicionar quantidade - distribui o excesso proporcionalmente
+            hotmixes_com_margem = [
+                (i, hotmix.capacidade_gramas_max - qtd) 
+                for i, (hotmix, qtd, _, _, _) in enumerate(distribuicao)
+                if hotmix.capacidade_gramas_max - qtd > 0
+            ]
+            
+            if hotmixes_com_margem:
+                margem_total = sum(margem for _, margem in hotmixes_com_margem)
+                
+                for i, margem_disponivel in hotmixes_com_margem:
+                    if diferenca <= 0:
+                        break
+                    
+                    hotmix, qtd_atual, vel, chama, press = distribuicao[i]
+                    proporcao = margem_disponivel / margem_total
+                    adicionar = min(diferenca, diferenca * proporcao)
+                    adicionar = min(adicionar, margem_disponivel)  # Não excede capacidade
+                    
+                    distribuicao[i] = (hotmix, qtd_atual + adicionar, vel, chama, press)
+                    diferenca -= adicionar
+        
+        elif diferenca < 0:
+            # Precisa remover quantidade - remove proporcionalmente das que têm margem
+            diferenca = abs(diferenca)
+            hotmixes_com_margem = [
+                (i, qtd - hotmix.capacidade_gramas_min) 
+                for i, (hotmix, qtd, _, _, _) in enumerate(distribuicao)
+                if qtd - hotmix.capacidade_gramas_min > 0
+            ]
+            
+            if hotmixes_com_margem:
+                margem_total = sum(margem for _, margem in hotmixes_com_margem)
+                
+                for i, margem_removivel in hotmixes_com_margem:
+                    if diferenca <= 0:
+                        break
+                    
+                    hotmix, qtd_atual, vel, chama, press = distribuicao[i]
+                    proporcao = margem_removivel / margem_total
+                    remover = min(diferenca, diferenca * proporcao)
+                    remover = min(remover, margem_removivel)  # Não fica abaixo do mínimo
+                    
+                    distribuicao[i] = (hotmix, qtd_atual - remover, vel, chama, press)
+                    diferenca -= remover
+        
+        # Remove HotMixes com quantidade abaixo do mínimo (ajuste final rápido)
+        distribuicao_final = [
+            (hotmix, qtd, vel, chama, press) for hotmix, qtd, vel, chama, press in distribuicao
+            if qtd >= hotmix.capacidade_gramas_min
+        ]
+        
+        return distribuicao_final
+
+    def _algoritmo_first_fit_decreasing(self, quantidade_total: float,
+                                      hotmixes_disponiveis: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]) -> List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]:
+        """
+        📚 First Fit Decreasing (FFD): Algoritmo clássico de Bin Packing que ordena itens
+        por tamanho decrescente e aloca cada item no primeiro recipiente que couber.
+        Garante aproximação de 11/9 do ótimo e é amplamente usado em problemas de otimização.
+        Adaptado aqui para respeitar capacidades mínimas das HotMixes, evitando
+        distribuições que violem restrições operacionais.
+        
+        Implementação do algoritmo First Fit Decreasing adaptado para capacidades mínimas.
+        """
+        # Ordena HotMixes por capacidade disponível (maior primeiro)
+        hotmixes_ordenadas = sorted(hotmixes_disponiveis, key=lambda x: x[1], reverse=True)
+        
+        distribuicao = []
+        quantidade_restante = quantidade_total
+        
+        for hotmix, cap_disponivel, velocidade, chama, pressoes in hotmixes_ordenadas:
+            if quantidade_restante <= 0:
+                break
+            
+            # Calcula quanto alocar nesta HotMix
+            if quantidade_restante >= hotmix.capacidade_gramas_min:
+                quantidade_alocar = min(quantidade_restante, cap_disponivel)
+                
+                # Garante que não fica quantidade insuficiente para próximas HotMixes
+                hotmixes_restantes = [h for h, _, _, _, _ in hotmixes_ordenadas 
+                                    if h != hotmix and (quantidade_restante - quantidade_alocar) > 0]
+                
+                if hotmixes_restantes:
+                    cap_min_restantes = min(h.capacidade_gramas_min for h in hotmixes_restantes)
+                    if quantidade_restante - quantidade_alocar < cap_min_restantes and quantidade_restante - quantidade_alocar > 0:
+                        # Ajusta para deixar quantidade suficiente
+                        quantidade_alocar = quantidade_restante - cap_min_restantes
+                
+                if quantidade_alocar >= hotmix.capacidade_gramas_min:
+                    distribuicao.append((hotmix, quantidade_alocar, velocidade, chama, pressoes))
+                    quantidade_restante -= quantidade_alocar
+        
+        return distribuicao if quantidade_restante <= 0.1 else []
+
+    def _calcular_distribuicao_otima(self, quantidade_total: float, 
+                                   hotmixes_disponiveis: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]) -> List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]:
+        """
+        ⚡ OTIMIZADO PARA BACKWARD SCHEDULING: Calcula distribuição ótima com limite de tempo.
+        Testa algoritmos rapidamente e retorna a primeira solução viável para não atrasar
+        o backward scheduling que precisa testar muitas janelas temporais.
+        """
+        # 🚀 ESTRATÉGIA 1: Tenta distribuição balanceada (mais rápida)
+        dist_balanceada = self._algoritmo_distribuicao_balanceada(quantidade_total, hotmixes_disponiveis)
+        
+        if dist_balanceada and sum(qtd for _, qtd, _, _, _ in dist_balanceada) >= quantidade_total * 0.98:
+            logger.debug(f"📊 Distribuição balanceada aceita com {len(dist_balanceada)} HotMixes")
+            return dist_balanceada
+        
+        # 🚀 ESTRATÉGIA 2: Se balanceada falhou, tenta FFD
+        dist_ffd = self._algoritmo_first_fit_decreasing(quantidade_total, hotmixes_disponiveis)
+        
+        if dist_ffd and sum(qtd for _, qtd, _, _, _ in dist_ffd) >= quantidade_total * 0.98:
+            logger.debug(f"📊 Distribuição FFD aceita com {len(dist_ffd)} HotMixes")
+            return dist_ffd
+        
+        # ❌ Nenhuma estratégia funcionou - falha rápida para backward scheduling continuar
+        logger.debug("📊 Nenhuma distribuição viável encontrada - prosseguindo backward scheduling")
+        return []
+
+    def _calcular_balanceamento(self, distribuicao: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]]) -> float:
+        """
+        Calcula score de balanceamento da distribuição (maior = mais balanceado).
+        """
+        if len(distribuicao) <= 1:
+            return 1.0
+        
+        quantidades = [qtd for _, qtd, _, _, _ in distribuicao]
+        media = sum(quantidades) / len(quantidades)
+        variancia = sum((qtd - media) ** 2 for qtd in quantidades) / len(quantidades)
+        
+        # Score inversamente proporcional à variância
+        return 1.0 / (1.0 + variancia / media**2) if media > 0 else 0.0
+
     # ==========================================================
     # 📊 Ordenação dos equipamentos por FIP (fator de importância)
     # ==========================================================  
@@ -92,8 +381,49 @@ class GestorMisturadorasComCoccao:
                 continue
         return pressoes
 
+    def _verificar_compatibilidade_parametros(self, hotmix: HotMix, id_item: int, velocidade: TipoVelocidade, chama: TipoChama, pressoes: List[TipoPressaoChama], inicio: datetime, fim: datetime) -> bool:
+        """
+        Verifica se os parâmetros são compatíveis com ocupações existentes do mesmo produto.
+        🎯 REGRA DE SOBREPOSIÇÃO: Permite apenas simultaneidade exata ou períodos distintos.
+        """
+        
+        for ocupacao in hotmix.obter_ocupacoes_item_periodo(id_item, inicio, fim):
+            # ocupacao = (id_ordem, id_pedido, id_atividade, id_item, quantidade, velocidade, chama, pressoes, inicio, fim)
+            inicio_existente = ocupacao[8]
+            fim_existente = ocupacao[9]
+            vel_existente = ocupacao[5]
+            chama_existente = ocupacao[6]
+            press_existentes = ocupacao[7]
+            
+            # 🎯 REGRA DE JANELA TEMPORAL: Só permite simultaneidade exata ou períodos distintos
+            simultaneidade_exata = (inicio == inicio_existente and fim == fim_existente)
+            periodos_distintos = (fim <= inicio_existente or inicio >= fim_existente)
+            
+            if not (simultaneidade_exata or periodos_distintos):
+                logger.debug(f"❌ Sobreposição temporal inválida: período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} conflita com ocupação existente {inicio_existente.strftime('%H:%M')}-{fim_existente.strftime('%H:%M')}")
+                return False
+            
+            # Se há simultaneidade exata, verifica compatibilidade de parâmetros
+            if simultaneidade_exata:
+                # Verificar se velocidade é compatível
+                if vel_existente != velocidade:
+                    logger.debug(f"❌ Velocidade incompatível: existente={vel_existente.name}, nova={velocidade.name}")
+                    return False
+                
+                # Verificar se chama é compatível
+                if chama_existente != chama:
+                    logger.debug(f"❌ Chama incompatível: existente={chama_existente.name}, nova={chama.name}")
+                    return False
+                
+                # Verificar se pressões são compatíveis
+                if set(press_existentes) != set(pressoes):
+                    logger.debug(f"❌ Pressões incompatíveis: existentes={[p.name for p in press_existentes]}, novas={[p.name for p in pressoes]}")
+                    return False
+        
+        return True
+
     # ==========================================================
-    # 🔄 Alocação Individual com Intervalos Flexíveis
+    # 🔄 Alocação Otimizada Individual e Distribuída
     # ==========================================================
     def _tentar_alocacao_individual(
         self, 
@@ -106,7 +436,7 @@ class GestorMisturadorasComCoccao:
     ) -> Optional[Tuple[HotMix, datetime, datetime]]:
         """
         Tenta alocar toda a quantidade em uma única HotMix.
-        Permite sobreposição do mesmo id_item com validação dinâmica de capacidade.
+        🎯 JANELAS SIMULTÂNEAS: Permite sobreposição do mesmo id_item apenas com janelas idênticas.
         """
         for hotmix in hotmixes_ordenados:
             # Obter configurações técnicas
@@ -118,9 +448,9 @@ class GestorMisturadorasComCoccao:
                 logger.debug(f"❌ {hotmix.nome}: configurações incompletas")
                 continue
             
-            # Verifica se pode alocar considerando mesmo item (intervalos flexíveis)
-            if not hotmix.esta_disponivel_para_item(inicio_tentativa, fim_tentativa, id_item):
-                logger.debug(f"❌ {hotmix.nome}: ocupada por item diferente")
+            # Verifica se pode alocar considerando janelas simultâneas
+            if not hotmix.esta_disponivel_para_item_janelas_simultaneas(inicio_tentativa, fim_tentativa, id_item):
+                logger.debug(f"❌ {hotmix.nome}: ocupada por item diferente ou janela temporal conflitante")
                 continue
             
             # Verifica se quantidade individual está nos limites da HotMix
@@ -133,8 +463,8 @@ class GestorMisturadorasComCoccao:
                 logger.debug(f"❌ {hotmix.nome}: parâmetros incompatíveis com ocupações existentes do item {id_item}")
                 continue
             
-            # Tenta adicionar a ocupação (validação dinâmica de capacidade interna)
-            sucesso = hotmix.ocupar(
+            # Tenta adicionar a ocupação (validação dinâmica de capacidade interna com janelas simultâneas)
+            sucesso = hotmix.ocupar_janelas_simultaneas(
                 id_ordem=id_ordem,
                 id_pedido=id_pedido,
                 id_atividade=id_atividade,
@@ -148,14 +478,14 @@ class GestorMisturadorasComCoccao:
             )
             
             if sucesso:
-                logger.debug(f"✅ {hotmix.nome}: alocação individual bem-sucedida para item {id_item}")
+                logger.debug(f"✅ {hotmix.nome}: alocação individual bem-sucedida para item {id_item} (janelas simultâneas)")
                 return hotmix, inicio_tentativa, fim_tentativa
             else:
-                logger.debug(f"❌ {hotmix.nome}: falha na validação de capacidade dinâmica")
+                logger.debug(f"❌ {hotmix.nome}: falha na validação de capacidade dinâmica com janelas simultâneas")
         
         return None
 
-    def _tentar_alocacao_distribuida(
+    def _tentar_alocacao_distribuida_otimizada(
         self, 
         inicio_tentativa: datetime, 
         fim_tentativa: datetime,
@@ -165,17 +495,25 @@ class GestorMisturadorasComCoccao:
         id_ordem: int, id_pedido: int, id_atividade: int, id_item: int
     ) -> Optional[Tuple[List[HotMix], datetime, datetime]]:
         """
-        Tenta alocar a quantidade distribuindo entre múltiplas HotMixes.
-        CORRIGIDO: Garante que cada parte respeite a capacidade mínima das HotMixes
-        e considera corretamente a capacidade disponível real para o item específico.
+        NOVA IMPLEMENTAÇÃO: Tenta alocação distribuída usando algoritmos otimizados.
+        🎯 JANELAS SIMULTÂNEAS: Aplica verificação de janelas simultâneas para múltiplas HotMixes.
         """
-        # Coleta HotMixes com capacidade disponível para o item específico
+        # Fase 1: Verificação de viabilidade com janelas simultâneas
+        viavel, motivo = self._verificar_viabilidade_quantidade(
+            atividade, float(quantidade_gramas), id_item, inicio_tentativa, fim_tentativa
+        )
+        
+        if not viavel:
+            logger.debug(f"❌ Inviável no horário {inicio_tentativa.strftime('%H:%M')}: {motivo}")
+            return None
+
+        # Fase 2: Coleta HotMixes com configurações técnicas válidas e janelas simultâneas
         hotmixes_com_capacidade = []
         
         for hotmix in hotmixes_ordenados:
-            # Verifica disponibilidade para o item específico
-            if not hotmix.esta_disponivel_para_item(inicio_tentativa, fim_tentativa, id_item):
-                logger.debug(f"❌ {hotmix.nome}: ocupada por item diferente")
+            # Verifica disponibilidade para o item específico com janelas simultâneas
+            if not hotmix.esta_disponivel_para_item_janelas_simultaneas(inicio_tentativa, fim_tentativa, id_item):
+                logger.debug(f"❌ {hotmix.nome}: ocupada por item diferente ou janela temporal conflitante")
                 continue
             
             # Obter configurações técnicas
@@ -192,134 +530,85 @@ class GestorMisturadorasComCoccao:
                 logger.debug(f"❌ {hotmix.nome}: parâmetros incompatíveis")
                 continue
             
-            # CORRIGIDO: Calcula capacidade disponível real para o item específico
-            capacidade_disponivel = hotmix.obter_capacidade_disponivel_item(
+            # Calcula capacidade disponível real para o item específico com janelas simultâneas
+            capacidade_disponivel = hotmix.obter_capacidade_disponivel_item_simultaneo(
                 id_item, inicio_tentativa, fim_tentativa
             )
             
             # Deve ter pelo menos capacidade mínima disponível
             if capacidade_disponivel >= hotmix.capacidade_gramas_min:
                 hotmixes_com_capacidade.append((hotmix, capacidade_disponivel, velocidade, chama, pressoes))
-                logger.debug(f"🔍 {hotmix.nome}: {capacidade_disponivel}g disponível para item {id_item}")
+                logger.debug(f"🔍 {hotmix.nome}: {capacidade_disponivel}g disponível para item {id_item} (janelas simultâneas)")
 
         if not hotmixes_com_capacidade:
-            logger.debug("❌ Nenhuma HotMix com capacidade mínima disponível")
+            logger.debug("❌ Nenhuma HotMix com capacidade mínima disponível (janelas simultâneas)")
             return None
 
-        # CORRIGIDO: Ordenar por capacidade disponível (maior primeiro) para melhor distribuição
-        hotmixes_com_capacidade.sort(key=lambda x: x[1], reverse=True)
-
-        # Tenta distribuir a quantidade respeitando capacidades mínimas
-        quantidade_restante = quantidade_gramas
-        hotmixes_selecionadas = []
-        alocacoes_temporarias = []
-
-        for i, (hotmix, capacidade_disponivel, velocidade, chama, pressoes) in enumerate(hotmixes_com_capacidade):
-            if quantidade_restante <= 0:
-                break
-
-            # Calcula quanto alocar nesta HotMix
-            eh_ultima_hotmix = (i == len(hotmixes_com_capacidade) - 1)
-            
-            if eh_ultima_hotmix:
-                # Última HotMix: aloca todo o restante (se couber)
-                quantidade_para_alocar = min(quantidade_restante, capacidade_disponivel)
-            else:
-                # Não é a última: calcula considerando que as próximas precisam de pelo menos o mínimo
-                hotmixes_restantes = len(hotmixes_com_capacidade) - i - 1
-                if hotmixes_restantes > 0:
-                    # Soma das capacidades mínimas das HotMixes restantes
-                    capacidade_minima_restantes = sum(
-                        hm[0].capacidade_gramas_min 
-                        for hm in hotmixes_com_capacidade[i+1:]
-                    )
-                    # Não pode alocar mais que: restante - mínimo_necessário_para_outras
-                    quantidade_maxima_permitida = quantidade_restante - capacidade_minima_restantes
-                    quantidade_para_alocar = min(
-                        capacidade_disponivel,
-                        max(hotmix.capacidade_gramas_min, quantidade_maxima_permitida)
-                    )
-                else:
-                    quantidade_para_alocar = min(quantidade_restante, capacidade_disponivel)
-            
-            # Verifica se a quantidade está dentro dos limites
-            if quantidade_para_alocar < hotmix.capacidade_gramas_min:
-                if eh_ultima_hotmix and quantidade_restante < hotmix.capacidade_gramas_min:
-                    # Se é a última e o restante é menor que o mínimo, tenta mesmo assim
-                    logger.debug(f"⚠️ {hotmix.nome}: tentando alocar {quantidade_restante}g (abaixo do mínimo) por ser última HotMix")
-                    quantidade_para_alocar = quantidade_restante
-                else:
-                    logger.debug(f"❌ {hotmix.nome}: quantidade {quantidade_para_alocar}g abaixo do mínimo {hotmix.capacidade_gramas_min}g")
-                    continue
-            
-            # Última validação: quantidade deve ser positiva e não exceder máximo
-            if quantidade_para_alocar <= 0:
-                logger.debug(f"❌ {hotmix.nome}: quantidade calculada inválida: {quantidade_para_alocar}g")
-                continue
-                
-            quantidade_para_alocar = min(quantidade_para_alocar, hotmix.capacidade_gramas_max)
-                
-            # Tenta adicionar a ocupação
-            sucesso = hotmix.ocupar(
-                id_ordem=id_ordem,
-                id_pedido=id_pedido,
-                id_atividade=id_atividade,
-                id_item=id_item,
-                quantidade=quantidade_para_alocar,
-                velocidade=velocidade,
-                chama=chama,
-                pressao_chamas=pressoes,
-                inicio=inicio_tentativa,
-                fim=fim_tentativa
-            )
-            
-            if sucesso:
-                hotmixes_selecionadas.append(hotmix)
-                alocacoes_temporarias.append((hotmix, quantidade_para_alocar))
-                quantidade_restante -= quantidade_para_alocar
-                logger.debug(f"✅ {hotmix.nome}: alocados {quantidade_para_alocar}g do item {id_item}, restam {quantidade_restante}g")
-            else:
-                logger.debug(f"❌ {hotmix.nome}: falha na validação de capacidade dinâmica para {quantidade_para_alocar}g")
-
-        # Verifica se conseguiu alocar toda a quantidade
-        if quantidade_restante <= 0:
-            logger.debug(f"✅ Alocação distribuída bem-sucedida: {len(hotmixes_selecionadas)} HotMixes para item {id_item}")
-            return hotmixes_selecionadas, inicio_tentativa, fim_tentativa
-        else:
-            # Rollback: remove alocações parciais que não completaram
-            logger.debug(f"🔄 Rollback: não conseguiu alocar {quantidade_restante}g restantes do item {id_item}")
-            for hotmix, _ in alocacoes_temporarias:
-                hotmix.liberar_por_atividade(id_ordem, id_pedido, id_atividade)
+        # Fase 3: Aplica algoritmos de distribuição otimizada
+        distribuicao = self._calcular_distribuicao_otima(float(quantidade_gramas), hotmixes_com_capacidade)
+        
+        if not distribuicao:
+            logger.debug("❌ Algoritmos de distribuição não encontraram solução viável (janelas simultâneas)")
             return None
 
-    def _verificar_compatibilidade_parametros(self, hotmix: HotMix, id_item: int, velocidade: TipoVelocidade, chama: TipoChama, pressoes: List[TipoPressaoChama], inicio: datetime, fim: datetime) -> bool:
-        """Verifica se os parâmetros são compatíveis com ocupações existentes do mesmo produto."""
+        # Fase 4: Executa alocação múltipla com janelas simultâneas
+        sucesso = self._executar_alocacao_multipla_hotmix(
+            distribuicao, inicio_tentativa, fim_tentativa, 
+            id_ordem, id_pedido, id_atividade, id_item
+        )
         
-        for ocupacao in hotmix.obter_ocupacoes_item_periodo(id_item, inicio, fim):
-            # ocupacao = (id_ordem, id_pedido, id_atividade, id_item, quantidade, velocidade, chama, pressoes, inicio, fim)
-            vel_existente = ocupacao[5]
-            chama_existente = ocupacao[6]
-            press_existentes = ocupacao[7]
-            
-            # Verificar se velocidade é compatível
-            if vel_existente != velocidade:
-                logger.debug(f"❌ Velocidade incompatível: existente={vel_existente.name}, nova={velocidade.name}")
-                return False
-            
-            # Verificar se chama é compatível
-            if chama_existente != chama:
-                logger.debug(f"❌ Chama incompatível: existente={chama_existente.name}, nova={chama.name}")
-                return False
-            
-            # Verificar se pressões são compatíveis
-            if set(press_existentes) != set(pressoes):
-                logger.debug(f"❌ Pressões incompatíveis: existentes={[p.name for p in press_existentes]}, novas={[p.name for p in pressoes]}")
-                return False
+        if sucesso:
+            hotmixes_alocadas = [h for h, _, _, _, _ in distribuicao]
+            logger.debug(f"✅ Alocação múltipla otimizada: {len(hotmixes_alocadas)} HotMixes para item {id_item} (janelas simultâneas)")
+            return hotmixes_alocadas, inicio_tentativa, fim_tentativa
         
-        return True
+        return None
+
+    def _executar_alocacao_multipla_hotmix(self, distribuicao: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]], 
+                                         inicio: datetime, fim: datetime,
+                                         id_ordem: int, id_pedido: int, id_atividade: int, id_item: int) -> bool:
+        """
+        Executa alocação em múltiplas HotMixes conforme distribuição calculada.
+        🎯 JANELAS SIMULTÂNEAS: Usa método específico para janelas simultâneas.
+        """
+        # Lista para rollback em caso de falha
+        alocacoes_realizadas = []
+        
+        try:
+            for hotmix, quantidade, velocidade, chama, pressoes in distribuicao:
+                sucesso = hotmix.ocupar_janelas_simultaneas(
+                    id_ordem=id_ordem,
+                    id_pedido=id_pedido,
+                    id_atividade=id_atividade,
+                    id_item=id_item,
+                    quantidade=quantidade,
+                    velocidade=velocidade,
+                    chama=chama,
+                    pressao_chamas=pressoes,
+                    inicio=inicio,
+                    fim=fim
+                )
+                
+                if not sucesso:
+                    # Rollback das alocações já realizadas
+                    for h_rollback in alocacoes_realizadas:
+                        h_rollback.liberar_por_atividade(id_ordem, id_pedido, id_atividade)
+                    return False
+                
+                alocacoes_realizadas.append(hotmix)
+                logger.info(f"🔹 Alocado {quantidade}g na {hotmix.nome} (janelas simultâneas)")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro na alocação múltipla com janelas simultâneas: {e}")
+            # Rollback em caso de erro
+            for h_rollback in alocacoes_realizadas:
+                h_rollback.liberar_por_atividade(id_ordem, id_pedido, id_atividade)
+            return False
 
     # ==========================================================
-    # 🎯 Alocação Principal com Backward Scheduling
+    # 🎯 Alocação Principal com Backward Scheduling e Janelas Simultâneas
     # ==========================================================    
     def alocar(
         self,
@@ -330,10 +619,13 @@ class GestorMisturadorasComCoccao:
         **kwargs
     ) -> Tuple[bool, Optional[List[HotMix]], Optional[datetime], Optional[datetime]]:
         """
-        Aloca HotMixes seguindo a estratégia otimizada com intervalos flexíveis:
-        1. Tenta alocação individual por FIP (permite sobreposição mesmo item)
-        2. Tenta distribuição de carga (respeitando capacidades mínimas)
-        3. Usa backward scheduling minuto a minuto
+        Aloca HotMixes seguindo a estratégia otimizada com janelas de tempo simultâneas:
+        1. Verificação de viabilidade total usando Multiple Knapsack Problem
+        2. Verificação de capacidade total do sistema primeiro
+        3. Tenta alocação individual por FIP 
+        4. Tenta distribuição otimizada usando algoritmos inteligentes
+        5. Usa backward scheduling minuto a minuto
+        6. 🎯 JANELAS SIMULTÂNEAS: Mesmo id_item só pode ocupar períodos idênticos ou distintos
         """
         duracao = atividade.duracao
         hotmixes_ordenados = self._ordenar_por_fip(atividade)
@@ -346,11 +638,28 @@ class GestorMisturadorasComCoccao:
             logger.warning(f"❌ Quantidade inválida para atividade {id_atividade}: {quantidade_gramas}")
             return False, None, None, None
 
-        logger.info(f"🎯 Iniciando alocação atividade {id_atividade}: {quantidade_gramas}g do item {id_item}")
+        logger.info(f"🎯 Iniciando alocação otimizada atividade {id_atividade}: {quantidade_gramas}g do item {id_item} (JANELAS SIMULTÂNEAS)")
         logger.debug(f"📅 Janela: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} (duração: {duracao})")
+        
+        # 🔍 DIAGNÓSTICO: Verifica capacidades disponíveis
+        capacidades_individuais = [h.capacidade_gramas_max for h in hotmixes_ordenados]
+        capacidade_total_sistema = sum(capacidades_individuais)
+        capacidade_maxima_individual = max(capacidades_individuais)
+        
+        logger.debug(f"🔍 DIAGNÓSTICO: Quantidade necessária {quantidade_gramas}g")
+        logger.debug(f"🔍 DIAGNÓSTICO: Capacidades individuais: {capacidades_individuais}")
+        logger.debug(f"🔍 DIAGNÓSTICO: Capacidade total sistema: {capacidade_total_sistema}g")
+        logger.debug(f"🔍 DIAGNÓSTICO: Capacidade máxima individual: {capacidade_maxima_individual}g")
+        
+        # 📋 REGRA PRINCIPAL: Primeiro verifica se capacidade total do sistema atende
+        if quantidade_gramas > capacidade_total_sistema:
+            logger.warning(f"❌ Quantidade {quantidade_gramas}g > capacidade total {capacidade_total_sistema}g - IMPOSSÍVEL")
+            return False, None, None, None
+        
+        logger.info(f"✅ Capacidade total do sistema ({capacidade_total_sistema}g) atende a demanda ({quantidade_gramas}g)")
 
         # ==========================================================
-        # 🔄 BACKWARD SCHEDULING - MINUTO A MINUTO
+        # 🔄 BACKWARD SCHEDULING COM JANELAS SIMULTÂNEAS - MINUTO A MINUTO
         # ==========================================================
         tentativas = 0
         while horario_final_tentativa - duracao >= inicio:
@@ -360,6 +669,7 @@ class GestorMisturadorasComCoccao:
             logger.debug(f"⏰ Tentativa {tentativas}: {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}")
 
             # 1️⃣ PRIMEIRA ESTRATÉGIA: Tenta alocação integral em uma HotMix
+            logger.debug(f"🔍 Tentando alocação individual - quantidade {quantidade_gramas}g")
             sucesso_individual = self._tentar_alocacao_individual(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_gramas, hotmixes_ordenados,
@@ -376,12 +686,13 @@ class GestorMisturadorasComCoccao:
                 logger.info(
                     f"✅ Atividade {id_atividade} (Item {id_item}) alocada INTEIRAMENTE na {hotmix_usada.nome} "
                     f"({quantidade_gramas}g) de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
-                    f"(retrocedeu {minutos_retrocedidos} minutos)"
+                    f"(retrocedeu {minutos_retrocedidos} minutos) [JANELAS SIMULTÂNEAS]"
                 )
                 return True, [hotmix_usada], inicio_real, fim_real
 
-            # 2️⃣ SEGUNDA ESTRATÉGIA: Tenta alocação distribuída entre múltiplas HotMixes
-            sucesso_distribuido = self._tentar_alocacao_distribuida(
+            # 2️⃣ SEGUNDA ESTRATÉGIA: Tenta alocação distribuída otimizada entre múltiplas HotMixes
+            logger.debug(f"🔍 Tentando alocação distribuída para {quantidade_gramas}g")
+            sucesso_distribuido = self._tentar_alocacao_distribuida_otimizada(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_gramas, hotmixes_ordenados,
                 id_ordem, id_pedido, id_atividade, id_item
@@ -393,12 +704,16 @@ class GestorMisturadorasComCoccao:
                 atividade.equipamentos_selecionados = hotmixes_usadas
                 atividade.alocada = True
                 
+                # Adiciona informação de alocação múltipla se disponível
+                if hasattr(atividade, 'alocacao_multipla'):
+                    atividade.alocacao_multipla = True
+                
                 minutos_retrocedidos = int((fim - fim_real).total_seconds() / 60)
                 logger.info(
-                    f"🧩 Atividade {id_atividade} (Item {id_item}) DIVIDIDA entre "
+                    f"🧩 Atividade {id_atividade} (Item {id_item}) DIVIDIDA OTIMIZADA entre "
                     f"{', '.join(h.nome for h in hotmixes_usadas)} "
                     f"({quantidade_gramas}g total) de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
-                    f"(retrocedeu {minutos_retrocedidos} minutos)"
+                    f"(retrocedeu {minutos_retrocedidos} minutos) [JANELAS SIMULTÂNEAS]"
                 )
                 return True, hotmixes_usadas, inicio_real, fim_real
 
@@ -415,12 +730,12 @@ class GestorMisturadorasComCoccao:
             f"❌ Atividade {id_atividade} (Item {id_item}) não pôde ser alocada após {tentativas} tentativas "
             f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
             f"Quantidade necessária: {quantidade_gramas}g "
-            f"(retrocedeu até o limite de {minutos_total_retrocedidos} minutos)"
+            f"(retrocedeu até o limite de {minutos_total_retrocedidos} minutos) [JANELAS SIMULTÂNEAS]"
         )
         return False, None, None, None
     
     # ==========================================================
-    # 🔓 Liberações
+    # 🔓 Liberações (mantidas do original)
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         """Libera ocupações específicas por atividade."""
@@ -458,12 +773,12 @@ class GestorMisturadorasComCoccao:
             hotmix.liberar_todas_ocupacoes()
 
     # ==========================================================
-    # 📅 Agenda e Relatórios
+    # 📅 Agenda e Relatórios (mantidos do original)
     # ==========================================================
     def mostrar_agenda(self):
         """Mostra agenda consolidada de todas as HotMixes."""
         logger.info("==============================================")
-        logger.info("📅 Agenda das Misturadoras com Cocção (HotMix)")
+        logger.info("📅 Agenda das Misturadoras com Cocção (HotMix) - JANELAS SIMULTÂNEAS")
         logger.info("==============================================")
         for hotmix in self.hotmixes:
             hotmix.mostrar_agenda()
@@ -506,17 +821,18 @@ class GestorMisturadorasComCoccao:
     ) -> List[HotMix]:
         """
         Verifica quais HotMixes estão disponíveis no período para um item específico.
+        🎯 JANELAS SIMULTÂNEAS: Considera regras de janelas simultâneas.
         """
         disponiveis = []
         
         for hotmix in self.hotmixes:
             if id_item is not None:
-                if hotmix.esta_disponivel_para_item(inicio, fim, id_item):
+                if hotmix.esta_disponivel_para_item_janelas_simultaneas(inicio, fim, id_item):
                     if quantidade is None:
                         disponiveis.append(hotmix)
                     else:
-                        # Verifica se pode adicionar a quantidade especificada
-                        if hotmix.validar_nova_ocupacao_item(id_item, quantidade, inicio, fim):
+                        # Verifica se pode adicionar a quantidade especificada com janelas simultâneas
+                        if hotmix.validar_nova_ocupacao_item_simultaneo(id_item, quantidade, inicio, fim):
                             disponiveis.append(hotmix)
             else:
                 # Comportamento original para compatibilidade
@@ -573,11 +889,11 @@ class GestorMisturadorasComCoccao:
             if not ocupacoes_item:
                 continue
                 
-            # Usa método da própria HotMix para calcular pico
+            # Usa método da própria HotMix para calcular pico considerando janelas simultâneas
             periodo_inicio = min(oc[8] for oc in ocupacoes_item)
             periodo_fim = max(oc[9] for oc in ocupacoes_item)
             
-            pico_quantidade = hotmix.obter_quantidade_maxima_item_periodo(
+            pico_quantidade = hotmix.obter_quantidade_maxima_item_periodo_simultaneo(
                 id_item, periodo_inicio, periodo_fim
             )
             
@@ -592,7 +908,7 @@ class GestorMisturadorasComCoccao:
 
     def obter_relatorio_detalhado_item(self, id_item: int) -> dict:
         """
-        NOVO: Gera relatório detalhado de um item específico em todas as HotMixes.
+        Gera relatório detalhado de um item específico em todas as HotMixes.
         """
         relatorio = {
             'id_item': id_item,
@@ -625,7 +941,7 @@ class GestorMisturadorasComCoccao:
                 if periodo_global_fim is None or periodo_fim > periodo_global_fim:
                     periodo_global_fim = periodo_fim
                 
-                pico_quantidade = hotmix.obter_quantidade_maxima_item_periodo(
+                pico_quantidade = hotmix.obter_quantidade_maxima_item_periodo_simultaneo(
                     id_item, periodo_inicio, periodo_fim
                 )
                 
@@ -645,3 +961,86 @@ class GestorMisturadorasComCoccao:
         }
         
         return relatorio
+
+    # ==========================================================
+    # 🆕 Métodos Adicionais para Compatibilidade e Análise
+    # ==========================================================
+    def obter_detalhes_alocacao_atividade(self, atividade: "AtividadeModular") -> dict:
+        """
+        🔍 Retorna detalhes completos da alocação de uma atividade,
+        incluindo informações de múltiplas HotMixes se aplicável.
+        """
+        id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
+        
+        detalhes = {
+            'id_atividade': id_atividade,
+            'id_item': id_item,
+            'alocacao_multipla': len(atividade.equipamentos_selecionados) > 1 if hasattr(atividade, 'equipamentos_selecionados') else False,
+            'hotmixes_utilizadas': [],
+            'quantidade_total': 0.0
+        }
+        
+        # Coleta informações de todas as HotMixes que processam esta atividade
+        for hotmix in self.hotmixes:
+            ocupacoes_atividade = [
+                oc for oc in hotmix.ocupacoes 
+                if oc[0] == id_ordem and oc[1] == id_pedido and oc[2] == id_atividade
+            ]
+            
+            if ocupacoes_atividade:
+                quantidade_hotmix = sum(oc[4] for oc in ocupacoes_atividade)
+                detalhes['hotmixes_utilizadas'].append({
+                    'nome': hotmix.nome,
+                    'quantidade': quantidade_hotmix,
+                    'ocupacoes': len(ocupacoes_atividade)
+                })
+                detalhes['quantidade_total'] += quantidade_hotmix
+        
+        return detalhes
+
+    def listar_alocacoes_multiplas(self) -> List[dict]:
+        """
+        📊 Lista todas as atividades que utilizaram múltiplas HotMixes.
+        """
+        alocacoes_multiplas = []
+        atividades_processadas = set()
+        
+        for hotmix in self.hotmixes:
+            for ocupacao in hotmix.ocupacoes:
+                id_ordem, id_pedido, id_atividade = ocupacao[0], ocupacao[1], ocupacao[2]
+                chave_atividade = (id_ordem, id_pedido, id_atividade)
+                
+                if chave_atividade not in atividades_processadas:
+                    # Conta quantas HotMixes diferentes processam esta atividade
+                    hotmixes_atividade = []
+                    quantidade_total = 0.0
+                    
+                    for h in self.hotmixes:
+                        ocupacoes_atividade = [
+                            oc for oc in h.ocupacoes
+                            if oc[0] == id_ordem and oc[1] == id_pedido and oc[2] == id_atividade
+                        ]
+                        if ocupacoes_atividade:
+                            qtd_hotmix = sum(oc[4] for oc in ocupacoes_atividade)
+                            hotmixes_atividade.append({
+                                'nome': h.nome,
+                                'quantidade': qtd_hotmix
+                            })
+                            quantidade_total += qtd_hotmix
+                    
+                    if len(hotmixes_atividade) > 1:
+                        alocacoes_multiplas.append({
+                            'id_ordem': id_ordem,
+                            'id_pedido': id_pedido,
+                            'id_atividade': id_atividade,
+                            'id_item': ocupacao[3],
+                            'quantidade_total': quantidade_total,
+                            'num_hotmixes': len(hotmixes_atividade),
+                            'hotmixes': hotmixes_atividade,
+                            'inicio': ocupacao[8].strftime('%H:%M [%d/%m]'),
+                            'fim': ocupacao[9].strftime('%H:%M [%d/%m]')
+                        })
+                    
+                    atividades_processadas.add(chave_atividade)
+        
+        return alocacoes_multiplas

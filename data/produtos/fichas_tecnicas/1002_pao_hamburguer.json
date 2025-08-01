@@ -1,0 +1,23 @@
+  {
+    "id_ficha_tecnica": 1002,
+    "id_item": 1002,
+    "nome": "pao_hamburger",
+    "descricao": "Pão Hambúrguer",
+    "tipo_item": "PRODUTO",
+    "unidade_medida": "UNIDADES",
+    "peso_unitario": 65,
+    "quantidade_base": 100,
+    "perda_percentual": 0.0,
+    "politica_producao": "SOB_DEMANDA",
+    "itens": [
+      {
+        "id_item": 2002,
+        "descricao": "Massa Suave",
+        "nome": "massa_suave",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "SOB_DEMANDA",
+        "proporcao": 100,
+        "id_ficha_tecnica": 2002
+      }
+    ]
+  }

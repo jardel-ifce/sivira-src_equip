@@ -1,0 +1,48 @@
+[
+  {
+    "id_item": 2003,
+    "nome": "massa_para_brownie",
+    "antecipacao_de_producao": "00:00:00",
+    "atividades": [
+    
+      {
+        "id_atividade": 20032,
+        "nome": "coccao_de_massas_para_brownie",
+        "tipo_atividade": "COCCAO_DE_MASSA_PARA_BROWNIE",
+        "tipo_equipamento": {
+          "FORNOS": 1
+        },
+        "equipamentos_elegiveis": ["forno_3", "forno_4"],
+        "fips_equipamentos": {
+          "forno_3": 2,
+          "forno_4": 1
+        },
+        "tempo_maximo_de_espera": "00:00:00",
+        "configuracoes_equipamentos": {
+          "forno_3": {
+            "faixa_temperatura": 180,
+            "tipo_coccao": ["LASTRO"],
+            "vaporizacao": 3,
+            "velocidade_mps": 2,
+            "gramas_por_nivel": 1000
+          },
+          "forno_4": {
+            "faixa_temperatura": 180,
+            "tipo_coccao": ["LASTRO"],  
+            "vaporizacao": 3,
+            "velocidade_mps": 2,
+            "gramas_por_nivel": 1000
+
+          }
+      },
+        "tipos_profissionais_permitidos": ["PADEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 1000, "quantidade_max": 6000, "duracao": "00:15:00" },
+          { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:15:00" },
+          { "quantidade_min": 13001, "quantidade_max": 3000000, "duracao": "00:15:00" }
+        ]
+      }
+    ]
+  }
+]

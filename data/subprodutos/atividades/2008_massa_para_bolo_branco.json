@@ -1,0 +1,203 @@
+{
+  "id_item": 2008,
+  "nome": "massa_para_bolo_branco",
+  "antecipacao_de_producao": "00:00:00",
+  "atividades": [
+    {
+      "id_atividade": 20081,
+      "nome": "mistura_de_massas_para_bolo_branco",
+      "tipo_atividade": "MISTURA_DE_MASSAS_PARA_BOLO_BRANCO",
+      "tipo_equipamento": {
+        "BATEDEIRAS": 1
+      },
+      "equipamentos_elegiveis": ["batedeira_planetaria_1", "batedeira_planetaria_2", "batedeira_industrial_1"],
+      "fips_equipamentos": {
+        "batedeira_planetaria_1": 1,
+        "batedeira_planetaria_2": 1,
+        "batedeira_industrial_1": 2
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "batedeira_planetaria_1": {
+          "velocidade": 5
+        },
+        "batedeira_planetaria_2": {
+          "velocidade": 5
+        },
+        "batedeira_industrial_1": {
+          "velocidade": 5
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 7000, "duracao": "00:08:00" },
+        { "quantidade_min": 7001, "quantidade_max": 15000, "duracao": "00:12:00" },
+        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:16:00" }
+      ]
+    },
+    {
+      "id_atividade": 20082,
+      "nome": "preparo_para_coccao_de_massa_para_bolo_branco",
+      "tipo_atividade": "PREPARO_PARA_COCCAO_DE_MASSA_PARA_BOLO_BRANCO",
+      "tipo_equipamento": {
+        "BANCADAS": 1,
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6", "armario_esqueleto_1", "armario_esqueleto_2"],
+      "fips_equipamentos": {
+        "bancada_4": 1,
+        "bancada_5": 2,
+        "bancada_6": 3,
+        "armario_esqueleto_1": 1,
+        "armario_esqueleto_2": 2
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "bancada_4": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "bancada_5": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "bancada_6": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "armario_esqueleto_1": {
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        },
+        "armario_esqueleto_2": {
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 7000, "duracao": "00:10:00" },
+        { "quantidade_min": 7001, "quantidade_max": 15000, "duracao": "00:15:00" },
+        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:20:00" }
+      ]
+    },
+    {
+      "id_atividade": 20083,
+      "nome": "coccao_de_massas_para_bolo_branco",
+      "tipo_atividade": "COCCAO_DE_MASSAS_PARA_BOLO_BRANCO",
+      "tipo_equipamento": {
+        "FORNOS": 1
+      },
+      "equipamentos_elegiveis": ["forno_3", "forno_4"],
+      "fips_equipamentos": {
+        "forno_3": 2,
+        "forno_4": 1
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "forno_3": {
+          "faixa_temperatura": 160,
+          "tipo_coccao": ["LASTRO"]
+        },
+        "forno_4": {
+          "faixa_temperatura": 160,
+          "tipo_coccao": ["LASTRO"]
+        }
+      },
+      "tipos_profissionais_permitidos": [],
+      "fips_profissionais_permitidos": {},
+      "quantidade_funcionarios": 0,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 7000, "duracao": "00:25:00" },
+        { "quantidade_min": 7001, "quantidade_max": 15000, "duracao": "00:30:00" },
+        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:35:00" }
+      ]
+    },
+    {
+      "id_atividade": 20084,
+      "nome": "preparo_para_armazenamento_de_massa_para_bolo_branco",
+      "tipo_atividade": "PREPARO_PARA_ARMAZENAMENTO_DE_MASSA_PARA_BOLO_BRANCO",
+      "tipo_equipamento": {
+        "BANCADAS": 1,
+        "ARMARIOS_PARA_FERMENTACAO": 1
+      },
+      "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6", "armario_esqueleto_1", "armario_esqueleto_2"],
+      "fips_equipamentos": {
+        "bancada_4": 1,
+        "bancada_5": 2,
+        "bancada_6": 3,
+        "armario_esqueleto_1": 1,
+        "armario_esqueleto_2": 2
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "bancada_4": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "bancada_5": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "bancada_6": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
+        },
+        "armario_esqueleto_1": {
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        },
+        "armario_esqueleto_2": {
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        }
+      },
+      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "fips_profissionais_permitidos": {
+        "CONFEITEIRO": 2,
+        "AUXILIAR_DE_CONFEITEIRO": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 7000, "duracao": "00:08:00" },
+        { "quantidade_min": 7001, "quantidade_max": 15000, "duracao": "00:12:00" },
+        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:16:00" }
+      ]
+    },
+    {
+      "id_atividade": 20085,
+      "nome": "armazenamento_sob_temperatura_para_massa_para_bolo_branco",
+      "tipo_atividade": "ARMAZENAMENTO_SOB_TEMPERATURA_PARA_MASSA_PARA_BOLO_BRANCO",
+      "tipo_equipamento": {
+        "REFRIGERACAO_CONGELAMENTO": 1
+      },
+      "equipamentos_elegiveis": ["camara_refrigerada_1"],
+      "fips_equipamentos": {
+        "camara_refrigerada_1": 1
+      },
+      "tempo_maximo_de_espera": "00:00:00",
+      "configuracoes_equipamentos": {
+        "camara_refrigerada_1": {
+          "faixa_temperatura": 4,
+          "tipo_de_armazenamento": "NIVEIS_TELA"
+        }
+      },
+      "tipos_profissionais_permitidos": ["ALMOXARIFE"],
+      "fips_profissionais_permitidos": {
+        "ALMOXARIFE": 1
+      },
+      "quantidade_funcionarios": 1,
+      "faixas": [
+        { "quantidade_min": 500, "quantidade_max": 7000, "duracao": "00:05:00" },
+        { "quantidade_min": 7001, "quantidade_max": 15000, "duracao": "00:08:00" },
+        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:10:00" }
+      ]
+    }
+  ]
+}

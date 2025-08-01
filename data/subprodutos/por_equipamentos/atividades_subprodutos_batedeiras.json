@@ -1,0 +1,37 @@
+[{
+    "id_item": 2003,
+    "nome": "massa_para_brownie",
+    "antecipacao_de_producao": "00:00:00",
+    "atividades": [
+      {
+        "id_atividade": 20031,
+        "nome": "mistura_de_massas_para_brownie",
+        "tipo_atividade": "MISTURA_DE_MASSA_PARA_BROWNIE",
+        "tipo_equipamento": {
+          "BATEDEIRAS": 1
+        },
+        "equipamentos_elegiveis": ["batedeira_planetaria_1", "batedeira_planetaria_2"],
+        "fips_equipamentos": {
+          "batedeira_planetaria_1": 1,
+          "batedeira_planetaria_2": 1
+        },
+        "tempo_maximo_de_espera": "00:00:00",
+        "configuracoes_equipamentos": {
+          "batedeira_planetaria_1": {
+            "velocidade": 5
+          },
+          "batedeira_planetaria_2": {
+            "velocidade": 5
+          }
+      },
+        "tipos_profissionais_permitidos": ["PADEIRO"],
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 3000, "quantidade_max": 6000, "duracao": "00:05:00" },
+          { "quantidade_min": 6001, "quantidade_max": 13000, "duracao": "00:07:00" },
+          { "quantidade_min": 13001, "quantidade_max": 20000, "duracao": "00:09:00" }
+        ]
+      }
+    ]
+  }
+]

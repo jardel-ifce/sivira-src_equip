@@ -1,0 +1,78 @@
+{
+  "id_ficha_tecnica": 2005,
+  "id_item": 2005,
+  "nome": "massa_para_brownie",
+  "descricao": "Massa para brownie",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 17,
+      "descricao": "Farinha de trigo doméstica",
+      "nome": "farinha_de_trigo_domestica",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 18,
+      "descricao": "Leite líquido integral",
+      "nome": "leite_liquido_integral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 50
+    },
+    {
+      "id_item": 19,
+      "descricao": "Ovo de galinha",
+      "nome": "ovo_de_galinha",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 10
+    },
+    {
+      "id_item": 20,
+      "descricao": "Margarina sem sal",
+      "nome": "margarina_sem_sal",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 10
+    },
+    {
+      "id_item": 21,
+      "descricao": "Cacau em pó 50%",
+      "nome": "cacau_em_po_50",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 15
+    },
+    {
+      "id_item": 22,
+      "descricao": "Chocolate ao leite fracionado",
+      "nome": "chocolate_ao_leite_fracionado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 20
+    },
+    {
+      "id_item": 23,
+      "descricao": "Açúcar refinado",
+      "nome": "acucar_refinado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 15
+    },
+    {
+      "id_item": 24,
+      "descricao": "Fermento químico",
+      "nome": "fermento_quimico",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 2
+    }
+  ]
+}

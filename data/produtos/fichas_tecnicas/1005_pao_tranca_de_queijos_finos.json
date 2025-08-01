@@ -1,0 +1,48 @@
+{
+    "id_ficha_tecnica": 1005,
+    "id_item": 1005,
+    "nome": "pao_tranca_de_queijo_finos",
+    "descricao": "Pão Baguete",
+    "tipo_item": "PRODUTO",
+    "unidade_medida": "UNIDADES",
+    "peso_unitario": 500,
+    "quantidade_base": 100,
+    "perda_percentual": 0.0,
+    "politica_producao": "SOB_DEMANDA",
+    "itens": [
+      {
+        "id_item": 2002,
+        "descricao": "Massa Suave",
+        "nome": "massa_suave",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "SOB_DEMANDA",
+        "proporcao": 100,
+        "id_ficha_tecnica": 2002
+      },
+      {
+        "id_item": 2010,
+        "descricao": "Creme de Queijo",
+        "nome": "creme_de_queijo",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 92,
+        "id_ficha_tecnica": 2010
+      },
+      {
+        "id_item": 50,
+        "descricao": "Queijo Parmesão",
+        "nome": "queijo_parmesao",
+        "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 6
+      },
+       {
+        "id_item": 19,
+        "descricao": "Ovo de galinha",
+        "nome": "ovo_de_galinha",
+        "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 2
+      }
+    ]
+  }

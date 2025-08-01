@@ -1,0 +1,62 @@
+{
+  "id_ficha_tecnica": 2004,
+  "id_item": 2004,
+  "nome": "massa_para_folhados",
+  "descricao": "Massa para folhados",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 3,
+      "descricao": "Farinha de trigo para pães",
+      "nome": "farinha_de_trigo_para_paes",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 10,
+      "descricao": "Água mineral",
+      "nome": "agua_mineral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 4
+    },
+    {
+      "id_item": 5,
+      "descricao": "Sal refinado",
+      "nome": "sal_refinado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 2
+    },
+    {
+      "id_item": 13,
+      "descricao": "Açúcar cristal",
+      "nome": "acucar_cristal",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 2
+    },
+    {
+      "id_item": 15,
+      "descricao": "Gordura hidrogenada",
+      "nome": "gordura_hidrogenada",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 10
+    },
+    {
+      "id_item": 16,
+      "descricao": "Margarina para folhados",
+      "nome": "margarina_para_folhados",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 25
+    }
+  ]
+}

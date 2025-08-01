@@ -43,6 +43,7 @@ class GestorArmariosParaFermentacao:
         """
         Obtém a capacidade por nível de tela do armário a partir da atividade.
         Suporta tanto unidades_por_nivel_tela quanto gramas_por_nivel_tela.
+        CORREÇÃO: Também aceita unidades_por_nivel e gramas_por_nivel (sem "_tela")
         Retorna (capacidade, tipo_unidade) onde tipo_unidade pode ser 'unidades' ou 'gramas'
         """
         try:
@@ -51,28 +52,36 @@ class GestorArmariosParaFermentacao:
             
             if not config:
                 logger.warning(f"⚠️ Configuração não encontrada para {armario.nome}")
+                logger.debug(f"🔍 Chave normalizada tentada: '{chave}'")
+                logger.debug(f"🔍 Chaves disponíveis em configuracoes_equipamentos: {list(atividade.configuracoes_equipamentos.keys())}")
                 return None, None
             
-            # Verificar se tem unidades_por_nivel_tela
-            if "unidades_por_nivel_tela" in config:
-                capacidade = int(config["unidades_por_nivel_tela"])
-                logger.debug(f"📏 {armario.nome}: {capacidade} unidades por nível de tela")
+            logger.debug(f"🔍 Configuração encontrada para {armario.nome}: {config}")
+            
+       
+            # Verificar se tem unidades_por_nivel (formato antigo) - NOVO
+            if "unidades_por_nivel" in config:
+                capacidade = int(config["unidades_por_nivel"])
+                logger.debug(f"📏 {armario.nome}: {capacidade} unidades por nível (formato antigo)")
                 return capacidade, "unidades"
             
-            # Verificar se tem gramas_por_nivel_tela
-            elif "gramas_por_nivel_tela" in config:
-                capacidade = int(config["gramas_por_nivel_tela"])
-                logger.debug(f"📏 {armario.nome}: {capacidade} gramas por nível de tela")
+            
+            # Verificar se tem gramas_por_nivel (formato antigo) - NOVO
+            if "gramas_por_nivel" in config:
+                capacidade = int(config["gramas_por_nivel"])
+                logger.debug(f"📏 {armario.nome}: {capacidade} gramas por nível (formato antigo)")
                 return capacidade, "gramas"
             
             else:
                 logger.warning(f"⚠️ Nenhuma configuração de capacidade encontrada para {armario.nome}")
                 logger.warning(f"🔍 Chaves disponíveis: {list(config.keys())}")
+                logger.info(f"💡 Formatos suportados: unidades_por_nivel_tela, unidades_por_nivel, gramas_por_nivel_tela, gramas_por_nivel")
                 return None, None
                 
         except Exception as e:
             logger.error(f"❌ Erro ao obter capacidade por nível de tela para {armario.nome}: {e}")
             return None, None
+
 
     def _normalizar_nome(self, nome: str) -> str:
         nome_bruto = nome.lower().replace(" ", "_")
@@ -257,6 +266,7 @@ class GestorArmariosParaFermentacao:
             horario_inicio_tentativa = horario_final_tentativa - duracao
             quantidade_restante = quantidade
             alocados = []
+            armarios_utilizados = set()  # ← NOVO: Set para rastrear armários únicos
 
             logger.debug(f"⏱️ Tentativa de alocação entre {horario_inicio_tentativa.strftime('%H:%M')} e {horario_final_tentativa.strftime('%H:%M')}")
 
@@ -288,6 +298,8 @@ class GestorArmariosParaFermentacao:
                 logger.debug(f"{armario.nome} - 📊 Capacidade: {capacidade_por_nivel} {tipo_unidade}/nível, Níveis compatíveis: {len(niveis_compativeis)}")
 
                 # ✅ ALOCAR NOS NÍVEIS COMPATÍVEIS
+                armario_foi_usado = False  # ← NOVO: Flag para rastrear se o armário foi usado
+                
                 for nivel_index, quantidade_disponivel in niveis_compativeis:
                     if quantidade_restante <= 0:
                         break
@@ -309,14 +321,20 @@ class GestorArmariosParaFermentacao:
                     if sucesso:
                         alocados.append((armario, nivel_index, unidades_alocar_nivel, tipo_unidade))
                         quantidade_restante -= unidades_alocar_nivel
+                        armario_foi_usado = True  # ← NOVO: Marca que o armário foi usado
                         
                         logger.debug(f"✅ Alocado no {armario.nome}[{nivel_index}]: {unidades_alocar_nivel} {tipo_unidade} do item {id_item}")
                     else:
                         logger.warning(f"❌ {armario.nome}[{nivel_index}] falhou na ocupação real.")
+                
+                # ← NOVO: Adiciona o armário ao set apenas se foi usado
+                if armario_foi_usado:
+                    armarios_utilizados.add(armario)
 
             if quantidade_restante <= 0:
                 atividade.equipamento_alocado = None
-                atividade.equipamentos_selecionados = list(set([a for a, _, _, _ in alocados]))
+                # ← MODIFICAÇÃO: Retorna lista de armários únicos em vez de repetidos
+                atividade.equipamentos_selecionados = list(armarios_utilizados)
                 atividade.alocada = True
 
                 log_ocupacoes = " | ".join(f"{a.nome}[{n}]: {qtd} {tipo}" for a, n, qtd, tipo in alocados)
@@ -324,7 +342,8 @@ class GestorArmariosParaFermentacao:
                     f"✅ Atividade {atividade.id_atividade} (item {id_item}) alocada com sucesso: {log_ocupacoes} | "
                     f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}"
                 )
-                return True, [a for a, _, _, _ in alocados], horario_inicio_tentativa, horario_final_tentativa
+                # ← MODIFICAÇÃO: Retorna lista de armários únicos
+                return True, list(armarios_utilizados), horario_inicio_tentativa, horario_final_tentativa
 
             logger.debug(f"🔁 Tentativa falhou. Restante: {quantidade_restante}. Retrocedendo 1 minuto.")
             horario_final_tentativa -= timedelta(minutes=1)

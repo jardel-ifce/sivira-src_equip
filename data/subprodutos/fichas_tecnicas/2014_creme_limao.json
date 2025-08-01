@@ -1,0 +1,30 @@
+{
+  "id_ficha_tecnica": 2014,
+  "id_item": 2014,
+  "nome": "creme_de_limao",
+  "descricao": "Creme de limão",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 50.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 48,
+      "nome": "limao_siciliano",
+      "descricao": "Limão siciliano",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 47,
+      "nome": "leite_condensado",
+      "descricao": "Leite condensado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 50
+    }
+  ]
+}

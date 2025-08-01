@@ -1,0 +1,54 @@
+{
+  "id_ficha_tecnica": 2008,
+  "id_item": 2008,
+  "nome": "carne_de_sol_refogada",
+  "descricao": "Carne de sol refogada",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 27,
+      "nome": "carne_de_sol_cozida_pronta",
+      "descricao": "Carne de sol cozida pronta",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 28,
+      "nome": "cebola_roxa",
+      "descricao": "Cebola roxa",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 20
+    },
+    {
+      "id_item": 29,
+      "nome": "manteiga_da_terra",
+      "descricao": "Manteiga da terra",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 20
+    },
+    {
+      "id_item": 30,
+      "nome": "cheiro_verde",
+      "descricao": "Cheiro verde",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    },
+    {
+      "id_item": 31,
+      "nome": "pimenta_de_cheiro",
+      "descricao": "Pimenta de cheiro",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id_ficha_tecnica": 2012,
+  "id_item": 2012,
+  "nome": "creme_de_frango",
+  "descricao": "Creme de frango",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 32,
+      "nome": "frango_cozido_pronto",
+      "descricao": "Frango cozido pronto",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 43,
+      "nome": "caldo_de_frango_cozido",
+      "descricao": "Caldo de frango cozido",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 50
+    },
+    {
+      "id_item": 44,
+      "nome": "creme_de_leite_integral",
+      "descricao": "Creme de leite integral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 50
+    },
+    {
+      "id_item": 30,
+      "nome": "cheiro_verde",
+      "descricao": "Cheiro verde",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    },
+    {
+      "id_item": 33,
+      "nome": "pimenta_do_reino",
+      "descricao": "Pimenta do reino",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 0.3
+    },
+    {
+      "id_item": 45,
+      "nome": "amido_de_milho",
+      "descricao": "Amido de milho",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 2
+    },
+    {
+      "id_item": 5,
+      "nome": "sal_refinado",
+      "descricao": "Sal refinado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 1
+    }
+  ]
+}

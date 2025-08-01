@@ -1,0 +1,30 @@
+{
+  "id_ficha_tecnica": 2015,
+  "id_item": 2015,
+  "nome": "ganache_de_chocolate",
+  "descricao": "Ganache de chocolate",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 22,
+      "nome": "chocolate_ao_leite_fracionado",
+      "descricao": "Chocolate ao leite fracionado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 44,
+      "nome": "creme_de_leite_integral",
+      "descricao": "Creme de leite integral",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 80
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
+from typing import Union
 from typing import List, Optional, Tuple, TYPE_CHECKING
 from models.equipamentos.modeladora_de_paes import ModeladoraDePaes
+from models.equipamentos.modeladora_de_salgados import ModeladoraDeSalgados
 if TYPE_CHECKING:
     from models.atividades.atividade_modular import AtividadeModular 
 from utils.logs.logger_factory import setup_logger
@@ -8,6 +10,7 @@ import unicodedata
 
 logger = setup_logger("GestorModeladoras")
 
+ItensModelados = Union[ModeladoraDePaes, ModeladoraDeSalgados]
 
 class GestorModeladoras:
     """
@@ -20,13 +23,13 @@ class GestorModeladoras:
     - Alocação direta no horário especificado
     """
 
-    def __init__(self, modeladoras: List[ModeladoraDePaes]):
+    def __init__(self, modeladoras: List[ItensModelados]):
         self.modeladoras = modeladoras
 
     # ==========================================================
     # 📊 Ordenação dos equipamentos por FIP (fator de importância)
-    # ==========================================================  
-    def _ordenar_por_fip(self, atividade: "AtividadeModular") -> List[ModeladoraDePaes]:
+    # ==========================================================
+    def _ordenar_por_fip(self, atividade: "AtividadeModular") -> List[ItensModelados]:
         """Ordena modeladoras por fator de importância de prioridade."""
         ordenadas = sorted(
             self.modeladoras,
@@ -82,7 +85,7 @@ class GestorModeladoras:
         fim: datetime,
         atividade: "AtividadeModular",
         quantidade_unidades: int
-    ) -> Tuple[bool, Optional[ModeladoraDePaes], Optional[datetime], Optional[datetime]]:
+    ) -> Tuple[bool, Optional[ItensModelados], Optional[datetime], Optional[datetime]]:
         """
         Aloca uma atividade nas modeladoras (sempre disponíveis).
         Usa ordenação por FIP mas não verifica disponibilidade.
@@ -179,7 +182,7 @@ class GestorModeladoras:
     def mostrar_agenda(self):
         """Mostra histórico consolidado de todas as modeladoras."""
         logger.info("==============================================")
-        logger.info("📅 Histórico das Modeladoras de Pães")
+        logger.info("📅 Histórico das Modeladoras")
         logger.info("==============================================")
         for modeladora in self.modeladoras:
             modeladora.mostrar_agenda()

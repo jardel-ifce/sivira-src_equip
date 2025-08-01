@@ -1,0 +1,70 @@
+{
+  "id_ficha_tecnica": 2002,
+  "id_item": 2002,
+  "nome": "massa_suave",
+  "descricao": "Massa suave",
+  "tipo_item": "SUBPRODUTO",
+  "unidade_medida": "GRAMAS",
+  "peso_unitario": 0,
+  "quantidade_base": 100,
+  "perda_percentual": 0.0,
+  "politica_producao": "SOB_DEMANDA",
+  "itens": [
+    {
+      "id_item": 3,
+      "descricao": "Farinha de trigo para pães",
+      "nome": "farinha_de_trigo_para_paes",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 100
+    },
+    {
+      "id_item": 4,
+      "descricao": "Gelo para alimentos",
+      "nome": "gelo_para_alimentos",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 55
+    },
+    {
+      "id_item": 5,
+      "descricao": "Sal refinado",
+      "nome": "sal_refinado",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 1
+    },
+    {
+      "id_item": 6,
+      "descricao": "Fermento biológico seco",
+      "nome": "fermento_biologico_seco",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 2
+    },
+    {
+      "id_item": 13,
+      "descricao": "Açúcar cristal",
+      "nome": "acucar_cristal",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    },
+    {
+      "id_item": 14,
+      "descricao": "Margarina com sal",
+      "nome": "margarina_com_sal",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 5
+    },
+    {
+      "id_item": 7,
+      "descricao": "Aditivo em pasta",
+      "nome": "aditivo_em_pasta",
+      "tipo_item": "INSUMO",
+      "politica_producao": "ESTOCADO",
+      "proporcao": 0.3
+    }
+  ]
+}

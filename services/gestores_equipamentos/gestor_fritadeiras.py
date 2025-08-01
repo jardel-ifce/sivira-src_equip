@@ -13,29 +13,280 @@ logger = setup_logger('GestorFritadeiras')
 
 class GestorFritadeiras:
     """
-    🍟 Gestor especializado no controle de fritadeiras.
-    Utiliza backward scheduling e FIP (Fatores de Importância de Prioridade).
-    Implementa verificação dinâmica de intervalos e priorização por fritadeira.
-    ✅ CORRIGIDO: Frações tratadas como espaços físicos independentes
-    ✅ MELHORADO: Validação de temperatura em ocupações simultâneas
-    ❌ REMOVIDO: Tentativas inadequadas de sobreposição por id_item
+    🍟 Gestor otimizado para controle de fritadeiras com distribuição inteligente.
+    
+    Baseado em:
+    - Multiple Knapsack Problem para verificação de viabilidade
+    - First Fit Decreasing (FFD) para distribuição ótima
+    - Binary Space Partitioning para balanceamento de cargas
+    - Load Balancing para redistribuição eficiente
+    
+    Funcionalidades:
+    - Verificação prévia de viabilidade total do sistema
+    - Distribuição otimizada respeitando capacidades mín/máx
+    - Algoritmos de otimização com múltiplas estratégias
+    - Priorização por FIP com balanceamento de carga
+    - Validação de temperatura simultânea
+    - Controle de frações como espaços físicos independentes
     """
 
     def __init__(self, fritadeiras: List[Fritadeira]):
         self.fritadeiras = fritadeiras
 
     # ==========================================================
-    # 📊 Ordenação dos equipamentos por FIP (fator de importância)
-    # ==========================================================  
+    # 📊 Análise de Viabilidade e Capacidades
+    # ==========================================================
+    def _calcular_capacidade_total_sistema(self, atividade: "AtividadeModular", temperatura: int,
+                                          inicio: datetime, fim: datetime) -> Tuple[float, float]:
+        """
+        📚 Multiple Knapsack Problem (MKP): Calcula capacidade total do sistema.
+        Considera temperatura e disponibilidade de frações para cada fritadeira.
+        
+        Retorna: (capacidade_total_disponivel, capacidade_maxima_teorica)
+        """
+        capacidade_disponivel_total = 0.0
+        capacidade_maxima_teorica = 0.0
+        
+        for fritadeira in self.fritadeiras:
+            capacidade_maxima_teorica += fritadeira.capacidade_gramas_max
+            
+            # Verifica compatibilidade básica (temperatura)
+            if fritadeira.validar_temperatura(temperatura):
+                # Verifica temperatura simultânea
+                if fritadeira.validar_temperatura_simultanea(temperatura, inicio, fim):
+                    # Calcula capacidade disponível considerando ocupações existentes
+                    quantidade_atual = self._calcular_quantidade_maxima_fritadeira_periodo(fritadeira, inicio, fim)
+                    capacidade_livre = fritadeira.capacidade_gramas_max - quantidade_atual
+                    capacidade_disponivel_total += max(0, capacidade_livre)
+        
+        return capacidade_disponivel_total, capacidade_maxima_teorica
+
+    def _verificar_viabilidade_quantidade(self, atividade: "AtividadeModular", quantidade_total: float,
+                                        temperatura: int, fracoes_necessarias: int, 
+                                        inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        📚 Multiple Knapsack Problem (MKP): Verifica viabilidade teórica da demanda.
+        Considera capacidade total, temperatura e número de frações necessárias.
+        """
+        cap_disponivel, cap_teorica = self._calcular_capacidade_total_sistema(
+            atividade, temperatura, inicio, fim
+        )
+        
+        if quantidade_total > cap_teorica:
+            return False, f"Quantidade {quantidade_total}g excede capacidade máxima teórica do sistema ({cap_teorica}g)"
+        
+        if quantidade_total > cap_disponivel:
+            return False, f"Quantidade {quantidade_total}g excede capacidade disponível ({cap_disponivel}g) no período"
+        
+        # Verifica disponibilidade de frações
+        fritadeiras_compatíveis = [
+            f for f in self.fritadeiras 
+            if (f.validar_temperatura(temperatura) and 
+                f.validar_temperatura_simultanea(temperatura, inicio, fim))
+        ]
+        
+        if not fritadeiras_compatíveis:
+            return False, f"Nenhuma fritadeira compatível com temperatura {temperatura}°C no período"
+        
+        # Conta frações disponíveis total
+        fracoes_disponiveis_total = sum(
+            len(f.fracoes_disponiveis_periodo(inicio, fim)) 
+            for f in fritadeiras_compatíveis
+        )
+        
+        if fracoes_disponiveis_total < fracoes_necessarias:
+            return False, f"Apenas {fracoes_disponiveis_total} frações disponíveis, necessárias {fracoes_necessarias}"
+        
+        # Verifica capacidades mínimas
+        capacidade_minima_total = sum(f.capacidade_gramas_min for f in fritadeiras_compatíveis)
+        if quantidade_total < min(f.capacidade_gramas_min for f in fritadeiras_compatíveis if fracoes_necessarias <= f.numero_fracoes):
+            if len([f for f in fritadeiras_compatíveis if f.numero_fracoes >= fracoes_necessarias]) >= 1:
+                return True, "Viável com uma fritadeira"
+        elif quantidade_total >= capacidade_minima_total:
+            return True, "Viável com múltiplas fritadeiras"
+        else:
+            return False, f"Quantidade {quantidade_total}g insuficiente para capacidades mínimas"
+        
+        return True, "Quantidade viável"
+
+    # ==========================================================
+    # 🧮 Algoritmos de Distribuição Otimizada
+    # ==========================================================
+    def _algoritmo_distribuicao_balanceada(self, quantidade_total: float, temperatura: int,
+                                          fritadeiras_disponiveis: List[Tuple[Fritadeira, float, List[int]]]) -> List[Tuple[Fritadeira, float, List[int]]]:
+        """
+        📚 Binary Space Partitioning: Distribui quantidade proporcionalmente entre fritadeiras,
+        considerando suas capacidades disponíveis e frações livres.
+        
+        Args:
+            fritadeiras_disponiveis: Lista de (fritadeira, capacidade_disponivel, fracoes_livres)
+        
+        Returns:
+            Lista de (fritadeira, quantidade_alocada, fracoes_a_usar)
+        """
+        if not fritadeiras_disponiveis:
+            return []
+        
+        # Ordena por capacidade disponível (maior primeiro)
+        fritadeiras_ordenadas = sorted(fritadeiras_disponiveis, key=lambda x: x[1], reverse=True)
+        
+        # Capacidade total disponível
+        capacidade_total_disponivel = sum(cap for _, cap, _ in fritadeiras_ordenadas)
+        
+        if capacidade_total_disponivel < quantidade_total:
+            return []
+        
+        # Fase 1: Distribuição proporcional inicial
+        distribuicao = []
+        quantidade_restante = quantidade_total
+        
+        for i, (fritadeira, cap_disponivel, fracoes_livres) in enumerate(fritadeiras_ordenadas):
+            if i == len(fritadeiras_ordenadas) - 1:
+                # Última fritadeira recebe o restante
+                quantidade_fritadeira = quantidade_restante
+            else:
+                # Distribuição proporcional
+                proporcao = cap_disponivel / capacidade_total_disponivel
+                quantidade_fritadeira = quantidade_total * proporcao
+            
+            # Ajusta para limites da fritadeira
+            quantidade_fritadeira = max(fritadeira.capacidade_gramas_min, 
+                                      min(quantidade_fritadeira, cap_disponivel))
+            
+            # Calcula quantas frações usar baseado na quantidade
+            fracoes_necessarias = min(
+                len(fracoes_livres),
+                max(1, math.ceil(quantidade_fritadeira / (fritadeira.capacidade_gramas_max / fritadeira.numero_fracoes)))
+            )
+            
+            fracoes_a_usar = fracoes_livres[:fracoes_necessarias]
+            
+            distribuicao.append((fritadeira, quantidade_fritadeira, fracoes_a_usar))
+            quantidade_restante -= quantidade_fritadeira
+            
+            if quantidade_restante <= 0:
+                break
+        
+        # Fase 2: Redistribuição de excedentes/déficits
+        distribuicao = self._redistribuir_excedentes_fritadeiras(distribuicao, quantidade_total)
+        
+        return distribuicao
+
+    def _redistribuir_excedentes_fritadeiras(self, distribuicao: List[Tuple[Fritadeira, float, List[int]]], 
+                                           quantidade_target: float) -> List[Tuple[Fritadeira, float, List[int]]]:
+        """
+        📚 Load Balancing Algorithms: Redistribui quantidades para atingir o target exato.
+        Específico para fritadeiras considerando frações disponíveis.
+        """
+        MAX_ITERACOES = 10
+        iteracao = 0
+        
+        while iteracao < MAX_ITERACOES:
+            quantidade_atual = sum(qtd for _, qtd, _ in distribuicao)
+            diferenca = quantidade_target - quantidade_atual
+            
+            if abs(diferenca) < 0.1:  # Tolerância de 0.1g
+                break
+            
+            if diferenca > 0:
+                # Precisa adicionar quantidade
+                for i, (fritadeira, qtd_atual, fracoes_usadas) in enumerate(distribuicao):
+                    margem_disponivel = fritadeira.capacidade_gramas_max - qtd_atual
+                    
+                    if margem_disponivel > 0:
+                        adicionar = min(diferenca, margem_disponivel)
+                        distribuicao[i] = (fritadeira, qtd_atual + adicionar, fracoes_usadas)
+                        diferenca -= adicionar
+                        
+                        if diferenca <= 0:
+                            break
+            else:
+                # Precisa remover quantidade
+                diferenca = abs(diferenca)
+                for i, (fritadeira, qtd_atual, fracoes_usadas) in enumerate(distribuicao):
+                    margem_removivel = qtd_atual - fritadeira.capacidade_gramas_min
+                    
+                    if margem_removivel > 0:
+                        remover = min(diferenca, margem_removivel)
+                        nova_quantidade = qtd_atual - remover
+                        
+                        # Ajusta frações se necessário
+                        if nova_quantidade < fritadeira.capacidade_gramas_min and len(fracoes_usadas) > 1:
+                            fracoes_ajustadas = fracoes_usadas[:-1]  # Remove uma fração
+                        else:
+                            fracoes_ajustadas = fracoes_usadas
+                        
+                        distribuicao[i] = (fritadeira, nova_quantidade, fracoes_ajustadas)
+                        diferenca -= remover
+                        
+                        if diferenca <= 0:
+                            break
+            
+            iteracao += 1
+        
+        # Remove fritadeiras com quantidade abaixo do mínimo
+        distribuicao_final = [
+            (fritadeira, qtd, fracoes) for fritadeira, qtd, fracoes in distribuicao
+            if qtd >= fritadeira.capacidade_gramas_min and fracoes
+        ]
+        
+        return distribuicao_final
+
+    def _algoritmo_first_fit_decreasing(self, quantidade_total: float, temperatura: int,
+                                       fritadeiras_disponiveis: List[Tuple[Fritadeira, float, List[int]]]) -> List[Tuple[Fritadeira, float, List[int]]]:
+        """
+        📚 First Fit Decreasing (FFD): Algoritmo clássico adaptado para fritadeiras.
+        Aloca quantidade em fritadeiras ordenadas por capacidade decrescente.
+        """
+        # Ordena fritadeiras por capacidade disponível (maior primeiro)
+        fritadeiras_ordenadas = sorted(fritadeiras_disponiveis, key=lambda x: x[1], reverse=True)
+        
+        distribuicao = []
+        quantidade_restante = quantidade_total
+        
+        for fritadeira, cap_disponivel, fracoes_livres in fritadeiras_ordenadas:
+            if quantidade_restante <= 0:
+                break
+            
+            # Calcula quanto alocar nesta fritadeira
+            if quantidade_restante >= fritadeira.capacidade_gramas_min:
+                quantidade_alocar = min(quantidade_restante, cap_disponivel)
+                
+                # Garante que não fica quantidade insuficiente para próximas fritadeiras
+                fritadeiras_restantes = [
+                    f for f, _, _ in fritadeiras_ordenadas 
+                    if f != fritadeira and (quantidade_restante - quantidade_alocar) > 0
+                ]
+                
+                if fritadeiras_restantes:
+                    cap_min_restantes = min(f.capacidade_gramas_min for f in fritadeiras_restantes)
+                    if quantidade_restante - quantidade_alocar < cap_min_restantes and quantidade_restante - quantidade_alocar > 0:
+                        # Ajusta para deixar quantidade suficiente
+                        quantidade_alocar = quantidade_restante - cap_min_restantes
+                
+                if quantidade_alocar >= fritadeira.capacidade_gramas_min:
+                    # Calcula frações necessárias
+                    fracoes_necessarias = min(
+                        len(fracoes_livres),
+                        max(1, math.ceil(quantidade_alocar / (fritadeira.capacidade_gramas_max / fritadeira.numero_fracoes)))
+                    )
+                    
+                    fracoes_a_usar = fracoes_livres[:fracoes_necessarias]
+                    
+                    distribuicao.append((fritadeira, quantidade_alocar, fracoes_a_usar))
+                    quantidade_restante -= quantidade_alocar
+        
+        return distribuicao if quantidade_restante <= 0.1 else []
+
+    # ==========================================================
+    # 🔍 Métodos auxiliares e ordenação
+    # ==========================================================
     def _ordenar_por_fip(self, atividade: "AtividadeModular") -> List[Fritadeira]:
         return sorted(
             self.fritadeiras,
             key=lambda f: atividade.fips_equipamentos.get(f, 999)
         )
     
-    # ==========================================================
-    # 🔍 Leitura dos parâmetros via JSON
-    # ==========================================================
     def _normalizar_nome(self, nome: str) -> str:
         nome_bruto = nome.lower().replace(" ", "_")
         return unicodedata.normalize("NFKD", nome_bruto).encode("ASCII", "ignore").decode("utf-8")
@@ -69,389 +320,55 @@ class GestorFritadeiras:
             logger.warning(f"⚠️ Erro ao obter frações necessárias para {fritadeira.nome}: {e}")
             return None
 
-    # ==========================================================
-    # 🆕 VERIFICAÇÃO DINÂMICA DE INTERVALOS COM MELHORIA DE TEMPERATURA
-    # ==========================================================
-    def _calcular_quantidade_maxima_fritadeira_periodo(
-        self, 
-        fritadeira: Fritadeira, 
-        inicio: datetime, 
-        fim: datetime
-    ) -> int:
-        """
-        🔍 Calcula a quantidade máxima ocupada simultaneamente na fritadeira durante o período.
-        Analisa todos os pontos temporais para detectar picos de ocupação.
-        """
-        # Coleta todos os pontos temporais relevantes
-        pontos_temporais = set()
-        ocupacoes_periodo = []
-        
-        for fracao_index in range(fritadeira.numero_fracoes):
-            for ocupacao in fritadeira.ocupacoes_por_fracao[fracao_index]:
-                # Acesso por índices: (id_ordem, id_pedido, id_atividade, id_item, quantidade, temperatura, setup_minutos, inicio, fim)
-                inicio_ocup = ocupacao[7]  # início
-                fim_ocup = ocupacao[8]     # fim
-                quantidade = ocupacao[4]  # quantidade
-                
-                if not (fim <= inicio_ocup or inicio >= fim_ocup):  # há sobreposição temporal
-                    ocupacoes_periodo.append(ocupacao)
-                    pontos_temporais.add(inicio_ocup)
-                    pontos_temporais.add(fim_ocup)
-        
-        # Adiciona pontos do período de interesse
-        pontos_temporais.add(inicio)
-        pontos_temporais.add(fim)
-        
-        # Ordena pontos temporais
-        pontos_ordenados = sorted(pontos_temporais)
-        
-        quantidade_maxima = 0
-        
-        # Verifica quantidade em cada intervalo
-        for i in range(len(pontos_ordenados) - 1):
-            momento_inicio = pontos_ordenados[i]
-            momento_fim = pontos_ordenados[i + 1]
-            momento_meio = momento_inicio + (momento_fim - momento_inicio) / 2
-            
-            # Soma quantidade de todas as ocupações ativas neste momento
-            quantidade_momento = 0
-            for ocupacao in ocupacoes_periodo:
-                inicio_ocup = ocupacao[7]
-                fim_ocup = ocupacao[8]
-                quantidade = ocupacao[4]
-                
-                if inicio_ocup <= momento_meio < fim_ocup:  # ocupação ativa neste momento
-                    quantidade_momento += quantidade
-            
-            quantidade_maxima = max(quantidade_maxima, quantidade_momento)
-        
-        return quantidade_maxima
+    def _calcular_quantidade_maxima_fritadeira_periodo(self, fritadeira: Fritadeira, 
+                                                     inicio: datetime, fim: datetime) -> int:
+        """Calcula a quantidade máxima ocupada simultaneamente na fritadeira durante o período."""
+        return fritadeira.calcular_quantidade_maxima_periodo(inicio, fim)
 
-    def _validar_nova_ocupacao_fritadeira(
-        self, 
-        fritadeira: Fritadeira, 
-        quantidade_nova: int, 
-        temperatura: int,
-        fracoes_necessarias: int,
-        inicio: datetime, 
-        fim: datetime
-    ) -> bool:
+    def _calcular_distribuicao_otima(self, quantidade_total: float, temperatura: int,
+                                   fritadeiras_disponiveis: List[Tuple[Fritadeira, float, List[int]]]) -> List[Tuple[Fritadeira, float, List[int]]]:
         """
-        🔍 MELHORADO: Valida se uma nova ocupação pode ser adicionada à fritadeira sem exceder limites.
-        Considera capacidade total, temperatura individual, temperatura simultânea e número de frações.
+        Calcula distribuição ótima usando múltiplos algoritmos e retorna o melhor resultado.
         """
-        # Validação 1: Temperatura da fritadeira
-        if not fritadeira.validar_temperatura(temperatura):
-            return False
+        # Testa algoritmo de distribuição balanceada
+        dist_balanceada = self._algoritmo_distribuicao_balanceada(quantidade_total, temperatura, fritadeiras_disponiveis)
         
-        # 🆕 Validação 2: Temperatura em ocupações simultâneas
-        if not fritadeira.validar_temperatura_simultanea(temperatura, inicio, fim):
-            return False
+        # Testa First Fit Decreasing
+        dist_ffd = self._algoritmo_first_fit_decreasing(quantidade_total, temperatura, fritadeiras_disponiveis)
         
-        # Validação 3: Frações disponíveis
-        fracoes_disponiveis = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
-        if len(fracoes_disponiveis) < fracoes_necessarias:
-            logger.debug(f"❌ {fritadeira.nome}: apenas {len(fracoes_disponiveis)} frações disponíveis, necessárias {fracoes_necessarias}")
-            return False
+        # Avalia qual distribuição é melhor
+        candidatos = []
         
-        # Validação 4: Capacidade total da fritadeira
-        quantidade_atual_maxima = self._calcular_quantidade_maxima_fritadeira_periodo(fritadeira, inicio, fim)
-        quantidade_final = quantidade_atual_maxima + quantidade_nova
+        if dist_balanceada and sum(qtd for _, qtd, _ in dist_balanceada) >= quantidade_total * 0.99:
+            candidatos.append(('balanceada', dist_balanceada))
         
-        if quantidade_final < fritadeira.capacidade_min:
-            logger.debug(f"❌ {fritadeira.nome}: quantidade total {quantidade_final} ficará abaixo do mínimo {fritadeira.capacidade_min}")
-            return False
+        if dist_ffd and sum(qtd for _, qtd, _ in dist_ffd) >= quantidade_total * 0.99:
+            candidatos.append(('ffd', dist_ffd))
         
-        if quantidade_final > fritadeira.capacidade_max:
-            logger.debug(f"❌ {fritadeira.nome}: quantidade total {quantidade_final} excederá máximo {fritadeira.capacidade_max}")
-            return False
+        if not candidatos:
+            return []
         
-        return True
+        # Escolhe a distribuição que usa menos fritadeiras, ou a mais balanceada
+        melhor_distribuicao = min(candidatos, key=lambda x: (len(x[1]), -self._calcular_balanceamento_fritadeiras(x[1])))
+        
+        logger.debug(f"📊 Escolhida distribuição {melhor_distribuicao[0]} com {len(melhor_distribuicao[1])} fritadeiras")
+        
+        return melhor_distribuicao[1]
 
-    def _verificar_compatibilidade_fritadeira(
-        self, 
-        fritadeira: Fritadeira, 
-        quantidade: int, 
-        temperatura: int,
-        fracoes_necessarias: int,
-        inicio: datetime, 
-        fim: datetime
-    ) -> Tuple[bool, int]:
-        """
-        🔍 MELHORADO: Verifica se uma fritadeira pode receber uma ocupação e retorna capacidade disponível.
-        Inclui validação de temperatura simultânea.
-        Retorna (pode_alocar, capacidade_disponivel)
-        """
-        if not self._validar_nova_ocupacao_fritadeira(fritadeira, quantidade, temperatura, fracoes_necessarias, inicio, fim):
-            return False, 0
+    def _calcular_balanceamento_fritadeiras(self, distribuicao: List[Tuple[Fritadeira, float, List[int]]]) -> float:
+        """Calcula score de balanceamento da distribuição (maior = mais balanceado)."""
+        if len(distribuicao) <= 1:
+            return 1.0
         
-        # Calcula capacidade disponível
-        quantidade_atual_maxima = self._calcular_quantidade_maxima_fritadeira_periodo(fritadeira, inicio, fim)
-        capacidade_disponivel = fritadeira.capacidade_max - quantidade_atual_maxima
+        quantidades = [qtd for _, qtd, _ in distribuicao]
+        media = sum(quantidades) / len(quantidades)
+        variancia = sum((qtd - media) ** 2 for qtd in quantidades) / len(quantidades)
         
-        return True, max(0, capacidade_disponivel)
+        # Score inversamente proporcional à variância
+        return 1.0 / (1.0 + variancia / media**2) if media > 0 else 0.0
 
     # ==========================================================
-    # 🧮 Análise de Capacidade Total com Verificação Dinâmica
-    # ==========================================================
-    def _verificar_capacidade_total_sistema(
-        self, 
-        quantidade_necessaria: int, 
-        temperatura: int, 
-        fracoes_necessarias: int,
-        inicio: datetime, 
-        fim: datetime
-    ) -> bool:
-        """Verifica se o sistema de fritadeiras como um todo pode atender a demanda com verificação dinâmica."""
-        capacidade_total_disponivel = 0
-        
-        for fritadeira in self.fritadeiras:
-            compativel, capacidade_disponivel = self._verificar_compatibilidade_fritadeira(
-                fritadeira, 0, temperatura, fracoes_necessarias, inicio, fim
-            )
-            
-            if compativel:
-                capacidade_total_disponivel += capacidade_disponivel
-        
-        resultado = capacidade_total_disponivel >= quantidade_necessaria
-        logger.info(
-            f"🧮 Capacidade total do sistema: {capacidade_total_disponivel}g | "
-            f"Necessário: {quantidade_necessaria}g | Atendível: {'✅' if resultado else '❌'}"
-        )
-        return resultado
-
-    # ==========================================================
-    # 🎯 Estratégias de Alocação Priorizadas (CORRIGIDAS)
-    # ==========================================================
-    def _tentar_alocacao_fritadeira_individual(
-        self, 
-        atividade: "AtividadeModular", 
-        inicio: datetime, 
-        fim: datetime
-    ) -> Tuple[bool, Optional[Fritadeira], Optional[datetime], Optional[datetime]]:
-        """
-        Tenta alocar em uma única fritadeira por ordem de FIP.
-        Prioriza fritadeiras que podem acomodar toda a demanda.
-        ✅ MANTIDO: Funciona corretamente com frações independentes.
-        """
-        equipamentos_ordenados = self._ordenar_por_fip(atividade)
-        
-        for fritadeira in equipamentos_ordenados:
-            temperatura = self._obter_temperatura(atividade, fritadeira)
-            quantidade_gramas = self._obter_quantidade_gramas(atividade, fritadeira)
-            fracoes_necessarias = self._obter_fracoes_necessarias(atividade, fritadeira)
-
-            if not temperatura or not quantidade_gramas or not fracoes_necessarias:
-                continue
-
-            logger.debug(f"🔍 Testando {fritadeira.nome}: {quantidade_gramas}g, {fracoes_necessarias} frações, {temperatura}°C")
-
-            # Verifica compatibilidade com verificação dinâmica melhorada
-            compativel, capacidade_disponivel = self._verificar_compatibilidade_fritadeira(
-                fritadeira, quantidade_gramas, temperatura, fracoes_necessarias, inicio, fim
-            )
-
-            if compativel and capacidade_disponivel >= quantidade_gramas:
-                # Tenta ocupar as frações necessárias
-                fracoes_disponiveis = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
-                fracoes_para_ocupar = fracoes_disponiveis[:fracoes_necessarias]
-                
-                sucesso_total = True
-                fracoes_ocupadas = []
-                
-                for fracao_index in fracoes_para_ocupar:
-                    sucesso = fritadeira.adicionar_ocupacao_fracao(
-                        fracao_index=fracao_index,
-                        id_ordem=atividade.id_ordem,
-                        id_pedido=atividade.id_pedido,
-                        id_atividade=atividade.id_atividade,
-                        id_item=atividade.id_item,
-                        quantidade=quantidade_gramas // fracoes_necessarias,  # Distribui igualmente
-                        temperatura=temperatura,
-                        setup_minutos=fritadeira.setup_minutos,
-                        inicio=inicio,
-                        fim=fim
-                    )
-                    
-                    if sucesso:
-                        fracoes_ocupadas.append(fracao_index)
-                    else:
-                        sucesso_total = False
-                        logger.warning(f"❌ Falha ao ocupar fração {fracao_index} da {fritadeira.nome}")
-                        break
-                
-                if sucesso_total:
-                    logger.info(
-                        f"✅ Alocação individual: {fritadeira.nome} para Atividade {atividade.id_atividade} | "
-                        f"Quantidade: {quantidade_gramas}g | Frações: {fracoes_necessarias} | Temp: {temperatura}°C"
-                    )
-                    return True, fritadeira, inicio, fim
-                else:
-                    # Rollback das frações já ocupadas
-                    for fracao_index in fracoes_ocupadas:
-                        fritadeira.liberar_fracao_especifica(fracao_index, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade)
-
-        return False, None, None, None
-
-    def _tentar_alocacao_priorizada_por_fritadeira(
-        self, 
-        atividade: "AtividadeModular", 
-        inicio: datetime, 
-        fim: datetime
-    ) -> Tuple[bool, List[Fritadeira], Optional[datetime], Optional[datetime]]:
-        """
-        Tenta alocar priorizando uso de fritadeiras completas antes de dividir.
-        Verifica cada fritadeira individualmente antes de partir para distribuição.
-        ✅ MANTIDO: Funciona corretamente com frações independentes.
-        """
-        temperatura = self._obter_temperatura(atividade, self.fritadeiras[0])
-        quantidade_gramas = self._obter_quantidade_gramas(atividade, self.fritadeiras[0])
-        fracoes_necessarias = self._obter_fracoes_necessarias(atividade, self.fritadeiras[0])
-        
-        if not temperatura or not quantidade_gramas or not fracoes_necessarias:
-            return False, [], None, None
-
-        equipamentos_ordenados = self._ordenar_por_fip(atividade)
-        
-        # ETAPA 1: Tenta alocar em fritadeiras individuais completas
-        for fritadeira in equipamentos_ordenados:
-            compativel, capacidade_disponivel = self._verificar_compatibilidade_fritadeira(
-                fritadeira, quantidade_gramas, temperatura, fracoes_necessarias, inicio, fim
-            )
-            
-            if compativel and capacidade_disponivel >= quantidade_gramas:
-                fracoes_disponiveis = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
-                
-                if len(fracoes_disponiveis) >= fracoes_necessarias:
-                    logger.info(f"🎯 Tentando alocar completamente em {fritadeira.nome}")
-                    
-                    # Tenta alocar todas as frações necessárias nesta fritadeira
-                    fracoes_para_ocupar = fracoes_disponiveis[:fracoes_necessarias]
-                    sucesso_total = True
-                    fracoes_ocupadas = []
-                    
-                    for fracao_index in fracoes_para_ocupar:
-                        sucesso = fritadeira.adicionar_ocupacao_fracao(
-                            fracao_index=fracao_index,
-                            id_ordem=atividade.id_ordem,
-                            id_pedido=atividade.id_pedido,
-                            id_atividade=atividade.id_atividade,
-                            id_item=atividade.id_item,
-                            quantidade=quantidade_gramas // fracoes_necessarias,
-                            temperatura=temperatura,
-                            setup_minutos=fritadeira.setup_minutos,
-                            inicio=inicio,
-                            fim=fim
-                        )
-                        
-                        if sucesso:
-                            fracoes_ocupadas.append(fracao_index)
-                        else:
-                            sucesso_total = False
-                            break
-                    
-                    if sucesso_total:
-                        logger.info(
-                            f"✅ Alocação priorizada: {fritadeira.nome} completa para Atividade {atividade.id_atividade} | "
-                            f"Quantidade: {quantidade_gramas}g | Frações: {fracoes_necessarias}"
-                        )
-                        return True, [fritadeira], inicio, fim
-                    else:
-                        # Rollback
-                        for fracao_index in fracoes_ocupadas:
-                            fritadeira.liberar_fracao_especifica(fracao_index, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade)
-
-        return False, [], None, None
-
-    def _tentar_alocacao_distribuida_ultima_opcao(
-        self, 
-        atividade: "AtividadeModular", 
-        inicio: datetime, 
-        fim: datetime
-    ) -> Tuple[bool, List[Fritadeira], Optional[datetime], Optional[datetime]]:
-        """
-        Última opção: distribui entre múltiplas fritadeiras quando não consegue alocar em uma só.
-        ✅ MANTIDO: Funciona corretamente com frações independentes.
-        """
-        temperatura = self._obter_temperatura(atividade, self.fritadeiras[0])
-        quantidade_gramas = self._obter_quantidade_gramas(atividade, self.fritadeiras[0])
-        fracoes_necessarias = self._obter_fracoes_necessarias(atividade, self.fritadeiras[0])
-        
-        if not temperatura or not quantidade_gramas or not fracoes_necessarias:
-            return False, [], None, None
-
-        logger.info(f"🔄 Tentando distribuição entre múltiplas fritadeiras (última opção)")
-        
-        equipamentos_ordenados = self._ordenar_por_fip(atividade)
-        fritadeiras_utilizadas = []
-        fracoes_restantes = fracoes_necessarias
-        quantidade_restante = quantidade_gramas
-        alocacoes_realizadas = []  # Para rollback se necessário
-        
-        for fritadeira in equipamentos_ordenados:
-            if fracoes_restantes <= 0:
-                break
-            
-            compativel, capacidade_disponivel = self._verificar_compatibilidade_fritadeira(
-                fritadeira, 0, temperatura, 1, inicio, fim  # Verifica pelo menos 1 fração
-            )
-            
-            if compativel:
-                fracoes_disponiveis = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
-                fracoes_a_usar = min(len(fracoes_disponiveis), fracoes_restantes)
-                
-                if fracoes_a_usar > 0:
-                    quantidade_por_fracao = quantidade_restante // fracoes_restantes
-                    fracoes_ocupadas_fritadeira = []
-                    
-                    for i in range(fracoes_a_usar):
-                        fracao_index = fracoes_disponiveis[i]
-                        sucesso = fritadeira.adicionar_ocupacao_fracao(
-                            fracao_index=fracao_index,
-                            id_ordem=atividade.id_ordem,
-                            id_pedido=atividade.id_pedido,
-                            id_atividade=atividade.id_atividade,
-                            id_item=atividade.id_item,
-                            quantidade=quantidade_por_fracao,
-                            temperatura=temperatura,
-                            setup_minutos=fritadeira.setup_minutos,
-                            inicio=inicio,
-                            fim=fim
-                        )
-                        
-                        if sucesso:
-                            fracoes_ocupadas_fritadeira.append(fracao_index)
-                            fracoes_restantes -= 1
-                            quantidade_restante -= quantidade_por_fracao
-                        else:
-                            # Falha - fazer rollback desta fritadeira
-                            for fracao_rollback in fracoes_ocupadas_fritadeira:
-                                fritadeira.liberar_fracao_especifica(fracao_rollback, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade)
-                            break
-                    
-                    if fracoes_ocupadas_fritadeira:  # Se conseguiu ocupar pelo menos uma fração
-                        fritadeiras_utilizadas.append(fritadeira)
-                        alocacoes_realizadas.append((fritadeira, fracoes_ocupadas_fritadeira))
-                        logger.info(f"🔄 Distribuição: {fritadeira.nome} recebeu {fracoes_a_usar} frações")
-
-        # Verifica se conseguiu alocar tudo
-        if fracoes_restantes == 0:
-            logger.info(
-                f"✅ Alocação distribuída: {len(fritadeiras_utilizadas)} fritadeiras para Atividade {atividade.id_atividade} | "
-                f"Total: {quantidade_gramas}g | Frações: {fracoes_necessarias} | Temp: {temperatura}°C"
-            )
-            return True, fritadeiras_utilizadas, inicio, fim
-        else:
-            # Rollback completo - não conseguiu alocar tudo
-            logger.warning(f"❌ Distribuição falhou - fazendo rollback completo")
-            for fritadeira, fracoes_ocupadas in alocacoes_realizadas:
-                for fracao_index in fracoes_ocupadas:
-                    fritadeira.liberar_fracao_especifica(fracao_index, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade)
-            
-            return False, [], None, None
-
-    # ==========================================================
-    # 🎯 Alocação Principal com Priorização CORRIGIDA
+    # 🎯 Alocação Otimizada Principal
     # ==========================================================
     def alocar(
         self,
@@ -460,15 +377,11 @@ class GestorFritadeiras:
         atividade: "AtividadeModular"
     ) -> Tuple[bool, Optional[List[Fritadeira]], Optional[datetime], Optional[datetime]]:
         """
-        Aloca fritadeiras seguindo a estratégia corrigida:
-        1. Verifica capacidade total do sistema
-        2. Tenta alocação individual por FIP (fritadeira completa)
-        3. ❌ REMOVIDO: Sobreposição inadequada por id_item
-        4. Tenta alocação priorizada por fritadeira completa
-        5. Em último caso, distribui entre múltiplas fritadeiras
+        Alocação otimizada com verificação prévia de viabilidade e distribuição inteligente.
         
-        ✅ CORRIGIDO: Frações tratadas como espaços físicos independentes
-        ✅ MELHORADO: Validação de temperatura simultânea
+        Returns:
+            Para alocação simples: (True, [fritadeira], inicio, fim)
+            Para alocação múltipla: (True, [lista_fritadeiras], inicio, fim)
         """
         duracao = atividade.duracao
         horario_final_tentativa = fim
@@ -482,67 +395,199 @@ class GestorFritadeiras:
             logger.error(f"❌ Parâmetros inválidos para atividade {atividade.id_atividade}")
             return False, None, None, None
 
-        logger.info(
-            f"🎯 Iniciando alocação (FRAÇÕES FÍSICAS INDEPENDENTES): "
-            f"{quantidade_gramas}g, {fracoes_necessarias} frações, {temperatura}°C"
-        )
+        logger.info(f"🎯 Iniciando alocação otimizada: {quantidade_gramas}g, {fracoes_necessarias} frações, {temperatura}°C")
 
         while horario_final_tentativa - duracao >= inicio:
             horario_inicial_tentativa = horario_final_tentativa - duracao
 
-            # 1. Verificar capacidade total do sistema com verificação dinâmica
-            if not self._verificar_capacidade_total_sistema(
-                quantidade_gramas, temperatura, fracoes_necessarias, 
+            # Fase 1: Verificação de viabilidade
+            viavel, motivo = self._verificar_viabilidade_quantidade(
+                atividade, quantidade_gramas, temperatura, fracoes_necessarias,
                 horario_inicial_tentativa, horario_final_tentativa
-            ):
+            )
+            
+            if not viavel:
+                logger.debug(f"❌ Inviável no horário {horario_inicial_tentativa.strftime('%H:%M')}: {motivo}")
                 horario_final_tentativa -= timedelta(minutes=1)
                 continue
 
-            # 2. Tentar alocação individual (fritadeira completa)
-            sucesso, fritadeira, ini, fim_exec = self._tentar_alocacao_fritadeira_individual(
-                atividade, horario_inicial_tentativa, horario_final_tentativa
-            )
-            if sucesso:
-                atividade.equipamento_alocado = fritadeira
-                atividade.equipamentos_selecionados = [fritadeira]
-                atividade.alocada = True
-                return True, [fritadeira], ini, fim_exec
+            # Fase 2: Identificar fritadeiras disponíveis com suas capacidades
+            fritadeiras_disponiveis = []
+            fritadeiras_ordenadas = self._ordenar_por_fip(atividade)
+            
+            for fritadeira in fritadeiras_ordenadas:
+                # Verifica compatibilidade de temperatura
+                if (fritadeira.validar_temperatura(temperatura) and 
+                    fritadeira.validar_temperatura_simultanea(temperatura, horario_inicial_tentativa, horario_final_tentativa)):
+                    
+                    # Verifica frações disponíveis
+                    fracoes_livres = fritadeira.fracoes_disponiveis_periodo(horario_inicial_tentativa, horario_final_tentativa)
+                    
+                    if fracoes_livres:
+                        # Calcula capacidade disponível
+                        quantidade_atual = self._calcular_quantidade_maxima_fritadeira_periodo(
+                            fritadeira, horario_inicial_tentativa, horario_final_tentativa
+                        )
+                        capacidade_disponivel = fritadeira.capacidade_gramas_max - quantidade_atual
+                        
+                        if capacidade_disponivel >= fritadeira.capacidade_gramas_min:
+                            fritadeiras_disponiveis.append((fritadeira, capacidade_disponivel, fracoes_livres))
 
-            # 3. ❌ REMOVIDO: Sobreposição inadequada por id_item
-            # Motivo: Frações são espaços físicos independentes que não podem ser compartilhados
+            if not fritadeiras_disponiveis:
+                horario_final_tentativa -= timedelta(minutes=1)
+                continue
 
-            # 4. Tentar alocação priorizada por fritadeira
-            sucesso, fritadeiras, ini, fim_exec = self._tentar_alocacao_priorizada_por_fritadeira(
-                atividade, horario_inicial_tentativa, horario_final_tentativa
-            )
-            if sucesso:
-                atividade.equipamento_alocado = fritadeiras[0]  # Principal
-                atividade.equipamentos_selecionados = fritadeiras
-                atividade.alocada = True
-                return True, fritadeiras, ini, fim_exec
+            # Fase 3: Tentativa de alocação em fritadeira única (otimização)
+            for fritadeira, cap_disponivel, fracoes_livres in fritadeiras_disponiveis:
+                if (cap_disponivel >= quantidade_gramas and 
+                    len(fracoes_livres) >= fracoes_necessarias):
+                    # Pode alocar em uma única fritadeira
+                    sucesso = self._tentar_alocacao_simples(
+                        fritadeira, atividade, quantidade_gramas, temperatura, fracoes_necessarias,
+                        horario_inicial_tentativa, horario_final_tentativa
+                    )
+                    if sucesso:
+                        logger.info(f"✅ Alocação simples: {quantidade_gramas}g na {fritadeira.nome}")
+                        atividade.equipamento_alocado = fritadeira
+                        atividade.equipamentos_selecionados = [fritadeira]
+                        atividade.alocada = True
+                        return True, [fritadeira], horario_inicial_tentativa, horario_final_tentativa
 
-            # 5. Última opção: distribuição entre múltiplas fritadeiras
-            sucesso, fritadeiras, ini, fim_exec = self._tentar_alocacao_distribuida_ultima_opcao(
-                atividade, horario_inicial_tentativa, horario_final_tentativa
-            )
-            if sucesso:
-                atividade.equipamento_alocado = fritadeiras[0]  # Principal
-                atividade.equipamentos_selecionados = fritadeiras
-                atividade.alocada = True
-                logger.info(f"⚠️ Usando distribuição como última opção para Atividade {atividade.id_atividade}")
-                return True, fritadeiras, ini, fim_exec
+            # Fase 4: Distribuição em múltiplas fritadeiras
+            distribuicao = self._calcular_distribuicao_otima(quantidade_gramas, temperatura, fritadeiras_disponiveis)
+            
+            if distribuicao:
+                sucesso = self._executar_alocacao_multipla(
+                    distribuicao, atividade, temperatura, 
+                    horario_inicial_tentativa, horario_final_tentativa
+                )
+                if sucesso:
+                    fritadeiras_alocadas = [f for f, _, _ in distribuicao]
+                    logger.info(
+                        f"✅ Alocação múltipla bem-sucedida em {len(fritadeiras_alocadas)} fritadeiras: "
+                        f"{', '.join(f.nome for f in fritadeiras_alocadas)}"
+                    )
+                    atividade.equipamento_alocado = fritadeiras_alocadas[0]  # Principal
+                    atividade.equipamentos_selecionados = fritadeiras_alocadas
+                    atividade.alocada = True
+                    return True, fritadeiras_alocadas, horario_inicial_tentativa, horario_final_tentativa
 
             horario_final_tentativa -= timedelta(minutes=1)
 
-        logger.warning(
-            f"❌ Nenhuma estratégia de alocação funcionou para atividade {atividade.id_atividade} "
-            f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} "
-            f"(FRAÇÕES TRATADAS COMO RECURSOS FÍSICOS INDEPENDENTES)."
-        )
+        logger.warning(f"❌ Falha na alocação de {quantidade_gramas}g")
         return False, None, None, None
 
+    def _tentar_alocacao_simples(self, fritadeira: Fritadeira, atividade: "AtividadeModular", 
+                                quantidade: float, temperatura: int, fracoes_necessarias: int,
+                                inicio: datetime, fim: datetime) -> bool:
+        """Tenta alocação em uma única fritadeira."""
+        fracoes_livres = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
+        fracoes_para_ocupar = fracoes_livres[:fracoes_necessarias]
+        
+        # Distribui quantidade igualmente entre frações
+        quantidade_por_fracao = quantidade // fracoes_necessarias
+        quantidade_restante = quantidade % fracoes_necessarias
+        
+        fracoes_ocupadas = []
+        sucesso_total = True
+        
+        for i, fracao_index in enumerate(fracoes_para_ocupar):
+            # Última fração recebe o restante
+            qtd_fracao = quantidade_por_fracao + (quantidade_restante if i == len(fracoes_para_ocupar) - 1 else 0)
+            
+            sucesso = fritadeira.adicionar_ocupacao_fracao(
+                fracao_index=fracao_index,
+                id_ordem=atividade.id_ordem,
+                id_pedido=atividade.id_pedido,
+                id_atividade=atividade.id_atividade,
+                id_item=atividade.id_item,
+                quantidade=int(qtd_fracao),
+                temperatura=temperatura,
+                setup_minutos=fritadeira.setup_minutos,
+                inicio=inicio,
+                fim=fim
+            )
+            
+            if sucesso:
+                fracoes_ocupadas.append(fracao_index)
+            else:
+                sucesso_total = False
+                break
+        
+        if not sucesso_total:
+            # Rollback das frações já ocupadas
+            for fracao_index in fracoes_ocupadas:
+                fritadeira.liberar_fracao_especifica(
+                    fracao_index, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade
+                )
+        
+        return sucesso_total
+
+    def _executar_alocacao_multipla(self, distribuicao: List[Tuple[Fritadeira, float, List[int]]], 
+                                  atividade: "AtividadeModular", temperatura: int,
+                                  inicio: datetime, fim: datetime) -> bool:
+        """Executa alocação em múltiplas fritadeiras conforme distribuição calculada."""
+        alocacoes_realizadas = []  # Para rollback em caso de falha
+        
+        try:
+            for fritadeira, quantidade, fracoes_a_usar in distribuicao:
+                # Distribui quantidade entre frações desta fritadeira
+                quantidade_por_fracao = quantidade // len(fracoes_a_usar)
+                quantidade_restante = quantidade % len(fracoes_a_usar)
+                
+                fracoes_ocupadas_fritadeira = []
+                
+                for i, fracao_index in enumerate(fracoes_a_usar):
+                    # Última fração recebe o restante  
+                    qtd_fracao = quantidade_por_fracao + (quantidade_restante if i == len(fracoes_a_usar) - 1 else 0)
+                    
+                    sucesso = fritadeira.adicionar_ocupacao_fracao(
+                        fracao_index=fracao_index,
+                        id_ordem=atividade.id_ordem,
+                        id_pedido=atividade.id_pedido,
+                        id_atividade=atividade.id_atividade,
+                        id_item=atividade.id_item,
+                        quantidade=int(qtd_fracao),
+                        temperatura=temperatura,
+                        setup_minutos=fritadeira.setup_minutos,
+                        inicio=inicio,
+                        fim=fim
+                    )
+                    
+                    if sucesso:
+                        fracoes_ocupadas_fritadeira.append(fracao_index)
+                    else:
+                        # Rollback desta fritadeira
+                        for fracao_rollback in fracoes_ocupadas_fritadeira:
+                            fritadeira.liberar_fracao_especifica(
+                                fracao_rollback, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade
+                            )
+                        # Rollback completo
+                        for f_rollback, fracoes_rollback in alocacoes_realizadas:
+                            for fracao_rollback in fracoes_rollback:
+                                f_rollback.liberar_fracao_especifica(
+                                    fracao_rollback, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade
+                                )
+                        return False
+                
+                if fracoes_ocupadas_fritadeira:
+                    alocacoes_realizadas.append((fritadeira, fracoes_ocupadas_fritadeira))
+                    logger.info(f"🔹 Alocado {quantidade}g na {fritadeira.nome} ({len(fracoes_ocupadas_fritadeira)} frações)")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro na alocação múltipla: {e}")
+            # Rollback em caso de erro
+            for fritadeira, fracoes_ocupadas in alocacoes_realizadas:
+                for fracao_index in fracoes_ocupadas:
+                    fritadeira.liberar_fracao_especifica(
+                        fracao_index, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade
+                    )
+            return False
+
     # ==========================================================
-    # 🔓 Liberações
+    # 🔓 Liberações (mantidas do original)
     # ==========================================================
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         for fritadeira in self.fritadeiras:
@@ -572,7 +617,7 @@ class GestorFritadeiras:
             fritadeira.liberar_todas_ocupacoes()
 
     # ==========================================================
-    # 📅 Agenda e Relatórios
+    # 📅 Agenda e Status
     # ==========================================================
     def mostrar_agenda(self):
         logger.info("==============================================")
@@ -581,14 +626,130 @@ class GestorFritadeiras:
         for fritadeira in self.fritadeiras:
             fritadeira.mostrar_agenda()
 
+    def obter_status_fritadeiras(self) -> dict:
+        """Retorna o status atual de todas as fritadeiras."""
+        status = {}
+        for fritadeira in self.fritadeiras:
+            status[fritadeira.nome] = {
+                'capacidade_minima': fritadeira.capacidade_gramas_min,
+                'capacidade_maxima': fritadeira.capacidade_gramas_max,
+                'numero_fracoes': fritadeira.numero_fracoes,
+                'temperatura_min': fritadeira.faixa_temperatura_min,
+                'temperatura_max': fritadeira.faixa_temperatura_max,
+                'total_ocupacoes': sum(len(fracoes) for fracoes in fritadeira.ocupacoes_por_fracao),
+                'fracoes_ocupadas': sum(1 for fracoes in fritadeira.ocupacoes_por_fracao if fracoes)
+            }
+        
+        return status
+
+    def obter_detalhes_alocacao_atividade(self, atividade: "AtividadeModular") -> dict:
+        """Retorna detalhes completos da alocação de uma atividade."""
+        detalhes = {
+            'id_atividade': atividade.id_atividade,
+            'id_item': atividade.id_item,
+            'alocacao_multipla': len(atividade.equipamentos_selecionados) > 1 if hasattr(atividade, 'equipamentos_selecionados') else False,
+            'fritadeiras_utilizadas': [],
+            'quantidade_total': 0.0,
+            'fracoes_total': 0
+        }
+        
+        # Coleta informações de todas as fritadeiras que processam esta atividade
+        for fritadeira in self.fritadeiras:
+            quantidade_fritadeira = 0
+            fracoes_utilizadas = 0
+            
+            for fracao_index in range(fritadeira.numero_fracoes):
+                ocupacoes_atividade = [
+                    oc for oc in fritadeira.ocupacoes_por_fracao[fracao_index]
+                    if (oc[0] == atividade.id_ordem and 
+                        oc[1] == atividade.id_pedido and 
+                        oc[2] == atividade.id_atividade)
+                ]
+                
+                if ocupacoes_atividade:
+                    fracoes_utilizadas += 1
+                    quantidade_fritadeira += sum(oc[4] for oc in ocupacoes_atividade)
+            
+            if quantidade_fritadeira > 0:
+                detalhes['fritadeiras_utilizadas'].append({
+                    'nome': fritadeira.nome,
+                    'quantidade': quantidade_fritadeira,
+                    'fracoes_utilizadas': fracoes_utilizadas
+                })
+                detalhes['quantidade_total'] += quantidade_fritadeira
+                detalhes['fracoes_total'] += fracoes_utilizadas
+        
+        return detalhes
+
+    def listar_alocacoes_multiplas(self) -> List[dict]:
+        """Lista todas as atividades que utilizaram múltiplas fritadeiras."""
+        alocacoes_multiplas = []
+        atividades_processadas = set()
+        
+        for fritadeira in self.fritadeiras:
+            for fracao_index in range(fritadeira.numero_fracoes):
+                for ocupacao in fritadeira.ocupacoes_por_fracao[fracao_index]:
+                    id_ordem, id_pedido, id_atividade = ocupacao[0], ocupacao[1], ocupacao[2]
+                    chave_atividade = (id_ordem, id_pedido, id_atividade)
+                    
+                    if chave_atividade not in atividades_processadas:
+                        # Conta quantas fritadeiras diferentes processam esta atividade
+                        fritadeiras_atividade = []
+                        quantidade_total = 0.0
+                        fracoes_total = 0
+                        
+                        for f in self.fritadeiras:
+                            qtd_fritadeira = 0
+                            fracoes_utilizadas = 0
+                            
+                            for fi in range(f.numero_fracoes):
+                                ocupacoes_atividade = [
+                                    oc for oc in f.ocupacoes_por_fracao[fi]
+                                    if (oc[0] == id_ordem and oc[1] == id_pedido and oc[2] == id_atividade)
+                                ]
+                                if ocupacoes_atividade:
+                                    fracoes_utilizadas += 1
+                                    qtd_fritadeira += sum(oc[4] for oc in ocupacoes_atividade)
+                            
+                            if qtd_fritadeira > 0:
+                                fritadeiras_atividade.append({
+                                    'nome': f.nome,
+                                    'quantidade': qtd_fritadeira,
+                                    'fracoes_utilizadas': fracoes_utilizadas
+                                })
+                                quantidade_total += qtd_fritadeira
+                                fracoes_total += fracoes_utilizadas
+                        
+                        if len(fritadeiras_atividade) > 1:
+                            alocacoes_multiplas.append({
+                                'id_ordem': id_ordem,
+                                'id_pedido': id_pedido,
+                                'id_atividade': id_atividade,
+                                'id_item': ocupacao[3],
+                                'quantidade_total': quantidade_total,
+                                'fracoes_total': fracoes_total,
+                                'num_fritadeiras': len(fritadeiras_atividade),
+                                'fritadeiras': fritadeiras_atividade,
+                                'temperatura': ocupacao[5],
+                                'inicio': ocupacao[7].strftime('%H:%M [%d/%m]'),
+                                'fim': ocupacao[8].strftime('%H:%M [%d/%m]')
+                            })
+                        
+                        atividades_processadas.add(chave_atividade)
+        
+        return alocacoes_multiplas
+
+    # ==========================================================
+    # 📊 Estatísticas avançadas
+    # ==========================================================
     def obter_estatisticas_sistema(self, inicio: datetime, fim: datetime) -> Dict:
         """Retorna estatísticas consolidadas do sistema de fritadeiras."""
         estatisticas_sistema = {
             'fritadeiras_total': len(self.fritadeiras),
             'fritadeiras_utilizadas': 0,
-            'capacidade_total_sistema': 0,
+            'capacidade_total_sistema': sum(f.capacidade_gramas_max for f in self.fritadeiras),
             'capacidade_utilizada_sistema': 0,
-            'fracoes_totais': 0,
+            'fracoes_totais': sum(f.numero_fracoes for f in self.fritadeiras),
             'fracoes_utilizadas': 0,
             'taxa_utilizacao_capacidade': 0.0,
             'taxa_utilizacao_fracoes': 0.0,
@@ -599,9 +760,6 @@ class GestorFritadeiras:
         for fritadeira in self.fritadeiras:
             stats = fritadeira.obter_estatisticas_uso(inicio, fim)
             estatisticas_sistema['estatisticas_por_fritadeira'][fritadeira.nome] = stats
-            
-            estatisticas_sistema['capacidade_total_sistema'] += fritadeira.capacidade_max
-            estatisticas_sistema['fracoes_totais'] += fritadeira.numero_fracoes
             
             if stats['fracoes_utilizadas'] > 0:
                 estatisticas_sistema['fritadeiras_utilizadas'] += 1
@@ -625,183 +783,3 @@ class GestorFritadeiras:
         estatisticas_sistema['temperaturas_utilizadas'] = list(estatisticas_sistema['temperaturas_utilizadas'])
         
         return estatisticas_sistema
-
-    # ==========================================================
-    # 📋 DOCUMENTAÇÃO DAS CORREÇÕES IMPLEMENTADAS
-    # ==========================================================
-    def obter_relatorio_correcoes_implementadas(self) -> Dict[str, any]:
-        """
-        📋 Documenta as correções implementadas no gestor.
-        """
-        return {
-            "correcoes_principais": {
-                "1_remocao_sobreposicao_inadequada": {
-                    "problema_original": "Método _tentar_alocacao_com_sobreposicao_item tentava sobrepor ocupações do mesmo id_item",
-                    "solucao_implementada": "Método removido completamente da estratégia de alocação",
-                    "justificativa": "Frações são espaços físicos independentes que requerem operadores humanos dedicados",
-                    "impacto": "2 pedidos mesmo item com 2 frações cada = 4 frações ocupadas (comportamento correto)"
-                },
-                "2_validacao_temperatura_simultanea": {
-                    "problema_original": "Não validava temperatura em ocupações simultâneas",
-                    "solucao_implementada": "Integração com fritadeira.validar_temperatura_simultanea()",
-                    "justificativa": "Ocupações simultâneas devem ter mesma temperatura, independente do item",
-                    "impacto": "Previne conflitos de temperatura em ocupações simultâneas"
-                },
-                "3_melhoria_verificacao_compatibilidade": {
-                    "problema_original": "Verificação de compatibilidade não incluía temperatura simultânea",
-                    "solucao_implementada": "Atualização do método _verificar_compatibilidade_fritadeira",
-                    "justificativa": "Validação completa deve incluir todos os aspectos de compatibilidade",
-                    "impacto": "Detecção precoce de incompatibilidades de temperatura"
-                }
-            },
-            "estrategia_alocacao_corrigida": {
-                "ordem_tentativas": [
-                    "1. Verificar capacidade total do sistema",
-                    "2. Tentar alocação individual por FIP",
-                    "3. ❌ REMOVIDO: Sobreposição por id_item",
-                    "4. Tentar alocação priorizada por fritadeira",
-                    "5. Distribuir entre múltiplas fritadeiras (último recurso)"
-                ],
-                "principios_aplicados": [
-                    "Frações como espaços físicos independentes",
-                    "Validação de temperatura simultânea obrigatória",
-                    "Priorização por FIP mantida",
-                    "Rollback em caso de falha parcial"
-                ]
-            },
-            "comportamento_esperado": {
-                "cenario_exemplo": {
-                    "pedido_1": "id_item=100, fracoes_necessarias=2, temperatura=180°C",
-                    "pedido_2": "id_item=100, fracoes_necessarias=2, temperatura=180°C",
-                    "resultado_antes": "Tentaria sobrepor (incorreto)",
-                    "resultado_depois": "4 frações ocupadas independentemente (correto)",
-                    "validacao_temperatura": "Ambos 180°C - compatível para ocupações simultâneas"
-                },
-                "regras_validacao": [
-                    "Cada fração = 1 operador humano = espaço físico único",
-                    "Ocupações simultâneas = mesma temperatura obrigatória",
-                    "Capacidade total = soma de todas as frações ativas",
-                    "Não há compartilhamento entre atividades diferentes"
-                ]
-            }
-        }
-
-    def diagnosticar_problemas_alocacao(self, inicio: datetime, fim: datetime) -> Dict[str, any]:
-        """
-        🔍 Diagnostica problemas potenciais na alocação atual.
-        ✅ ATUALIZADO: Inclui diagnóstico de conflitos de temperatura.
-        """
-        diagnostico = {
-            "fragmentacao_detectada": [],
-            "subutilizacao_detectada": [],
-            "conflitos_temperatura": [],
-            "distribuicoes_desnecessarias": [],
-            "validacao_temperatura_simultanea": []
-        }
-        
-        for fritadeira in self.fritadeiras:
-            # Detecta fragmentação
-            fracoes_ocupadas = 0
-            capacidade_utilizada = self._calcular_quantidade_maxima_fritadeira_periodo(fritadeira, inicio, fim)
-            
-            for fracao_index in range(fritadeira.numero_fracoes):
-                if fritadeira.ocupacoes_por_fracao[fracao_index]:
-                    fracoes_ocupadas += 1
-            
-            # Fragmentação: poucas frações ocupadas mas baixa utilização de capacidade
-            if fracoes_ocupadas > 0 and capacidade_utilizada < fritadeira.capacidade_min:
-                diagnostico["fragmentacao_detectada"].append({
-                    "fritadeira": fritadeira.nome,
-                    "fracoes_ocupadas": fracoes_ocupadas,
-                    "capacidade_utilizada": capacidade_utilizada,
-                    "capacidade_minima": fritadeira.capacidade_min
-                })
-            
-            # Subutilização: muitas frações livres mas equipamento usado
-            if fracoes_ocupadas > 0 and fracoes_ocupadas < fritadeira.numero_fracoes // 2:
-                diagnostico["subutilizacao_detectada"].append({
-                    "fritadeira": fritadeira.nome,
-                    "fracoes_ocupadas": fracoes_ocupadas,
-                    "fracoes_totais": fritadeira.numero_fracoes,
-                    "taxa_utilizacao": (fracoes_ocupadas / fritadeira.numero_fracoes) * 100
-                })
-            
-            # 🆕 Verificar conflitos de temperatura simultânea
-            inconsistencias_temp = fritadeira.validar_consistencia_ocupacoes()
-            conflitos_temp = [inc for inc in inconsistencias_temp if "temperatura" in inc.lower()]
-            if conflitos_temp:
-                diagnostico["validacao_temperatura_simultanea"].append({
-                    "fritadeira": fritadeira.nome,
-                    "conflitos": conflitos_temp
-                })
-        
-        return diagnostico
-
-    # ==========================================================
-    # 📊 LIMITAÇÕES DA ABORDAGEM CORRIGIDA
-    # ==========================================================
-    def obter_limitacoes_abordagem_corrigida(self) -> Dict[str, str]:
-        """
-        📋 Documenta as limitações da abordagem corrigida.
-        """
-        return {
-            "1_maior_consumo_fracoes": (
-                "Com a correção, o sistema consome mais frações pois não há "
-                "compartilhamento inadequado. Isso pode reduzir a capacidade "
-                "total de atendimento simultâneo do sistema."
-            ),
-            "2_possivel_reducao_eficiencia": (
-                "A remoção da sobreposição pode resultar em menor eficiência "
-                "aparente, mas reflete o comportamento real operacional "
-                "onde cada fração precisa de operador dedicado."
-            ),
-            "3_validacao_temperatura_mais_restritiva": (
-                "A validação de temperatura simultânea pode rejeitar mais "
-                "alocações, exigindo sequenciamento temporal para diferentes "
-                "temperaturas do mesmo equipamento."
-            ),
-            "4_complexidade_operacional_realista": (
-                "O sistema agora reflete melhor a complexidade operacional "
-                "real, mas pode parecer menos otimizado em comparação "
-                "com abordagens que ignoram limitações físicas."
-            ),
-            "5_necessidade_planejamento_temperatura": (
-                "Operadores precisarão planejar melhor o sequenciamento "
-                "de temperaturas para maximizar utilização, já que mudanças "
-                "de temperatura podem exigir tempos de setup."
-            )
-        }
-
-    def obter_metricas_impacto_correcoes(self, inicio: datetime, fim: datetime) -> Dict[str, any]:
-        """
-        📊 Calcula métricas do impacto das correções implementadas.
-        """
-        stats_sistema = self.obter_estatisticas_sistema(inicio, fim)
-        diagnostico = self.diagnosticar_problemas_alocacao(inicio, fim)
-        
-        return {
-            "metricas_utilizacao": {
-                "taxa_utilizacao_fracoes": stats_sistema['taxa_utilizacao_fracoes'],
-                "taxa_utilizacao_capacidade": stats_sistema['taxa_utilizacao_capacidade'],
-                "fritadeiras_ativas": stats_sistema['fritadeiras_utilizadas'],
-                "fritadeiras_total": stats_sistema['fritadeiras_total']
-            },
-            "qualidade_alocacao": {
-                "fragmentacao_detectada": len(diagnostico['fragmentacao_detectada']),
-                "subutilizacao_detectada": len(diagnostico['subutilizacao_detectada']),
-                "conflitos_temperatura": len(diagnostico['validacao_temperatura_simultanea']),
-                "consistencia_geral": "OK" if not diagnostico['validacao_temperatura_simultanea'] else "PROBLEMAS"
-            },
-            "comportamento_corrigido": {
-                "sobreposicao_inadequada": "REMOVIDA",
-                "validacao_temperatura_simultanea": "IMPLEMENTADA",
-                "fracoes_como_espacos_fisicos": "CORRIGIDO",
-                "operadores_dedicados_por_fracao": "RESPEITADO"
-            },
-            "recomendacoes": [
-                "Planejar sequenciamento de temperaturas para otimizar utilização",
-                "Considerar aumentar número de frações se utilização alta",
-                "Monitorar fragmentação e ajustar estratégias se necessário",
-                "Validar consistência de ocupações periodicamente"
-            ]
-        }

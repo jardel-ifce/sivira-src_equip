@@ -88,6 +88,7 @@ class Funcionario:
             if pid == id_pedido and oid == id_ordem:
                 return True
         return False
+    
     def verificar_disponibilidade_no_intervalo(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         for i, (_, _, _, ocup_inicio, ocup_fim) in enumerate(self.ocupacoes):
             if not (fim <= ocup_inicio or inicio >= ocup_fim):

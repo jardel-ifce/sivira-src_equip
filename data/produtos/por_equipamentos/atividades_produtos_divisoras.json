@@ -1,0 +1,38 @@
+[
+  {
+    "id_item": 1001,
+    "nome": "pao_frances",
+    "atividades": [
+      {
+        "id_atividade": 10012,
+        "nome": "divisao_de_massas_crocantes",
+        "tipo_atividade": "DIVISAO_DE_MASSAS_CROCANTES",
+        "tipo_equipamento": {
+          "DIVISORAS_BOLEADORAS": 1        },
+        "equipamentos_elegiveis": ["divisora_de_massas_1", "divisora_de_massas_2"],
+        "tempo_maximo_de_espera": "00:00:00",
+        "fips_equipamentos": {
+          "divisora_de_massas_1": 1,
+          "divisora_de_massas_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "divisora_de_massas_1": {
+            "boleadora": "False"          },
+          "divisora_de_massas_2": {
+            "boleadora": "False"
+          }
+        },
+        "tipos_profissionais_permitidos": ["PADEIRO"],
+        "fips_profissionais_permitidos": {
+          "PADEIRO": 1
+        },
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 1, "quantidade_max": 240, "duracao": "00:04:00" },
+          { "quantidade_min": 241, "quantidade_max": 480, "duracao": "00:08:00" },
+          { "quantidade_min": 481, "quantidade_max": 9999999, "duracao": "00:12:00" }
+        ]
+      }
+    ]
+  }
+]

@@ -27,11 +27,11 @@ for i in range(1, 2):  # ou qualquer número de pedidos
     pedido = PedidoDeProducao(
         id_ordem=111,
         id_pedido=i,
-        id_produto=2010,
+        id_produto=1002,
         tipo_item=TipoItem.SUBPRODUTO,
-        quantidade=50000,
+        quantidade=20,
         inicio_jornada=datetime(2025, 6, 23, 8, 0),
-        fim_jornada=datetime(2025, 6, 24, 18, 0),
+        fim_jornada=datetime(2025, 6, 25, 18, 0),
         todos_funcionarios=funcionarios_disponiveis
     )
     try:
@@ -39,14 +39,14 @@ for i in range(1, 2):  # ou qualquer número de pedidos
         pedidos.append(pedido)
     except RuntimeError as e:
         print(f"⚠️ Falha ao montar estrutura do pedido {i}: {e}")
-        
+ 
 for i in range(1, 2):  # ou qualquer número de pedidos
     pedido = PedidoDeProducao(
         id_ordem=222,
         id_pedido=i,
-        id_produto=2010,
+        id_produto=2004,
         tipo_item=TipoItem.SUBPRODUTO,
-        quantidade=2500,
+        quantidade=20000,
         inicio_jornada=datetime(2025, 6, 23, 8, 0),
         fim_jornada=datetime(2025, 6, 24, 18, 0),
         todos_funcionarios=funcionarios_disponiveis
@@ -56,9 +56,9 @@ for i in range(1, 2):  # ou qualquer número de pedidos
         pedidos.append(pedido)
     except RuntimeError as e:
         print(f"⚠️ Falha ao montar estrutura do pedido {i}: {e}")
-
+ 
 # 🧠 Ordenar os pedidos com base nas restrições
-pedidos_ordenados = ordenar_pedidos_por_restricoes(pedidos)
+pedidos_ordenados = pedidos.copy()
 
 # 3. Executar cada pedido em ordem de prioridade
 for pedido in pedidos_ordenados:
