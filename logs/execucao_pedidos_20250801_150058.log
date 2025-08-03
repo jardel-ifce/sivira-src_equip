@@ -1,0 +1,322 @@
+================================================================================
+LOG DE EXECUÇÃO - 01/08/2025 15:00:58
+================================================================================
+
+🔄 Carregando itens do almoxarifado...
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_1.json
+✅ Total de comandas removidas: 1
+🗑️ Removido: logs/equipamentos/ordem: 1 | pedido: 1.log
+✅ Almoxarifado carregado com sucesso!
+
+🔄 Criando pedidos de produção...
+   Processando pedido 1...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1005
+🧭 DEBUG: Explorando ID 1005
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_pao_tranca_de_queijos_finos.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_pao_tranca_de_queijos_finos.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1005
+📊 DEBUG: Número de atividades: 7
+✅ DEBUG: Item 1005 carregado: pao_tranca_de_queijo_finos
+🔍 DEBUG: Processando 7 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 6: 0 tipos profissionais - []
+   Atividade 7: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_PADEIRO
+   📋 PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_PADEIRO
+   📋 PADEIRO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2010
+🧭 DEBUG: Explorando ID 2010
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_creme_de_queijo.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_creme_de_queijo.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2010
+📊 DEBUG: Número de atividades: 4
+✅ DEBUG: Item 2010 carregado: creme_de_queijo
+🔍 DEBUG: Processando 4 atividades
+   Atividade 1: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 2: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 3: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 4: 1 tipos profissionais - ['ALMOXARIFE']
+   ✅ Adicionado: ALMOXARIFE
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 ALMOXARIFE
+   📋 COZINHEIRO
+   ✅ Pedido 1 criado com sucesso!
+
+🔄 Ordenando pedidos por restrições...
+✅ 1 pedidos ordenados!
+
+🔄 Executando pedidos em ordem de prioridade...
+   Executando pedido 1/1 (ID: 1)...
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_1.json
+pao_tranca_de_queijo_finos (20UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+│   ├── massa_suave (5000.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (2970.89g)
+│   │   └── Gelo para alimentos (1633.99g)
+│   │   └── Sal refinado (29.71g)
+│   │   └── Fermento biológico seco (59.42g)
+│   │   └── Açúcar cristal (148.54g)
+│   │   └── Margarina com sal (148.54g)
+│   │   └── Aditivo em pasta (8.91g)
+│   ├── creme_de_queijo (4600.0GRAMAS)
+📦 Item: Queijo do reino | ID: 34 | Política: ESTOCADO
+📦 Item: Queijo gorgonzola | ID: 35 | Política: ESTOCADO
+📦 Item: Queijo prato | ID: 36 | Política: ESTOCADO
+📦 Item: Requeijão cremoso | ID: 37 | Política: ESTOCADO
+📦 Item: Pimenta rosa | ID: 38 | Política: ESTOCADO
+│   │   └── Queijo do reino (1207.35g)
+│   │   └── Queijo gorgonzola (1207.35g)
+│   │   └── Queijo prato (1207.35g)
+│   │   └── Requeijão cremoso (965.88g)
+│   │   └── Pimenta rosa (12.07g)
+│   └── Queijo Parmesão (300.0g)
+│   └── Ovo de galinha (100.0g)
+🆔 Atividade 10051 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10051: 500g | Tipo produto: TipoItem.PRODUTO
+🆔 Atividade 10052 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10052: 500g | Tipo produto: TipoItem.PRODUTO
+🆔 Atividade 10053 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10053: 500g | Tipo produto: TipoItem.PRODUTO
+🆔 Atividade 10054 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10054: 500g | Tipo produto: TipoItem.PRODUTO
+🆔 Atividade 10055 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10055: 500g | Tipo produto: TipoItem.PRODUTO
+🆔 Atividade 10056 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10056: 500g | Tipo produto: TipoItem.PRODUTO
+🆔 Atividade 10057 | Tipo: PRODUTO | Quantidade: 20 u
+Peso unitário da atividade 10057: 500g | Tipo produto: TipoItem.PRODUTO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+🆔 Atividade 20021 | Tipo: SUBPRODUTO | Quantidade: 5000.0 u
+Peso unitário da atividade 20021: 0g | Tipo produto: TipoItem.SUBPRODUTO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+🆔 Atividade 20101 | Tipo: SUBPRODUTO | Quantidade: 4600.0 u
+Peso unitário da atividade 20101: 0g | Tipo produto: TipoItem.SUBPRODUTO
+🆔 Atividade 20102 | Tipo: SUBPRODUTO | Quantidade: 4600.0 u
+Peso unitário da atividade 20102: 0g | Tipo produto: TipoItem.SUBPRODUTO
+🆔 Atividade 20103 | Tipo: SUBPRODUTO | Quantidade: 4600.0 u
+Peso unitário da atividade 20103: 0g | Tipo produto: TipoItem.SUBPRODUTO
+🆔 Atividade 20104 | Tipo: SUBPRODUTO | Quantidade: 4600.0 u
+Peso unitário da atividade 20104: 0g | Tipo produto: TipoItem.SUBPRODUTO
+📦 Item: Queijo do reino | ID: 34 | Política: ESTOCADO
+📦 Item: Queijo gorgonzola | ID: 35 | Política: ESTOCADO
+📦 Item: Queijo prato | ID: 36 | Política: ESTOCADO
+📦 Item: Requeijão cremoso | ID: 37 | Política: ESTOCADO
+📦 Item: Pimenta rosa | ID: 38 | Política: ESTOCADO
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x10fd91c70>], datetime.datetime(2025, 6, 24, 17, 57), datetime.datetime(2025, 6, 24, 18, 0)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x10fd91c70>
+🛠️ Equipamentos alocados: ['Armário Fermentador 3']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x10fd91c70>], datetime.datetime(2025, 6, 24, 17, 57), datetime.datetime(2025, 6, 24, 18, 0))]
+Quantidade de unidades: 20, Unidades por nível: 20
+Quantidade de unidades: 20, Unidades por nível: 20
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.forno.Forno object at 0x10fd91ac0>], datetime.datetime(2025, 6, 24, 17, 37), datetime.datetime(2025, 6, 24, 17, 57)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.forno.Forno'> | Valor: <models.equipamentos.forno.Forno object at 0x10fd91ac0>
+🛠️ Equipamentos alocados: ['Forno 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.forno.Forno object at 0x10fd91ac0>], datetime.datetime(2025, 6, 24, 17, 37), datetime.datetime(2025, 6, 24, 17, 57))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 10057: 0:00:00
+Fim da atividade atual: 17:57:00
+Início da próxima (já alocada): 17:57:00
+Tempo de atraso: 0:00:00
+📦 DEBUG - equipamentos retornados na alocação:
+   - []
+[⏱️] Comparando com tempo máximo da atividade sucessora 10056: 0:00:00
+Fim da atividade atual: 17:37:00
+Início da próxima (já alocada): 17:37:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x10fd91c10>], datetime.datetime(2025, 6, 24, 16, 3), datetime.datetime(2025, 6, 24, 17, 33)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x10fd91c10>
+🛠️ Equipamentos alocados: ['Armário Fermentador 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x10fd91c10>], datetime.datetime(2025, 6, 24, 16, 3), datetime.datetime(2025, 6, 24, 17, 33))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 10055: 0:00:00
+Fim da atividade atual: 17:33:00
+Início da próxima (já alocada): 17:33:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x10fd91790>], datetime.datetime(2025, 6, 24, 16, 0), datetime.datetime(2025, 6, 24, 16, 3)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x10fd91790>
+🛠️ Equipamentos alocados: ['Bancada 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.bancada.Bancada object at 0x10fd91790>], datetime.datetime(2025, 6, 24, 16, 0), datetime.datetime(2025, 6, 24, 16, 3))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 10054: 0:00:00
+Fim da atividade atual: 16:03:00
+Início da próxima (já alocada): 16:03:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x10fd91790>], datetime.datetime(2025, 6, 24, 15, 50), datetime.datetime(2025, 6, 24, 16, 0)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x10fd91790>
+🛠️ Equipamentos alocados: ['Bancada 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.bancada.Bancada object at 0x10fd91790>], datetime.datetime(2025, 6, 24, 15, 50), datetime.datetime(2025, 6, 24, 16, 0))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 10053: 0:00:00
+Fim da atividade atual: 16:00:00
+Início da próxima (já alocada): 16:00:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x10fd91790>], datetime.datetime(2025, 6, 24, 15, 47), datetime.datetime(2025, 6, 24, 15, 50)) (len=4)
+  🔸[1] (True, <models.equipamentos.balanca_digital.BalancaDigital object at 0x10fcf44a0>, datetime.datetime(2025, 6, 24, 15, 44), datetime.datetime(2025, 6, 24, 15, 47)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x10fd91790>
+  🧪 Tipo: <class 'models.equipamentos.balanca_digital.BalancaDigital'> | Valor: 
+⚖️ Balança: Balança Digital 1 (ID: 5)
+Setor: PANIFICACAO | Status: Ativa
+Capacidade: 1g - 40000g
+Ocupações atuais: 1
+🛠️ Equipamentos alocados: ['Bancada 1', 'Balança Digital 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.bancada.Bancada object at 0x10fd91790>], datetime.datetime(2025, 6, 24, 15, 47), datetime.datetime(2025, 6, 24, 15, 50)), (True, <models.equipamentos.balanca_digital.BalancaDigital object at 0x10fcf44a0>, datetime.datetime(2025, 6, 24, 15, 44), datetime.datetime(2025, 6, 24, 15, 47))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 10052: 0:00:00
+Fim da atividade atual: 15:50:00
+Início da próxima (já alocada): 15:50:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.masseira.Masseira object at 0x10fd91940>], datetime.datetime(2025, 6, 24, 15, 37), datetime.datetime(2025, 6, 24, 15, 44)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.masseira.Masseira'> | Valor: <models.equipamentos.masseira.Masseira object at 0x10fd91940>
+🛠️ Equipamentos alocados: ['Masseira 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.masseira.Masseira object at 0x10fd91940>], datetime.datetime(2025, 6, 24, 15, 37), datetime.datetime(2025, 6, 24, 15, 44))]
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x10fd91880>], datetime.datetime(2025, 6, 24, 15, 29), datetime.datetime(2025, 6, 24, 15, 37)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x10fd91880>
+🛠️ Equipamentos alocados: ['Bancada 7']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, [<models.equipamentos.bancada.Bancada object at 0x10fd91880>], datetime.datetime(2025, 6, 24, 15, 29), datetime.datetime(2025, 6, 24, 15, 37))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 20021: 0:00:00
+Fim da atividade atual: 15:37:00
+Início da próxima (já alocada): 15:37:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, <models.equipamentos.fogao.Fogao object at 0x10fd916d0>, datetime.datetime(2025, 6, 24, 15, 14), datetime.datetime(2025, 6, 24, 15, 29)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.fogao.Fogao'> | Valor: <models.equipamentos.fogao.Fogao object at 0x10fd916d0>
+🛠️ Equipamentos alocados: ['Fogão 1']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, <models.equipamentos.fogao.Fogao object at 0x10fd916d0>, datetime.datetime(2025, 6, 24, 15, 14), datetime.datetime(2025, 6, 24, 15, 29))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 20101: 0:00:00
+Fim da atividade atual: 15:29:00
+Início da próxima (já alocada): 15:29:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, <models.equipamentos.balanca_digital.BalancaDigital object at 0x10fd91760>, datetime.datetime(2025, 6, 24, 15, 4), datetime.datetime(2025, 6, 24, 15, 14)) (len=4)
+  🔸[1] (True, [<models.equipamentos.bancada.Bancada object at 0x10fd91880>], datetime.datetime(2025, 6, 24, 14, 54), datetime.datetime(2025, 6, 24, 15, 4)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.balanca_digital.BalancaDigital'> | Valor: 
+⚖️ Balança: Balança Digital 4 (ID: 8)
+Setor: COZINHA | Status: Ativa
+Capacidade: 1g - 40000g
+Ocupações atuais: 1
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x10fd91880>
+🛠️ Equipamentos alocados: ['Balança Digital 4', 'Bancada 7']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, <models.equipamentos.balanca_digital.BalancaDigital object at 0x10fd91760>, datetime.datetime(2025, 6, 24, 15, 4), datetime.datetime(2025, 6, 24, 15, 14)), (True, [<models.equipamentos.bancada.Bancada object at 0x10fd91880>], datetime.datetime(2025, 6, 24, 14, 54), datetime.datetime(2025, 6, 24, 15, 4))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 20102: 0:00:00
+Fim da atividade atual: 15:14:00
+Início da próxima (já alocada): 15:14:00
+Tempo de atraso: 0:00:00
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, <models.equipamentos.camara_refrigerada.CamaraRefrigerada object at 0x10fbd8440>, datetime.datetime(2025, 6, 24, 14, 44), datetime.datetime(2025, 6, 24, 14, 54)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.camara_refrigerada.CamaraRefrigerada'> | Valor: <models.equipamentos.camara_refrigerada.CamaraRefrigerada object at 0x10fbd8440>
+🛠️ Equipamentos alocados: ['Câmara Refrigerada 2']
+📦 DEBUG - equipamentos retornados na alocação:
+   - [(True, <models.equipamentos.camara_refrigerada.CamaraRefrigerada object at 0x10fbd8440>, datetime.datetime(2025, 6, 24, 14, 44), datetime.datetime(2025, 6, 24, 14, 54))]
+[⏱️] Comparando com tempo máximo da atividade sucessora 20103: 0:00:00
+Fim da atividade atual: 14:54:00
+Início da próxima (já alocada): 14:54:00
+Tempo de atraso: 0:00:00
+   ✅ Pedido 1 executado com sucesso!
+
+================================================================================
+🎉 EXECUÇÃO CONCLUÍDA COM SUCESSO!
+📄 Log salvo em: logs/execucao_pedidos_20250801_150058.log
+================================================================================

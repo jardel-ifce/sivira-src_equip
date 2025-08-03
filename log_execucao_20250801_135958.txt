@@ -1,0 +1,501 @@
+🐛 === MODO DEBUG ATIVADO ===
+🧪 === TESTES INICIAIS ===
+
+🧪 === TESTE DIRETO DO PARSER ===
+
+🔍 Testando atividade 10051 (PRODUTO):
+  ✅ Dados encontrados!
+     - Nome item: 'pao_tranca_de_queijo_finos'
+     - Nome atividade: 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos'
+     - Keys dados gerais: ['nome_item', 'nome_atividade', 'id_item', 'tipo_item']
+     - Keys dados atividade: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+🔍 Testando atividade 10057 (PRODUTO):
+  ✅ Dados encontrados!
+     - Nome item: 'pao_tranca_de_queijo_finos'
+     - Nome atividade: 'retirada_de_paes_tranca_de_queijo_finos_da_coccao'
+     - Keys dados gerais: ['nome_item', 'nome_atividade', 'id_item', 'tipo_item']
+     - Keys dados atividade: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+🔍 Testando atividade 20021 (SUBPRODUTO):
+  ✅ Dados encontrados!
+     - Nome item: 'massa_suave'
+     - Nome atividade: 'mistura_de_massas_suaves'
+     - Keys dados gerais: ['nome_item', 'nome_atividade', 'id_item', 'tipo_item']
+     - Keys dados atividade: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+🔍 Testando atividade 20104 (SUBPRODUTO):
+  ✅ Dados encontrados!
+     - Nome item: 'creme_de_queijo'
+     - Nome atividade: 'armazenamento_sob_temperatura_para_creme_de_queijo'
+     - Keys dados gerais: ['nome_item', 'nome_atividade', 'id_item', 'tipo_item']
+     - Keys dados atividade: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+🔧 === DEBUG CRIAÇÃO DE ATIVIDADES ===
+🧪 Testando criação de AtividadeModular...
+📦 Dados recebidos do parser:
+   - Dados gerais: {'nome_item': 'pao_tranca_de_queijo_finos', 'nome_atividade': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'id_item': 1005, 'tipo_item': 'PRODUTO'}
+   - Dados atividade: {'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}
+🆔 Atividade 10051 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10051: Noneg | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada!
+   - Nome item final: 'pao_tranca_de_queijo_finos'
+   - Nome atividade final: 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos'
+
+🏗️ === FASE 1: PREPARAÇÃO DO AMBIENTE ===
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_1.json
+✅ Total de comandas removidas: 1
+🗑️ Removido: logs/equipamentos/ordem: 1 | pedido: 1.log
+✅ Limpeza concluída
+✅ Almoxarifado configurado com 18 itens
+
+🎯 === FASE 2: CRIAÇÃO DOS PEDIDOS ===
+
+📋 Criando pedido 1...
+  🏗️ Montando estrutura do pedido 1...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1005
+🧭 DEBUG: Explorando ID 1005
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_pao_tranca_de_queijos_finos.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_pao_tranca_de_queijos_finos.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1005
+📊 DEBUG: Número de atividades: 7
+✅ DEBUG: Item 1005 carregado: pao_tranca_de_queijo_finos
+🔍 DEBUG: Processando 7 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 6: 0 tipos profissionais - []
+   Atividade 7: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2010
+🧭 DEBUG: Explorando ID 2010
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_creme_de_queijo.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_creme_de_queijo.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2010
+📊 DEBUG: Número de atividades: 4
+✅ DEBUG: Item 2010 carregado: creme_de_queijo
+🔍 DEBUG: Processando 4 atividades
+   Atividade 1: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 2: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 3: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 4: 1 tipos profissionais - ['ALMOXARIFE']
+   ✅ Adicionado: ALMOXARIFE
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 ALMOXARIFE
+   📋 COZINHEIRO
+  ✅ Estrutura do pedido 1 montada com sucesso
+✅ 1 pedido(s) criado(s) com sucesso
+
+🧠 === FASE 3: ORDENAÇÃO DOS PEDIDOS ===
+✅ Pedidos ordenados por prioridade
+
+🚀 === FASE 4: EXECUÇÃO DOS PEDIDOS ===
+
+📦 === EXECUTANDO PEDIDO 1 (1/1) ===
+  📋 Gerando comanda de reserva para pedido 1...
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_1.json
+  ✅ Comanda de reserva gerada
+  🏗️ Estrutura do pedido 1:
+pao_tranca_de_queijo_finos (10UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+│   ├── massa_suave (2500.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (1485.44g)
+│   │   └── Gelo para alimentos (816.99g)
+│   │   └── Sal refinado (14.85g)
+│   │   └── Fermento biológico seco (29.71g)
+│   │   └── Açúcar cristal (74.27g)
+│   │   └── Margarina com sal (74.27g)
+│   │   └── Aditivo em pasta (4.46g)
+│   ├── creme_de_queijo (2300.0GRAMAS)
+📦 Item: Queijo do reino | ID: 34 | Política: ESTOCADO
+📦 Item: Queijo gorgonzola | ID: 35 | Política: ESTOCADO
+📦 Item: Queijo prato | ID: 36 | Política: ESTOCADO
+📦 Item: Requeijão cremoso | ID: 37 | Política: ESTOCADO
+📦 Item: Pimenta rosa | ID: 38 | Política: ESTOCADO
+│   │   └── Queijo do reino (603.67g)
+│   │   └── Queijo gorgonzola (603.67g)
+│   │   └── Queijo prato (603.67g)
+│   │   └── Requeijão cremoso (482.94g)
+│   │   └── Pimenta rosa (6.04g)
+│   └── Queijo Parmesão (150.0g)
+│   └── Ovo de galinha (50.0g)
+  🔧 Criando atividades modulares para pedido 1...
+🔍 DEBUG - Criando atividade 10051:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10051 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10051: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10051'
+🔍 DEBUG - Criando atividade 10052:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10052 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10052: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10052'
+🔍 DEBUG - Criando atividade 10053:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10053 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10053: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10053'
+🔍 DEBUG - Criando atividade 10054:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10054 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10054: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10054'
+🔍 DEBUG - Criando atividade 10055:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10055 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10055: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10055'
+🔍 DEBUG - Criando atividade 10056:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10056 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10056: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10056'
+🔍 DEBUG - Criando atividade 10057:
+   - Dados gerais: {'id_item': 1005, 'nome': 'pao_tranca_de_queijo_finos', 'atividades': [{'id_atividade': 10051, 'nome': 'pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos', 'tipo_atividade': 'PESAGEM_E_DIVISAO_DE_MASSAS_PARA_PAO_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BALANCAS': 1, 'BANCADAS': 1}, 'equipamentos_elegiveis': ['balanca_digital_1', 'bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'balanca_digital_1': 1, 'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'balanca_digital_1': {'peso_gramas': 250}, 'bancada_1': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_2': {'fracoes_necessarias': 1, 'numero_operadores': 1}, 'bancada_3': {'fracoes_necessarias': 1, 'numero_operadores': 1}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10052, 'nome': 'modelagem_e_recheio_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_2': {'fracoes_necessarias': 3, 'numero_operadores': 3}, 'bancada_3': {'fracoes_necessarias': 3, 'numero_operadores': 3}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 3, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:10:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:20:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:30:00'}]}, {'id_atividade': 10053, 'nome': 'preparo_de_pao_tranca_de_queijo_finos_para_fermentacao', 'tipo_atividade': 'PREPARO_DE_PAO_TRANCA_DE_QUEIJO_FINOS_PARA_FERMENTACAO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_1', 'bancada_2', 'bancada_3'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'bancada_1': 1, 'bancada_2': 2, 'bancada_3': 3}, 'configuracoes_equipamentos': {'bancada_1': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_2': {'fracoes_necessarias': 2, 'numero_operadores': 2}, 'bancada_3': {'fracoes_necessarias': 2, 'numero_operadores': 2}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}, {'id_atividade': 10054, 'nome': 'fermentacao_biologica_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'FERMENTACAO_BIOLOGICA_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 1, 'armario_fermentador_2': 1, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '01:30:00'}]}, {'id_atividade': 10055, 'nome': 'preparo_de_paes_tranca_de_queijo_finos_para_coccao', 'tipo_atividade': 'PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO', 'tipo_equipamento': {}, 'equipamentos_elegiveis': [], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {}, 'configuracoes_equipamentos': {}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:04:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:08:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:12:00'}]}, {'id_atividade': 10056, 'nome': 'coccao_de_paes_tranca_de_queijo_finos', 'tipo_atividade': 'COCCAO_DE_PAES_TRANCA_DE_QUEIJO_FINOS', 'tipo_equipamento': {'FORNOS': 1}, 'equipamentos_elegiveis': ['forno_1', 'forno_2'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'forno_1': 1, 'forno_2': 2}, 'configuracoes_equipamentos': {'forno_1': {'faixa_temperatura': 190, 'setup_min': 15, 'tipo_coccao': ['TURBO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}, 'forno_2': {'faixa_temperatura': 210, 'setup_min': 20, 'tipo_coccao': ['LASTRO'], 'tem_vaporizacao': 'False', 'vaporizacao': 0, 'unidades_por_nivel': 20}}, 'tipos_profissionais_permitidos': [], 'fips_profissionais_permitidos': {}, 'quantidade_funcionarios': 0, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 72, 'duracao': '00:20:00'}]}, {'id_atividade': 10057, 'nome': 'retirada_de_paes_tranca_de_queijo_finos_da_coccao', 'tipo_atividade': 'RETIRADA_DE_PAES_TRANCA_DE_QUEIJO_FINOS_DA_COCCAO', 'tipo_equipamento': {'ARMARIOS_PARA_FERMENTACAO': 1}, 'equipamentos_elegiveis': ['armario_fermentador_1', 'armario_fermentador_2', 'armario_fermentador_3', 'armario_fermentador_4'], 'tempo_maximo_de_espera': '00:00:00', 'fips_equipamentos': {'armario_fermentador_1': 2, 'armario_fermentador_2': 2, 'armario_fermentador_3': 1, 'armario_fermentador_4': 1}, 'configuracoes_equipamentos': {'armario_fermentador_1': {'unidades_por_nivel': 5}, 'armario_fermentador_2': {'unidades_por_nivel': 5}, 'armario_fermentador_3': {'unidades_por_nivel': 5}, 'armario_fermentador_4': {'unidades_por_nivel': 5}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20, 'duracao': '00:03:00'}, {'quantidade_min': 21, 'quantidade_max': 48, 'duracao': '00:06:00'}, {'quantidade_min': 49, 'quantidade_max': 72, 'duracao': '00:09:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 10057 | Tipo: PRODUTO | Quantidade: 10 u
+Peso unitário da atividade 10057: 500g | Tipo produto: TipoItem.PRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 10057'
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+🔍 DEBUG - Criando atividade 20021:
+   - Dados gerais: {'id_item': 2002, 'nome': 'massa_suave', 'antecipacao_de_producao': '00:00:00', 'atividades': [{'id_atividade': 20021, 'nome': 'mistura_de_massas_suaves', 'tipo_atividade': 'MISTURA_DE_MASSAS_SUAVES', 'tipo_equipamento': {'MISTURADORAS': 1}, 'equipamentos_elegiveis': ['masseira_1', 'masseira_2'], 'fips_equipamentos': {'masseira_1': 1, 'masseira_2': 2}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'masseira_1': {'velocidade': ['BAIXA', 'MEDIA'], 'tipo_mistura': ['SEMI_RAPIDA']}, 'masseira_2': {'velocidade': ['ALTA'], 'tipo_mistura': ['RAPIDA']}}, 'tipos_profissionais_permitidos': ['PADEIRO', 'AUXILIAR_DE_PADEIRO'], 'fips_profissionais_permitidos': {'PADEIRO': 2, 'AUXILIAR_DE_PADEIRO': 1}, 'quantidade_funcionarios': 2, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 17000, 'duracao': '00:07:00'}, {'quantidade_min': 17001, 'quantidade_max': 34000, 'duracao': '00:11:00'}, {'quantidade_min': 34001, 'quantidade_max': 50000, 'duracao': '00:15:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 20021 | Tipo: SUBPRODUTO | Quantidade: 2500.0 u
+Peso unitário da atividade 20021: 0g | Tipo produto: TipoItem.SUBPRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 20021'
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+🔍 DEBUG - Criando atividade 20101:
+   - Dados gerais: {'id_item': 2010, 'nome': 'creme_de_queijo', 'antecipacao_de_producao': '00:00:00', 'atividades': [{'id_atividade': 20101, 'nome': 'preparo_para_coccao_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_7'], 'fips_equipamentos': {'bancada_7': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 1}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:08:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:16:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:24:00'}]}, {'id_atividade': 20102, 'nome': 'coccao_de_creme_de_queijo', 'tipo_atividade': 'COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'FOGOES': 1}, 'equipamentos_elegiveis': ['fogao_1', 'fogao_2'], 'fips_equipamentos': {'fogao_1': 1, 'fogao_2': 2}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'fogao_1': {'tipo_chama': ['MEDIA'], 'pressao_chama': ['ALTA_PRESSAO', 'CHAMA_DUPLA']}, 'fogao_2': {'tipo_chama': ['ALTA'], 'pressao_chama': ['BAIXA_PRESSAO', 'CHAMA_UNICA']}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:15:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:30:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:45:00'}]}, {'id_atividade': 20103, 'nome': 'preparo_para_armazenamento_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_ARMAZENAMENTO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1, 'BALANCAS': 1}, 'equipamentos_elegiveis': ['bancada_7', 'balanca_digital_4'], 'fips_equipamentos': {'bancada_7': 1, 'balanca_digital_4': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 2}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}, {'id_atividade': 20104, 'nome': 'armazenamento_sob_temperatura_para_creme_de_queijo', 'tipo_atividade': 'ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CREME_DE_QUEIJO', 'tipo_equipamento': {'REFRIGERACAO_CONGELAMENTO': 1}, 'equipamentos_elegiveis': ['camara_refrigerada_2'], 'fips_equipamentos': {'camara_refrigerada_2': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'camara_refrigerada_2': {'faixa_temperatura': -18, 'tipo_de_armazenamento': 'CAIXAS', 'gramas_por_caixa': 2000}}, 'tipos_profissionais_permitidos': ['ALMOXARIFE'], 'fips_profissionais_permitidos': {'ALMOXARIFE': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 20101 | Tipo: SUBPRODUTO | Quantidade: 2300.0 u
+Peso unitário da atividade 20101: 0g | Tipo produto: TipoItem.SUBPRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 20101'
+🔍 DEBUG - Criando atividade 20102:
+   - Dados gerais: {'id_item': 2010, 'nome': 'creme_de_queijo', 'antecipacao_de_producao': '00:00:00', 'atividades': [{'id_atividade': 20101, 'nome': 'preparo_para_coccao_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_7'], 'fips_equipamentos': {'bancada_7': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 1}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:08:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:16:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:24:00'}]}, {'id_atividade': 20102, 'nome': 'coccao_de_creme_de_queijo', 'tipo_atividade': 'COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'FOGOES': 1}, 'equipamentos_elegiveis': ['fogao_1', 'fogao_2'], 'fips_equipamentos': {'fogao_1': 1, 'fogao_2': 2}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'fogao_1': {'tipo_chama': ['MEDIA'], 'pressao_chama': ['ALTA_PRESSAO', 'CHAMA_DUPLA']}, 'fogao_2': {'tipo_chama': ['ALTA'], 'pressao_chama': ['BAIXA_PRESSAO', 'CHAMA_UNICA']}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:15:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:30:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:45:00'}]}, {'id_atividade': 20103, 'nome': 'preparo_para_armazenamento_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_ARMAZENAMENTO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1, 'BALANCAS': 1}, 'equipamentos_elegiveis': ['bancada_7', 'balanca_digital_4'], 'fips_equipamentos': {'bancada_7': 1, 'balanca_digital_4': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 2}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}, {'id_atividade': 20104, 'nome': 'armazenamento_sob_temperatura_para_creme_de_queijo', 'tipo_atividade': 'ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CREME_DE_QUEIJO', 'tipo_equipamento': {'REFRIGERACAO_CONGELAMENTO': 1}, 'equipamentos_elegiveis': ['camara_refrigerada_2'], 'fips_equipamentos': {'camara_refrigerada_2': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'camara_refrigerada_2': {'faixa_temperatura': -18, 'tipo_de_armazenamento': 'CAIXAS', 'gramas_por_caixa': 2000}}, 'tipos_profissionais_permitidos': ['ALMOXARIFE'], 'fips_profissionais_permitidos': {'ALMOXARIFE': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 20102 | Tipo: SUBPRODUTO | Quantidade: 2300.0 u
+Peso unitário da atividade 20102: 0g | Tipo produto: TipoItem.SUBPRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 20102'
+🔍 DEBUG - Criando atividade 20103:
+   - Dados gerais: {'id_item': 2010, 'nome': 'creme_de_queijo', 'antecipacao_de_producao': '00:00:00', 'atividades': [{'id_atividade': 20101, 'nome': 'preparo_para_coccao_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_7'], 'fips_equipamentos': {'bancada_7': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 1}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:08:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:16:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:24:00'}]}, {'id_atividade': 20102, 'nome': 'coccao_de_creme_de_queijo', 'tipo_atividade': 'COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'FOGOES': 1}, 'equipamentos_elegiveis': ['fogao_1', 'fogao_2'], 'fips_equipamentos': {'fogao_1': 1, 'fogao_2': 2}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'fogao_1': {'tipo_chama': ['MEDIA'], 'pressao_chama': ['ALTA_PRESSAO', 'CHAMA_DUPLA']}, 'fogao_2': {'tipo_chama': ['ALTA'], 'pressao_chama': ['BAIXA_PRESSAO', 'CHAMA_UNICA']}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:15:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:30:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:45:00'}]}, {'id_atividade': 20103, 'nome': 'preparo_para_armazenamento_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_ARMAZENAMENTO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1, 'BALANCAS': 1}, 'equipamentos_elegiveis': ['bancada_7', 'balanca_digital_4'], 'fips_equipamentos': {'bancada_7': 1, 'balanca_digital_4': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 2}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}, {'id_atividade': 20104, 'nome': 'armazenamento_sob_temperatura_para_creme_de_queijo', 'tipo_atividade': 'ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CREME_DE_QUEIJO', 'tipo_equipamento': {'REFRIGERACAO_CONGELAMENTO': 1}, 'equipamentos_elegiveis': ['camara_refrigerada_2'], 'fips_equipamentos': {'camara_refrigerada_2': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'camara_refrigerada_2': {'faixa_temperatura': -18, 'tipo_de_armazenamento': 'CAIXAS', 'gramas_por_caixa': 2000}}, 'tipos_profissionais_permitidos': ['ALMOXARIFE'], 'fips_profissionais_permitidos': {'ALMOXARIFE': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 20103 | Tipo: SUBPRODUTO | Quantidade: 2300.0 u
+Peso unitário da atividade 20103: 0g | Tipo produto: TipoItem.SUBPRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 20103'
+🔍 DEBUG - Criando atividade 20104:
+   - Dados gerais: {'id_item': 2010, 'nome': 'creme_de_queijo', 'antecipacao_de_producao': '00:00:00', 'atividades': [{'id_atividade': 20101, 'nome': 'preparo_para_coccao_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1}, 'equipamentos_elegiveis': ['bancada_7'], 'fips_equipamentos': {'bancada_7': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 1}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:08:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:16:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:24:00'}]}, {'id_atividade': 20102, 'nome': 'coccao_de_creme_de_queijo', 'tipo_atividade': 'COCCAO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'FOGOES': 1}, 'equipamentos_elegiveis': ['fogao_1', 'fogao_2'], 'fips_equipamentos': {'fogao_1': 1, 'fogao_2': 2}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'fogao_1': {'tipo_chama': ['MEDIA'], 'pressao_chama': ['ALTA_PRESSAO', 'CHAMA_DUPLA']}, 'fogao_2': {'tipo_chama': ['ALTA'], 'pressao_chama': ['BAIXA_PRESSAO', 'CHAMA_UNICA']}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:15:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:30:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:45:00'}]}, {'id_atividade': 20103, 'nome': 'preparo_para_armazenamento_de_creme_de_queijo', 'tipo_atividade': 'PREPARO_PARA_ARMAZENAMENTO_DE_CREME_DE_QUEIJO', 'tipo_equipamento': {'BANCADAS': 1, 'BALANCAS': 1}, 'equipamentos_elegiveis': ['bancada_7', 'balanca_digital_4'], 'fips_equipamentos': {'bancada_7': 1, 'balanca_digital_4': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'bancada_7': {'fracoes_necessarias': 2}}, 'tipos_profissionais_permitidos': ['COZINHEIRO'], 'fips_profissionais_permitidos': {'COZINHEIRO': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}, {'id_atividade': 20104, 'nome': 'armazenamento_sob_temperatura_para_creme_de_queijo', 'tipo_atividade': 'ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CREME_DE_QUEIJO', 'tipo_equipamento': {'REFRIGERACAO_CONGELAMENTO': 1}, 'equipamentos_elegiveis': ['camara_refrigerada_2'], 'fips_equipamentos': {'camara_refrigerada_2': 1}, 'tempo_maximo_de_espera': '00:00:00', 'configuracoes_equipamentos': {'camara_refrigerada_2': {'faixa_temperatura': -18, 'tipo_de_armazenamento': 'CAIXAS', 'gramas_por_caixa': 2000}}, 'tipos_profissionais_permitidos': ['ALMOXARIFE'], 'fips_profissionais_permitidos': {'ALMOXARIFE': 1}, 'quantidade_funcionarios': 1, 'faixas': [{'quantidade_min': 1, 'quantidade_max': 20000, 'duracao': '00:10:00'}, {'quantidade_min': 20001, 'quantidade_max': 40000, 'duracao': '00:20:00'}, {'quantidade_min': 40001, 'quantidade_max': 60000, 'duracao': '00:30:00'}]}]}
+   - Nome item: 'NÃO ENCONTRADO'
+   - Nome atividade: 'NÃO ENCONTRADO'
+🆔 Atividade 20104 | Tipo: SUBPRODUTO | Quantidade: 2300.0 u
+Peso unitário da atividade 20104: 0g | Tipo produto: TipoItem.SUBPRODUTO
+✅ Atividade criada:
+   - Nome item final: 'item_desconhecido'
+   - Nome atividade final: 'Atividade 20104'
+📦 Item: Queijo do reino | ID: 34 | Política: ESTOCADO
+📦 Item: Queijo gorgonzola | ID: 35 | Política: ESTOCADO
+📦 Item: Queijo prato | ID: 36 | Política: ESTOCADO
+📦 Item: Requeijão cremoso | ID: 37 | Política: ESTOCADO
+📦 Item: Pimenta rosa | ID: 38 | Política: ESTOCADO
+  ✅ 12 atividades criadas
+
+🔍 === INVESTIGAÇÃO DETALHADA DO PEDIDO 1 ===
+✅ Ficha técnica carregada: ID 1005
+   - Tipo: TipoItem.PRODUTO
+   - Quantidade: 10
+
+📋 Atividades criadas: 12
+  🔸 Atividade 1:
+     - ID: 10051
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10051'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 2:
+     - ID: 10052
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10052'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 3:
+     - ID: 10053
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10053'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 4:
+     - ID: 10054
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10054'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 5:
+     - ID: 10055
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10055'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 6:
+     - ID: 10056
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10056'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 7:
+     - ID: 10057
+     - Tipo Item: TipoItem.PRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 10057'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'tempo_maximo_de_espera', 'fips_equipamentos', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 8:
+     - ID: 20021
+     - Tipo Item: TipoItem.SUBPRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 20021'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 9:
+     - ID: 20101
+     - Tipo Item: TipoItem.SUBPRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 20101'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 10:
+     - ID: 20102
+     - Tipo Item: TipoItem.SUBPRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 20102'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 11:
+     - ID: 20103
+     - Tipo Item: TipoItem.SUBPRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 20103'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🔸 Atividade 12:
+     - ID: 20104
+     - Tipo Item: TipoItem.SUBPRODUTO
+     - Nome Item: 'item_desconhecido'
+     - Nome Atividade: 'Atividade 20104'
+     - Dados carregados: True
+     - Keys nos dados: ['id_atividade', 'nome', 'tipo_atividade', 'tipo_equipamento', 'equipamentos_elegiveis', 'fips_equipamentos', 'tempo_maximo_de_espera', 'configuracoes_equipamentos', 'tipos_profissionais_permitidos', 'fips_profissionais_permitidos', 'quantidade_funcionarios', 'faixas']
+
+  🚀 Executando pedido 1...
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.masseira.Masseira object at 0x100c90b60>], datetime.datetime(2025, 6, 29, 17, 53), datetime.datetime(2025, 6, 29, 18, 0)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.masseira.Masseira'> | Valor: <models.equipamentos.masseira.Masseira object at 0x100c90b60>
+🛠️ Equipamentos alocados: ['Masseira 1']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x100c90aa0>], datetime.datetime(2025, 6, 29, 17, 45), datetime.datetime(2025, 6, 29, 17, 53)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x100c90aa0>
+🛠️ Equipamentos alocados: ['Bancada 7']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, <models.equipamentos.fogao.Fogao object at 0x100c90860>, datetime.datetime(2025, 6, 29, 17, 30), datetime.datetime(2025, 6, 29, 17, 45)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.fogao.Fogao'> | Valor: <models.equipamentos.fogao.Fogao object at 0x100c90860>
+🛠️ Equipamentos alocados: ['Fogão 1']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, <models.equipamentos.balanca_digital.BalancaDigital object at 0x100c90950>, datetime.datetime(2025, 6, 29, 17, 20), datetime.datetime(2025, 6, 29, 17, 30)) (len=4)
+  🔸[1] (True, [<models.equipamentos.bancada.Bancada object at 0x100c90aa0>], datetime.datetime(2025, 6, 29, 17, 10), datetime.datetime(2025, 6, 29, 17, 20)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.balanca_digital.BalancaDigital'> | Valor: 
+⚖️ Balança: Balança Digital 4 (ID: 8)
+Setor: COZINHA | Status: Ativa
+Capacidade: 1g - 40000g
+Ocupações atuais: 1
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x100c90aa0>
+🛠️ Equipamentos alocados: ['Balança Digital 4', 'Bancada 7']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, <models.equipamentos.camara_refrigerada.CamaraRefrigerada object at 0x100bf8980>, datetime.datetime(2025, 6, 29, 17, 0), datetime.datetime(2025, 6, 29, 17, 10)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.camara_refrigerada.CamaraRefrigerada'> | Valor: <models.equipamentos.camara_refrigerada.CamaraRefrigerada object at 0x100bf8980>
+🛠️ Equipamentos alocados: ['Câmara Refrigerada 2']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x100c90e30>], datetime.datetime(2025, 6, 29, 17, 57), datetime.datetime(2025, 6, 29, 18, 0)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x100c90e30>
+🛠️ Equipamentos alocados: ['Armário Fermentador 3']
+Quantidade de unidades: 10, Unidades por nível: 20
+Quantidade de unidades: 10, Unidades por nível: 20
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.forno.Forno object at 0x100c90ce0>], datetime.datetime(2025, 6, 29, 17, 37), datetime.datetime(2025, 6, 29, 17, 57)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.forno.Forno'> | Valor: <models.equipamentos.forno.Forno object at 0x100c90ce0>
+🛠️ Equipamentos alocados: ['Forno 1']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x100c90dd0>], datetime.datetime(2025, 6, 29, 16, 3), datetime.datetime(2025, 6, 29, 17, 33)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x100c90dd0>
+🛠️ Equipamentos alocados: ['Armário Fermentador 1']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x100c90980>], datetime.datetime(2025, 6, 29, 16, 0), datetime.datetime(2025, 6, 29, 16, 3)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x100c90980>
+🛠️ Equipamentos alocados: ['Bancada 1']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x100c90980>], datetime.datetime(2025, 6, 29, 15, 50), datetime.datetime(2025, 6, 29, 16, 0)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x100c90980>
+🛠️ Equipamentos alocados: ['Bancada 1']
+
+🔍 DEBUG — Conteúdo de equipamentos_alocados:
+  🔸[0] (True, [<models.equipamentos.bancada.Bancada object at 0x100c90980>], datetime.datetime(2025, 6, 29, 15, 47), datetime.datetime(2025, 6, 29, 15, 50)) (len=4)
+  🔸[1] (True, <models.equipamentos.balanca_digital.BalancaDigital object at 0x100c908f0>, datetime.datetime(2025, 6, 29, 15, 44), datetime.datetime(2025, 6, 29, 15, 47)) (len=4)
+🔍 DEBUG — Resultado final em self.equipamentos_selecionados:
+  🧪 Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x100c90980>
+  🧪 Tipo: <class 'models.equipamentos.balanca_digital.BalancaDigital'> | Valor: 
+⚖️ Balança: Balança Digital 1 (ID: 5)
+Setor: PANIFICACAO | Status: Ativa
+Capacidade: 1g - 40000g
+Ocupações atuais: 1
+🛠️ Equipamentos alocados: ['Bancada 1', 'Balança Digital 1']
+  ✅ Pedido 1 executado COM SUCESSO!
+    📊 Resumo: 12 atividades, 13 equipamentos alocados
+
+📊 === RELATÓRIO FINAL ===
+Total de pedidos processados: 1
+Pedidos executados com sucesso: 1
+Taxa de sucesso: 100.0%
+
+👥 === HISTÓRICO DE FUNCIONÁRIOS ===
+
+🎉 Execução concluída!

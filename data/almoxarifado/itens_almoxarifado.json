@@ -1,166 +1,647 @@
 [
   {
+    "id_item": 1,
+    "nome": "acucar_refinado",
+    "descricao": "Açúcar refinado",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 10000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 50000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 2,
+    "nome": "agua",
+    "descricao": "Água",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 20000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 40000,
+    "estoque_max": 60000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
     "id_item": 3,
-    "nome": "farinha_de_trigo_para_paes",
-    "descricao": "Farinha de trigo para pães",
+    "nome": "cacau_em_po_50",
+    "descricao": "Cacau em pó 50%",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 2000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 4,
+    "nome": "caldo_knorr_frango",
+    "descricao": "Caldo Knorr frango",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 500,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 5000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 5,
+    "nome": "carne_de_sol",
+    "descricao": "Carne de sol",
     "tipo_item": "INSUMO",
     "politica_producao": "ESTOCADO",
     "peso": 1000,
     "unidade_medida": "GRAMAS",
     "estoque_min": 10000,
-    "estoque_max": 70000,
-    "estoque_atual": -16870.79,
-    "consumo_diario_estimado": 7000,
-    "reabastecimento_previsto_em": "2025-06-28",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 9552.97,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
   },
   {
-    "id_item": 4,
-    "nome": "gelo_para_alimentos",
-    "descricao": "Gelo para alimentos",
+    "id_item": 6,
+    "nome": "catupiry",
+    "descricao": "Catupiry",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1500,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 3000,
+    "estoque_max": 15000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 7,
+    "nome": "cebola_branca",
+    "descricao": "Cebola branca",
     "tipo_item": "INSUMO",
     "politica_producao": "ESTOCADO",
     "peso": 1000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 8000,
-    "estoque_max": 30000,
-    "estoque_atual": -16122.46,
-    "consumo_diario_estimado": 4000,
-    "reabastecimento_previsto_em": "2025-06-26",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 5731.78,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "estoque_min": 5000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
   },
   {
-    "id_item": 5,
-    "nome": "sal_refinado",
-    "descricao": "Sal refinado",
+    "id_item": 8,
+    "nome": "cebola_roxa",
+    "descricao": "Cebola roxa",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 2000,
+    "estoque_max": 5000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 9,
+    "nome": "cereja_em_calda",
+    "descricao": "Cereja em calda",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 3100,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 3100,
+    "estoque_max": 9300,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 10,
+    "nome": "cheiro_verde",
+    "descricao": "Cheiro verde",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 20,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 500,
+    "estoque_max": 2000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 11,
+    "nome": "chocolate_meio_amargo_em_barra",
+    "descricao": "Chocolate meio amargo em barra",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1010,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10100,
+    "estoque_max": 15500,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 12,
+    "nome": "colorau",
+    "descricao": "Colorau",
     "tipo_item": "INSUMO",
     "politica_producao": "ESTOCADO",
     "peso": 1000,
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 5000,
-    "estoque_atual": 1662.58,
-    "consumo_diario_estimado": 160,
-    "reabastecimento_previsto_em": "2025-06-30",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 191.06,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
   },
   {
-    "id_item": 6,
+    "id_item": 13,
+    "nome": "creme_de_leite_culinario",
+    "descricao": "Creme de leite culinário",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 3000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 14,
+    "nome": "essencia_de_baunilha",
+    "descricao": "Essência de baunilha",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 1000,
+    "estoque_max": 2000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 15,
+    "nome": "farinha_de_rosca",
+    "descricao": "Farinha de rosca",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 16,
+    "nome": "farinha_de_trigo_s_ferm",
+    "descricao": "Farinha de trigo s/ ferm.",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 80000,
+    "estoque_max": 150000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 17,
     "nome": "fermento_biologico_seco",
     "descricao": "Fermento biológico seco",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 500,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 1000,
+    "estoque_max": 4000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 18,
+    "nome": "fermento_quimico",
+    "descricao": "Fermento químico",
     "tipo_item": "INSUMO",
     "politica_producao": "ESTOCADO",
     "peso": 1000,
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 3000,
-    "estoque_atual": 1331.29,
-    "consumo_diario_estimado": 80,
-    "reabastecimento_previsto_em": "2025-06-27",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 95.53,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
   },
   {
-    "id_item": 7,
-    "nome": "aditivo_em_pasta",
-    "descricao": "Aditivo em pasta",
+    "id_item": 19,
+    "nome": "geleia_de_morango",
+    "descricao": "Geleia de morango",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 2000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 2000,
+    "estoque_max": 6000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 20,
+    "nome": "leite_condensado",
+    "descricao": "Leite condensado",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 2500,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 25000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 21,
+    "nome": "leite_em_po",
+    "descricao": "Leite em pó",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 10000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 22,
+    "nome": "leite_liquido_integral",
+    "descricao": "Leite líquido",
     "tipo_item": "INSUMO",
     "politica_producao": "ESTOCADO",
     "peso": 1000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 300,
+    "estoque_min": 5000,
+    "estoque_max": 25000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 23,
+    "nome": "limao_tahiti",
+    "descricao": "Limão tahiti",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 1000,
+    "estoque_max": 5000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 24,
+    "nome": "manteiga_da_terra",
+    "descricao": "Manteiga da terra",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 2000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 25,
+    "nome": "manteiga_s_sal",
+    "descricao": "Manteiga s/ sal",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 200,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 26,
+    "nome": "margarina_c_sal",
+    "descricao": "Margarina c/ sal",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 3000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 27,
+    "nome": "margarina_folhada",
+    "descricao": "Margarina folhada",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 2000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 4000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 28,
+    "nome": "mistura_para_chantilly",
+    "descricao": "Mistura para chantilly",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 29,
+    "nome": "mistura_para_pao_batata",
+    "descricao": "Mistura para pão batata",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 10000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 30,
+    "nome": "mistura_pronta_creme_conf",
+    "descricao": "Mistura pronta creme conf.",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 4000,
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 31,
+    "nome": "morango",
+    "descricao": "Morango",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 250,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 1000,
+    "estoque_max": 3000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 32,
+    "nome": "oregano",
+    "descricao": "Orégano",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 100,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 500,
     "estoque_max": 1000,
-    "estoque_atual": -200.62,
-    "consumo_diario_estimado": 24,
-    "reabastecimento_previsto_em": "2025-06-25",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 28.66,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 33,
+    "nome": "ovo_de_galinha",
+    "descricao": "Ovo",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 34,
+    "nome": "peito_de_frango_s_osso",
+    "descricao": "Peito de frango s/ osso",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 30000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 35,
+    "nome": "pimenta_de_cheiro",
+    "descricao": "Pimenta de cheiro",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 1000,
+    "estoque_max": 5000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 36,
+    "nome": "presunto_cozido",
+    "descricao": "Presunto cozido",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 2000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 37,
+    "nome": "queijo_coalho",
+    "descricao": "Queijo coalho",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 20000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 38,
+    "nome": "queijo_mussarela",
+    "descricao": "Queijo mussarela",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 4000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 16000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
+  },
+  {
+    "id_item": 39,
+    "nome": "sal_refinado",
+    "descricao": "Sal",
+    "tipo_item": "INSUMO",
+    "politica_producao": "ESTOCADO",
+    "peso": 1000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 1000,
+    "estoque_max": 3000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": []
   },
   {
     "id_item": 2001,
     "nome": "massa_crocante",
-    "descricao": "Massa Crocante",
+    "descricao": "Massa crocante",
     "tipo_item": "SUBPRODUTO",
     "politica_producao": "SOB_DEMANDA",
-    "peso": 1000,
+    "peso": 0,
     "unidade_medida": "GRAMAS",
     "estoque_min": 0,
     "estoque_max": 0,
-    "estoque_atual": -109200.0,
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 15600.0,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ],
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
     "ficha_tecnica": {
       "id_ficha_tecnica": 2001
     }
   },
   {
-    "id_item": 1001,
-    "nome": "pao_frances",
-    "descricao": "Pão Francês",
-    "tipo_item": "PRODUTO",
+    "id_item": 2002,
+    "nome": "massa_suave",
+    "descricao": "Massa suave",
+    "tipo_item": "SUBPRODUTO",
     "politica_producao": "SOB_DEMANDA",
-    "peso": 60,
-    "unidade_medida": "UNIDADE",
-    "estoque_min": 200,
-    "estoque_max": 1000,
-    "estoque_atual": -1520.0,
-    "consumo_diario_estimado": 120,
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 240,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ],
+    "reservas_futuras": [],
     "ficha_tecnica": {
-      "id_ficha_tecnica": 1001
+      "id_ficha_tecnica": 2002
+    }
+  },
+  {
+    "id_item": 2003,
+    "nome": "massa_para_brownie",
+    "descricao": "Massa para brownie",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 0,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2003
     }
   },
   {
     "id_item": 2004,
-    "nome": "massa_para_frituras",
-    "descricao": "Massa para Frituras",
+    "nome": "massa_para_fritura",
+    "descricao": "Massa para fritura",
     "tipo_item": "SUBPRODUTO",
     "politica_producao": "SOB_DEMANDA",
     "peso": 0,
@@ -178,7 +659,7 @@
   {
     "id_item": 2005,
     "nome": "massa_para_bolo_de_chocolate",
-    "descricao": "Massa para Bolo de Chocolate",
+    "descricao": "Massa para bolo de chocolate",
     "tipo_item": "SUBPRODUTO",
     "politica_producao": "SOB_DEMANDA",
     "peso": 0,
@@ -188,134 +669,107 @@
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 6000,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ],
+    "reservas_futuras": [],
     "ficha_tecnica": {
       "id_ficha_tecnica": 2005
     }
   },
   {
-    "id_item": 17,
-    "nome": "farinha_de_trigo_domestica",
-    "descricao": "Farinha de trigo doméstica",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2006,
+    "nome": "carne_de_sol_refogada",
+    "descricao": "Carne de sol refogada",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 5000,
+    "estoque_max": 20000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 1431.98,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2006
+    }
   },
   {
-    "id_item": 18,
-    "nome": "leite_liquido_integral",
-    "descricao": "Leite líquido integral",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2007,
+    "nome": "massa_para_folhados",
+    "descricao": "Massa para folhados",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 5000,
+    "estoque_max": 20000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 572.79,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2007
+    }
   },
   {
-    "id_item": 19,
-    "nome": "ovo_de_galinha",
-    "descricao": "Ovo de galinha",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2008,
+    "nome": "massa_para_bolo_branco",
+    "descricao": "Massa para bolo branco",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 500,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 2000,
+    "estoque_max": 5000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 286.4,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2008
+    }
   },
   {
-    "id_item": 20,
-    "nome": "margarina_sem_sal",
-    "descricao": "Margarina sem sal",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2009,
+    "nome": "frango_refogado",
+    "descricao": "Frango refogado",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 5000,
+    "estoque_max": 20000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 143.2,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2009
+    }
   },
   {
-    "id_item": 21,
-    "nome": "cacau_em_po_50",
-    "descricao": "Cacau em pó 50%",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2010,
+    "nome": "creme_de_queijo",
+    "descricao": "Creme de queijo",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 1000,
+    "estoque_max": 3000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 214.8,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2010
+    }
   },
   {
-    "id_item": 23,
-    "nome": "acucar_refinado",
-    "descricao": "Açúcar refinado",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
+    "id_item": 2011,
+    "nome": "creme_de_camarao",
+    "descricao": "Creme de camarão",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
     "peso": 0,
     "unidade_medida": "GRAMAS",
     "estoque_min": 0,
@@ -323,74 +777,423 @@
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 286.4,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2011
+    }
   },
   {
-    "id_item": 24,
-    "nome": "fermento_quimico",
-    "descricao": "Fermento químico",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2012,
+    "nome": "creme_de_frango",
+    "descricao": "Creme de frango",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 10000,
+    "estoque_max": 20000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 57.28,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2012
+    }
   },
   {
-    "id_item": 25,
-    "nome": "essencia_de_baunilha",
-    "descricao": "Essência de baunilha",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2013,
+    "nome": "creme_chantilly",
+    "descricao": "Creme chantilly",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
     "unidade_medida": "GRAMAS",
-    "estoque_min": 0,
-    "estoque_max": 0,
+    "estoque_min": 15000,
+    "estoque_max": 25000,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      {
-        "data": "2025-06-24",
-        "quantidade_reservada": 7.16,
-        "id_ordem": 1,
-        "id_pedido": 1
-      }
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2013
+    }
   },
   {
-    "id_item": 26,
-    "nome": "queijo_parmesao",
-    "descricao": "Queijo Parmesão",
-    "tipo_item": "INSUMO",
-    "politica_producao": "ESTOCADO",
-    "peso": 0,
+    "id_item": 2014,
+    "nome": "creme_de_limao",
+    "descricao": "Creme de limão",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
     "unidade_medida": "GRAMAS",
+    "estoque_min": 5000,
+    "estoque_max": 10000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2014
+    }
+  },
+  {
+    "id_item": 2015,
+    "nome": "ganache_de_chocolate",
+    "descricao": "Ganache de chocolate",
+    "tipo_item": "SUBPRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 5000,
+    "unidade_medida": "GRAMAS",
+    "estoque_min": 10000,
+    "estoque_max": 15000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 2015
+    }
+  },
+  {
+    "id_item": 1001,
+    "nome": "pao_frances",
+    "descricao": "Pão francês",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 60,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 200,
+    "estoque_max": 1000,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1001
+    }
+  },
+  {
+    "id_item": 1002,
+    "nome": "pao_hamburguer",
+    "descricao": "Pão hambúrguer",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 80,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 50,
+    "estoque_max": 200,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1002
+    }
+  },
+  {
+    "id_item": 1003,
+    "nome": "pao_de_forma",
+    "descricao": "Pão de forma",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 500,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 10,
+    "estoque_max": 50,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1003
+    }
+  },
+  {
+    "id_item": 1004,
+    "nome": "pao_baguete",
+    "descricao": "Pão baguete",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 300,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 20,
+    "estoque_max": 100,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1004
+    }
+  },
+  {
+    "id_item": 1005,
+    "nome": "pao_tranca_de_queijos_finos",
+    "descricao": "Pão trança de queijos finos",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 400,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 10,
+    "estoque_max": 40,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1005
+    }
+  },
+  {
+    "id_item": 1055,
+    "nome": "coxinha_de_frango",
+    "descricao": "Coxinha de frango",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 30,
+    "estoque_max": 90,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1055
+    }
+  },
+  {
+    "id_item": 1056,
+    "nome": "coxinha_de_frango_com_catupiry",
+    "descricao": "Coxinha de frango com catupiry",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 30,
+    "estoque_max": 90,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1056
+    }
+  },
+  {
+    "id_item": 1057,
+    "nome": "risole_misto",
+    "descricao": "Risole misto",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 30,
+    "estoque_max": 60,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1057
+    }
+  },
+  {
+    "id_item": 1058,
+    "nome": "risole_de_queijo",
+    "descricao": "Risole de queijo",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 30,
+    "estoque_max": 60,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1058
+    }
+  },
+  {
+    "id_item": 1059,
+    "nome": "folhado_de_carne_de_sol",
+    "descricao": "Folhado de carne de sol",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 36,
+    "estoque_max": 72,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1059
+    }
+  },
+  {
+    "id_item": 1060,
+    "nome": "folhado_de_queijo",
+    "descricao": "Folhado de queijo",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 36,
+    "estoque_max": 72,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1060
+    }
+  },
+  {
+    "id_item": 1061,
+    "nome": "pao_de_batata_com_carne_de_sol_e_catupiry",
+    "descricao": "Pão de batata com carne de sol e catupiry",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 28,
+    "estoque_max": 56,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1061
+    }
+  },
+  {
+    "id_item": 1062,
+    "nome": "pao_de_batata_de_frango_e_catupiry",
+    "descricao": "Pão de batata de frango e catupiry",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 28,
+    "estoque_max": 56,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1062
+    }
+  },
+  {
+    "id_item": 1063,
+    "nome": "tartelete_de_morango",
+    "descricao": "Tartelete de morango",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
     "estoque_min": 0,
     "estoque_max": 0,
     "estoque_atual": 0,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [
-      
-    ]
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1063
+    }
+  },
+  {
+    "id_item": 1064,
+    "nome": "tartelete_de_chocolate",
+    "descricao": "Tartelete de chocolate",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1064
+    }
+  },
+  {
+    "id_item": 1065,
+    "nome": "bomba_de_chocolate",
+    "descricao": "Bomba de chocolate",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1065
+    }
+  },
+  {
+    "id_item": 1066,
+    "nome": "bomba_de_creme_com_morango",
+    "descricao": "Bomba de creme com morango",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 0,
+    "estoque_max": 0,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1066
+    }
+  },
+  {
+    "id_item": 1067,
+    "nome": "torta_de_chocolate_com_morango",
+    "descricao": "Torta de chocolate com morango",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 4,
+    "estoque_max": 6,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1067
+    }
+  },
+  {
+    "id_item": 1068,
+    "nome": "torta_de_creme_de_limao",
+    "descricao": "Torta de creme de limão",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 4,
+    "estoque_max": 6,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1068
+    }
   }
 ]

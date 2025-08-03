@@ -1,0 +1,109 @@
+================================================================================
+LOG DE EXECUÇÃO - 03/08/2025 18:28:56
+================================================================================
+
+🔄 Carregando itens do almoxarifado...
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_1.json
+✅ Total de comandas removidas: 1
+🗑️ Removido: logs/erros/ordem: 1 | pedido: 1.log
+✅ Almoxarifado carregado com sucesso!
+
+🔄 Criando pedidos de produção...
+   Processando pedido 1...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1002
+🧭 DEBUG: Explorando ID 1002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1002_pao_hamburguer.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1002_pao_hamburguer.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1002
+📊 DEBUG: Número de atividades: 9
+✅ DEBUG: Item 1002 carregado: pao_hamburguer
+🔍 DEBUG: Processando 9 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 6: 0 tipos profissionais - []
+   Atividade 7: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 8: 0 tipos profissionais - []
+   Atividade 9: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+   ✅ Pedido 1 criado com sucesso!
+
+🔄 Ordenando pedidos por restrições...
+✅ 1 pedidos ordenados!
+
+🔄 Executando pedidos em ordem de prioridade...
+   Executando pedido 1/1 (ID: 1)...
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_1.json
+pao_hamburger (20UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+│   ├── massa_suave (1300.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (772.43g)
+│   │   └── Gelo para alimentos (424.84g)
+│   │   └── Sal refinado (7.72g)
+│   │   └── Fermento biológico seco (15.45g)
+│   │   └── Açúcar cristal (38.62g)
+│   │   └── Margarina com sal (38.62g)
+│   │   └── Aditivo em pasta (2.32g)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+Quantidade de unidades: 20, Unidades por nível: 30
+   ✅ Pedido 1 executado com sucesso!
+
+================================================================================
+🎉 EXECUÇÃO CONCLUÍDA COM SUCESSO!
+📄 Log salvo em: logs/execucao_pedidos_20250803_182856.log
+================================================================================
