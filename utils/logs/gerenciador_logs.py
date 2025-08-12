@@ -15,19 +15,126 @@ PASTAS = [
 ]
 
 def limpar_todos_os_logs():
+    """
+    🧹 Limpa todos os logs do sistema, incluindo:
+    - Arquivos .log tradicionais
+    - Arquivos .json de erros de exceções (quantidade, timing, etc.)
+    """
     for pasta in PASTAS:
         if not os.path.exists(pasta):
             print(f"📁 Pasta não encontrada: {pasta}")
             continue
 
+        # Contar arquivos por tipo para relatório
+        logs_removidos = 0
+        jsons_removidos = 0
+        
         for nome_arquivo in os.listdir(pasta):
-            if nome_arquivo.endswith(".log"):
-                caminho = os.path.join(pasta, nome_arquivo)
+            caminho = os.path.join(pasta, nome_arquivo)
+            
+            try:
+                # Limpar arquivos .log tradicionais
+                if nome_arquivo.endswith(".log"):
+                    os.remove(caminho)
+                    logs_removidos += 1
+                    print(f"🗑️ Log removido: {caminho}")
+                
+                # 🆕 Limpar arquivos .json de erros de exceções
+                elif nome_arquivo.endswith(".json"):
+                    # Verificar se é arquivo de erro de exceção
+                    if any(prefix in nome_arquivo for prefix in [
+                        "quantity_",     # Erros de quantidade
+                        "timing_",       # Erros de timing
+                        "relatorio_"     # Relatórios gerados
+                    ]):
+                        os.remove(caminho)
+                        jsons_removidos += 1
+                        print(f"🗑️ JSON de erro removido: {caminho}")
+                    else:
+                        print(f"ℹ️ JSON mantido (não é arquivo de erro): {nome_arquivo}")
+                        
+            except Exception as e:
+                print(f"❌ Erro ao remover {caminho}: {e}")
+        
+        # Relatório por pasta
+        if logs_removidos > 0 or jsons_removidos > 0:
+            print(f"📊 Pasta {pasta}: {logs_removidos} logs + {jsons_removidos} JSONs removidos")
+    
+    print("✅ Limpeza de logs concluída!")
+
+
+def limpar_apenas_jsons_erros():
+    """
+    🧹 Limpa APENAS os arquivos JSON de erros de exceções, mantendo logs tradicionais.
+    Útil para limpeza seletiva.
+    """
+    pasta_erros = "logs/erros"
+    
+    if not os.path.exists(pasta_erros):
+        print(f"📁 Pasta de erros não encontrada: {pasta_erros}")
+        return
+    
+    jsons_removidos = 0
+    
+    for nome_arquivo in os.listdir(pasta_erros):
+        if nome_arquivo.endswith(".json"):
+            # Verificar se é arquivo de erro de exceção
+            if any(prefix in nome_arquivo for prefix in [
+                "quantity_",           # Erros de quantidade
+                "timing_",            # Erros de timing  
+                "relatorio_quantity_", # Relatórios de quantidade
+                "relatorio_timing_"   # Relatórios de timing
+            ]):
+                caminho = os.path.join(pasta_erros, nome_arquivo)
                 try:
                     os.remove(caminho)
-                    print(f"🗑️ Removido: {caminho}")
+                    jsons_removidos += 1
+                    print(f"🗑️ JSON de erro removido: {caminho}")
                 except Exception as e:
                     print(f"❌ Erro ao remover {caminho}: {e}")
+    
+    print(f"📊 {jsons_removidos} arquivos JSON de erros removidos da pasta {pasta_erros}")
+
+
+def limpar_jsons_erros_por_tipo(tipo_erro: str):
+    """
+    🧹 Limpa JSONs de erros de um tipo específico.
+    
+    Args:
+        tipo_erro: "quantity", "timing", ou "relatorio"
+    """
+    pasta_erros = "logs/erros"
+    
+    if not os.path.exists(pasta_erros):
+        print(f"📁 Pasta de erros não encontrada: {pasta_erros}")
+        return
+    
+    prefixos_validos = {
+        "quantity": ["quantity_"],
+        "timing": ["timing_"],
+        "relatorio": ["relatorio_quantity_", "relatorio_timing_"],
+        "all": ["quantity_", "timing_", "relatorio_"]
+    }
+    
+    if tipo_erro not in prefixos_validos:
+        print(f"❌ Tipo de erro inválido: {tipo_erro}. Opções: {list(prefixos_validos.keys())}")
+        return
+    
+    prefixos = prefixos_validos[tipo_erro]
+    jsons_removidos = 0
+    
+    for nome_arquivo in os.listdir(pasta_erros):
+        if nome_arquivo.endswith(".json"):
+            if any(prefixo in nome_arquivo for prefixo in prefixos):
+                caminho = os.path.join(pasta_erros, nome_arquivo)
+                try:
+                    os.remove(caminho)
+                    jsons_removidos += 1
+                    print(f"🗑️ JSON removido: {caminho}")
+                except Exception as e:
+                    print(f"❌ Erro ao remover {caminho}: {e}")
+    
+    print(f"📊 {jsons_removidos} arquivos JSON do tipo '{tipo_erro}' removidos")
 
 
 def remover_logs_pedido(id_pedido: int):
@@ -84,7 +191,6 @@ def registrar_erro_execucao_pedido(id_ordem: int, id_pedido: int, erro: Exceptio
         logger.warning(f"⚠️ Falha ao registrar erro em arquivo: {log_erro}")
 
 
-
 def registrar_log_equipamentos(id_ordem: int, id_pedido: int, id_atividade: int, nome_item: str,
                                nome_atividade: str, equipamentos_alocados: list[tuple]): 
     """
@@ -111,7 +217,6 @@ def registrar_log_equipamentos(id_ordem: int, id_pedido: int, id_atividade: int,
                     f"{nomes_equipamentos} | {str_inicio} | {str_fim} \n"
                 )
                 arq.write(linha)
-
 
 
 def registrar_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int, 
@@ -156,7 +261,6 @@ def apagar_logs_por_pedido_e_ordem(id_ordem: int, id_pedido: int):
                 print(f"🗑️ Apagado: {caminho}")
             except Exception as e:
                 logger.warning(f"⚠️ Falha ao apagar {caminho}: {e}")
-
 
 
 def remover_log_equipamentos(id_ordem: int, id_pedido: int = None, id_atividade: int = None):

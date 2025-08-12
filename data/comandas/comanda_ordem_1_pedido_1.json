@@ -4,21 +4,21 @@
   "data_reserva": "2025-06-23",
   "itens": [
     {
-      "id_item": 1001,
-      "nome": "Pão Francês",
+      "id_item": 1005,
+      "nome": "Pão Baguete",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 450,
+      "quantidade_necessaria": 60,
       "itens_necessarios": [
         {
-          "id_item": 2001,
-          "nome": "Massa Crocante",
+          "id_item": 2002,
+          "nome": "Massa Suave",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 29250.0,
+          "quantidade_necessaria": 15000.0,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 17911.82,
+              "quantidade_necessaria": 8912.66,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -26,7 +26,7 @@
             {
               "id_item": 4,
               "nome": "Gelo para alimentos",
-              "quantidade_necessaria": 10747.09,
+              "quantidade_necessaria": 4901.96,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -34,7 +34,7 @@
             {
               "id_item": 5,
               "nome": "Sal refinado",
-              "quantidade_necessaria": 358.24,
+              "quantidade_necessaria": 89.13,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -42,7 +42,23 @@
             {
               "id_item": 6,
               "nome": "Fermento biológico seco",
-              "quantidade_necessaria": 179.12,
+              "quantidade_necessaria": 178.25,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 13,
+              "nome": "Açúcar cristal",
+              "quantidade_necessaria": 445.63,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 14,
+              "nome": "Margarina com sal",
+              "quantidade_necessaria": 445.63,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -50,12 +66,34 @@
             {
               "id_item": 7,
               "nome": "Aditivo em pasta",
-              "quantidade_necessaria": 53.74,
+              "quantidade_necessaria": 26.74,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             }
           ]
+        },
+        {
+          "id_item": 2010,
+          "nome": "Creme de Queijo",
+          "politica_producao": "ESTOCADO",
+          "quantidade_necessaria": 13800.0
+        },
+        {
+          "id_item": 50,
+          "nome": "Queijo Parmesão",
+          "quantidade_necessaria": 900.0,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 19,
+          "nome": "Ovo de galinha",
+          "quantidade_necessaria": 300.0,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
         }
       ]
     }

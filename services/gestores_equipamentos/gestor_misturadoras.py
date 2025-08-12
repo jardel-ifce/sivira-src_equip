@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 from enums.equipamentos.tipo_velocidade import TipoVelocidade
 from enums.equipamentos.tipo_mistura import TipoMistura
 from utils.logs.logger_factory import setup_logger
+from utils.logs.quantity_exceptions import QuantityBelowMinimumError, QuantityExceedsMaximumError
+from utils.logs.quantity_logger import quantity_logger
 
 logger = setup_logger('GestorMisturadoras')
 
@@ -145,6 +147,95 @@ class GestorMisturadoras:
     # ==========================================================
     # 📊 Análise de Viabilidade e Capacidades (OTIMIZADA)
     # ==========================================================
+    def _validar_quantidade_estrutural(self, atividade: "AtividadeModular", quantidade_total: float) -> None:
+        """
+        🚀 VALIDAÇÃO PRÉVIA DE QUANTIDADE: Verifica apenas impossibilidades estruturais
+        relacionadas a capacidades mínimas e máximas.
+        
+        ✅ FOCO INICIAL: Apenas quantidades
+        - Quantidade < capacidade mínima de qualquer equipamento
+        - Quantidade > capacidade máxima total do sistema
+        
+        ❌ NÃO VERIFICA (para implementação futura):
+        - Parâmetros técnicos
+        - Conflitos temporais
+        - Disponibilidade específica
+        """
+        logger.info(f"🔍 Validação de quantidade estrutural para atividade {atividade.id_atividade}")
+        
+        # Obter IDs para logging
+        id_ordem, id_pedido, id_atividade, _ = self._obter_ids_atividade(atividade)
+        
+        # Coletar informações de capacidade
+        equipamentos_info = []
+        capacidade_minima_sistema = float('inf')
+        
+        for masseira in self.masseiras:
+            info_masseira = {
+                "nome": masseira.nome,
+                "capacidade_min": masseira.capacidade_gramas_min,
+                "capacidade_max": masseira.capacidade_gramas_max
+            }
+            equipamentos_info.append(info_masseira)
+            capacidade_minima_sistema = min(capacidade_minima_sistema, masseira.capacidade_gramas_min)
+        
+        # ❌ VERIFICAÇÃO 1: Quantidade menor que qualquer capacidade mínima
+        if quantidade_total < capacidade_minima_sistema:
+            logger.error(
+                f"❌ Quantidade {quantidade_total}g < capacidade mínima do sistema ({capacidade_minima_sistema}g)"
+            )
+            
+            error = QuantityBelowMinimumError(
+                equipment_type="MISTURADORAS",
+                requested_quantity=quantidade_total,
+                minimum_capacity=capacidade_minima_sistema,
+                available_equipment=equipamentos_info
+            )
+            
+            # Log estruturado
+            quantity_logger.log_quantity_error(
+                id_ordem=id_ordem,
+                id_pedido=id_pedido,
+                id_atividade=id_atividade,
+                nome_atividade=atividade.nome_atividade,
+                quantity_error=error
+            )
+            
+            # Lançar exceção
+            raise error
+        
+        # ❌ VERIFICAÇÃO 2: Quantidade excede capacidade máxima total
+        capacidade_total_sistema = sum(m.capacidade_gramas_max for m in self.masseiras)
+        if quantidade_total > capacidade_total_sistema:
+            logger.error(
+                f"❌ Quantidade {quantidade_total}g > capacidade total do sistema ({capacidade_total_sistema}g)"
+            )
+            
+            error = QuantityExceedsMaximumError(
+                equipment_type="MISTURADORAS",
+                requested_quantity=quantidade_total,
+                total_system_capacity=capacidade_total_sistema,
+                individual_capacities=equipamentos_info
+            )
+            
+            # Log estruturado
+            quantity_logger.log_quantity_error(
+                id_ordem=id_ordem,
+                id_pedido=id_pedido,
+                id_atividade=id_atividade,
+                nome_atividade=atividade.nome_atividade,
+                quantity_error=error
+            )
+            
+            # Lançar exceção
+            raise error
+        
+        # ✅ VALIDAÇÃO DE QUANTIDADE PASSOU
+        logger.info(
+            f"✅ Validação de quantidade PASSOU para atividade {id_atividade}. "
+            f"Quantidade {quantidade_total}g está dentro dos limites estruturais."
+        )
+
     def _calcular_capacidade_total_sistema(self, atividade: "AtividadeModular", id_item: int, 
                                           inicio: datetime, fim: datetime) -> Tuple[float, float]:
         """
@@ -704,69 +795,46 @@ class GestorMisturadoras:
         **kwargs
     ) -> Tuple[bool, Optional[List[Masseira]], Optional[datetime], Optional[datetime]]:
         """
-        🚀 VERSÃO OTIMIZADA: Aloca masseiras seguindo a estratégia otimizada com verificação prévia de viabilidade:
-        
-        Melhorias implementadas:
-        - Verificação rápida de capacidade antes da análise temporal
-        - Early exit para casos impossíveis (ganho de 90-95% em performance)
-        - Logs de diagnóstico melhorados para depuração
-        
-        1. Verificação de viabilidade total usando Multiple Knapsack Problem
-        2. Tenta alocação individual por FIP (se quantidade cabe em uma masseira)
-        3. Tenta distribuição otimizada usando algoritmos inteligentes
-        4. Usa backward scheduling minuto a minuto (busca exaustiva)
+        Aloca masseiras com validação prévia DE QUANTIDADE apenas.
+        Outras validações serão implementadas gradualmente.
         """
+        # Validações básicas
+        if quantidade_alocada <= 0:
+            logger.warning(f"❌ Quantidade inválida: {quantidade_alocada}")
+            return False, None, None, None
+
+        # Obter IDs
+        id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
+        
+        logger.info(f"🎯 Alocação com validação de quantidade: {quantidade_alocada:.2f}g")
+
+        # 🚀 VALIDAÇÃO PRÉVIA DE QUANTIDADE APENAS
+        try:
+            self._validar_quantidade_estrutural(atividade, quantidade_alocada)
+        except (QuantityBelowMinimumError, QuantityExceedsMaximumError) as e:
+            logger.error(
+                f"🚫 VALIDAÇÃO DE QUANTIDADE FALHOU para atividade {id_atividade}. "
+                f"CANCELANDO sem backward scheduling. Erro: {e.error_type}"
+            )
+            # Re-lançar exceção para ser tratada pela AtividadeModular
+            raise e
+
+        # ✅ QUANTIDADE OK - PROSSEGUIR COM BACKWARD SCHEDULING NORMAL
+        logger.info("✅ Validação de quantidade passou. Iniciando backward scheduling...")
+        
+        # RESTO DO CÓDIGO PERMANECE IGUAL
+        # (todo o backward scheduling normal continua funcionando)
+        
         duracao = atividade.duracao
         masseiras_ordenadas = self._ordenar_por_fip(atividade)
         horario_final_tentativa = fim
-
-        # Obter IDs da atividade de forma consistente
-        id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
-
-        if quantidade_alocada <= 0:
-            logger.warning(f"❌ Quantidade inválida para atividade {id_atividade}: {quantidade_alocada}")
-            return False, None, None, None
-
-        logger.info(f"🎯 Iniciando alocação otimizada atividade {id_atividade}: {quantidade_alocada:.2f}g do item {id_item}")
-        logger.debug(f"📅 Janela: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} (duração: {duracao})")
-
-        # 🔍 DIAGNÓSTICO: Verifica capacidades disponíveis
-        capacidades_individuais = [m.capacidade_gramas_max for m in masseiras_ordenadas]
-        capacidade_total_sistema = sum(capacidades_individuais)
-        capacidade_maxima_individual = max(capacidades_individuais)
-        
-        logger.debug(f"🔍 DIAGNÓSTICO: Quantidade necessária {quantidade_alocada:.2f}g")
-        logger.debug(f"🔍 DIAGNÓSTICO: Capacidades individuais: {capacidades_individuais}")
-        logger.debug(f"🔍 DIAGNÓSTICO: Capacidade total sistema: {capacidade_total_sistema}g")
-        logger.debug(f"🔍 DIAGNÓSTICO: Capacidade máxima individual: {capacidade_maxima_individual}g")
-        
-        # 📋 REGRA PRINCIPAL: Primeiro verifica se capacidade total do sistema atende
-        if quantidade_alocada > capacidade_total_sistema:
-            logger.warning(f"❌ Quantidade {quantidade_alocada:.2f}g > capacidade total {capacidade_total_sistema}g - IMPOSSÍVEL")
-            return False, None, None, None
-        
-        logger.info(f"✅ Capacidade total do sistema ({capacidade_total_sistema}g) atende a demanda ({quantidade_alocada:.2f}g)")
-        
-        if quantidade_alocada > capacidade_maxima_individual:
-            logger.info(f"📊 Quantidade {quantidade_alocada:.2f}g > capacidade individual {capacidade_maxima_individual}g - tentará individual primeiro, depois distribuição")
-
-        # ==========================================================
-        # 🔄 BACKWARD SCHEDULING OTIMIZADO - MINUTO A MINUTO (BUSCA EXAUSTIVA)
-        # ==========================================================
-        # 🚀 CONTADOR DE PERFORMANCE para diagnóstico
         tentativas_total = 0
-        early_exits = 0
-        analises_temporais = 0
 
         while horario_final_tentativa - duracao >= inicio:
             tentativas_total += 1
             horario_inicio_tentativa = horario_final_tentativa - duracao
             
-            logger.debug(f"⏰ Tentativa {tentativas_total}: {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}")
-
-            # 1️⃣ PRIMEIRA ESTRATÉGIA: Tenta alocação integral em uma masseira
-            # 🎯 SEMPRE tenta individual primeiro (independente da capacidade individual)
-            logger.debug(f"🔍 Tentando alocação individual - quantidade {quantidade_alocada:.2f}g")
+            # Tentar alocação individual
             sucesso_individual = self._tentar_alocacao_individual(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_alocada, masseiras_ordenadas,
@@ -774,24 +842,18 @@ class GestorMisturadoras:
             )
             
             if sucesso_individual:
-                analises_temporais += 1  # Chegou até análise temporal
                 masseira_usada, inicio_real, fim_real = sucesso_individual
                 atividade.equipamento_alocado = masseira_usada
                 atividade.equipamentos_selecionados = [masseira_usada]
                 atividade.alocada = True
                 
-                minutos_retrocedidos = int((fim - fim_real).total_seconds() / 60)
-                # 🚀 LOG DE PERFORMANCE
                 logger.info(
-                    f"✅ Atividade {id_atividade} (Item {id_item}) alocada INTEIRAMENTE na {masseira_usada.nome} "
-                    f"({quantidade_alocada:.2f}g) de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
-                    f"(retrocedeu {minutos_retrocedidos} minutos) "
-                    f"(Tentativas: {tentativas_total}, Early exits: {early_exits}, Análises temporais: {analises_temporais})"
+                    f"✅ Atividade {id_atividade} alocada na {masseira_usada.nome} "
+                    f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')}"
                 )
                 return True, [masseira_usada], inicio_real, fim_real
 
-            # 2️⃣ SEGUNDA ESTRATÉGIA: Tenta alocação distribuída otimizada entre múltiplas masseiras
-            logger.debug(f"🔍 Tentando alocação distribuída para {quantidade_alocada:.2f}g")
+            # Tentar alocação distribuída
             sucesso_distribuido = self._tentar_alocacao_distribuida_otimizada(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_alocada, masseiras_ordenadas,
@@ -799,56 +861,24 @@ class GestorMisturadoras:
             )
             
             if sucesso_distribuido:
-                analises_temporais += 1  # Chegou até análise temporal
                 masseiras_usadas, inicio_real, fim_real = sucesso_distribuido
-                atividade.equipamento_alocado = None  # Múltiplas masseiras
+                atividade.equipamento_alocado = None
                 atividade.equipamentos_selecionados = masseiras_usadas
                 atividade.alocada = True
                 
-                # Adiciona informação de alocação múltipla se disponível
-                if hasattr(atividade, 'alocacao_multipla'):
-                    atividade.alocacao_multipla = True
-                    atividade.detalhes_alocacao = [
-                        {'masseira': m.nome, 'quantidade': 0}  # Quantidade será calculada posteriormente se necessário
-                        for m in masseiras_usadas
-                    ]
-                
-                minutos_retrocedidos = int((fim - fim_real).total_seconds() / 60)
-                # 🚀 LOG DE PERFORMANCE
                 logger.info(
-                    f"🧩 Atividade {id_atividade} (Item {id_item}) DIVIDIDA OTIMIZADA entre "
-                    f"{', '.join(m.nome for m in masseiras_usadas)} "
-                    f"({quantidade_alocada:.2f}g total) de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
-                    f"(retrocedeu {minutos_retrocedidos} minutos) "
-                    f"(Tentativas: {tentativas_total}, Early exits: {early_exits}, Análises temporais: {analises_temporais})"
+                    f"🧩 Atividade {id_atividade} distribuída entre "
+                    f"{', '.join(m.nome for m in masseiras_usadas)}"
                 )
                 return True, masseiras_usadas, inicio_real, fim_real
 
-            # Contar se foi early exit ou análise temporal completa
-            # Se chegou até aqui sem sucesso, pode ter havido early exit na verificação de viabilidade
-            early_exits += 1  # Assumindo que a maioria das falhas são early exits
-
-            # 3️⃣ Falhou nesta janela: RETROCEDE 1 MINUTO (BUSCA EXAUSTIVA)
+            # Próxima tentativa
             horario_final_tentativa -= timedelta(minutes=1)
-            
-            # Log ocasional para evitar spam
-            if tentativas_total % 10 == 0:
-                logger.debug(f"⏪ Tentativa {tentativas_total}: retrocedendo para {horario_final_tentativa.strftime('%H:%M')}")
 
-        # 🚀 DIAGNÓSTICO DETALHADO DE PERFORMANCE
-        eficiencia_otimizacao = (early_exits / tentativas_total * 100) if tentativas_total > 0 else 0
-        minutos_total_retrocedidos = int((fim - (inicio + duracao)).total_seconds() / 60)
-        
+        # Se chegou aqui: falha temporal (passou na validação de quantidade mas não conseguiu alocar)
         logger.warning(
-            f"❌ Atividade {id_atividade} (Item {id_item}) não pôde ser alocada após {tentativas_total} tentativas "
-            f"dentro da janela entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
-            f"Quantidade necessária: {quantidade_alocada:.2f}g "
-            f"(retrocedeu até o limite de {minutos_total_retrocedidos} minutos)\n"
-            f"📊 ESTATÍSTICAS DE PERFORMANCE:\n"
-            f"   Total de tentativas: {tentativas_total:,}\n"
-            f"   Early exits (otimização): {early_exits:,} ({eficiencia_otimizacao:.1f}%)\n"
-            f"   Análises temporais: {analises_temporais:,}\n"
-            f"   Economia estimada: {early_exits * 95}% de tempo computacional"
+            f"❌ Atividade {id_atividade} falhou temporalmente após {tentativas_total} tentativas. "
+            f"Quantidade {quantidade_alocada}g é estruturalmente válida mas há conflitos temporais."
         )
         
         return False, None, None, None

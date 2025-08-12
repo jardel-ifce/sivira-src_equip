@@ -15,6 +15,9 @@ from utils.time.conversores_temporais import converter_para_timedelta
 from utils.logs.logger_factory import setup_logger
 from utils.commons.normalizador_de_nomes import normalizar_nome
 from utils.logs.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
+from utils.logs.quantity_exceptions import QuantityError
+from utils.logs.timing_exceptions import IntraActivityTimingError
+from utils.logs.timing_logger import log_intra_activity_timing_error
 import traceback
 
 logger = setup_logger('Atividade_Modular')
@@ -28,6 +31,11 @@ class AtividadeModular:
     """
     Classe responsável por gerenciar uma atividade individual de produção.
     Controla a alocação de equipamentos e funcionários necessários para execução.
+    
+    ✅ SISTEMA DE TIMING INTEGRADO:
+    - Detecta erros de tempo entre equipamentos (INTRA-ATIVIDADE)
+    - Registra logs estruturados para análise
+    - Cancela atividades com problemas temporais críticos
     """
     
     def __init__(self, id, id_atividade: int, tipo_item: TipoItem, quantidade: float, *args, **kwargs):
@@ -444,83 +452,128 @@ class AtividadeModular:
             f"(janela: {janela_total})"
         )
         
-        while horario_final - self.duracao >= inicio_jornada:
-            tentativas += 1
-            
-            # Log de progresso a cada hora de tentativas
-            if tentativas % 60 == 0:
-                tempo_restante = (horario_final - self.duracao - inicio_jornada)
-                horas_restantes = tempo_restante.total_seconds() / 3600
-                logger.debug(
-                    f"🔍 Tentativa {tentativas:,} - testando {horario_final.strftime('%H:%M')} "
-                    f"({horas_restantes:.1f}h restantes)"
-                )
-            
-            # Tentar alocação no horário atual
-            sucesso, equipamentos_alocados = self._tentar_alocacao_no_horario(horario_final)
-            
-            if sucesso:
-                # ✅ VALIDAÇÃO ESPECIAL: Se tem fim_obrigatorio, verificar se atende
-                if tem_fim_obrigatorio:
-                    equipamentos_ordenados = sorted(equipamentos_alocados, key=lambda x: x[2])
-                    fim_real = equipamentos_ordenados[-1][3] if equipamentos_ordenados else horario_final
+        try:
+            while horario_final - self.duracao >= inicio_jornada:
+                tentativas += 1
+                
+                # Log de progresso a cada hora de tentativas
+                if tentativas % 60 == 0:
+                    tempo_restante = (horario_final - self.duracao - inicio_jornada)
+                    horas_restantes = tempo_restante.total_seconds() / 3600
+                    logger.debug(
+                        f"🔍 Tentativa {tentativas:,} - testando {horario_final.strftime('%H:%M')} "
+                        f"({horas_restantes:.1f}h restantes)"
+                    )
+                
+                try:
+                    # Tentar alocação no horário atual
+                    sucesso, equipamentos_alocados = self._tentar_alocacao_no_horario(horario_final)
                     
-                    if fim_real != self.fim_obrigatorio:
-                        # Esta alocação não atende a restrição de pontualidade
-                        diferenca = abs((fim_real - self.fim_obrigatorio).total_seconds())
+                    if sucesso:
+                        # ✅ VALIDAÇÃO ESPECIAL: Se tem fim_obrigatorio, verificar se atende
+                        if tem_fim_obrigatorio:
+                            equipamentos_ordenados = sorted(equipamentos_alocados, key=lambda x: x[2])
+                            fim_real = equipamentos_ordenados[-1][3] if equipamentos_ordenados else horario_final
+                            
+                            if fim_real != self.fim_obrigatorio:
+                                # Esta alocação não atende a restrição de pontualidade
+                                diferenca = abs((fim_real - self.fim_obrigatorio).total_seconds())
+                                
+                                if not alocacao_exata_tentada and diferenca <= 60:  # Tolerância de 1 minuto
+                                    logger.debug(
+                                        f"⚠️ Alocação próxima mas não exata: terminaria às {fim_real.strftime('%H:%M')} "
+                                        f"(diferença: {diferenca}s). Continuando busca..."
+                                    )
+                                
+                                self._fazer_rollback_tentativa(equipamentos_alocados)
+                                horario_final -= timedelta(minutes=1)
+                                
+                                # Marcar que já tentamos a alocação exata
+                                if horario_final == self.fim_obrigatorio:
+                                    alocacao_exata_tentada = True
+                                
+                                continue
+                            else:
+                                logger.info(
+                                    f"✅ Alocação PONTUAL conseguida! Atividade terminará exatamente às "
+                                    f"{fim_real.strftime('%H:%M')} conforme requerido"
+                                )
                         
-                        if not alocacao_exata_tentada and diferenca <= 60:  # Tolerância de 1 minuto
-                            logger.debug(
-                                f"⚠️ Alocação próxima mas não exata: terminaria às {fim_real.strftime('%H:%M')} "
-                                f"(diferença: {diferenca}s). Continuando busca..."
-                            )
-                        
+                        logger.info(
+                            f"✅ Alocação bem-sucedida na tentativa {tentativas:,} "
+                            f"(horário: {horario_final.strftime('%H:%M')})"
+                        )
+                        return self._finalizar_alocacao_bem_sucedida(equipamentos_alocados)
+                    else:
+                        # Rollback desta tentativa e avançar para próximo horário
                         self._fazer_rollback_tentativa(equipamentos_alocados)
                         horario_final -= timedelta(minutes=1)
                         
-                        # Marcar que já tentamos a alocação exata
-                        if horario_final == self.fim_obrigatorio:
-                            alocacao_exata_tentada = True
-                        
-                        continue
-                    else:
-                        logger.info(
-                            f"✅ Alocação PONTUAL conseguida! Atividade terminará exatamente às "
-                            f"{fim_real.strftime('%H:%M')} conforme requerido"
-                        )
-                
-                logger.info(
-                    f"✅ Alocação bem-sucedida na tentativa {tentativas:,} "
-                    f"(horário: {horario_final.strftime('%H:%M')})"
-                )
-                return self._finalizar_alocacao_bem_sucedida(equipamentos_alocados)
-            else:
-                # Rollback desta tentativa e avançar para próximo horário
-                self._fazer_rollback_tentativa(equipamentos_alocados)
-                horario_final -= timedelta(minutes=1)
+                except QuantityError as e:
+                    # 🚫 ERRO DE QUANTIDADE - CANCELAR IMEDIATAMENTE
+                    logger.error(
+                        f"🚫 ATIVIDADE {self.id_atividade} CANCELADA devido a erro de quantidade: "
+                        f"{e.error_type} - {e}"
+                    )
+                    
+                    # Criar mensagem detalhada para o erro
+                    sugestoes_texto = ""
+                    if e.suggestions:
+                        sugestoes_texto = f" Sugestões: {'; '.join(e.suggestions[:3])}"
+                    
+                    # 🔥 LANÇAR EXCEÇÃO ESPECÍFICA PARA O PEDIDO TRATAR
+                    raise RuntimeError(
+                        f"Atividade {self.id_atividade} ({self.nome_atividade}) não pode ser executada. "
+                        f"Erro de quantidade: {e.error_type} - {e}.{sugestoes_texto}"
+                    ) from e
+                    
+                except IntraActivityTimingError as e:
+                    # ⏰ ERRO DE TEMPO INTRA-ATIVIDADE - CANCELAR IMEDIATAMENTE
+                    logger.error(
+                        f"⏰ ATIVIDADE {self.id_atividade} CANCELADA devido a erro de tempo intra-atividade: "
+                        f"{e.error_type} - {e}"
+                    )
+                    
+                    # Criar mensagem detalhada para o erro
+                    sugestoes_texto = ""
+                    if e.suggestions:
+                        sugestoes_texto = f" Sugestões: {'; '.join(e.suggestions[:3])}"
+                    
+                    # 🔥 LANÇAR EXCEÇÃO ESPECÍFICA PARA O PEDIDO TRATAR
+                    raise RuntimeError(
+                        f"Atividade {self.id_atividade} ({self.nome_atividade}) não pode ser executada. "
+                        f"Erro de tempo entre equipamentos: {e.error_type} - {e}.{sugestoes_texto}"
+                    ) from e
 
-        # Se chegou aqui, esgotou toda a janela temporal disponível
-        tempo_total_tentado = fim_jornada - inicio_jornada
-        logger.error(
-            f"🛑 Janela temporal completamente esgotada após {tentativas:,} tentativas. "
-            f"Impossível alocar atividade {self.id_atividade}"
-        )
-        
-        # Diagnóstico detalhado
-        logger.error(f"📊 DIAGNÓSTICO DETALHADO DA FALHA:")
-        logger.error(f"   🆔 Atividade: {self.id_atividade} ({self.nome_atividade})")
-        logger.error(f"   ⏱️ Duração necessária: {self.duracao}")
-        logger.error(f"   📅 Janela disponível: {tempo_total_tentado}")
-        logger.error(f"   🕐 Período: {inicio_jornada.strftime('%d/%m %H:%M')} → {fim_jornada.strftime('%d/%m %H:%M')}")
-        
-        if tem_fim_obrigatorio:
-            logger.error(f"   ⚠️ RESTRIÇÃO CRÍTICA: Atividade DEVE terminar EXATAMENTE às {self.fim_obrigatorio.strftime('%H:%M')}")
-            logger.error(f"   📍 Isso significa que deve começar às {(self.fim_obrigatorio - self.duracao).strftime('%H:%M')}")
-        
-        return False, None, None, self.tempo_maximo_de_espera, []
+            # Se chegou aqui, esgotou toda a janela temporal disponível
+            tempo_total_tentado = fim_jornada - inicio_jornada
+            logger.error(
+                f"🛑 Janela temporal completamente esgotada após {tentativas:,} tentativas. "
+                f"Impossível alocar atividade {self.id_atividade}"
+            )
+            
+            # Diagnóstico detalhado
+            logger.error(f"📊 DIAGNÓSTICO DETALHADO DA FALHA:")
+            logger.error(f"   🆔 Atividade: {self.id_atividade} ({self.nome_atividade})")
+            logger.error(f"   ⏱️ Duração necessária: {self.duracao}")
+            logger.error(f"   📅 Janela disponível: {tempo_total_tentado}")
+            logger.error(f"   🕐 Período: {inicio_jornada.strftime('%d/%m %H:%M')} → {fim_jornada.strftime('%d/%m %H:%M')}")
+            
+            if tem_fim_obrigatorio:
+                logger.error(f"   ⚠️ RESTRIÇÃO CRÍTICA: Atividade DEVE terminar EXATAMENTE às {self.fim_obrigatorio.strftime('%H:%M')}")
+                logger.error(f"   📍 Isso significa que deve começar às {(self.fim_obrigatorio - self.duracao).strftime('%H:%M')}")
+            
+            return False, None, None, self.tempo_maximo_de_espera, []
+            
+        except (QuantityError, IntraActivityTimingError):
+            # Re-lançar exceções específicas
+            raise
 
     def _tentar_alocacao_no_horario(self, horario_final: datetime):
-        """Tenta alocar todos os equipamentos necessários em um horário específico"""
+        """
+        ✅ VERSÃO ATUALIZADA: Tenta alocar todos os equipamentos necessários em um horário específico.
+        Trata exceções de quantidade E tempo intra-atividade de forma genérica e centralizada.
+        """
         equipamentos_alocados = []
         horario_fim_etapa = horario_final
 
@@ -528,29 +581,55 @@ class AtividadeModular:
             for tipo_eqp, qtd in reversed(list(self._quantidade_por_tipo_equipamento.items())):
                 logger.debug(f"🔧 Tentando alocar {tipo_eqp.name} para {horario_fim_etapa.strftime('%H:%M')}")
                 
-                resultado_alocacao = self._alocar_tipo_equipamento(tipo_eqp, horario_fim_etapa)
-                
-                if not resultado_alocacao[0] or resultado_alocacao[1] is None:
-                    logger.debug(f"❌ Falha na alocação de {tipo_eqp.name}")
-                    return False, equipamentos_alocados
-                
-                equipamentos_alocados.append(resultado_alocacao)
-                horario_fim_etapa = resultado_alocacao[2]  # Usar início desta etapa como fim da próxima
+                try:
+                    resultado_alocacao = self._alocar_tipo_equipamento(tipo_eqp, horario_fim_etapa)
+                    
+                    if not resultado_alocacao[0] or resultado_alocacao[1] is None:
+                        logger.debug(f"❌ Falha na alocação de {tipo_eqp.name}")
+                        return False, equipamentos_alocados
+                    
+                    equipamentos_alocados.append(resultado_alocacao)
+                    horario_fim_etapa = resultado_alocacao[2]  # Usar início desta etapa como fim da próxima
+                    
+                except QuantityError as e:
+                    # 🚫 ERRO DE QUANTIDADE - CANCELAR IMEDIATAMENTE SEM CONTINUAR
+                    logger.error(
+                        f"🚫 Cancelando alocação da atividade {self.id_atividade} "
+                        f"devido a erro de quantidade em {tipo_eqp.name}: {e.error_type}"
+                    )
+                    
+                    # 🔥 LANÇAR EXCEÇÃO PARA CANCELAR TODA A ATIVIDADE
+                    raise e
 
-            # Verificar sequenciamento
-            if not self._verificar_sequenciamento(equipamentos_alocados):
-                logger.debug("❌ Falha no sequenciamento dos equipamentos")
-                return False, equipamentos_alocados
+            # Verificar sequenciamento (agora com detecção de erros intra-atividade)
+            try:
+                if not self._verificar_sequenciamento(equipamentos_alocados):
+                    logger.debug("❌ Falha no sequenciamento dos equipamentos")
+                    return False, equipamentos_alocados
+            except IntraActivityTimingError as e:
+                # ⏰ ERRO DE TEMPO INTRA-ATIVIDADE
+                logger.error(
+                    f"⏰ Erro de tempo intra-atividade detectado: {e.error_type}"
+                )
+                # Re-lançar para tratamento no nível superior
+                raise e
 
             logger.debug("✅ Todos os equipamentos alocados com sucesso")
             return True, equipamentos_alocados
+            
+        except (QuantityError, IntraActivityTimingError):
+            # Re-lançar exceções específicas para cancelar atividade
+            raise
             
         except Exception as e:
             logger.error(f"❌ Erro durante tentativa de alocação: {e}")
             return False, equipamentos_alocados
 
     def _alocar_tipo_equipamento(self, tipo_eqp: TipoEquipamento, horario_fim_etapa: datetime):
-        """Aloca um tipo específico de equipamento com tratamento robusto de erros"""
+        """
+        Aloca um tipo específico de equipamento com tratamento robusto de erros de quantidade.
+        Agora trata exceções específicas de quantidade de forma genérica.
+        """
         try:
             equipamentos = [
                 eqp for eqp in self.equipamentos_elegiveis 
@@ -589,8 +668,17 @@ class AtividadeModular:
             
             return resultado
             
+        except QuantityError as e:
+            # 🚫 ERRO ESPECÍFICO DE QUANTIDADE - REGISTRAR E RE-LANÇAR
+            logger.error(
+                f"🚫 ERRO DE QUANTIDADE para {tipo_eqp.name}: {e.error_type} - {e}"
+            )
+            
+            # 🔥 LANÇAR EXCEÇÃO PARA CANCELAR TODA A TENTATIVA DE ALOCAÇÃO
+            raise e
+            
         except Exception as e:
-            logger.error(f"❌ Erro ao alocar {tipo_eqp.name}: {e}")
+            logger.error(f"❌ Erro genérico ao alocar {tipo_eqp.name}: {e}")
             traceback.print_exc()
             return (False, None, None, None)
 
@@ -610,7 +698,10 @@ class AtividadeModular:
             return {}
 
     def _verificar_sequenciamento(self, equipamentos_alocados):
-        """Verifica se os equipamentos estão sequenciados corretamente com logs detalhados"""
+        """
+        ✅ VERSÃO ATUALIZADA: Verifica se os equipamentos estão sequenciados corretamente 
+        com logs detalhados E sistema de logging de tempo intra-atividade.
+        """
         try:
             if len(equipamentos_alocados) <= 1:
                 return True
@@ -620,20 +711,71 @@ class AtividadeModular:
             for i in range(1, len(equipamentos_ordenados)):
                 fim_anterior = equipamentos_ordenados[i - 1][3]
                 inicio_atual = equipamentos_ordenados[i][2]
+                nome_anterior = getattr(equipamentos_ordenados[i - 1][1], 'nome', 'Equipamento Desconhecido')
+                nome_atual = getattr(equipamentos_ordenados[i][1], 'nome', 'Equipamento Desconhecido')
 
                 if fim_anterior != inicio_atual:
                     gap = abs((fim_anterior - inicio_atual).total_seconds())
+                    atraso = inicio_atual - fim_anterior
                     
                     logger.warning(
                         f"🔁 Equipamentos da atividade {self.id_atividade} não estão sequenciados. "
-                        f"Gap de {gap}s entre '{equipamentos_ordenados[i - 1][1].nome}' "
+                        f"Gap de {gap}s entre '{nome_anterior}' "
                         f"({fim_anterior.strftime('%H:%M:%S')}) e "
-                        f"'{equipamentos_ordenados[i][1].nome}' ({inicio_atual.strftime('%H:%M:%S')})"
+                        f"'{nome_atual}' ({inicio_atual.strftime('%H:%M:%S')})"
                     )
+                    
+                    # ✅ VERIFICAR SE É UM ERRO DE TEMPO MÁXIMO DE ESPERA INTRA-ATIVIDADE
+                    if hasattr(self, 'tempo_maximo_de_espera') and self.tempo_maximo_de_espera is not None:
+                        if atraso > self.tempo_maximo_de_espera:
+                            logger.error(
+                                f"⏰ ERRO DE TEMPO INTRA-ATIVIDADE: Gap de {atraso} excede "
+                                f"tempo máximo de espera ({self.tempo_maximo_de_espera}) na atividade {self.id_atividade}"
+                            )
+                            
+                            # ✅ REGISTRAR NO SISTEMA DE LOGS DE TEMPO INTRA-ATIVIDADE
+                            try:
+                                log_intra_activity_timing_error(
+                                    id_ordem=self.id_ordem,
+                                    id_pedido=self.id_pedido,
+                                    activity_id=self.id_atividade,
+                                    activity_name=self.nome_atividade,
+                                    current_equipment=nome_anterior,
+                                    successor_equipment=nome_atual,
+                                    current_end_time=fim_anterior,
+                                    successor_start_time=inicio_atual,
+                                    maximum_wait_time=self.tempo_maximo_de_espera
+                                )
+                                
+                                logger.info(
+                                    f"📝 Erro de tempo intra-atividade registrado no sistema de logs: "
+                                    f"TEMPO_MAXIMO_ESPERA_INTRA_ATIVIDADE"
+                                )
+                                
+                            except Exception as log_err:
+                                logger.warning(f"⚠️ Falha ao registrar log intra-atividade: {log_err}")
+                            
+                            # ✅ LANÇAR EXCEÇÃO PARA CANCELAR A ATIVIDADE
+                            raise IntraActivityTimingError(
+                                activity_id=self.id_atividade,
+                                activity_name=self.nome_atividade,
+                                current_equipment=nome_anterior,
+                                successor_equipment=nome_atual,
+                                current_end_time=fim_anterior,
+                                successor_start_time=inicio_atual,
+                                maximum_wait_time=self.tempo_maximo_de_espera,
+                                actual_delay=atraso
+                            )
+                    
+                    # Se não há restrição de tempo máximo ou está dentro do limite, só avisar
                     return False
-            
+                
             logger.debug("✅ Sequenciamento dos equipamentos validado")
             return True
+            
+        except IntraActivityTimingError:
+            # Re-lançar exceção de timing para tratamento superior
+            raise
             
         except Exception as e:
             logger.error(f"❌ Erro na verificação de sequenciamento: {e}")
@@ -798,49 +940,6 @@ class AtividadeModular:
     
     def _alocar_embaladora(self, gestor, inicio, fim, **kwargs): 
         return gestor.alocar(inicio, fim, self, self.quantidade)
-
-    # =============================================================================
-    #                     VERIFICAÇÃO DE TEMPO MÁXIMO DE ESPERA - CORRIGIDA
-    # =============================================================================
-
-    def _verificar_tempo_maximo_espera(
-        self, 
-        atividade_atual: "AtividadeModular", 
-        atividade_sucessora: "AtividadeModular",
-        fim_atual: datetime, 
-        inicio_prox_atividade: datetime
-    ):
-        """
-        ✅ CORREÇÃO DO BUG: Verifica se o tempo de espera entre atividades não excede o limite máximo.
-        Agora valida corretamente tempo_maximo_de_espera = timedelta(0)
-        """
-        # ✅ VERIFICAÇÃO CORRIGIDA: Verificar se o atributo existe e não é None
-        if not hasattr(atividade_sucessora, 'tempo_maximo_de_espera') or atividade_sucessora.tempo_maximo_de_espera is None:
-            logger.debug("ℹ️ Atividade sucessora não possui tempo máximo de espera definido")
-            return
-        
-        tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
-        atraso = inicio_prox_atividade - fim_atual
-
-        logger.debug(
-            f"⏱️ Verificação de tempo entre atividades:\n"
-            f"   Atual: {atividade_atual.id_atividade} (fim: {fim_atual.strftime('%H:%M:%S')})\n"
-            f"   Sucessora: {atividade_sucessora.id_atividade} (início: {inicio_prox_atividade.strftime('%H:%M:%S')})\n"
-            f"   Atraso: {atraso} | Máximo permitido: {tempo_max_espera}"
-        )
-
-        # ✅ VALIDAÇÃO RIGOROSA: Agora funciona corretamente para tempo_max_espera = timedelta(0)
-        if atraso > tempo_max_espera:
-            raise RuntimeError(
-                f"❌ Tempo máximo de espera excedido entre atividades:\n"
-                f"   Atividade atual: {atividade_atual.id_atividade} ({atividade_atual.nome_atividade})\n"
-                f"   Atividade sucessora: {atividade_sucessora.id_atividade} ({atividade_sucessora.nome_atividade})\n"
-                f"   Atraso detectado: {atraso}\n"
-                f"   Máximo permitido: {tempo_max_espera}\n"
-                f"   Excesso: {atraso - tempo_max_espera}"
-            )
-        else:
-            logger.debug(f"✅ Tempo de espera dentro do limite permitido")
 
     # =============================================================================
     #                           UTILITÁRIOS

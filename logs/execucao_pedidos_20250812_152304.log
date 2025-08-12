@@ -1,0 +1,167 @@
+================================================================================
+LOG DE EXECUÇÃO - SISTEMA DE PRODUÇÃO PADARIA
+Data/Hora: 12/08/2025 15:23:04
+================================================================================
+
+🥖 INICIANDO SISTEMA DE PRODUÇÃO DA PADARIA
+📅 Total de 16 pedidos programados
+
+🔄 Carregando itens do almoxarifado...
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_1.json
+✅ Total de comandas removidas: 1
+🗑️ Log removido: logs/equipamentos/ordem: 1 | pedido: 1.log
+📊 Pasta logs/equipamentos: 1 logs + 0 JSONs removidos
+✅ Limpeza de logs concluída!
+✅ Almoxarifado carregado com sucesso!
+
+🔄 Criando pedidos de produção da padaria...
+   Processando pedido 1: Pão Trança de Queijo finos - 60 unidades...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1005
+🧭 DEBUG: Explorando ID 1005
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_pao_tranca_de_queijos_finos.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1005_pao_tranca_de_queijos_finos.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1005
+📊 DEBUG: Número de atividades: 7
+✅ DEBUG: Item 1005 carregado: pao_tranca_de_queijo_finos
+🔍 DEBUG: Processando 7 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 6: 0 tipos profissionais - []
+   Atividade 7: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_PADEIRO
+   📋 PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_PADEIRO
+   📋 PADEIRO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2010
+🧭 DEBUG: Explorando ID 2010
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_creme_de_queijo.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2010_creme_de_queijo.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2010
+📊 DEBUG: Número de atividades: 4
+✅ DEBUG: Item 2010 carregado: creme_de_queijo
+🔍 DEBUG: Processando 4 atividades
+   Atividade 1: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 2: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 3: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 4: 1 tipos profissionais - ['ALMOXARIFE']
+   ✅ Adicionado: ALMOXARIFE
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 COZINHEIRO
+   📋 ALMOXARIFE
+   ✅ Pedido 1 criado: Pão Trança de Queijo finos (60 uni)
+      Início: 23/06/2025 07:00 | Fim: 26/06/2025 07:00
+
+✅ Total de 1 pedidos criados para a padaria!
+
+🔄 Ordenando pedidos por restrições...
+✅ 1 pedidos ordenados!
+
+🔄 Executando pedidos da padaria em ordem de prioridade...
+   Executando pedido 1/1 (ID: 1)...
+   📋 Pão Trança de Queijo finos - 60 unidades
+   ⏰ Prazo: 26/06/2025 07:00
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_1.json
+pao_tranca_de_queijo_finos (60UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+│   ├── massa_suave (15000.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (8912.66g)
+│   │   └── Gelo para alimentos (4901.96g)
+│   │   └── Sal refinado (89.13g)
+│   │   └── Fermento biológico seco (178.25g)
+│   │   └── Açúcar cristal (445.63g)
+│   │   └── Margarina com sal (445.63g)
+│   │   └── Aditivo em pasta (26.74g)
+│   ├── creme_de_queijo (13800.0GRAMAS)
+📦 Item: Queijo do reino | ID: 34 | Política: ESTOCADO
+📦 Item: Queijo gorgonzola | ID: 35 | Política: ESTOCADO
+📦 Item: Queijo prato | ID: 36 | Política: ESTOCADO
+📦 Item: Requeijão cremoso | ID: 37 | Política: ESTOCADO
+📦 Item: Pimenta rosa | ID: 38 | Política: ESTOCADO
+│   │   └── Queijo do reino (3622.05g)
+│   │   └── Queijo gorgonzola (3622.05g)
+│   │   └── Queijo prato (3622.05g)
+│   │   └── Requeijão cremoso (2897.64g)
+│   │   └── Pimenta rosa (36.22g)
+│   └── Queijo Parmesão (900.0g)
+│   └── Ovo de galinha (300.0g)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Creme de Queijo | ID: 2010 | Política: ESTOCADO
+📦 Item: Queijo Parmesão | ID: 50 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+📦 Item: Queijo do reino | ID: 34 | Política: ESTOCADO
+📦 Item: Queijo gorgonzola | ID: 35 | Política: ESTOCADO
+📦 Item: Queijo prato | ID: 36 | Política: ESTOCADO
+📦 Item: Requeijão cremoso | ID: 37 | Política: ESTOCADO
+📦 Item: Pimenta rosa | ID: 38 | Política: ESTOCADO
+Quantidade de unidades: 60, Unidades por nível: 20
+Quantidade de unidades: 60, Unidades por nível: 20
+   ✅ Pedido 1 (Pão Trança de Queijo finos) executado com sucesso!
+
+================================================================================
+🎉 EXECUÇÃO CONCLUÍDA COM SUCESSO!
+📄 Log salvo em: logs/execucao_pedidos_20250812_152304.log
+================================================================================

@@ -124,16 +124,16 @@ class TesteSistemaProducao:
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
             # Horário 07:00
-            {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
-            {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
-            {"produto": "Pão de Forma", "quantidade": 70, "hora_fim": 7},
-            {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 7},
-           # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 7},
+           # {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
+            #{"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
+            #{"produto": "Pão de Forma", "quantidade": 70, "hora_fim": 7},
+           # {"produto": "Pão Baguete", "quantidade": 40, "hora_fim": 7},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 60, "hora_fim": 7},
 
             # # # Horário 09:00
-            # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},
-            # {"produto": "Pão Baguete", "quantidade": 10, "hora_fim": 9},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 9},
+           # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},
+            #{"produto": "Pão Baguete", "quantidade": 50, "hora_fim": 9},
+           # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 9},
             
             # # # Horário 15:00
             # {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 15},
@@ -144,8 +144,8 @@ class TesteSistemaProducao:
             
             # # # Horário 17:00
             # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 17},
-            # {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 17},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 17},
+            # {"produto": "Pão Baguete", "quantidade": 50, "hora_fim": 17},
+            # {"produto": "Pão Trança de Queijo finos", "quantidade": 20, "hora_fim": 17},
         ]
         
         id_pedido_counter = 1
