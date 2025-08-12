@@ -1,0 +1,490 @@
+================================================================================
+LOG DE EXECUÇÃO - SISTEMA DE PRODUÇÃO PADARIA
+Data/Hora: 12/08/2025 08:29:20
+================================================================================
+
+🥖 INICIANDO SISTEMA DE PRODUÇÃO DA PADARIA
+📅 Total de 16 pedidos programados
+
+🔄 Carregando itens do almoxarifado...
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_1.json
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_2.json
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_3.json
+🗑️ Comanda removida: data/comandas/comanda_ordem_1_pedido_4.json
+✅ Total de comandas removidas: 4
+🗑️ Removido: logs/equipamentos/ordem: 1 | pedido: 4.log
+🗑️ Removido: logs/equipamentos/ordem: 1 | pedido: 2.log
+🗑️ Removido: logs/equipamentos/ordem: 1 | pedido: 3.log
+🗑️ Removido: logs/equipamentos/ordem: 1 | pedido: 1.log
+✅ Almoxarifado carregado com sucesso!
+
+🔄 Criando pedidos de produção da padaria...
+   Processando pedido 1: Pão Francês - 450 unidades...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1001
+🧭 DEBUG: Explorando ID 1001
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1001_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1001_pao_frances.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1001_pao_frances.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1001
+📊 DEBUG: Número de atividades: 8
+✅ DEBUG: Item 1001 carregado: pao_frances
+🔍 DEBUG: Processando 8 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 5: 0 tipos profissionais - []
+   Atividade 6: 1 tipos profissionais - ['PADEIRO']
+   ✅ Adicionado: PADEIRO
+   Atividade 7: 0 tipos profissionais - []
+   Atividade 8: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+📦 Item: Massa Crocante | ID: 2001 | Política: SOB_DEMANDA
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2001
+🧭 DEBUG: Explorando ID 2001
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2001_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2001_massa_crocante.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2001_massa_crocante.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2001
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2001 carregado: massa_crocante
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+   ✅ Pedido 1 criado: Pão Francês (450 uni)
+      Início: 23/06/2025 07:00 | Fim: 26/06/2025 07:00
+   Processando pedido 2: Pão Hambúrguer - 120 unidades...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1002
+🧭 DEBUG: Explorando ID 1002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1002_pao_hamburguer.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1002_pao_hamburguer.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1002
+📊 DEBUG: Número de atividades: 9
+✅ DEBUG: Item 1002 carregado: pao_hamburguer
+🔍 DEBUG: Processando 9 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 6: 0 tipos profissionais - []
+   Atividade 7: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 8: 0 tipos profissionais - []
+   Atividade 9: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+   ✅ Pedido 2 criado: Pão Hambúrguer (120 uni)
+      Início: 23/06/2025 07:00 | Fim: 26/06/2025 07:00
+   Processando pedido 3: Pão de Forma - 70 unidades...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1003
+🧭 DEBUG: Explorando ID 1003
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1003_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1003_pao_de_forma.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1003_pao_de_forma.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1003
+📊 DEBUG: Número de atividades: 9
+✅ DEBUG: Item 1003 carregado: pao_de_forma
+🔍 DEBUG: Processando 9 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 6: 0 tipos profissionais - []
+   Atividade 7: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 8: 0 tipos profissionais - []
+   Atividade 9: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+   ✅ Pedido 3 criado: Pão de Forma (70 uni)
+      Início: 23/06/2025 07:00 | Fim: 26/06/2025 07:00
+   Processando pedido 4: Pão Baguete - 20 unidades...
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1004
+🧭 DEBUG: Explorando ID 1004
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1004_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1004_pao_baguete.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1004_pao_baguete.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1004
+📊 DEBUG: Número de atividades: 8
+✅ DEBUG: Item 1004 carregado: pao_baguete
+🔍 DEBUG: Processando 8 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 2: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 3: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 4: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 5: 0 tipos profissionais - []
+   Atividade 6: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+   Atividade 7: 0 tipos profissionais - []
+   Atividade 8: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Gergelim Branco | ID: 50 | Política: ESTOCADO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2002
+🧭 DEBUG: Explorando ID 2002
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2002_massa_suave.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2002
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2002 carregado: massa_suave
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['PADEIRO', 'AUXILIAR_DE_PADEIRO']
+   ✅ Adicionado: PADEIRO
+   ✅ Adicionado: AUXILIAR_DE_PADEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 PADEIRO
+   📋 AUXILIAR_DE_PADEIRO
+   ✅ Pedido 4 criado: Pão Baguete (20 uni)
+      Início: 23/06/2025 07:00 | Fim: 26/06/2025 07:00
+
+✅ Total de 4 pedidos criados para a padaria!
+
+🔄 Ordenando pedidos por restrições...
+✅ 4 pedidos ordenados!
+
+🔄 Executando pedidos da padaria em ordem de prioridade...
+   Executando pedido 1/4 (ID: 1)...
+   📋 Pão Francês - 450 unidades
+   ⏰ Prazo: 26/06/2025 07:00
+📦 Item: Massa Crocante | ID: 2001 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_1.json
+pao_frances (450UNIDADES)
+📦 Item: Massa Crocante | ID: 2001 | Política: SOB_DEMANDA
+│   ├── massa_crocante (29250.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (17911.82g)
+│   │   └── Gelo para alimentos (10747.09g)
+│   │   └── Sal refinado (358.24g)
+│   │   └── Fermento biológico seco (179.12g)
+│   │   └── Aditivo em pasta (53.74g)
+📦 Item: Massa Crocante | ID: 2001 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+Quantidade de unidades: 450, Unidades por nível: 30
+Quantidade de unidades: 450, Unidades por nível: 30
+   ✅ Pedido 1 (Pão Francês) executado com sucesso!
+
+   Executando pedido 2/4 (ID: 2)...
+   📋 Pão Hambúrguer - 120 unidades
+   ⏰ Prazo: 26/06/2025 07:00
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_2.json
+pao_hamburger (120UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+│   ├── massa_suave (7800.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (4634.58g)
+│   │   └── Gelo para alimentos (2549.02g)
+│   │   └── Sal refinado (46.35g)
+│   │   └── Fermento biológico seco (92.69g)
+│   │   └── Açúcar cristal (231.73g)
+│   │   └── Margarina com sal (231.73g)
+│   │   └── Aditivo em pasta (13.9g)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+Quantidade de unidades: 120, Unidades por nível: 30
+   ✅ Pedido 2 (Pão Hambúrguer) executado com sucesso!
+
+   Executando pedido 3/4 (ID: 3)...
+   📋 Pão de Forma - 70 unidades
+   ⏰ Prazo: 26/06/2025 07:00
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_3.json
+pao_de_forma (70UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+│   ├── massa_suave (4550.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (2703.51g)
+│   │   └── Gelo para alimentos (1486.93g)
+│   │   └── Sal refinado (27.04g)
+│   │   └── Fermento biológico seco (54.07g)
+│   │   └── Açúcar cristal (135.18g)
+│   │   └── Margarina com sal (135.18g)
+│   │   └── Aditivo em pasta (8.11g)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+Quantidade de unidades: 70, Unidades por nível: 30
+Quantidade de unidades: 70, Unidades por nível: 30
+   ✅ Pedido 3 (Pão de Forma) executado com sucesso!
+
+   Executando pedido 4/4 (ID: 4)...
+   📋 Pão Baguete - 20 unidades
+   ⏰ Prazo: 26/06/2025 07:00
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Gergelim Branco | ID: 50 | Política: ESTOCADO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_4.json
+pao_baguete (20UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Gergelim Branco | ID: 50 | Política: ESTOCADO
+│   ├── massa_suave (1295.72GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (769.89g)
+│   │   └── Gelo para alimentos (423.44g)
+│   │   └── Sal refinado (7.7g)
+│   │   └── Fermento biológico seco (15.4g)
+│   │   └── Açúcar cristal (38.49g)
+│   │   └── Margarina com sal (38.49g)
+│   │   └── Aditivo em pasta (2.31g)
+│   └── Gergelim Branco (4.28g)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Gergelim Branco | ID: 50 | Política: ESTOCADO
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+Quantidade de unidades: 20, Unidades por nível: 24
+Quantidade de unidades: 20, Unidades por nível: 24
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b439e0>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b439e0>
+🔄 Liberando Armário Fermentador 3 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.forno.Forno object at 0x106b43860>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.forno.Forno'> | Valor: <models.equipamentos.forno.Forno object at 0x106b43860>
+🔄 Liberando Forno 2 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b434d0>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b434d0>
+🔄 Liberando Bancada 2 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b43980>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b43980>
+🔄 Liberando Armário Fermentador 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+🔄 Liberando Bancada 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>, <models.equipamentos.modeladora_de_paes.ModeladoraDePaes object at 0x106b43a70>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+  [1] Tipo: <class 'models.equipamentos.modeladora_de_paes.ModeladoraDePaes'> | Valor: <models.equipamentos.modeladora_de_paes.ModeladoraDePaes object at 0x106b43a70>
+🔄 Liberando Bancada 1 
+🔄 Liberando Modeladora de Pães 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>, <models.equipamentos.divisora_de_massas.DivisoraDeMassas object at 0x106b43a40>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+  [1] Tipo: <class 'models.equipamentos.divisora_de_massas.DivisoraDeMassas'> | Valor: <models.equipamentos.divisora_de_massas.DivisoraDeMassas object at 0x106b43a40>
+🔄 Liberando Bancada 1 
+🔄 Liberando Divisoras de Massas 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>, <models.equipamentos.balanca_digital.BalancaDigital object at 0x106b433e0>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+  [1] Tipo: <class 'models.equipamentos.balanca_digital.BalancaDigital'> | Valor: <models.equipamentos.balanca_digital.BalancaDigital object at 0x106b433e0>
+🔄 Liberando Bancada 1 
+🔄 Liberando Balança Digital 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>, <models.equipamentos.balanca_digital.BalancaDigital object at 0x106b433e0>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+  [1] Tipo: <class 'models.equipamentos.balanca_digital.BalancaDigital'> | Valor: <models.equipamentos.balanca_digital.BalancaDigital object at 0x106b433e0>
+🔄 Liberando Bancada 1 
+🔄 Liberando Balança Digital 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>, <models.equipamentos.divisora_de_massas.DivisoraDeMassas object at 0x106b43a40>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+  [1] Tipo: <class 'models.equipamentos.divisora_de_massas.DivisoraDeMassas'> | Valor: <models.equipamentos.divisora_de_massas.DivisoraDeMassas object at 0x106b43a40>
+🔄 Liberando Bancada 1 
+🔄 Liberando Divisoras de Massas 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>, <models.equipamentos.modeladora_de_paes.ModeladoraDePaes object at 0x106b43a70>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+  [1] Tipo: <class 'models.equipamentos.modeladora_de_paes.ModeladoraDePaes'> | Valor: <models.equipamentos.modeladora_de_paes.ModeladoraDePaes object at 0x106b43a70>
+🔄 Liberando Bancada 1 
+🔄 Liberando Modeladora de Pães 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b43470>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b43470>
+🔄 Liberando Bancada 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b43980>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b43980>
+🔄 Liberando Armário Fermentador 1 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.bancada.Bancada object at 0x106b434d0>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.bancada.Bancada'> | Valor: <models.equipamentos.bancada.Bancada object at 0x106b434d0>
+🔄 Liberando Bancada 2 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.forno.Forno object at 0x106b43860>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.forno.Forno'> | Valor: <models.equipamentos.forno.Forno object at 0x106b43860>
+🔄 Liberando Forno 2 
+🔍 DEBUG - equipamentos_alocados RECEBIDO:
+[<models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b439e0>]
+🔍 DEBUG - EQUIPAMENTOS EXTRAÍDOS:
+  [0] Tipo: <class 'models.equipamentos.armario_fermentador.ArmarioFermentador'> | Valor: <models.equipamentos.armario_fermentador.ArmarioFermentador object at 0x106b439e0>
+🔄 Liberando Armário Fermentador 3 
+🗑️ Apagado: logs/equipamentos/ordem: 1 | pedido: 4.log
+   ⚠️ Falha ao processar o pedido 4 (Pão Baguete): ❌ FALHA CRÍTICA DE SUBPRODUTO: Erro na atividade SUBPRODUTO 20021: ❌ FALHA CRÍTICA DE DEPENDÊNCIA: Atividade SUBPRODUTO 20021 (mistura_de_massas_suaves) é ESSENCIAL para o pedido mas falhou durante execução. Motivo provável: quantidade abaixo do mínimo de equipamento, conflito de recursos ou restrições técnicas. Como o PRODUTO já foi parcialmente executado, isso gera um estado inválido. CANCELANDO pedido completo e fazendo rollback de 8 atividade(s) já executada(s).. Como 8 atividade(s) do PRODUTO já foram executadas, isso gera estado inválido. CANCELANDO pedido completo.
+
+================================================================================
+🎉 EXECUÇÃO CONCLUÍDA COM SUCESSO!
+📄 Log salvo em: logs/execucao_pedidos_20250812_082920.log
+================================================================================

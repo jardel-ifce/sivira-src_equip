@@ -315,7 +315,8 @@
       },
       "configuracoes_equipamentos": {
         "embaladora_1": { 
-          "tipo_embalagem": ["SIMPLES", "SELADORA"]
+          "tipo_embalagem": ["SIMPLES", "SELADORA"],
+          "capacidade_gramas": 500
         }
       },
       "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],

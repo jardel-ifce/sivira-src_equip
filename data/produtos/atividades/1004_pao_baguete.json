@@ -52,18 +52,27 @@
       "nome": "divisao_de_massas_para_pao_baguete",
       "tipo_atividade": "DIVISAO_DE_MASSAS_PARA_PAO_BAGUETE",
       "tipo_equipamento": {
-        "DIVISORAS": 1,
+        "DIVISORAS_BOLEADORAS": 1,
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["divisora_1", "bancada_1", "bancada_2", "bancada_3"],
+      "equipamentos_elegiveis": ["divisora_de_massas_1", "divisora_de_massas_2", "bancada_1", "bancada_2", "bancada_3"],
       "tempo_maximo_de_espera": "00:00:00",
       "fips_equipamentos": { 
-        "divisora_1": 1, 
+        "divisora_de_massas_1": 1, 
+        "divisora_de_massas_2": 2,
         "bancada_1": 1,
         "bancada_2": 2,
         "bancada_3": 3
       },
       "configuracoes_equipamentos": {
+        "divisora_de_massas_1": {
+          "capacidade_gramas": 1950,
+          "boleadora": "True"
+        },
+        "divisora_de_massas_2": {
+          "capacidade_gramas": 1950,
+          "boleadora": "True"
+        },
         "bancada_1": { 
           "fracoes_necessarias": 2, 
           "numero_operadores": 2 
@@ -186,7 +195,20 @@
         "armario_fermentador_3": 1,
         "armario_fermentador_4": 1
       },
-      "configuracoes_equipamentos": {},
+      "configuracoes_equipamentos": {
+        "armario_fermentador_1": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_2": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_3": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_4": { 
+          "unidades_por_nivel": 5
+        }
+      },
       "tipos_profissionais_permitidos": [],
       "fips_profissionais_permitidos": {},
       "quantidade_funcionarios": 0,
@@ -287,7 +309,20 @@
         "armario_fermentador_3": 1,
         "armario_fermentador_4": 1
       },
-      "configuracoes_equipamentos": {},
+      "configuracoes_equipamentos": {
+        "armario_fermentador_1": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_2": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_3": { 
+          "unidades_por_nivel": 5
+        },
+        "armario_fermentador_4": { 
+          "unidades_por_nivel": 5
+        }
+      },
       "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
       "fips_profissionais_permitidos": { 
         "PADEIRO": 2,

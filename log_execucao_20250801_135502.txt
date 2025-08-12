@@ -1,9 +1,0 @@
-🐛 === MODO DEBUG ATIVADO ===
-
-💥 ERRO CRÍTICO na execução principal: name 'main' is not defined
-📋 Stack trace completo:
-Traceback (most recent call last):
-  File "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/teste_ordem_de_producao.py", line 295, in executar_com_debug
-    main()
-    ^^^^
-NameError: name 'main' is not defined. Did you mean: 'min'?

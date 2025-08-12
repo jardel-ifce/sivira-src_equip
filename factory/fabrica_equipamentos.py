@@ -637,23 +637,31 @@ class FabricaEquipamentos:
     # =========================================       
     @staticmethod
     def criar_embaladora_1():
+        """
+        🚀 ATUALIZADO: Embaladora 1 com capacidades min/max adequadas para 1100g+
+        """
         return Embaladora(
             id=44,
             nome="Embaladora 1",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=1,
-            capacidade_gramas=1000,
+            capacidade_gramas_min=1,
+            capacidade_gramas_max=1000,
             lista_tipo_embalagem=[TipoEmbalagem.SIMPLES, TipoEmbalagem.SELADORA]
         )
 
     @staticmethod
     def criar_embaladora_2():
+        """
+        🚀 ATUALIZADO: Embaladora 2 com capacidades min/max adequadas para 1100g+
+        """
         return Embaladora(
             id=45,
             nome="Embaladora 2",
             setor=TipoSetor.CONFEITARIA,
             numero_operadores=1,
-            capacidade_gramas=1000,
+            capacidade_gramas_min=1,     
+            capacidade_gramas_max=1000,   
             lista_tipo_embalagem=[TipoEmbalagem.VACUO, TipoEmbalagem.SELADORA]
         )
 

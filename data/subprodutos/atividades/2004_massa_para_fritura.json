@@ -37,7 +37,7 @@
       "faixas": [
         { "quantidade_min": 2000, "quantidade_max": 10000, "duracao": "00:12:00" },
         { "quantidade_min": 10001, "quantidade_max": 20000, "duracao": "00:16:00" },
-        { "quantidade_min": 20001, "quantidade_max": 30000, "duracao": "00:20:00" }
+        { "quantidade_min": 20001, "quantidade_max": 35000, "duracao": "00:20:00" }
       ]
     }
   ]

@@ -56,13 +56,17 @@
       "configuracoes_equipamentos": {
         "forno_3": {
           "faixa_temperatura": 180,
-          "tipo_coccao": ["LASTRO"],
-          "vaporizacao": 3       
+            "tipo_coccao": ["LASTRO"],
+            "vaporizacao": 3,
+            "velocidade_mps": 2,
+            "gramas_por_nivel": 1000     
         },
         "forno_4": {
           "faixa_temperatura": 180,
-          "tipo_coccao": ["LASTRO"],  
-          "velocidade_mps": 2
+            "tipo_coccao": ["LASTRO"],  
+            "vaporizacao": 3,
+            "velocidade_mps": 2,
+            "gramas_por_nivel": 1000
         }
       },
       "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],

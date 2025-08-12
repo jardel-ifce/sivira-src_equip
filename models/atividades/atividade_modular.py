@@ -79,26 +79,36 @@ class AtividadeModular:
         try:
             if not dados_atividade:
                 dados_gerais, dados_atividade = buscar_dados_por_id_atividade(self.id_atividade, self.tipo_item)
+                # ✅ CORREÇÃO: Usar o nome real da atividade do JSON
                 self.nome_atividade = dados_gerais.get("nome_atividade", f"Atividade {self.id_atividade}")
                 self.nome_item = dados_gerais.get("nome_item", "item_desconhecido")
                 logger.debug(f"📋 Dados carregados do JSON para atividade {self.id_atividade}")
             else:
+                # ✅ CORREÇÃO: Quando dados são fornecidos, ainda precisamos buscar o nome da atividade
+                # Se não temos dados_gerais, precisamos buscá-los para obter o nome correto
+                dados_gerais, _ = buscar_dados_por_id_atividade(self.id_atividade, self.tipo_item)
+                self.nome_atividade = dados_gerais.get("nome_atividade", f"Atividade {self.id_atividade}")
+                
                 # Usar nome fornecido ou carregar dos dados gerais
                 if nome_item_fornecido:
                     self.nome_item = nome_item_fornecido
                     logger.debug(f"📋 Nome do item fornecido diretamente: {self.nome_item}")
                 else:
-                    # Fallback: carregar apenas dados gerais para obter o nome
-                    dados_gerais, _ = buscar_dados_por_id_atividade(self.id_atividade, self.tipo_item)
                     self.nome_item = dados_gerais.get("nome_item", "item_desconhecido")
                     logger.debug(f"📋 Nome do item carregado do JSON: {self.nome_item}")
-                
-                self.nome_atividade = f"Atividade {self.id_atividade}"
             
             self.dados_atividade = dados_atividade
             
+            # ✅ LOG MELHORADO: Mostrar o nome real carregado
+            logger.info(
+                f"📋 Atividade {self.id_atividade} configurada: '{self.nome_atividade}' "
+                f"para item '{self.nome_item}'"
+            )
+            
         except Exception as e:
             logger.error(f"❌ Erro ao carregar dados da atividade {self.id_atividade}: {e}")
+            # ✅ FALLBACK: Se houver erro, usar nome genérico
+            self.nome_atividade = f"Atividade {self.id_atividade}"
             raise
 
     def _configurar_funcionarios(self, funcionarios_elegiveis):
@@ -360,6 +370,14 @@ class AtividadeModular:
         """
         logger.info(f"🔄 Iniciando alocação da atividade {self.id_atividade} ({self.nome_atividade})")
         
+        # ✅ VERIFICAÇÃO ESPECIAL: Se esta é a última atividade e tem fim_obrigatorio
+        if hasattr(self, 'fim_obrigatorio') and self.fim_obrigatorio:
+            logger.info(
+                f"⏰ Atividade {self.id_atividade} tem fim obrigatório às {self.fim_obrigatorio.strftime('%H:%M')}"
+            )
+            # Ajustar fim_jornada para o fim obrigatório
+            fim_jornada = self.fim_obrigatorio
+        
         try:
             # Caso especial: atividade sem equipamentos
             if not self._quantidade_por_tipo_equipamento:
@@ -400,16 +418,23 @@ class AtividadeModular:
             logger.error(f"❌ Erro na alocação de funcionários: {e}")
             raise
 
-   # =====================================================================================
-# PATCH PARA ATIVIDADE_MODULAR.PY
-# =====================================================================================
-# 
-# Substituir o método _alocar_equipamentos_e_funcionarios (linha ~470) por:
-
     def _alocar_equipamentos_e_funcionarios(self, inicio_jornada: datetime, fim_jornada: datetime):
         """Aloca equipamentos e funcionários seguindo o algoritmo de retrocesso - VERSÃO CORRIGIDA"""
-        horario_final = fim_jornada
+        
+        # ✅ VERIFICAÇÃO: Se tem fim_obrigatorio, deve terminar exatamente nesse horário
+        tem_fim_obrigatorio = hasattr(self, 'fim_obrigatorio') and self.fim_obrigatorio
+        
+        if tem_fim_obrigatorio:
+            horario_final = self.fim_obrigatorio
+            logger.info(
+                f"🎯 Atividade {self.id_atividade} DEVE terminar às {self.fim_obrigatorio.strftime('%H:%M')} "
+                f"(tempo_maximo_de_espera = 0)"
+            )
+        else:
+            horario_final = fim_jornada
+        
         tentativas = 0
+        alocacao_exata_tentada = False
         
         # Calcular janela total para logs informativos
         janela_total = fim_jornada - inicio_jornada
@@ -419,12 +444,10 @@ class AtividadeModular:
             f"(janela: {janela_total})"
         )
         
-        # ✅ CORREÇÃO PRINCIPAL: Loop continua até esgotar janela temporal completa
-        # Remove limite artificial de max_tentativas baseado em minutos
         while horario_final - self.duracao >= inicio_jornada:
             tentativas += 1
             
-            # Log de progresso a cada hora de tentativas (para não poluir o log)
+            # Log de progresso a cada hora de tentativas
             if tentativas % 60 == 0:
                 tempo_restante = (horario_final - self.duracao - inicio_jornada)
                 horas_restantes = tempo_restante.total_seconds() / 3600
@@ -437,6 +460,35 @@ class AtividadeModular:
             sucesso, equipamentos_alocados = self._tentar_alocacao_no_horario(horario_final)
             
             if sucesso:
+                # ✅ VALIDAÇÃO ESPECIAL: Se tem fim_obrigatorio, verificar se atende
+                if tem_fim_obrigatorio:
+                    equipamentos_ordenados = sorted(equipamentos_alocados, key=lambda x: x[2])
+                    fim_real = equipamentos_ordenados[-1][3] if equipamentos_ordenados else horario_final
+                    
+                    if fim_real != self.fim_obrigatorio:
+                        # Esta alocação não atende a restrição de pontualidade
+                        diferenca = abs((fim_real - self.fim_obrigatorio).total_seconds())
+                        
+                        if not alocacao_exata_tentada and diferenca <= 60:  # Tolerância de 1 minuto
+                            logger.debug(
+                                f"⚠️ Alocação próxima mas não exata: terminaria às {fim_real.strftime('%H:%M')} "
+                                f"(diferença: {diferenca}s). Continuando busca..."
+                            )
+                        
+                        self._fazer_rollback_tentativa(equipamentos_alocados)
+                        horario_final -= timedelta(minutes=1)
+                        
+                        # Marcar que já tentamos a alocação exata
+                        if horario_final == self.fim_obrigatorio:
+                            alocacao_exata_tentada = True
+                        
+                        continue
+                    else:
+                        logger.info(
+                            f"✅ Alocação PONTUAL conseguida! Atividade terminará exatamente às "
+                            f"{fim_real.strftime('%H:%M')} conforme requerido"
+                        )
+                
                 logger.info(
                     f"✅ Alocação bem-sucedida na tentativa {tentativas:,} "
                     f"(horário: {horario_final.strftime('%H:%M')})"
@@ -454,23 +506,18 @@ class AtividadeModular:
             f"Impossível alocar atividade {self.id_atividade}"
         )
         
-        # Diagnóstico detalhado para depuração
+        # Diagnóstico detalhado
         logger.error(f"📊 DIAGNÓSTICO DETALHADO DA FALHA:")
         logger.error(f"   🆔 Atividade: {self.id_atividade} ({self.nome_atividade})")
         logger.error(f"   ⏱️ Duração necessária: {self.duracao}")
         logger.error(f"   📅 Janela disponível: {tempo_total_tentado}")
         logger.error(f"   🕐 Período: {inicio_jornada.strftime('%d/%m %H:%M')} → {fim_jornada.strftime('%d/%m %H:%M')}")
-        logger.error(f"   🚫 Último horário testado: {horario_final.strftime('%H:%M')}")
-        logger.error(f"   ✅ Horário mínimo para caber: {(inicio_jornada + self.duracao).strftime('%H:%M')}")
-        logger.error(f"   📊 Total de tentativas realizadas: {tentativas:,}")
         
-        # Verificar se o problema é de janela insuficiente
-        if tempo_total_tentado < self.duracao:
-            logger.error(f"   ⚠️ PROBLEMA: Janela menor que duração da atividade!")
-            logger.error(f"      Janela: {tempo_total_tentado} < Duração: {self.duracao}")
+        if tem_fim_obrigatorio:
+            logger.error(f"   ⚠️ RESTRIÇÃO CRÍTICA: Atividade DEVE terminar EXATAMENTE às {self.fim_obrigatorio.strftime('%H:%M')}")
+            logger.error(f"   📍 Isso significa que deve começar às {(self.fim_obrigatorio - self.duracao).strftime('%H:%M')}")
         
         return False, None, None, self.tempo_maximo_de_espera, []
-
 
     def _tentar_alocacao_no_horario(self, horario_final: datetime):
         """Tenta alocar todos os equipamentos necessários em um horário específico"""
@@ -751,6 +798,49 @@ class AtividadeModular:
     
     def _alocar_embaladora(self, gestor, inicio, fim, **kwargs): 
         return gestor.alocar(inicio, fim, self, self.quantidade)
+
+    # =============================================================================
+    #                     VERIFICAÇÃO DE TEMPO MÁXIMO DE ESPERA - CORRIGIDA
+    # =============================================================================
+
+    def _verificar_tempo_maximo_espera(
+        self, 
+        atividade_atual: "AtividadeModular", 
+        atividade_sucessora: "AtividadeModular",
+        fim_atual: datetime, 
+        inicio_prox_atividade: datetime
+    ):
+        """
+        ✅ CORREÇÃO DO BUG: Verifica se o tempo de espera entre atividades não excede o limite máximo.
+        Agora valida corretamente tempo_maximo_de_espera = timedelta(0)
+        """
+        # ✅ VERIFICAÇÃO CORRIGIDA: Verificar se o atributo existe e não é None
+        if not hasattr(atividade_sucessora, 'tempo_maximo_de_espera') or atividade_sucessora.tempo_maximo_de_espera is None:
+            logger.debug("ℹ️ Atividade sucessora não possui tempo máximo de espera definido")
+            return
+        
+        tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
+        atraso = inicio_prox_atividade - fim_atual
+
+        logger.debug(
+            f"⏱️ Verificação de tempo entre atividades:\n"
+            f"   Atual: {atividade_atual.id_atividade} (fim: {fim_atual.strftime('%H:%M:%S')})\n"
+            f"   Sucessora: {atividade_sucessora.id_atividade} (início: {inicio_prox_atividade.strftime('%H:%M:%S')})\n"
+            f"   Atraso: {atraso} | Máximo permitido: {tempo_max_espera}"
+        )
+
+        # ✅ VALIDAÇÃO RIGOROSA: Agora funciona corretamente para tempo_max_espera = timedelta(0)
+        if atraso > tempo_max_espera:
+            raise RuntimeError(
+                f"❌ Tempo máximo de espera excedido entre atividades:\n"
+                f"   Atividade atual: {atividade_atual.id_atividade} ({atividade_atual.nome_atividade})\n"
+                f"   Atividade sucessora: {atividade_sucessora.id_atividade} ({atividade_sucessora.nome_atividade})\n"
+                f"   Atraso detectado: {atraso}\n"
+                f"   Máximo permitido: {tempo_max_espera}\n"
+                f"   Excesso: {atraso - tempo_max_espera}"
+            )
+        else:
+            logger.debug(f"✅ Tempo de espera dentro do limite permitido")
 
     # =============================================================================
     #                           UTILITÁRIOS

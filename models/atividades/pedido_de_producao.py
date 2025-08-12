@@ -27,6 +27,7 @@ class PedidoDeProducao:
     """
     Classe principal para gerenciar um pedido de produção.
     Coordena a criação e execução de atividades modulares com verificação inteligente de estoque.
+    ✅ CORRIGIDO: Implementa cancelamento em cascata se atividades do PRODUTO falharem.
     """
     
     def __init__(
@@ -78,6 +79,12 @@ class PedidoDeProducao:
         #                           ALMOXARIFADO
         # =============================================================================
         self.gestor_almoxarifado = gestor_almoxarifado
+        
+        # =============================================================================
+        #                    CONTROLE DE EXECUÇÃO - NOVO
+        # =============================================================================
+        self.atividades_executadas = []  # Atividades já executadas com sucesso
+        self.pedido_cancelado = False   # Flag para indicar se pedido foi cancelado
         
         # Log de inicialização
         logger.info(
@@ -226,8 +233,8 @@ class PedidoDeProducao:
     def criar_atividades_modulares_necessarias(self):
         """
         Cria todas as atividades modulares necessárias baseadas na ficha técnica.
-        Inclui atividades do produto principal e dos subprodutos.
-        Verifica estoque antes de criar atividades para PRODUTOS e SUBPRODUTOS.
+        ✅ CORRIGIDO: Verifica se atividades do PRODUTO foram criadas com sucesso.
+        Se nenhuma atividade do PRODUTO for criada, cancela o pedido inteiro.
         """
         if not self.ficha_tecnica_modular:
             raise ValueError("Ficha técnica ainda não foi montada")
@@ -235,11 +242,89 @@ class PedidoDeProducao:
         logger.info(f"🔄 Criando atividades modulares para pedido {self.id_pedido}")
         
         self.atividades_modulares = []
+        
+        # ✅ NOVA LÓGICA: Separar contadores por tipo
+        atividades_produto_criadas = 0
+        atividades_subproduto_criadas = 0
+        
         self._criar_atividades_recursivas(self.ficha_tecnica_modular)
         
+        # ✅ CONTABILIZAR ATIVIDADES POR TIPO
+        for atividade in self.atividades_modulares:
+            if atividade.tipo_item == TipoItem.PRODUTO:
+                atividades_produto_criadas += 1
+            elif atividade.tipo_item == TipoItem.SUBPRODUTO:
+                atividades_subproduto_criadas += 1
+        
         logger.info(
-            f"✅ Total de atividades criadas para pedido {self.id_pedido}: {len(self.atividades_modulares)}"
+            f"📊 Atividades criadas para pedido {self.id_pedido}: "
+            f"PRODUTO: {atividades_produto_criadas}, SUBPRODUTO: {atividades_subproduto_criadas}, "
+            f"Total: {len(self.atividades_modulares)}"
         )
+        
+        # ✅ VALIDAÇÃO CRÍTICA: Se é um pedido de PRODUTO mas nenhuma atividade foi criada
+        if self.tipo_item == TipoItem.PRODUTO and atividades_produto_criadas == 0:
+            erro_msg = (
+                f"❌ FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: "
+                f"Pedido {self.id_pedido} é do tipo PRODUTO (ID {self.id_produto}) "
+                f"mas NENHUMA atividade do produto foi criada com sucesso. "
+                f"Isso indica incompatibilidade nas faixas de quantidade ou configuração. "
+                f"CANCELANDO pedido completo incluindo {atividades_subproduto_criadas} atividade(s) de subproduto."
+            )
+            logger.error(erro_msg)
+            
+            # ✅ LIMPAR ATIVIDADES DE SUBPRODUTO JÁ CRIADAS
+            self.atividades_modulares.clear()
+            
+            raise RuntimeError(erro_msg)
+
+    def criar_atividades_modulares_necessarias(self):
+        """
+        Cria todas as atividades modulares necessárias baseadas na ficha técnica.
+        ✅ CORRIGIDO: Verifica se atividades do PRODUTO foram criadas com sucesso.
+        Se nenhuma atividade do PRODUTO for criada, cancela o pedido inteiro.
+        """
+        if not self.ficha_tecnica_modular:
+            raise ValueError("Ficha técnica ainda não foi montada")
+
+        logger.info(f"🔄 Criando atividades modulares para pedido {self.id_pedido}")
+        
+        self.atividades_modulares = []
+        
+        # ✅ NOVA LÓGICA: Separar contadores por tipo
+        atividades_produto_criadas = 0
+        atividades_subproduto_criadas = 0
+        
+        self._criar_atividades_recursivas(self.ficha_tecnica_modular)
+        
+        # ✅ CONTABILIZAR ATIVIDADES POR TIPO
+        for atividade in self.atividades_modulares:
+            if atividade.tipo_item == TipoItem.PRODUTO:
+                atividades_produto_criadas += 1
+            elif atividade.tipo_item == TipoItem.SUBPRODUTO:
+                atividades_subproduto_criadas += 1
+        
+        logger.info(
+            f"📊 Atividades criadas para pedido {self.id_pedido}: "
+            f"PRODUTO: {atividades_produto_criadas}, SUBPRODUTO: {atividades_subproduto_criadas}, "
+            f"Total: {len(self.atividades_modulares)}"
+        )
+        
+        # ✅ VALIDAÇÃO CRÍTICA: Se é um pedido de PRODUTO mas nenhuma atividade foi criada
+        if self.tipo_item == TipoItem.PRODUTO and atividades_produto_criadas == 0:
+            erro_msg = (
+                f"❌ FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: "
+                f"Pedido {self.id_pedido} é do tipo PRODUTO (ID {self.id_produto}) "
+                f"mas NENHUMA atividade do produto foi criada com sucesso. "
+                f"Isso indica incompatibilidade nas faixas de quantidade ou configuração. "
+                f"CANCELANDO pedido completo incluindo {atividades_subproduto_criadas} atividade(s) de subproduto."
+            )
+            logger.error(erro_msg)
+            
+            # ✅ LIMPAR ATIVIDADES DE SUBPRODUTO JÁ CRIADAS
+            self.atividades_modulares.clear()
+            
+            raise RuntimeError(erro_msg)
 
     def _criar_atividades_recursivas(self, ficha_modular: FichaTecnicaModular):
         """
@@ -355,13 +440,13 @@ class PedidoDeProducao:
             logger.error(f"❌ Erro ao processar subprodutos: {e}")
 
     # =============================================================================
-    #                        EXECUÇÃO DAS ATIVIDADES
+    #                        EXECUÇÃO DAS ATIVIDADES - CORRIGIDA
     # =============================================================================
 
     def executar_atividades_em_ordem(self):
         """
-        Executa todas as atividades em ordem de dependência.
-        Primeiro executa atividades do produto principal, depois dos subprodutos.
+        ✅ CORREÇÃO PRINCIPAL: Executa todas as atividades em ordem de dependência.
+        Se qualquer atividade do PRODUTO falhar, cancela o pedido inteiro incluindo SUBPRODUTOS.
         """
         total_atividades = len(self.atividades_modulares)
         logger.info(
@@ -373,21 +458,31 @@ class PedidoDeProducao:
             return
         
         try:
-            # Executar atividades do produto principal
+            # ✅ EXECUÇÃO SEQUENCIAL COM CANCELAMENTO EM CASCATA
+            # Primeiro tenta executar todas as atividades do produto principal
             self._executar_atividades_produto()
             
-            # Executar atividades dos subprodutos
+            # Se chegou até aqui, produto foi executado com sucesso
+            # Agora pode executar subprodutos
             self._executar_atividades_subproduto()
             
-            logger.info(f"✅ Pedido {self.id_pedido} executado com sucesso!")
+            logger.info(
+                f"✅ Pedido {self.id_pedido} executado com sucesso! "
+                f"Total de atividades executadas: {len(self.atividades_executadas)}"
+            )
             
         except Exception as e:
             logger.error(f"❌ Falha na execução do pedido {self.id_pedido}: {e}")
-            self._executar_rollback_completo()
+            
+            # ✅ CANCELAMENTO EM CASCATA
+            self._cancelar_pedido_completo(str(e))
             raise
 
     def _executar_atividades_produto(self):
-        """Executa atividades do produto principal em ordem reversa"""
+        """
+        ✅ CORREÇÃO: Executa atividades do produto principal em ordem reversa.
+        Se QUALQUER atividade falhar, levanta exceção para cancelar tudo.
+        """
         atividades_produto = [
             a for a in self.atividades_modulares 
             if a.tipo_item == TipoItem.PRODUTO
@@ -404,7 +499,15 @@ class PedidoDeProducao:
             reverse=True
         )
         
-        logger.info(f"🔄 Executando {len(atividades_ordenadas)} atividades de PRODUTO")
+        logger.info(
+            f"🔄 Executando {len(atividades_ordenadas)} atividades de PRODUTO "
+            f"(CANCELAMENTO EM CASCATA ativado)"
+        )
+        
+        # ✅ MARCAR A ÚLTIMA ATIVIDADE (primeira na ordem reversa)
+        if atividades_ordenadas:
+            atividades_ordenadas[0].eh_ultima_atividade_pedido = True
+            logger.debug(f"🏁 Atividade {atividades_ordenadas[0].id_atividade} marcada como última do pedido")
         
         current_fim = self.fim_jornada
         inicio_prox_atividade = self.fim_jornada
@@ -416,16 +519,52 @@ class PedidoDeProducao:
                 f"{atividade.nome_atividade} (ID {atividade.id_atividade})"
             )
             
+            # ✅ Para a última atividade com tempo_maximo_de_espera = 0
+            if i == 0:  # Primeira iteração = última atividade na execução real
+                if hasattr(atividade, 'tempo_maximo_de_espera') and atividade.tempo_maximo_de_espera is not None:
+                    if atividade.tempo_maximo_de_espera == timedelta(0):
+                        logger.info(
+                            f"⏰ Última atividade {atividade.id_atividade} tem tempo_maximo_de_espera=0. "
+                            f"Deve terminar EXATAMENTE às {self.fim_jornada.strftime('%H:%M')}"
+                        )
+                        atividade.fim_obrigatorio = self.fim_jornada
+            
             try:
                 sucesso, inicio_atual, fim_atual = self._executar_atividade_individual(
                     atividade, current_fim, atividade_sucessora, inicio_prox_atividade
                 )
                 
+                # ✅ VALIDAÇÃO CRÍTICA: Se falhou, cancela TUDO
                 if not sucesso:
-                    raise RuntimeError(
-                        f"Falha ao alocar atividade {atividade.nome_atividade} "
-                        f"PRODUTO {atividade.id_atividade}"
+                    erro_msg = (
+                        f"❌ FALHA CRÍTICA: Atividade PRODUTO {atividade.id_atividade} "
+                        f"({atividade.nome_atividade}) não pôde ser alocada. "
+                        f"CANCELANDO PEDIDO COMPLETO incluindo subprodutos."
                     )
+                    logger.error(erro_msg)
+                    raise RuntimeError(erro_msg)
+                
+                # ✅ VALIDAÇÃO DE PONTUALIDADE para última atividade
+                if i == 0 and hasattr(atividade, 'tempo_maximo_de_espera') and atividade.tempo_maximo_de_espera == timedelta(0):
+                    if fim_atual != self.fim_jornada:
+                        diferenca = self.fim_jornada - fim_atual
+                        erro_msg = (
+                            f"❌ FALHA DE PONTUALIDADE: Última atividade {atividade.id_atividade} "
+                            f"({atividade.nome_atividade}) deveria terminar exatamente às "
+                            f"{self.fim_jornada.strftime('%H:%M')}, mas terminou às "
+                            f"{fim_atual.strftime('%H:%M')}. Diferença: {diferenca}. "
+                            f"CANCELANDO PEDIDO COMPLETO."
+                        )
+                        logger.error(erro_msg)
+                        raise RuntimeError(erro_msg)
+                    else:
+                        logger.info(
+                            f"✅ Última atividade termina pontualmente às {fim_atual.strftime('%H:%M')} "
+                            f"conforme exigido (tempo_maximo_de_espera=0)"
+                        )
+                
+                # ✅ REGISTRO DE SUCESSO
+                self.atividades_executadas.append(atividade)
                 
                 # Atualizar para próxima iteração
                 inicio_prox_atividade = inicio_atual
@@ -433,17 +572,31 @@ class PedidoDeProducao:
                 current_fim = atividade.inicio_real
                 
                 logger.info(
-                    f"✅ Atividade PRODUTO {atividade.id_atividade} executada: "
+                    f"✅ Atividade PRODUTO {atividade.id_atividade} executada com sucesso: "
                     f"{inicio_atual.strftime('%H:%M')} - {fim_atual.strftime('%H:%M')}"
                 )
                 
             except Exception as e:
-                logger.error(f"❌ Atividade PRODUTO {atividade.id_atividade} falhou: {e}")
-                registrar_erro_execucao_pedido(self.id_ordem, self.id_pedido, e)
-                raise
-
+                # ✅ QUALQUER ERRO = CANCELAMENTO COMPLETO
+                erro_msg = (
+                    f"❌ ERRO NA ATIVIDADE PRODUTO {atividade.id_atividade} "
+                    f"({atividade.nome_atividade}): {e}. "
+                    f"CANCELANDO PEDIDO COMPLETO."
+                )
+                logger.error(erro_msg)
+                registrar_erro_execucao_pedido(self.id_ordem, self.id_pedido, RuntimeError(erro_msg))
+                raise RuntimeError(erro_msg) from e
+        
+        logger.info(
+            f"✅ Todas as {len(atividades_ordenadas)} atividades de PRODUTO executadas com sucesso! "
+            f"Prosseguindo para subprodutos."
+        )
+            
     def _executar_atividades_subproduto(self):
-        """Executa atividades dos subprodutos"""
+        """
+        ✅ CORREÇÃO: Executa atividades dos subprodutos.
+        Se algum SUBPRODUTO falhar, verifica se é uma falha crítica que deve cancelar o pedido.
+        """
         atividades_sub = [
             a for a in self.atividades_modulares 
             if a.tipo_item == TipoItem.SUBPRODUTO
@@ -453,14 +606,17 @@ class PedidoDeProducao:
             logger.info(f"ℹ️ Nenhuma atividade de SUBPRODUTO para executar no pedido {self.id_pedido}")
             return
         
-        logger.info(f"🔄 Executando {len(atividades_sub)} atividades de SUBPRODUTO")
+        logger.info(
+            f"🔄 Executando {len(atividades_sub)} atividades de SUBPRODUTO "
+            f"(PRODUTO já executado com sucesso - VALIDAÇÃO CRÍTICA ativa)"
+        )
         
         atividade_sucessora = None
         inicio_prox_atividade = self.fim_jornada
         
         # Usar o fim da última atividade de produto como limite superior
         atividades_produto_executadas = [
-            a for a in self.atividades_modulares 
+            a for a in self.atividades_executadas 
             if a.tipo_item == TipoItem.PRODUTO and hasattr(a, 'inicio_real')
         ]
         
@@ -469,6 +625,10 @@ class PedidoDeProducao:
             logger.debug(f"⏰ Limite superior para subprodutos: {current_fim.strftime('%H:%M')}")
         else:
             current_fim = self.fim_jornada
+
+        # ✅ NOVA LÓGICA: Contadores para detecção de falhas críticas
+        atividades_subproduto_executadas = 0
+        atividades_subproduto_falharam = 0
 
         for i, atividade in enumerate(atividades_sub):
             logger.info(
@@ -482,9 +642,38 @@ class PedidoDeProducao:
                 )
                 
                 if not sucesso:
-                    raise RuntimeError(
-                        f"Falha ao alocar atividade SUBPRODUTO {atividade.id_atividade}"
+                    atividades_subproduto_falharam += 1
+                    logger.error(
+                        f"❌ FALHA CRÍTICA: Atividade SUBPRODUTO {atividade.id_atividade} "
+                        f"({atividade.nome_atividade}) não pôde ser executada. "
+                        f"Isso indica incompatibilidade de equipamentos ou recursos insuficientes."
                     )
+                    
+                    # ✅ VALIDAÇÃO CRÍTICA: Se PRODUTO já foi executado, mas SUBPRODUTO essencial falha
+                    # Isso indica um problema grave que invalida todo o pedido
+                    if len(self.atividades_executadas) > 0:  # Há atividades do PRODUTO executadas
+                        erro_msg = (
+                            f"❌ FALHA CRÍTICA DE DEPENDÊNCIA: "
+                            f"Atividade SUBPRODUTO {atividade.id_atividade} ({atividade.nome_atividade}) "
+                            f"é ESSENCIAL para o pedido mas falhou durante execução. "
+                            f"Motivo provável: quantidade abaixo do mínimo de equipamento, "
+                            f"conflito de recursos ou restrições técnicas. "
+                            f"Como o PRODUTO já foi parcialmente executado, isso gera um estado inválido. "
+                            f"CANCELANDO pedido completo e fazendo rollback de {len(self.atividades_executadas)} atividade(s) já executada(s)."
+                        )
+                        logger.error(erro_msg)
+                        raise RuntimeError(erro_msg)
+                    
+                    # Se nenhum produto foi executado ainda, pode continuar
+                    logger.warning(
+                        f"⚠️ Atividade SUBPRODUTO {atividade.id_atividade} falhou, "
+                        f"mas nenhum PRODUTO foi executado ainda. Continuando..."
+                    )
+                    continue
+                
+                # ✅ SUCESSO: Registrar e continuar
+                atividades_subproduto_executadas += 1
+                self.atividades_executadas.append(atividade)
                 
                 # Atualizar para próxima iteração
                 inicio_prox_atividade = inicio_atual
@@ -497,9 +686,77 @@ class PedidoDeProducao:
                 )
                 
             except Exception as e:
-                logger.error(f"❌ Atividade SUBPRODUTO {atividade.id_atividade} falhou: {e}")
-                salvar_erro_em_log(self.id_ordem, self.id_pedido, e)
-                raise
+                atividades_subproduto_falharam += 1
+                
+                # ✅ VERIFICAR SE É FALHA CRÍTICA OU TOLERÁVEL
+                if len(self.atividades_executadas) > 0:  # Há atividades do PRODUTO executadas
+                    # Falha crítica - deve cancelar tudo
+                    erro_msg = (
+                        f"❌ FALHA CRÍTICA DE SUBPRODUTO: "
+                        f"Erro na atividade SUBPRODUTO {atividade.id_atividade}: {e}. "
+                        f"Como {len(self.atividades_executadas)} atividade(s) do PRODUTO já foram executadas, "
+                        f"isso gera estado inválido. CANCELANDO pedido completo."
+                    )
+                    logger.error(erro_msg)
+                    raise RuntimeError(erro_msg) from e
+                else:
+                    # Falha tolerável - pode continuar
+                    logger.warning(
+                        f"⚠️ Erro na atividade SUBPRODUTO {atividade.id_atividade}: {e}. "
+                        f"Nenhum PRODUTO executado ainda. Continuando..."
+                    )
+                    salvar_erro_em_log(self.id_ordem, self.id_pedido, e)
+                    continue
+
+        # ✅ RELATÓRIO FINAL DOS SUBPRODUTOS
+        logger.info(
+            f"📊 Execução de SUBPRODUTOS concluída: "
+            f"✅ {atividades_subproduto_executadas} executadas, "
+            f"❌ {atividades_subproduto_falharam} falharam, "
+            f"Total: {len(atividades_sub)}"
+        )
+
+    def _cancelar_pedido_completo(self, motivo: str):
+        """
+        ✅ NOVO MÉTODO: Cancela o pedido completo fazendo rollback de todas as atividades.
+        """
+        logger.error(
+            f"🚫 CANCELANDO PEDIDO COMPLETO {self.id_pedido} - Motivo: {motivo}"
+        )
+        
+        self.pedido_cancelado = True
+        
+        # Fazer rollback de todas as atividades executadas com sucesso até agora
+        if self.atividades_executadas:
+            logger.info(
+                f"🔁 Fazendo rollback de {len(self.atividades_executadas)} atividades já executadas"
+            )
+            
+            for atividade in self.atividades_executadas:
+                try:
+                    # Rollback de equipamentos
+                    if hasattr(atividade, 'equipamentos_selecionados') and atividade.equipamentos_selecionados:
+                        rollback_equipamentos(
+                            equipamentos_alocados=atividade.equipamentos_selecionados,
+                            id_ordem=self.id_ordem,
+                            id_pedido=self.id_pedido,
+                            id_atividade=atividade.id_atividade
+                        )
+                        logger.debug(f"🔄 Rollback equipamentos atividade {atividade.id_atividade}")
+                    
+                    # Marcar atividade como não alocada
+                    atividade.alocada = False
+                    
+                except Exception as e:
+                    logger.error(f"❌ Erro no rollback da atividade {atividade.id_atividade}: {e}")
+        
+        # Rollback completo adicional
+        self._executar_rollback_completo()
+        
+        logger.error(
+            f"🚫 PEDIDO {self.id_pedido} CANCELADO COMPLETAMENTE. "
+            f"Motivo: {motivo}"
+        )
 
     def _executar_atividade_individual(
         self, 
@@ -548,10 +805,12 @@ class PedidoDeProducao:
         inicio_prox_atividade: datetime
     ):
         """
-        Verifica se o tempo de espera entre atividades não excede o limite máximo.
+        ✅ CORREÇÃO DO BUG: Verifica se o tempo de espera entre atividades não excede o limite máximo.
+        Agora valida corretamente tempo_maximo_de_espera = timedelta(0)
         """
-        if not atividade_sucessora.tempo_maximo_de_espera:
-            logger.debug("ℹ️ Nenhum tempo máximo de espera definido para atividade sucessora")
+        # ✅ VERIFICAÇÃO CORRIGIDA: Verificar se o atributo existe e não é None
+        if not hasattr(atividade_sucessora, 'tempo_maximo_de_espera') or atividade_sucessora.tempo_maximo_de_espera is None:
+            logger.debug("ℹ️ Atividade sucessora não possui tempo máximo de espera definido")
             return
         
         tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
@@ -564,13 +823,20 @@ class PedidoDeProducao:
             f"   Atraso: {atraso} | Máximo permitido: {tempo_max_espera}"
         )
 
+        # ✅ VALIDAÇÃO RIGOROSA: Agora funciona corretamente para tempo_max_espera = timedelta(0)
         if atraso > tempo_max_espera:
             raise RuntimeError(
                 f"❌ Tempo máximo de espera excedido entre atividades:\n"
                 f"   Atividade atual: {atividade_atual.id_atividade} ({atividade_atual.nome_atividade})\n"
                 f"   Atividade sucessora: {atividade_sucessora.id_atividade} ({atividade_sucessora.nome_atividade})\n"
+                f"   Fim da atual: {fim_atual.strftime('%d/%m %H:%M:%S')}\n"
+                f"   Início da sucessora: {inicio_prox_atividade.strftime('%d/%m %H:%M:%S')}\n"
+                f"   Atraso detectado: {atraso}\n"
+                f"   Máximo permitido: {tempo_max_espera}\n"
                 f"   Excesso: {atraso - tempo_max_espera}"
             )
+        else:
+            logger.debug(f"✅ Tempo de espera dentro do limite permitido")
 
     # =============================================================================
     #                           ROLLBACK
@@ -618,7 +884,7 @@ class PedidoDeProducao:
     def rollback_pedido(self):
         """Método público para rollback manual"""
         logger.info(f"🔄 Rollback manual solicitado para pedido {self.id_pedido}")
-        self._executar_rollback_completo()
+        self._cancelar_pedido_completo("Rollback manual solicitado")
 
     # =============================================================================
     #                    CONTROLE DE ALMOXARIFADO
@@ -783,10 +1049,12 @@ class PedidoDeProducao:
             "fim_real": fim_real.isoformat() if fim_real else None,
             "total_atividades": len(self.atividades_modulares),
             "atividades_alocadas": atividades_alocadas,
+            "atividades_executadas": len(self.atividades_executadas),
             "funcionarios_elegiveis": len(self.funcionarios_elegiveis),
             "equipamentos_alocados": len(self.equipamentos_alocados_no_pedido),
             "tem_gestor_almoxarifado": self.gestor_almoxarifado is not None,
-            "ficha_tecnica_montada": self.ficha_tecnica_modular is not None
+            "ficha_tecnica_montada": self.ficha_tecnica_modular is not None,
+            "pedido_cancelado": self.pedido_cancelado
         }
 
     def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
@@ -811,9 +1079,10 @@ class PedidoDeProducao:
 
     def __repr__(self):
         status = f"{len([a for a in self.atividades_modulares if a.alocada])}/{len(self.atividades_modulares)} alocadas"
+        cancelado = " [CANCELADO]" if self.pedido_cancelado else ""
         return (
             f"<PedidoDeProducao {self.id_pedido} | "
             f"Produto {self.id_produto} | "
             f"Qtd {self.quantidade} | "
-            f"Atividades: {status}>"
+            f"Atividades: {status}{cancelado}>"
         )

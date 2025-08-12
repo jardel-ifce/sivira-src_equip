@@ -11,17 +11,13 @@
       "tipo_equipamento": {
         "REFRIGERACAO_CONGELAMENTO": 1
       },
-      "equipamentos_elegiveis": ["camara_refrigerada_1","camara_refrigerada_2"],
+      "equipamentos_elegiveis": ["camara_refrigerada_2"],
       "fips_equipamentos": {
-        "camara_refrigerada_1": 2,
         "camara_refrigerada_2": 1
       },
       "tempo_maximo_de_espera": "00:00:00",
       "configuracoes_equipamentos":{
-        "camara_refrigerada_1": {
-          "faixa_temperatura": 0,
-          "tipo_de_armazenamento": "NIVEIS_TELA"
-        },
+       
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,
           "tipo_de_armazenamento": "CAIXAS",
@@ -118,7 +114,8 @@
       "configuracoes_equipamentos": {
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,
-          "tipo_de_armazenamento": "CAIXAS"
+          "tipo_de_armazenamento": "CAIXAS",
+          "gramas_por_caixa": 20000
         }
       },
       "tipos_profissionais_permitidos": ["ALMOXARIFE"],
