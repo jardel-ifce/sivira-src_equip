@@ -181,9 +181,9 @@ class TesteSistemaProducao:
             # CONJUNTO INICIAL - Para testar otimizador
             #{"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
            # {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
-            {"produto": "Pão de Forma", "quantidade": 80, "hora_fim": 7},
+           # {"produto": "Pão de Forma", "quantidade": 80, "hora_fim": 7},
             # {"produto": "Pão Baguete", "quantidade": 50, "hora_fim": 7},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 7},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 70, "hora_fim": 7},
 
             # # CONJUNTO ADICIONAL - Para testar conflitos
             # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},

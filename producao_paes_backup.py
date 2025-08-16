@@ -124,11 +124,11 @@ class TesteSistemaProducao:
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
             # Horário 07:00
-           # {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
-            #{"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
-            #{"produto": "Pão de Forma", "quantidade": 70, "hora_fim": 7},
-           # {"produto": "Pão Baguete", "quantidade": 40, "hora_fim": 7},
-            {"produto": "Pão Trança de Queijo finos", "quantidade": 60, "hora_fim": 7},
+            {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
+            {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
+            {"produto": "Pão de Forma", "quantidade": 70, "hora_fim": 7},
+            {"produto": "Pão Baguete", "quantidade": 60, "hora_fim": 7},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 70, "hora_fim": 7},
 
             # # # Horário 09:00
            # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},
@@ -164,6 +164,7 @@ class TesteSistemaProducao:
                     print(f"   ⚠️ Produto '{config['produto']}' não encontrado no mapeamento!")
                     continue
                 
+                # ✅ CORREÇÃO: Adicionar gestor_almoxarifado na criação do pedido
                 pedido = PedidoDeProducao(
                     id_ordem=1,  # Fixo para testes
                     id_pedido=id_pedido_counter,
@@ -172,7 +173,8 @@ class TesteSistemaProducao:
                     quantidade=config['quantidade'],
                     inicio_jornada=inicio_jornada,
                     fim_jornada=fim_jornada,
-                    todos_funcionarios=funcionarios_disponiveis
+                    todos_funcionarios=funcionarios_disponiveis,
+                    gestor_almoxarifado=self.gestor_almoxarifado  # ✅ ADICIONADO
                 )
                 
                 pedido.montar_estrutura()

@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """
-Sistema de Menu Principal - Produção
-===================================
+Sistema de Menu Principal - Produção - ATUALIZADO
+===============================================
 
 Menu interativo para registro e execução de pedidos de produção
 com suporte a otimização PL usando TesteSistemaProducao diretamente.
+
+✅ NOVIDADES:
+- Limpeza automática de logs na inicialização
+- Método de limpeza completa adicional
+- Feedback melhorado sobre status de logs
+- 🆕 NOVO: Limpeza automática de arquivos de erro na inicialização
 """
 
 import os
 import sys
+import shutil
 from typing import Optional
 
 # Adiciona paths necessários
@@ -23,10 +30,101 @@ class MenuPrincipal:
     """Menu principal do sistema de produção"""
     
     def __init__(self):
+        # ✅ MUDANÇA: Limpa pedidos anteriores antes de carregar gerenciador
+        print("🚀 Inicializando Sistema de Produção...")
+        print("🗑️ Limpando dados de execuções anteriores...")
+        
+        # 🆕 NOVO: Limpa arquivos de erro antes de qualquer outra coisa
+        self._limpar_arquivos_erro_inicializacao()
+        
+        # Limpa arquivo de pedidos salvos antes de inicializar gerenciador
+        self._limpar_pedidos_salvos_inicializacao()
+        
+        # Inicializa gerenciador (que tentará carregar pedidos, mas arquivo já foi limpo)
         self.gerenciador = GerenciadorPedidos()
-        self.executor = ExecutorProducao()
+        
+        # ✅ MUDANÇA: ExecutorProducao agora limpa logs e pedidos automaticamente na inicialização
+        self.executor = ExecutorProducao()  # Limpa logs automaticamente aqui
         self.utils = MenuUtils()
         self.rodando = True
+    
+    def _limpar_arquivos_erro_inicializacao(self):
+        """
+        🆕 NOVO: Limpa todos os arquivos da pasta /logs/erros na inicialização do menu.
+        Garante que cada execução do menu comece sem arquivos de erro anteriores.
+        """
+        try:
+            diretorio_erros = "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/logs/erros"
+            
+            print("🧹 Limpando arquivos de erro anteriores...")
+            
+            if os.path.exists(diretorio_erros):
+                # Lista arquivos antes da limpeza
+                arquivos = [f for f in os.listdir(diretorio_erros) if os.path.isfile(os.path.join(diretorio_erros, f))]
+                
+                if arquivos:
+                    print(f"   📄 Encontrados {len(arquivos)} arquivo(s) de erro para remover...")
+                    
+                    # Remove cada arquivo
+                    arquivos_removidos = 0
+                    for arquivo in arquivos:
+                        try:
+                            caminho_arquivo = os.path.join(diretorio_erros, arquivo)
+                            os.remove(caminho_arquivo)
+                            arquivos_removidos += 1
+                        except Exception as e:
+                            print(f"   ⚠️ Erro ao remover {arquivo}: {e}")
+                    
+                    if arquivos_removidos > 0:
+                        print(f"   ✅ {arquivos_removidos} arquivo(s) de erro removido(s)")
+                    
+                    # Verifica se ainda há arquivos
+                    arquivos_restantes = [f for f in os.listdir(diretorio_erros) if os.path.isfile(os.path.join(diretorio_erros, f))]
+                    if not arquivos_restantes:
+                        print(f"   🎉 Diretório {diretorio_erros} limpo completamente")
+                    else:
+                        print(f"   ⚠️ {len(arquivos_restantes)} arquivo(s) não puderam ser removidos")
+                        
+                else:
+                    print("   🔭 Nenhum arquivo de erro encontrado")
+            else:
+                print(f"   📁 Diretório {diretorio_erros} não existe")
+                
+        except Exception as e:
+            print(f"   ⚠️ Erro ao limpar arquivos de erro: {e}")
+    
+    def _limpar_pedidos_salvos_inicializacao(self):
+        """
+        ✅ NOVO: Limpa arquivo de pedidos salvos na inicialização do menu.
+        Garante que cada execução do menu comece sem pedidos anteriores.
+        """
+        try:
+            import json
+            arquivo_pedidos = "menu/pedidos_salvos.json"
+            
+            if os.path.exists(arquivo_pedidos):
+                # Lê arquivo para mostrar quantos pedidos serão removidos
+                try:
+                    with open(arquivo_pedidos, 'r', encoding='utf-8') as f:
+                        dados = json.load(f)
+                    
+                    total_pedidos = len(dados.get('pedidos', []))
+                    if total_pedidos > 0:
+                        print(f"   📋 Removendo {total_pedidos} pedido(s) de execuções anteriores...")
+                    else:
+                        print("   🔭 Arquivo de pedidos vazio, removendo...")
+                        
+                except (json.JSONDecodeError, KeyError):
+                    print(f"   ⚠️ Arquivo de pedidos corrompido, removendo...")
+                
+                # Remove o arquivo
+                os.remove(arquivo_pedidos)
+                print(f"   ✅ Pedidos anteriores limpos")
+            else:
+                print("   🔭 Nenhum pedido anterior encontrado")
+                
+        except Exception as e:
+            print(f"   ⚠️ Erro ao limpar pedidos salvos: {e}")
     
     def executar(self):
         """Executa o menu principal"""
@@ -53,6 +151,9 @@ class MenuPrincipal:
         print("=" * 80)
         print("📋 Registre pedidos e execute com TesteSistemaProducao")
         print("🔧 Suporte a execução sequencial e otimizada (PL)")
+        print("✅ Logs e pedidos limpos automaticamente a cada inicialização")
+        print("🆕 Arquivos de erro removidos automaticamente na inicialização")
+        print("🚫 Menu independente: Não usa pedidos hardcoded do baseline")
         print()
     
     def mostrar_menu_principal(self):
@@ -72,10 +173,28 @@ class MenuPrincipal:
             if ids_unicos != total_pedidos:
                 print(f"⚠️ ATENÇÃO: {total_pedidos - ids_unicos} duplicata(s) detectada(s)")
         
-        # Verifica se há logs anteriores
-        if os.path.exists('logs') and os.listdir('logs'):
+        # ✅ ATUALIZADO: Verifica se há logs (com info de limpeza automática)
+        logs_existem = os.path.exists('logs') and os.listdir('logs')
+        if logs_existem:
             total_logs = len([f for f in os.listdir('logs') if f.endswith('.log')])
-            print(f"📄 Logs anteriores: {total_logs} arquivo(s)")
+            print(f"📄 Logs atuais: {total_logs} arquivo(s) (logs anteriores foram limpos)")
+        else:
+            print("🧹 Logs: Ambiente limpo (limpeza automática ativa)")
+        
+        # 🆕 NOVO: Status de arquivos de erro
+        diretorio_erros = "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/logs/erros"
+        if os.path.exists(diretorio_erros):
+            arquivos_erro = [f for f in os.listdir(diretorio_erros) if os.path.isfile(os.path.join(diretorio_erros, f))]
+            if arquivos_erro:
+                print(f"⚠️ Arquivos de erro: {len(arquivos_erro)} arquivo(s) (serão limpos automaticamente)")
+            else:
+                print("🧹 Arquivos de erro: Ambiente limpo (limpeza automática ativa)")
+        else:
+            print("📁 Diretório de erros: Não existe")
+        
+        # ✅ NOVO: Status de pedidos salvos
+        if total_pedidos == 0:
+            print("🗑️ Pedidos: Ambiente limpo (pedidos anteriores removidos)")
         
         print()
         
@@ -93,9 +212,12 @@ class MenuPrincipal:
         print("⚙️ SISTEMA:")
         print("7️⃣  Testar Sistema")
         print("8️⃣  Configurações")
-        print("9️⃣  Limpar Logs Anteriores")
+        print("9️⃣  Limpeza Manual de Logs")
+        print("🔟  Limpeza Completa de Logs")
+        print("1️⃣1️⃣  Limpeza Completa de Pedidos")
+        print("1️⃣2️⃣  Limpeza Manual de Arquivos de Erro")  # 🆕 NOVA OPÇÃO
         print("0️⃣  Ajuda")
-        print("❌  Sair")
+        print("[S]  Sair")
         print("─" * 60)
     
     def obter_opcao_usuario(self) -> str:
@@ -130,7 +252,16 @@ class MenuPrincipal:
             self.mostrar_configuracoes()
         
         elif opcao == "9":
-            self.limpar_logs()
+            self.limpar_logs_manual()
+        
+        elif opcao == "10":
+            self.limpar_logs_completo()
+        
+        elif opcao == "11":
+            self.limpar_pedidos_completo()
+        
+        elif opcao == "12":
+            self.limpar_arquivos_erro_manual()  # 🆕 NOVA FUNCIONALIDADE
         
         elif opcao == "0":
             self.mostrar_ajuda()
@@ -142,6 +273,94 @@ class MenuPrincipal:
             print(f"\n❌ Opção '{opcao}' inválida!")
             input("Pressione Enter para continuar...")
     
+    def limpar_arquivos_erro_manual(self):
+        """🆕 NOVO: Limpa arquivos de erro manualmente via menu"""
+        self.utils.limpar_tela()
+        print("🧹 LIMPEZA MANUAL DE ARQUIVOS DE ERRO")
+        print("=" * 40)
+        print("ℹ️ Nota: Limpeza automática já é executada na inicialização")
+        print()
+        
+        diretorio_erros = "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/logs/erros"
+        
+        # Verifica se diretório existe
+        if not os.path.exists(diretorio_erros):
+            print(f"📁 Diretório {diretorio_erros} não existe.")
+            input("\nPressione Enter para continuar...")
+            return
+        
+        # Verifica se há arquivos de erro
+        arquivos_erro = [f for f in os.listdir(diretorio_erros) if os.path.isfile(os.path.join(diretorio_erros, f))]
+        
+        if not arquivos_erro:
+            print("🔭 Nenhum arquivo de erro encontrado para limpar.")
+            print("✅ Diretório já está limpo!")
+            input("\nPressione Enter para continuar...")
+            return
+        
+        print(f"📄 Encontrados {len(arquivos_erro)} arquivo(s) de erro:")
+        
+        # Lista os primeiros 10 arquivos
+        for i, arquivo in enumerate(arquivos_erro[:10]):
+            tamanho = os.path.getsize(os.path.join(diretorio_erros, arquivo))
+            print(f"   • {arquivo} ({tamanho} bytes)")
+        
+        if len(arquivos_erro) > 10:
+            print(f"   ... e mais {len(arquivos_erro) - 10} arquivo(s)")
+        
+        confirmacao = input(f"\n🎯 Confirma limpeza de {len(arquivos_erro)} arquivo(s) de erro? (s/N): ").strip().lower()
+        
+        if confirmacao in ['s', 'sim', 'y', 'yes']:
+            try:
+                arquivos_removidos = 0
+                arquivos_com_erro = 0
+                
+                for arquivo in arquivos_erro:
+                    try:
+                        caminho_arquivo = os.path.join(diretorio_erros, arquivo)
+                        os.remove(caminho_arquivo)
+                        arquivos_removidos += 1
+                    except Exception as e:
+                        print(f"   ⚠️ Erro ao remover {arquivo}: {e}")
+                        arquivos_com_erro += 1
+                
+                print(f"\n✅ {arquivos_removidos} arquivo(s) de erro removido(s)")
+                if arquivos_com_erro > 0:
+                    print(f"⚠️ {arquivos_com_erro} arquivo(s) não puderam ser removidos")
+                
+            except Exception as e:
+                print(f"\n❌ Erro durante limpeza de arquivos de erro: {e}")
+        else:
+            print("\nℹ️ Limpeza cancelada.")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def limpar_arquivos_erro_completo(self):
+        """🆕 NOVO: Limpeza completa de arquivos de erro com remoção do diretório"""
+        try:
+            diretorio_erros = "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/logs/erros"
+            
+            print("🧹 LIMPEZA COMPLETA DE ARQUIVOS DE ERRO")
+            print("=" * 40)
+            
+            if os.path.exists(diretorio_erros):
+                # Remove todo o diretório e recria vazio
+                shutil.rmtree(diretorio_erros)
+                os.makedirs(diretorio_erros, exist_ok=True)
+                print(f"✅ Diretório {diretorio_erros} completamente limpo e recriado")
+            else:
+                # Cria o diretório se não existir
+                os.makedirs(diretorio_erros, exist_ok=True)
+                print(f"📁 Diretório {diretorio_erros} criado")
+            
+            print("🎉 Limpeza completa de arquivos de erro finalizada!")
+            
+        except Exception as e:
+            print(f"❌ Erro durante limpeza completa de arquivos de erro: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # [Resto dos métodos permanecem inalterados...]
     def registrar_pedido(self):
         """Interface para registrar novo pedido"""
         self.utils.limpar_tela()
@@ -163,7 +382,7 @@ class MenuPrincipal:
                 else:
                     print(f"\n❌ {mensagem}")
             else:
-                print("\n⏹️ Registro cancelado.")
+                print("\nℹ️ Registro cancelado.")
                 
         except Exception as e:
             print(f"\n❌ Erro ao registrar pedido: {e}")
@@ -177,7 +396,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido registrado ainda.")
+            print("🔭 Nenhum pedido registrado ainda.")
             print("\n💡 Use a opção '1' para registrar novos pedidos")
         else:
             self.gerenciador.listar_pedidos()
@@ -200,7 +419,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido para remover.")
+            print("🔭 Nenhum pedido para remover.")
             input("\nPressione Enter para continuar...")
             return
         
@@ -219,7 +438,7 @@ class MenuPrincipal:
                     # Auto-salva após remoção
                     self.gerenciador.salvar_pedidos()
             else:
-                print("\n⏹️ Remoção cancelada.")
+                print("\nℹ️ Remoção cancelada.")
                 
         except ValueError:
             print("\n❌ ID inválido!")
@@ -235,7 +454,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido para limpar.")
+            print("🔭 Nenhum pedido para limpar.")
             input("\nPressione Enter para continuar...")
             return
         
@@ -247,25 +466,30 @@ class MenuPrincipal:
             self.gerenciador.salvar_pedidos()  # Salva estado vazio
             print("\n✅ Todos os pedidos foram removidos.")
         else:
-            print("\n⏹️ Operação cancelada.")
+            print("\nℹ️ Operação cancelada.")
         
         input("\nPressione Enter para continuar...")
     
     def executar_sequencial(self):
         """Executa pedidos em modo sequencial"""
         self.utils.limpar_tela()
-        print("🔄 EXECUÇÃO SEQUENCIAL")
+        print("📄 EXECUÇÃO SEQUENCIAL")
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido para executar.")
-            print("\n💡 Use a opção '1' para registrar pedidos primeiro")
+            print("🔭 Nenhum pedido registrado para executar.")
+            print("\n💡 MENU INDEPENDENTE: Este menu funciona apenas com pedidos que você registrar")
+            print("💡 Use a opção '1' para registrar pedidos primeiro")
+            print("🚫 MENU: Não usa pedidos hardcoded do script baseline")
             input("\nPressione Enter para continuar...")
             return
         
         print(f"📊 {len(self.gerenciador.pedidos)} pedido(s) será(ão) executado(s) em ordem sequencial.")
         print("⏱️ Isso pode levar alguns minutos...")
-        print("\n🔧 Método: TesteSistemaProducao (usar_otimizacao=False)")
+        print("\n🔧 Método: TesteSistemaProducao SEQUENCIAL (producao_paes_backup.py)")
+        print("📋 SEQUENCIAL: Fluxo = Almoxarifado → Pedidos → Ordenação → Execução")
+        print("🧹 Logs foram limpos automaticamente para esta execução")
+        print("📋 MENU: Usando APENAS pedidos registrados pelo usuário")
         
         # Mostra resumo dos pedidos
         for pedido in self.gerenciador.pedidos:
@@ -283,7 +507,7 @@ class MenuPrincipal:
             except Exception as e:
                 print(f"\n❌ Erro durante execução: {e}")
         else:
-            print("\n⏹️ Execução cancelada.")
+            print("\nℹ️ Execução cancelada.")
         
         input("\nPressione Enter para continuar...")
     
@@ -294,8 +518,10 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido para executar.")
-            print("\n💡 Use a opção '1' para registrar pedidos primeiro")
+            print("🔭 Nenhum pedido registrado para executar.")
+            print("\n💡 MENU INDEPENDENTE: Este menu funciona apenas com pedidos que você registrar")
+            print("💡 Use a opção '1' para registrar pedidos primeiro")
+            print("🚫 MENU: Não usa pedidos hardcoded do script baseline")
             input("\nPressione Enter para continuar...")
             return
         
@@ -310,7 +536,10 @@ class MenuPrincipal:
         
         print(f"\n📊 {len(self.gerenciador.pedidos)} pedido(s) será(ão) otimizado(s) com Programação Linear.")
         print("⏱️ Isso pode levar alguns minutos para encontrar a solução ótima...")
-        print("\n🔧 Método: TesteSistemaProducao (usar_otimizacao=True)")
+        print("\n🔧 Método: TesteSistemaProducao OTIMIZADO (producao_paes.py)")
+        print("📋 OTIMIZADO: Usa Programação Linear para encontrar solução ótima")
+        print("🧹 Logs foram limpos automaticamente para esta execução")
+        print("📋 MENU: Usando APENAS pedidos registrados pelo usuário")
         
         # Configurações de otimização
         config = self.executor.obter_configuracoes()
@@ -335,7 +564,7 @@ class MenuPrincipal:
             except Exception as e:
                 print(f"\n❌ Erro durante execução otimizada: {e}")
         else:
-            print("\n⏹️ Execução cancelada.")
+            print("\nℹ️ Execução cancelada.")
         
         input("\nPressione Enter para continuar...")
     
@@ -378,13 +607,19 @@ class MenuPrincipal:
         print(f"🐍 Python: {info_sistema['python_version']}")
         print(f"💻 Sistema: {info_sistema['platform']} {info_sistema['platform_version']}")
         print()
-        print(f"📁 Diretórios:")
+        print(f"📂 Diretórios:")
         print(f"   Produtos: {self.gerenciador.dir_produtos}")
         print(f"   Subprodutos: {self.gerenciador.dir_subprodutos}")
         print()
         print(f"⚙️ Otimização PL:")
         print(f"   Resolução temporal: {config['resolucao_minutos']} minutos")
         print(f"   Timeout: {config['timeout_pl']} segundos")
+        print()
+        print(f"🧹 Sistema de Limpeza:")
+        print(f"   Limpeza automática: ✅ Ativa (na inicialização)")
+        print(f"   Limpeza manual: ✅ Disponível (opção 9)")
+        print(f"   Limpeza completa: ✅ Disponível (opção 10)")
+        print(f"   Limpeza arquivos erro: ✅ Automática + Manual (opção 12)")
         print()
         print(f"📋 Status:")
         print(f"   OR-Tools: {'✅ Disponível' if config['ortools_disponivel'] else '❌ Não encontrado'}")
@@ -420,33 +655,96 @@ class MenuPrincipal:
         
         input("\nPressione Enter para continuar...")
     
-    def limpar_logs(self):
-        """Limpa logs anteriores"""
+    def limpar_logs_manual(self):
+        """✅ RENOMEADO: Limpa logs manualmente via menu"""
         self.utils.limpar_tela()
-        print("🧹 LIMPAR LOGS ANTERIORES")
+        print("🧹 LIMPEZA MANUAL DE LOGS")
         print("=" * 40)
+        print("ℹ️ Nota: Limpeza automática já é executada na inicialização")
+        print()
         
         # Verifica se há logs
         logs_existem = os.path.exists('logs') and os.listdir('logs')
         
         if not logs_existem:
-            print("📭 Nenhum log encontrado para limpar.")
+            print("🔭 Nenhum log encontrado para limpar.")
+            print("✅ Sistema já está limpo!")
             input("\nPressione Enter para continuar...")
             return
         
         total_logs = len([f for f in os.listdir('logs') if f.endswith('.log')])
         print(f"📄 Encontrados {total_logs} arquivo(s) de log")
         
-        confirmacao = input("\n🎯 Confirma limpeza de logs? (s/N): ").strip().lower()
+        confirmacao = input("\n🎯 Confirma limpeza manual de logs? (s/N): ").strip().lower()
         
         if confirmacao in ['s', 'sim', 'y', 'yes']:
             try:
                 self.executor.limpar_logs_anteriores()
-                print("\n✅ Logs limpos com sucesso!")
+                print("\n✅ Logs limpos manualmente com sucesso!")
             except Exception as e:
                 print(f"\n❌ Erro ao limpar logs: {e}")
         else:
-            print("\n⏹️ Limpeza cancelada.")
+            print("\nℹ️ Limpeza cancelada.")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def limpar_logs_completo(self):
+        """✅ NOVO: Limpeza completa e detalhada de todos os logs"""
+        self.utils.limpar_tela()
+        print("🧹 LIMPEZA COMPLETA DE LOGS")
+        print("=" * 40)
+        print("⚠️ Esta opção remove TODOS os arquivos de log, comandas e temporários")
+        print("📂 Inclui limpeza de diretórios: logs/, comandas/, temp/")
+        print()
+        
+        confirmacao = input("🎯 Confirma limpeza COMPLETA? Digite 'LIMPAR' para confirmar: ").strip()
+        
+        if confirmacao == "LIMPAR":
+            try:
+                self.executor.limpar_logs_completo()
+                print("\n🎉 Limpeza completa finalizada com sucesso!")
+            except Exception as e:
+                print(f"\n❌ Erro durante limpeza completa: {e}")
+        else:
+            print("\nℹ️ Limpeza completa cancelada.")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def limpar_pedidos_completo(self):
+        """✅ NOVO: Limpeza completa de pedidos salvos"""
+        self.utils.limpar_tela()
+        print("🗑️ LIMPEZA COMPLETA DE PEDIDOS")
+        print("=" * 40)
+        print("⚠️ Esta opção remove TODOS os pedidos salvos em arquivos")
+        print("📂 Remove: menu/pedidos_salvos.json e arquivos relacionados")
+        print("💾 Pedidos em memória também serão limpos")
+        print()
+        
+        # Mostra pedidos atuais se houver
+        if self.gerenciador.pedidos:
+            print(f"📋 Pedidos atuais em memória: {len(self.gerenciador.pedidos)}")
+        else:
+            print("🔭 Nenhum pedido em memória atualmente")
+        
+        confirmacao = input("\n🎯 Confirma limpeza COMPLETA de pedidos? Digite 'LIMPAR' para confirmar: ").strip()
+        
+        if confirmacao == "LIMPAR":
+            try:
+                # Limpa pedidos em memória
+                if self.gerenciador.pedidos:
+                    total_memoria = len(self.gerenciador.pedidos)
+                    self.gerenciador.limpar_pedidos()
+                    print(f"✅ {total_memoria} pedido(s) removido(s) da memória")
+                
+                # Limpa arquivos salvos
+                self.executor.limpar_pedidos_completo()
+                
+                print("\n🎉 Limpeza completa de pedidos finalizada!")
+                
+            except Exception as e:
+                print(f"\n❌ Erro durante limpeza completa de pedidos: {e}")
+        else:
+            print("\nℹ️ Limpeza completa de pedidos cancelada.")
         
         input("\nPressione Enter para continuar...")
     
@@ -478,10 +776,21 @@ class MenuPrincipal:
         print("   • Minimiza conflitos de equipamentos")
         print("   • Requer OR-Tools instalado")
         print()
-        print("📁 ESTRUTURA DE ARQUIVOS:")
+        print("🧹 SISTEMA DE LIMPEZA:")
+        print("   • Limpeza automática: Executada na inicialização")
+        print("   • Logs limpos automaticamente a cada início")
+        print("   • Pedidos anteriores removidos automaticamente")
+        print("   • Arquivos de erro removidos automaticamente")
+        print("   • Limpeza manual: Remove logs atuais (opção 9)")
+        print("   • Limpeza completa logs: Remove todos os arquivos (opção 10)")
+        print("   • Limpeza completa pedidos: Remove arquivos salvos (opção 11)")
+        print("   • Limpeza manual erros: Remove arquivos de erro (opção 12)")
+        print()
+        print("📂 ESTRUTURA DE ARQUIVOS:")
         print("   • Produtos: /data/produtos/atividades/ID_nome.json")
         print("   • Subprodutos: /data/subprodutos/atividades/ID_nome.json")
         print("   • Logs: /logs/execucao_pedidos_TIMESTAMP.log")
+        print("   • Erros: /logs/erros/ (limpos automaticamente)")
         print()
         print("⚠️ REQUISITOS:")
         print("   • OR-Tools: pip install ortools")
@@ -490,8 +799,11 @@ class MenuPrincipal:
         print("   • TesteSistemaProducao acessível")
         print()
         print("🔧 DIFERENÇAS DOS MODOS:")
-        print("   • Sequencial: como producao_paes_backup.py")
-        print("   • Otimizado: como producao_paes.py atual")
+        print("   • Sequencial: como producao_paes_backup.py (ordem fixa)")
+        print("   • Otimizado: como producao_paes.py (Programação Linear)")
+        print("   • Ambos: limpam logs automaticamente")
+        print("   • Ambos: usam apenas pedidos do menu")
+        print("   • Ambos: removem arquivos de erro automaticamente")
         
         input("\nPressione Enter para continuar...")
     
@@ -514,6 +826,8 @@ class MenuPrincipal:
         
         print("\n🎉 Obrigado por usar o Sistema de Produção!")
         print("🔧 Baseado em TesteSistemaProducao")
+        print("🧹 Logs serão limpos automaticamente na próxima inicialização")
+        print("🗑️ Arquivos de erro serão removidos automaticamente na próxima inicialização")
         print("=" * 40)
         self.rodando = False
 
@@ -528,7 +842,7 @@ def main():
         import traceback
         traceback.print_exc()
     finally:
-        print("\n🔚 Sistema encerrado.")
+        print("\n📚 Sistema encerrado.")
 
 
 if __name__ == "__main__":

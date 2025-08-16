@@ -1,61 +1,122 @@
-from parser.gerenciador_json_comandas import ler_comandas_em_pasta
-from parser.gerenciador_json_reservas import registrar_reservas_em_itens_almoxarifado, descontar_estoque_por_reservas
-from pprint import pprint
-from datetime import date
-from models.almoxarifado.almoxarifado import Almoxarifado
-from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
+import json
+from enums.producao.politica_producao import PoliticaProducao
+from utils.logs.logger_factory import setup_logger
 
+logger = setup_logger("DebugConversaoEnum")
 
-reservas = ler_comandas_em_pasta()
-pprint(reservas)
-registrar_reservas_em_itens_almoxarifado(reservas)
+def debug_conversao_politica_producao(caminho_json: str):
+    """
+    🔍 Script para debugar a conversão de política de produção do JSON.
+    """
+    print("🔍 DEBUGGING CONVERSÃO DE POLÍTICA DE PRODUÇÃO")
+    print("=" * 60)
+    
+    try:
+        # 1. Carregar JSON bruto
+        with open(caminho_json, "r", encoding="utf-8") as f:
+            dados = json.load(f)
+        
+        print(f"📂 Arquivo carregado: {len(dados)} itens")
+        
+        # 2. Verificar item específico do creme de queijo
+        creme_queijo = None
+        for item in dados:
+            if item.get("id_item") == 2010:
+                creme_queijo = item
+                break
+        
+        if not creme_queijo:
+            print("❌ Item creme_de_queijo (ID 2010) não encontrado!")
+            return
+        
+        print("\n🧀 ITEM CREME DE QUEIJO (ID 2010):")
+        print("-" * 40)
+        print(f"📝 Nome: {creme_queijo.get('nome')}")
+        print(f"📝 Descrição: {creme_queijo.get('descricao')}")
+        print(f"📝 Política (string do JSON): '{creme_queijo.get('politica_producao')}'")
+        print(f"📝 Estoque atual: {creme_queijo.get('estoque_atual')}")
+        print(f"📝 Tipo do valor: {type(creme_queijo.get('politica_producao'))}")
+        
+        # 3. Testar conversão para ENUM
+        politica_string = creme_queijo.get('politica_producao')
+        
+        print(f"\n🔄 TESTANDO CONVERSÃO:")
+        print("-" * 40)
+        
+        try:
+            # Teste direto da conversão
+            politica_enum = PoliticaProducao[politica_string]
+            print(f"✅ Conversão bem-sucedida: {politica_string} → {politica_enum}")
+            print(f"📊 Valor do ENUM: {politica_enum.value}")
+            print(f"📊 Tipo do ENUM: {type(politica_enum)}")
+            
+            # Verificar se é realmente ESTOCADO
+            if politica_enum == PoliticaProducao.ESTOCADO:
+                print("✅ CONFIRMADO: Política é ESTOCADO")
+            else:
+                print(f"⚠️ ATENÇÃO: Política não é ESTOCADO, é {politica_enum.value}")
+                
+        except KeyError as e:
+            print(f"❌ ERRO na conversão: {e}")
+            print("💡 Possíveis valores válidos:")
+            for politica in PoliticaProducao:
+                print(f"   - {politica.name} (valor: {politica.value})")
+        
+        # 4. Verificar todos os valores de política no arquivo
+        print(f"\n📊 TODAS AS POLÍTICAS NO ARQUIVO:")
+        print("-" * 40)
+        
+        politicas_encontradas = {}
+        for item in dados:
+            politica = item.get('politica_producao')
+            if politica in politicas_encontradas:
+                politicas_encontradas[politica] += 1
+            else:
+                politicas_encontradas[politica] = 1
+        
+        for politica, count in politicas_encontradas.items():
+            print(f"📈 '{politica}': {count} itens")
+            
+            # Testar se cada uma é válida
+            try:
+                enum_val = PoliticaProducao[politica]
+                print(f"   ✅ Válida: {enum_val.value}")
+            except KeyError:
+                print(f"   ❌ INVÁLIDA: não existe no ENUM")
+        
+        # 5. Verificar valores possíveis do ENUM
+        print(f"\n🎯 VALORES VÁLIDOS DO ENUM PoliticaProducao:")
+        print("-" * 40)
+        for politica in PoliticaProducao:
+            print(f"📌 {politica.name} → valor: '{politica.value}'")
+        
+        # 6. Teste específico de verificação de estoque
+        print(f"\n🧪 SIMULAÇÃO DE VERIFICAÇÃO DE ESTOQUE:")
+        print("-" * 40)
+        
+        if creme_queijo:
+            politica_string = creme_queijo.get('politica_producao')
+            estoque_atual = creme_queijo.get('estoque_atual', 0)
+            
+            print(f"📦 Estoque atual: {estoque_atual}")
+            print(f"🏷️ Política: {politica_string}")
+            
+            # Simular a lógica do código
+            if politica_string == "SOB_DEMANDA":
+                print("🔄 Resultado: SEMPRE PRODUZIR (política SOB_DEMANDA)")
+            elif politica_string == "ESTOCADO":
+                if estoque_atual >= 4600:  # Quantidade aproximada necessária
+                    print("✅ Resultado: NÃO PRODUZIR (estoque suficiente)")
+                else:
+                    print("❌ Resultado: PRODUZIR (estoque insuficiente)")
+            else:
+                print(f"⚠️ Política desconhecida: {politica_string}")
+    
+    except Exception as e:
+        print(f"❌ ERRO GERAL: {e}")
+        import traceback
+        traceback.print_exc()
 
-#descontar_estoque_por_reservas((date(2025, 6, 24)))
-
-# from datetime import date
-# from parser.carregador_json_itens_almoxarifado import carregar_itens_almoxarifado
-# from models.itens.almoxarifado import Almoxarifado
-# from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
-
-# def main():
-#     caminho_json = "data/almoxarifado/itens_almoxarifado.json"  # ajuste se necessário
-#     itens = carregar_itens_almoxarifado(caminho_json)
-
-#     almoxarifado = Almoxarifado()
-#     for item in itens:
-#         almoxarifado.adicionar_item(item)
-
-#     gestor = GestorAlmoxarifado(almoxarifado)
-
-#     # Data desejada para projeção
-#     data_projecao = date(2025, 6, 24)
-
-#     print(f"📅 Estoque projetado para {data_projecao.strftime('%Y-%m-%d')}:\n")
-
-#     for item in almoxarifado.listar_itens():
-#         estoque_atual = item.estoque_atual
-#         reservado = item.quantidade_reservada_em(data_projecao)
-#         projetado = item.estoque_projetado_em(data_projecao)
-
-#         print(f"🔹 ID: {item.id_item} | {item.descricao}")
-#         print(f"   Estoque atual: {estoque_atual:.2f} {item.unidade_medida.value}")
-#         print(f"   Reservado para {data_projecao.strftime('%Y-%m-%d')}: {reservado:.2f}")
-#         print(f"   📉 Estoque projetado: {projetado:.2f} {item.unidade_medida.value}\n")
-
-# if __name__ == "__main__":
-#     main()
-
-# from parser.carregador_json_itens_almoxarifado import carregar_itens_almoxarifado
-# caminho_json = "data/almoxarifado/itens_almoxarifado.json"  # ajuste se necessário
-# itens = carregar_itens_almoxarifado(caminho_json)
-
-# almoxarifado = Almoxarifado()
-# for item in itens:
-#     almoxarifado.adicionar_item(item)
-
-# gestor = GestorAlmoxarifado(almoxarifado)
-# alertas = gestor.verificar_estoque_minimo()
-# if alertas:
-#     print("⚠️ Itens abaixo do estoque mínimo:")
-#     for alerta in alertas:
-#         print(f"🔸 {alerta['nome']} (ID {alerta['id_item']}): {alerta['estoque_atual']} / mínimo {alerta['estoque_min']}")
+# Função para uso direto
+if __name__ == "__main__":
+    debug_conversao_politica_producao("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/almoxarifado/itens_almoxarifado.json")

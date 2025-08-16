@@ -1,0 +1,273 @@
+================================================================================
+LOG DE EXECUÇÃO - SISTEMA DE PRODUÇÃO PADARIA
+Modo de execução: OTIMIZADA (Programação Linear)
+Data/Hora: 16/08/2025 15:48:47
+Configuração PL:
+  - Resolução temporal: 30 minutos
+  - Timeout: 300 segundos
+================================================================================
+
+🚀 MODO OTIMIZADO DETECTADO
+📋 MENU: Carregando 1 pedido(s) registrado(s) pelo usuário...
+🚫 MENU: Ignorando pedidos hardcoded do script baseline
+✅ MENU: 1 pedido(s) carregado(s) do menu!
+   🔍 Pedido 1: gestor_almoxarifado = ✅
+
+📊 Debug - Pedidos após criação: 1
+🚀 Iniciando execução otimizada com Programação Linear...
+
+🚀 INICIANDO EXECUÇÃO OTIMIZADA (VERSÃO FINAL)
+============================================================
+🔍 Fase 0: Análise de restrições temporais...
+🔍 Analisando restrições de horário de entrega...
+   📋 Criando atividades para análise do pedido 1...
+🔍 [CRIAR_ATIVIDADES_INICIO] Item 1003 (pao_de_forma): {'tipo_item': 'PRODUTO', 'quantidade_requerida': 80}
+🔍 [DECISAO_PRODUCAO] Item 1003 (pao_de_forma): {'tipo_item': 'PRODUTO', 'deve_produzir': True, 'motivo': 'PRODUTO_SEMPRE_PRODUZ'}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10031, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10031}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10032, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10032}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10033, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10033}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10034, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10034}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10035, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10035}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10036, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10036}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10037, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10037}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10038, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10038}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10039, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10039}
+🔍 [ATIVIDADES_CRIADAS_SUCESSO] Item 1003 (pao_de_forma): {'total_atividades_criadas': 0, 'quantidade_total': 80}
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+🔍 [PROCESSANDO_SUBPRODUTO] Item 2002 (subproduto_2002): {'quantidade': 5200.0, 'item_pai': 1003}
+🔍 [CRIAR_ATIVIDADES_INICIO] Item 2002 (massa_suave): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 5200.0}
+🔍 [VERIFICACAO_ESTOQUE_INICIO] Item 2002 (item_2002): {'quantidade_necessaria': 5200.0, 'gestor_disponivel': True}
+🔍 [ITEM_ENCONTRADO] Item 2002 (Massa suave): {'politica_enum': 'SOB_DEMANDA', 'politica_value': 'SOB_DEMANDA', 'estoque_atual': 0, 'tipo_politica': 'PoliticaProducao'}
+🔍 [DECISAO_SOB_DEMANDA] Item 2002 (Massa suave): {'decisao': 'SEMPRE_PRODUZIR', 'motivo': 'Política SOB_DEMANDA'}
+🔍 [DECISAO_PRODUCAO] Item 2002 (massa_suave): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+🔍 [ATIVIDADE_CRIADA] Item 2002 (massa_suave): {'id_atividade': 20021, 'nome_atividade': 'N/A', 'quantidade': 5200.0}
+🔍 [ATIVIDADES_CRIADAS_SUCESSO] Item 2002 (massa_suave): {'total_atividades_criadas': 1, 'quantidade_total': 5200.0}
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+   ❌ Erro ao analisar pedido 1: ❌ FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: Pedido 1 é do tipo PRODUTO (ID 1003) mas NENHUMA atividade do produto foi criada com sucesso. Isso indica incompatibilidade nas faixas de quantidade ou configuração. CANCELANDO pedido completo incluindo 1 atividade(s) de subproduto.
+📊 Análise concluída:
+   Pedidos com fim obrigatório: 0
+   Pedidos com horário flexível: 1
+
+📊 Fase 1: Extração de dados...
+🔄 Extraindo dados de 1 pedidos...
+   🔧 Forçando criação de atividades modulares para pedido 1
+🔍 [CRIAR_ATIVIDADES_INICIO] Item 1003 (pao_de_forma): {'tipo_item': 'PRODUTO', 'quantidade_requerida': 80}
+🔍 [DECISAO_PRODUCAO] Item 1003 (pao_de_forma): {'tipo_item': 'PRODUTO', 'deve_produzir': True, 'motivo': 'PRODUTO_SEMPRE_PRODUZ'}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10031, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10031}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10032, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10032}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10033, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10033}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10034, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10034}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10035, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10035}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10036, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10036}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10037, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10037}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10038, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10038}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10039, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10039}
+🔍 [ATIVIDADES_CRIADAS_SUCESSO] Item 1003 (pao_de_forma): {'total_atividades_criadas': 0, 'quantidade_total': 80}
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+🔍 [PROCESSANDO_SUBPRODUTO] Item 2002 (subproduto_2002): {'quantidade': 5200.0, 'item_pai': 1003}
+🔍 [CRIAR_ATIVIDADES_INICIO] Item 2002 (massa_suave): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 5200.0}
+🔍 [VERIFICACAO_ESTOQUE_INICIO] Item 2002 (item_2002): {'quantidade_necessaria': 5200.0, 'gestor_disponivel': True}
+🔍 [ITEM_ENCONTRADO] Item 2002 (Massa suave): {'politica_enum': 'SOB_DEMANDA', 'politica_value': 'SOB_DEMANDA', 'estoque_atual': 0, 'tipo_politica': 'PoliticaProducao'}
+🔍 [DECISAO_SOB_DEMANDA] Item 2002 (Massa suave): {'decisao': 'SEMPRE_PRODUZIR', 'motivo': 'Política SOB_DEMANDA'}
+🔍 [DECISAO_PRODUCAO] Item 2002 (massa_suave): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+🔍 [ATIVIDADE_CRIADA] Item 2002 (massa_suave): {'id_atividade': 20021, 'nome_atividade': 'N/A', 'quantidade': 5200.0}
+🔍 [ATIVIDADES_CRIADAS_SUCESSO] Item 2002 (massa_suave): {'total_atividades_criadas': 1, 'quantidade_total': 5200.0}
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+   ❌ Erro ao criar atividades: ❌ FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: Pedido 1 é do tipo PRODUTO (ID 1003) mas NENHUMA atividade do produto foi criada com sucesso. Isso indica incompatibilidade nas faixas de quantidade ou configuração. CANCELANDO pedido completo incluindo 1 atividade(s) de subproduto.
+   🆘 Criando atividades estimadas para pedido 1
+✅ Pedido 1 extraído: 6 atividades, duração: 9:30:00
+📊 Extração concluída: 1 pedidos, 0 equipamentos únicos
+
+🔧 Fase 1.5: Configuração de fins obrigatórios...
+ℹ️ Nenhum ajuste necessário - todos os pedidos têm horário flexível
+
+⏰ Fase 2: Geração de janelas temporais...
+🔄 Gerando janelas temporais FINAIS para 1 pedidos...
+⏰ Horizonte temporal simplificado:
+   Início: 18/08/2025 07:00
+   Fim: 21/08/2025 07:00
+   Resolução: 30 minutos
+
+📋 Processando Pedido 1 (pao_de_forma):
+   Duração necessária: 9:30:00
+   Tipo: FLEXÍVEL
+   Janela disponível: 3 days, 0:00:00
+      ✅ Gerando janelas múltiplas (método final)...
+      Início mais cedo: 18/08 07:00
+      Início mais tarde: 20/08 21:30
+      ✅ 126 janelas totais geradas
+      📋 Exemplos (primeiras 3):
+         1. 18/08 07:00 → 18/08 16:30
+         2. 18/08 07:30 → 18/08 17:00
+         3. 18/08 08:00 → 18/08 17:30
+         ... e mais 123 janelas
+   ✅ 126 janelas possíveis geradas
+
+📊 Total de janelas geradas: 126
+✅ 126 janelas viáveis geradas
+
+🧮 Fase 3: Otimização com Programação Linear (simulação)...
+🔧 Modelo PL inicializado:
+   Pedidos: 1
+   Janelas totais: 126
+🚀 Resolvendo modelo PL (timeout: 300s)...
+✅ Solver SCIP criado
+🔧 Criando variáveis de decisão...
+✅ 126 variáveis criadas
+🎯 Definindo função objetivo...
+✅ Função objetivo: maximizar soma de variáveis
+⚖️ Adicionando restrições...
+   📋 1 restrições de unicidade por pedido
+   🔍 Analisando conflitos de equipamentos...
+   ⚔️ 0 conflitos detectados
+   📋 0 restrições de conflito adicionadas
+✅ Restrições adicionadas
+⏱️ Iniciando resolução...
+📊 Status da resolução: OPTIMAL
+⏱️ Tempo de resolução: 0.04s
+🎯 Valor objetivo ótimo: 1.0
+📋 Pedidos atendidos:
+   ✅ Pedido 1 (pao_de_forma): 18/08 07:00 → 18/08 16:30
+
+🎯 Fase 4: Configuração de controle de deadlines...
+   🔍 DEBUG Pedido 1:
+      Janela original: 18/08 07:00 → 21/08 07:00
+      Janela otimizada: 18/08 07:00 → 18/08 16:30
+      ✅ Pedido flexível - mantendo janela original
+   ✅ Pedido 1: 18/08 07:00 → 21/08 07:00 (janela: 3 days, 0:00:00)
+📊 Configuração aplicada a 1/1 pedidos
+✅ Janelas originais de 3 dias MANTIDAS para execução flexível
+
+🏭 Fase 5: Execução com alocação REAL...
+📋 Executando 1 pedidos em ordem otimizada...
+
+🔄 Executando pedido 1/1: pao_de_forma
+   ⏰ Janela de execução: 18/08 07:00 → 21/08 07:00
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+✅ Comanda salva em: data/comandas/comanda_ordem_1_pedido_1.json
+pao_de_forma (80UNIDADES)
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+│   ├── massa_suave (5200.0GRAMAS)
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+│   │   └── Farinha de trigo para pães (3089.72g)
+│   │   └── Gelo para alimentos (1699.35g)
+│   │   └── Sal refinado (30.9g)
+│   │   └── Fermento biológico seco (61.79g)
+│   │   └── Açúcar cristal (154.49g)
+│   │   └── Margarina com sal (154.49g)
+│   │   └── Aditivo em pasta (9.27g)
+🔍 [CRIAR_ATIVIDADES_INICIO] Item 1003 (pao_de_forma): {'tipo_item': 'PRODUTO', 'quantidade_requerida': 80}
+🔍 [DECISAO_PRODUCAO] Item 1003 (pao_de_forma): {'tipo_item': 'PRODUTO', 'deve_produzir': True, 'motivo': 'PRODUTO_SEMPRE_PRODUZ'}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10031, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10031}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10032, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10032}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10033, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10033}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10034, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10034}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10035, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10035}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10036, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10036}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10037, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10037}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10038, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10038}
+🔍 [ATIVIDADE_CRIADA] Item 1003 (pao_de_forma): {'id_atividade': 10039, 'nome_atividade': 'N/A', 'quantidade': 80}
+🔍 [ERRO_CRIAR_ATIVIDADE] Item 1003 (pao_de_forma): {'erro': '❌ Nenhuma faixa compatível com a quantidade 80g.', 'id_atividade': 10039}
+🔍 [ATIVIDADES_CRIADAS_SUCESSO] Item 1003 (pao_de_forma): {'total_atividades_criadas': 0, 'quantidade_total': 80}
+📦 Item: Massa Suave | ID: 2002 | Política: SOB_DEMANDA
+🔍 [PROCESSANDO_SUBPRODUTO] Item 2002 (subproduto_2002): {'quantidade': 5200.0, 'item_pai': 1003}
+🔍 [CRIAR_ATIVIDADES_INICIO] Item 2002 (massa_suave): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 5200.0}
+🔍 [VERIFICACAO_ESTOQUE_INICIO] Item 2002 (item_2002): {'quantidade_necessaria': 5200.0, 'gestor_disponivel': True}
+🔍 [ITEM_ENCONTRADO] Item 2002 (Massa suave): {'politica_enum': 'SOB_DEMANDA', 'politica_value': 'SOB_DEMANDA', 'estoque_atual': 0, 'tipo_politica': 'PoliticaProducao'}
+🔍 [DECISAO_SOB_DEMANDA] Item 2002 (Massa suave): {'decisao': 'SEMPRE_PRODUZIR', 'motivo': 'Política SOB_DEMANDA'}
+🔍 [DECISAO_PRODUCAO] Item 2002 (massa_suave): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+🔍 [ATIVIDADE_CRIADA] Item 2002 (massa_suave): {'id_atividade': 20021, 'nome_atividade': 'N/A', 'quantidade': 5200.0}
+🔍 [ATIVIDADES_CRIADAS_SUCESSO] Item 2002 (massa_suave): {'total_atividades_criadas': 1, 'quantidade_total': 5200.0}
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Gelo para alimentos | ID: 4 | Política: ESTOCADO
+📦 Item: Sal refinado | ID: 5 | Política: ESTOCADO
+📦 Item: Fermento biológico seco | ID: 6 | Política: ESTOCADO
+📦 Item: Açúcar cristal | ID: 13 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Aditivo em pasta | ID: 7 | Política: ESTOCADO
+   ❌ Falha no pedido 1: ❌ FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: Pedido 1 é do tipo PRODUTO (ID 1003) mas NENHUMA atividade do produto foi criada com sucesso. Isso indica incompatibilidade nas faixas de quantidade ou configuração. CANCELANDO pedido completo incluindo 1 atividade(s) de subproduto.
+
+📊 Resultado da execução:
+   ✅ Executados: 0
+   ❌ Falhas: 1
+
+================================================================================
+🎉 EXECUÇÃO OTIMIZADA CONCLUÍDA (VERSÃO FINAL)
+================================================================================
+📊 RESULTADOS:
+   Pedidos atendidos: 1/1
+   Taxa de atendimento: 100.0%
+   Status do solver: OPTIMAL
+   Pedidos com fim obrigatório: 0
+
+⏱️ PERFORMANCE:
+   Tempo total: 0.10s
+   Tempo PL: 0.04s
+   Janelas geradas: 126
+
+✅ FUNCIONALIDADES IMPLEMENTADAS:
+   ✅ Detecção automática de fins obrigatórios
+   ✅ Respeito ao tempo_maximo_de_espera = 0
+   ✅ Manutenção de janela de 3 dias para execução
+   ✅ Otimização PL para múltiplos pedidos
+   ✅ Controle de conflitos entre equipamentos
+
+📅 CRONOGRAMA OTIMIZADO:
+   ✅ pao_de_forma: 18/08 07:00 → 18/08 16:30 (9:30:00) [FLEXÍVEL]
+================================================================================
+❌ Falha na execução otimizada
+================================================================================
+🎉 EXECUÇÃO CONCLUÍDA COM SUCESSO!
+📄 Log salvo em: logs/execucao_pedidos_otimizado_20250816_154847.log
+================================================================================

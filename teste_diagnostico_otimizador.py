@@ -1,405 +1,331 @@
-"""
-Teste de Diagnóstico do Otimizador PL
-=====================================
-
-Script para identificar e corrigir problemas no sistema de otimização.
-"""
-
-import sys
+import json
+from datetime import datetime
+from typing import List, Dict, Any
 import os
-from datetime import datetime, timedelta
 
-# Adiciona o caminho do sistema
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-def teste_1_importacoes():
-    """Testa se todas as importações estão funcionando"""
-    print("🧪 TESTE 1: Verificando importações...")
+class DebugCriacaoAtividades:
+    """
+    🔍 Sistema de debug detalhado para rastrear criação de atividades.
+    Salva logs em arquivo para análise posterior.
+    """
     
-    try:
-        # Teste OR-Tools
-        from ortools.linear_solver import pywraplp
-        print("   ✅ OR-Tools importado com sucesso")
-    except ImportError as e:
-        print(f"   ❌ OR-Tools não disponível: {e}")
-        print("   💡 Execute: pip install ortools")
-        return False
-    
-    try:
-        # Teste do extrator
-        from otimizador.extrator_dados_pedidos import ExtratorDadosPedidos, DadosPedido, DadosAtividade
-        print("   ✅ Extrator importado com sucesso")
-    except ImportError as e:
-        print(f"   ❌ Extrator não disponível: {e}")
-        return False
-    
-    try:
-        # Teste do gerador
-        from otimizador.gerador_janelas_temporais import GeradorJanelasTemporais
-        print("   ✅ Gerador de janelas importado com sucesso")
-    except ImportError as e:
-        print(f"   ❌ Gerador não disponível: {e}")
-        return False
-    
-    try:
-        # Teste do modelo PL
-        from otimizador.modelo_pl_otimizador import ModeloPLOtimizador
-        print("   ✅ Modelo PL importado com sucesso")
-    except ImportError as e:
-        print(f"   ❌ Modelo PL não disponível: {e}")
-        return False
-    
-    try:
-        # Teste do otimizador integrado
-        from otimizador.otimizador_integrado import OtimizadorIntegrado
-        print("   ✅ Otimizador integrado importado com sucesso")
-    except ImportError as e:
-        print(f"   ❌ Otimizador integrado não disponível: {e}")
-        return False
-    
-    print("   🎉 Todas as importações funcionando!")
-    return True
-
-
-def teste_2_extrator_basico():
-    """Testa o extrator com dados mock"""
-    print("\n🧪 TESTE 2: Extrator com dados mock...")
-    
-    from otimizador.extrator_dados_pedidos import ExtratorDadosPedidos, DadosPedido, DadosAtividade
-    
-    # Cria dados mock para teste
-    class MockPedido:
-        def __init__(self, id_pedido, id_produto, nome, quantidade):
-            self.id_pedido = id_pedido
-            self.id_produto = id_produto
-            self.quantidade = quantidade
-            self.inicio_jornada = datetime(2025, 6, 22, 7, 0)
-            self.fim_jornada = datetime(2025, 6, 26, 7, 0)
-            self.atividades_modulares = None  # Simula o problema real
-            
-            class MockFicha:
-                def __init__(self, nome):
-                    self.nome = nome
-            
-            self.ficha_tecnica_modular = MockFicha(nome)
-    
-    # Cria pedidos mock
-    pedidos_mock = [
-        MockPedido(1, 1001, "pao_frances", 450),
-        MockPedido(2, 1002, "pao_hamburguer", 120)
-    ]
-    
-    print(f"   🔧 Testando com {len(pedidos_mock)} pedidos mock...")
-    
-    # Testa extração
-    extrator = ExtratorDadosPedidos()
-    dados_extraidos = extrator.extrair_dados(pedidos_mock)
-    
-    # Verifica resultados
-    if dados_extraidos and len(dados_extraidos) > 0:
-        print(f"   ✅ Extração bem-sucedida: {len(dados_extraidos)} pedidos")
+    def __init__(self, salvar_em_arquivo: bool = True):
+        self.logs_debug = []
+        self.salvar_arquivo = salvar_em_arquivo
+        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.arquivo_debug = f"debug_criacao_atividades_{self.timestamp}.json"
         
-        for dados in dados_extraidos:
-            print(f"      • Pedido {dados.id_pedido}: {dados.nome_produto}")
-            print(f"        Duração: {dados.duracao_total}")
-            print(f"        Atividades: {len(dados.atividades)}")
+    def log(self, categoria: str, item_id: int, item_nome: str, dados: Dict[str, Any]):
+        """Registra um evento de debug"""
+        evento = {
+            "timestamp": datetime.now().isoformat(),
+            "categoria": categoria,
+            "item_id": item_id,
+            "item_nome": item_nome,
+            "dados": dados
+        }
+        
+        self.logs_debug.append(evento)
+        
+        # Print para console também
+        print(f"🔍 [{categoria}] Item {item_id} ({item_nome}): {dados}")
+        
+    def salvar_logs(self):
+        """Salva todos os logs em arquivo JSON"""
+        if not self.salvar_arquivo:
+            return
             
-        if all(d.duracao_total > timedelta(0) for d in dados_extraidos):
-            print("   ✅ Todas as durações são válidas!")
-            return True
-        else:
-            print("   ⚠️ Algumas durações são zero - verificar estimativas")
+        try:
+            with open(self.arquivo_debug, 'w', encoding='utf-8') as f:
+                json.dump({
+                    "timestamp_debug": self.timestamp,
+                    "total_eventos": len(self.logs_debug),
+                    "eventos": self.logs_debug
+                }, f, indent=2, ensure_ascii=False)
+            
+            print(f"💾 Debug salvo em: {self.arquivo_debug}")
+            print(f"📊 Total de eventos: {len(self.logs_debug)}")
+            
+        except Exception as e:
+            print(f"❌ Erro ao salvar debug: {e}")
+    
+    def gerar_relatorio_creme(self):
+        """Gera relatório específico para eventos do creme de queijo"""
+        eventos_creme = [
+            evento for evento in self.logs_debug 
+            if evento['item_id'] == 2010 or 'creme' in evento['item_nome'].lower()
+        ]
+        
+        print(f"\n📋 RELATÓRIO ESPECÍFICO - CREME DE QUEIJO:")
+        print("=" * 60)
+        print(f"🔢 Total de eventos relacionados ao creme: {len(eventos_creme)}")
+        
+        for evento in eventos_creme:
+            print(f"\n⏰ {evento['timestamp']}")
+            print(f"📂 Categoria: {evento['categoria']}")
+            print(f"📝 Dados: {evento['dados']}")
+        
+        return eventos_creme
+
+
+# Instância global para usar em todo o sistema
+debug_atividades = DebugCriacaoAtividades()
+
+
+def adicionar_debug_ao_pedido_producao():
+    """
+    🔧 Adiciona pontos de debug no método _verificar_estoque_suficiente
+    e _criar_atividades_recursivas do PedidoDeProducao.
+    
+    Cole este código no início dos métodos para debug.
+    """
+    
+    codigo_debug_verificar_estoque = '''
+    # 🔍 DEBUG - Início verificação de estoque
+    debug_atividades.log(
+        categoria="VERIFICACAO_ESTOQUE_INICIO",
+        item_id=id_item,
+        item_nome=f"item_{id_item}",
+        dados={
+            "quantidade_necessaria": quantidade_necessaria,
+            "gestor_disponivel": self.gestor_almoxarifado is not None
+        }
+    )
+    '''
+    
+    codigo_debug_item_encontrado = '''
+    # 🔍 DEBUG - Item encontrado
+    debug_atividades.log(
+        categoria="ITEM_ENCONTRADO",
+        item_id=id_item,
+        item_nome=item.descricao,
+        dados={
+            "politica_enum": str(politica_enum),
+            "politica_value": politica_enum.value,
+            "estoque_atual": self.gestor_almoxarifado.obter_estoque_atual(id_item)
+        }
+    )
+    '''
+    
+    codigo_debug_decisao_estoque = '''
+    # 🔍 DEBUG - Decisão de estoque
+    debug_atividades.log(
+        categoria="DECISAO_ESTOQUE",
+        item_id=id_item,
+        item_nome=item.descricao,
+        dados={
+            "politica": politica_enum.value,
+            "quantidade_necessaria": quantidade_necessaria,
+            "estoque_atual": estoque_atual,
+            "tem_estoque_suficiente": tem_estoque_suficiente,
+            "decisao": "NAO_PRODUZIR" if tem_estoque_suficiente else "PRODUZIR"
+        }
+    )
+    '''
+    
+    codigo_debug_criar_atividades = '''
+    # 🔍 DEBUG - Início criação atividades recursivas
+    debug_atividades.log(
+        categoria="CRIAR_ATIVIDADES_INICIO",
+        item_id=ficha_modular.id_item,
+        item_nome=getattr(ficha_modular, 'nome', f'item_{ficha_modular.id_item}'),
+        dados={
+            "tipo_item": ficha_modular.tipo_item.value,
+            "quantidade_requerida": ficha_modular.quantidade_requerida
+        }
+    )
+    '''
+    
+    codigo_debug_decisao_producao = '''
+    # 🔍 DEBUG - Decisão de produção
+    debug_atividades.log(
+        categoria="DECISAO_PRODUCAO",
+        item_id=ficha_modular.id_item,
+        item_nome=getattr(ficha_modular, 'nome', f'item_{ficha_modular.id_item}'),
+        dados={
+            "tipo_item": ficha_modular.tipo_item.value,
+            "deve_produzir": deve_produzir,
+            "motivo": "PRODUTO_SEMPRE_PRODUZ" if ficha_modular.tipo_item == TipoItem.PRODUTO else "VERIFICACAO_ESTOQUE"
+        }
+    )
+    '''
+    
+    print("🔧 CÓDIGOS DE DEBUG PARA ADICIONAR:")
+    print("=" * 50)
+    print("\n📝 1. No início de _verificar_estoque_suficiente:")
+    print(codigo_debug_verificar_estoque)
+    print("\n📝 2. Após encontrar o item no almoxarifado:")
+    print(codigo_debug_item_encontrado)
+    print("\n📝 3. Após a decisão de estoque (ESTOCADO/AMBOS):")
+    print(codigo_debug_decisao_estoque)
+    print("\n📝 4. No início de _criar_atividades_recursivas:")
+    print(codigo_debug_criar_atividades)
+    print("\n📝 5. Após a decisão deve_produzir:")
+    print(codigo_debug_decisao_producao)
+    
+    return {
+        "verificar_estoque_inicio": codigo_debug_verificar_estoque,
+        "item_encontrado": codigo_debug_item_encontrado,
+        "decisao_estoque": codigo_debug_decisao_estoque,
+        "criar_atividades_inicio": codigo_debug_criar_atividades,
+        "decisao_producao": codigo_debug_decisao_producao
+    }
+
+
+def criar_versao_debug_pedido_producao():
+    """
+    🔧 Cria uma versão com debug do método _verificar_estoque_suficiente
+    """
+    codigo_metodo_debug = '''
+def _verificar_estoque_suficiente(self, id_item: int, quantidade_necessaria: float) -> bool:
+    """
+    ✅ VERSÃO COM DEBUG: Verifica se há estoque suficiente para um item específico.
+    """
+    # 🔍 DEBUG - Início verificação de estoque
+    debug_atividades.log(
+        categoria="VERIFICACAO_ESTOQUE_INICIO",
+        item_id=id_item,
+        item_nome=f"item_{id_item}",
+        dados={
+            "quantidade_necessaria": quantidade_necessaria,
+            "gestor_disponivel": self.gestor_almoxarifado is not None
+        }
+    )
+    
+    if not self.gestor_almoxarifado:
+        debug_atividades.log(
+            categoria="ERRO_GESTOR_INDISPONIVEL",
+            item_id=id_item,
+            item_nome=f"item_{id_item}",
+            dados={"erro": "Gestor almoxarifado não disponível"}
+        )
+        logger.warning("⚠️ Gestor de almoxarifado não disponível. Assumindo necessidade de produção.")
+        return False
+    
+    try:
+        # Buscar item usando método otimizado do gestor
+        item = self.gestor_almoxarifado.obter_item_por_id(id_item)
+        if not item:
+            debug_atividades.log(
+                categoria="ERRO_ITEM_NAO_ENCONTRADO",
+                item_id=id_item,
+                item_nome=f"item_{id_item}",
+                dados={"erro": "Item não encontrado no almoxarifado"}
+            )
+            logger.warning(f"⚠️ Item {id_item} não encontrado no almoxarifado")
             return False
-    else:
-        print("   ❌ Falha na extração")
-        return False
-
-
-def teste_3_gerador_janelas():
-    """Testa o gerador de janelas temporais"""
-    print("\n🧪 TESTE 3: Gerador de janelas temporais...")
-    
-    from otimizador.extrator_dados_pedidos import ExtratorDadosPedidos
-    from otimizador.gerador_janelas_temporais import GeradorJanelasTemporais
-    
-    # Usa dados do teste anterior
-    class MockPedido:
-        def __init__(self, id_pedido, id_produto, nome, quantidade):
-            self.id_pedido = id_pedido
-            self.id_produto = id_produto
-            self.quantidade = quantidade
-            self.inicio_jornada = datetime(2025, 6, 22, 7, 0)
-            self.fim_jornada = datetime(2025, 6, 26, 7, 0)
-            self.atividades_modulares = None
-            
-            class MockFicha:
-                def __init__(self, nome):
-                    self.nome = nome
-            
-            self.ficha_tecnica_modular = MockFicha(nome)
-    
-    pedidos_mock = [
-        MockPedido(1, 1001, "pao_frances", 450),
-        MockPedido(2, 1002, "pao_hamburguer", 120)
-    ]
-    
-    print("   🔧 Extraindo dados...")
-    extrator = ExtratorDadosPedidos()
-    dados_extraidos = extrator.extrair_dados(pedidos_mock)
-    
-    print("   🔧 Gerando janelas temporais...")
-    gerador = GeradorJanelasTemporais(resolucao_minutos=60)  # 1h para teste rápido
-    janelas = gerador.gerar_janelas_todos_pedidos(dados_extraidos)
-    
-    # Verifica resultados
-    total_janelas = sum(len(j) for j in janelas.values())
-    print(f"   📊 Total de janelas geradas: {total_janelas}")
-    
-    if total_janelas > 0:
-        print("   ✅ Geração de janelas bem-sucedida!")
         
-        for pedido_id, lista_janelas in janelas.items():
-            if lista_janelas:
-                print(f"      • Pedido {pedido_id}: {len(lista_janelas)} janelas")
-                print(f"        Primeira: {lista_janelas[0].datetime_inicio.strftime('%d/%m %H:%M')} → {lista_janelas[0].datetime_fim.strftime('%d/%m %H:%M')}")
+        # ✅ CORREÇÃO: Usar ENUM diretamente, não string
+        politica_enum = item.politica_producao
         
-        return True
-    else:
-        print("   ❌ Nenhuma janela foi gerada")
-        return False
-
-
-def teste_4_modelo_pl():
-    """Testa o modelo de programação linear"""
-    print("\n🧪 TESTE 4: Modelo de Programação Linear...")
-    
-    try:
-        from otimizador.extrator_dados_pedidos import ExtratorDadosPedidos
-        from otimizador.gerador_janelas_temporais import GeradorJanelasTemporais
-        from otimizador.modelo_pl_otimizador import ModeloPLOtimizador
-        
-        # Dados do teste anterior
-        class MockPedido:
-            def __init__(self, id_pedido, id_produto, nome, quantidade):
-                self.id_pedido = id_pedido
-                self.id_produto = id_produto
-                self.quantidade = quantidade
-                self.inicio_jornada = datetime(2025, 6, 22, 7, 0)
-                self.fim_jornada = datetime(2025, 6, 26, 7, 0)
-                self.atividades_modulares = None
-                
-                class MockFicha:
-                    def __init__(self, nome):
-                        self.nome = nome
-                
-                self.ficha_tecnica_modular = MockFicha(nome)
-        
-        pedidos_mock = [MockPedido(1, 1001, "pao_frances", 300)]  # Apenas 1 para teste
-        
-        print("   🔧 Preparando dados...")
-        extrator = ExtratorDadosPedidos()
-        dados_extraidos = extrator.extrair_dados(pedidos_mock)
-        
-        gerador = GeradorJanelasTemporais(resolucao_minutos=120)  # 2h para teste bem rápido
-        janelas = gerador.gerar_janelas_todos_pedidos(dados_extraidos)
-        
-        total_janelas = sum(len(j) for j in janelas.values())
-        print(f"   📊 Dados preparados: {len(dados_extraidos)} pedidos, {total_janelas} janelas")
-        
-        if total_janelas == 0:
-            print("   ⚠️ Sem janelas para testar - criando janela manual...")
-            return False
-        
-        print("   🔧 Criando modelo PL...")
-        modelo = ModeloPLOtimizador(dados_extraidos, janelas, gerador.configuracao_tempo)
-        
-        print("   🔧 Resolvendo modelo...")
-        solucao = modelo.resolver(timeout_segundos=30)
-        
-        print(f"   📊 Resultado: {solucao.status_solver}")
-        print(f"   📊 Pedidos atendidos: {solucao.pedidos_atendidos}")
-        print(f"   📊 Tempo resolução: {solucao.tempo_resolucao:.2f}s")
-        
-        if solucao.status_solver in ["OPTIMAL", "FEASIBLE"]:
-            print("   ✅ Modelo PL funcionando!")
-            return True
-        else:
-            print("   ⚠️ Modelo não encontrou solução ótima")
-            return False
-            
-    except Exception as e:
-        print(f"   ❌ Erro no teste PL: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-
-def teste_5_sistema_real():
-    """Testa com dados do sistema real"""
-    print("\n🧪 TESTE 5: Sistema real...")
-    
-    try:
-        # Importa sistema real
-        from producao_paes_backup import TesteSistemaProducao
-        
-        print("   🔧 Criando sistema de teste...")
-        sistema = TesteSistemaProducao(usar_otimizacao=False)  # Primeiro sem otimização
-        
-        print("   🔧 Inicializando almoxarifado...")
-        sistema.inicializar_almoxarifado()
-        
-        print("   🔧 Criando pedidos...")
-        sistema.criar_pedidos_de_producao()
-        
-        print(f"   📊 Pedidos criados: {len(sistema.pedidos)}")
-        
-        # Diagnóstica os pedidos
-        pedidos_com_atividades = 0
-        for pedido in sistema.pedidos:
-            if hasattr(pedido, 'atividades_modulares') and pedido.atividades_modulares:
-                pedidos_com_atividades += 1
-        
-        print(f"   📊 Pedidos com atividades: {pedidos_com_atividades}/{len(sistema.pedidos)}")
-        
-        # Força criação de atividades nos pedidos
-        print("   🔧 Forçando criação de atividades...")
-        for pedido in sistema.pedidos:
-            try:
-                pedido.criar_atividades_modulares_necessarias()
-            except Exception as e:
-                print(f"      ⚠️ Erro no pedido {pedido.id_pedido}: {e}")
-        
-        # Re-verifica
-        pedidos_com_atividades_apos = 0
-        for pedido in sistema.pedidos:
-            if hasattr(pedido, 'atividades_modulares') and pedido.atividades_modulares:
-                pedidos_com_atividades_apos += 1
-        
-        print(f"   📊 Pedidos com atividades (após força): {pedidos_com_atividades_apos}/{len(sistema.pedidos)}")
-        
-        if pedidos_com_atividades_apos > 0:
-            print("   ✅ Sistema real com atividades funcionando!")
-            return True
-        else:
-            print("   ⚠️ Sistema real sem atividades - usar estimativas")
-            return False
-            
-    except Exception as e:
-        print(f"   ❌ Erro no teste sistema real: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-
-def teste_6_otimizacao_completa():
-    """Teste completo de otimização"""
-    print("\n🧪 TESTE 6: Otimização completa...")
-    
-    try:
-        from producao_paes_backup import TesteSistemaProducao
-        
-        print("   🔧 Criando sistema otimizado...")
-        sistema = TesteSistemaProducao(
-            usar_otimizacao=True,
-            resolucao_minutos=60,  # 1h para teste rápido
-            timeout_pl=60  # 1 min timeout
+        # 🔍 DEBUG - Item encontrado
+        debug_atividades.log(
+            categoria="ITEM_ENCONTRADO",
+            item_id=id_item,
+            item_nome=item.descricao,
+            dados={
+                "politica_enum": str(politica_enum),
+                "politica_value": politica_enum.value,
+                "estoque_atual": self.gestor_almoxarifado.obter_estoque_atual(id_item),
+                "tipo_politica": type(politica_enum).__name__
+            }
         )
         
-        print("   🔧 Executando teste completo...")
-        sucesso = sistema.executar_teste_completo()
+        # Para SOB_DEMANDA: sempre produzir (não verificar estoque)
+        if politica_enum == PoliticaProducao.SOB_DEMANDA:
+            debug_atividades.log(
+                categoria="DECISAO_SOB_DEMANDA",
+                item_id=id_item,
+                item_nome=item.descricao,
+                dados={
+                    "decisao": "SEMPRE_PRODUZIR",
+                    "motivo": "Política SOB_DEMANDA"
+                }
+            )
+            logger.debug(
+                f"🔄 Item '{item.descricao}' (ID {id_item}) é SOB_DEMANDA. "
+                f"Produção será realizada independente do estoque."
+            )
+            return False  # Retorna False para forçar produção
         
-        if sucesso:
-            print("   ✅ Otimização completa funcionando!")
+        # Para ESTOCADO e AMBOS: verificar estoque atual
+        if politica_enum in [PoliticaProducao.ESTOCADO, PoliticaProducao.AMBOS]:
+            tem_estoque_suficiente = self.gestor_almoxarifado.verificar_estoque_atual_suficiente(
+                id_item, quantidade_necessaria
+            )
             
-            # Mostra estatísticas
-            stats = sistema.obter_estatisticas()
-            print(f"   📊 Estatísticas: {stats}")
+            estoque_atual = self.gestor_almoxarifado.obter_estoque_atual(id_item)
             
-            return True
-        else:
-            print("   ❌ Falha na otimização completa")
-            return False
+            # 🔍 DEBUG - Decisão de estoque
+            debug_atividades.log(
+                categoria="DECISAO_ESTOQUE",
+                item_id=id_item,
+                item_nome=item.descricao,
+                dados={
+                    "politica": politica_enum.value,
+                    "quantidade_necessaria": quantidade_necessaria,
+                    "estoque_atual": estoque_atual,
+                    "tem_estoque_suficiente": tem_estoque_suficiente,
+                    "decisao": "NAO_PRODUZIR" if tem_estoque_suficiente else "PRODUZIR"
+                }
+            )
             
-    except Exception as e:
-        print(f"   ❌ Erro no teste completo: {e}")
-        import traceback
-        traceback.print_exc()
+            logger.info(
+                f"📦 Item '{item.descricao}' (ID {id_item}): "
+                f"Estoque atual: {estoque_atual} | "
+                f"Necessário: {quantidade_necessaria} | "
+                f"Política: {politica_enum.value} | "
+                f"Suficiente: {'✅' if tem_estoque_suficiente else '❌'}"
+            )
+            
+            return tem_estoque_suficiente
+        
+        # Política desconhecida - assumir necessidade de produção
+        debug_atividades.log(
+            categoria="POLITICA_DESCONHECIDA",
+            item_id=id_item,
+            item_nome=item.descricao,
+            dados={
+                "politica_desconhecida": str(politica_enum),
+                "decisao": "PRODUZIR_POR_SEGURANCA"
+            }
+        )
+        logger.warning(f"⚠️ Política de produção desconhecida '{politica_enum}' para item {id_item}")
         return False
-
-
-def executar_todos_os_testes():
-    """Executa todos os testes de diagnóstico"""
-    print("🔍 DIAGNÓSTICO COMPLETO DO OTIMIZADOR PL")
-    print("=" * 60)
-    
-    testes = [
-        ("Importações", teste_1_importacoes),
-        ("Extrator Básico", teste_2_extrator_basico),
-        ("Gerador de Janelas", teste_3_gerador_janelas),
-        ("Modelo PL", teste_4_modelo_pl),
-        ("Sistema Real", teste_5_sistema_real),
-        ("Otimização Completa", teste_6_otimizacao_completa)
-    ]
-    
-    resultados = []
-    
-    for nome, funcao_teste in testes:
-        try:
-            resultado = funcao_teste()
-            resultados.append((nome, resultado))
-        except Exception as e:
-            print(f"   ❌ ERRO CRÍTICO no teste {nome}: {e}")
-            resultados.append((nome, False))
-    
-    # Resumo final
-    print("\n" + "=" * 60)
-    print("📊 RESUMO DO DIAGNÓSTICO")
-    print("=" * 60)
-    
-    sucessos = 0
-    for nome, sucesso in resultados:
-        status = "✅ PASSOU" if sucesso else "❌ FALHOU"
-        print(f"   {nome}: {status}")
-        if sucesso:
-            sucessos += 1
-    
-    print(f"\n📊 Total: {sucessos}/{len(testes)} testes passaram")
-    
-    if sucessos == len(testes):
-        print("🎉 TODOS OS TESTES PASSARAM! Sistema funcionando corretamente.")
-    elif sucessos >= len(testes) - 2:
-        print("✅ MAIORIA DOS TESTES PASSOU. Sistema provavelmente funcionando.")
-    else:
-        print("⚠️ VÁRIOS TESTES FALHARAM. Verificar configuração do sistema.")
-    
-    return sucessos == len(testes)
-
-
-def main():
-    """Função principal"""
-    import sys
-    
-    if len(sys.argv) > 1:
-        teste_num = sys.argv[1]
         
-        if teste_num == "1":
-            teste_1_importacoes()
-        elif teste_num == "2":
-            teste_2_extrator_basico()
-        elif teste_num == "3":
-            teste_3_gerador_janelas()
-        elif teste_num == "4":
-            teste_4_modelo_pl()
-        elif teste_num == "5":
-            teste_5_sistema_real()
-        elif teste_num == "6":
-            teste_6_otimizacao_completa()
-        else:
-            print("❓ Testes disponíveis: 1, 2, 3, 4, 5, 6")
-            print("   Ou execute sem argumentos para todos os testes")
-    else:
-        executar_todos_os_testes()
+    except Exception as e:
+        debug_atividades.log(
+            categoria="ERRO_EXCECAO",
+            item_id=id_item,
+            item_nome=f"item_{id_item}",
+            dados={
+                "erro": str(e),
+                "tipo_erro": type(e).__name__
+            }
+        )
+        logger.warning(f"⚠️ Erro ao verificar estoque do item {id_item}: {e}")
+        return False
+'''
+    
+    print("📝 MÉTODO _verificar_estoque_suficiente COM DEBUG COMPLETO:")
+    print("=" * 60)
+    print(codigo_metodo_debug)
+    
+    return codigo_metodo_debug
 
 
 if __name__ == "__main__":
-    main()
+    print("🔍 SISTEMA DE DEBUG PARA CRIAÇÃO DE ATIVIDADES")
+    print("=" * 50)
+    
+    # Gerar códigos de debug
+    adicionar_debug_ao_pedido_producao()
+    
+    print("\n" + "="*50)
+    print("💡 INSTRUÇÕES:")
+    print("1. Adicione os códigos de debug nos métodos indicados")
+    print("2. Execute o pedido 777")
+    print("3. Execute: debug_atividades.salvar_logs()")
+    print("4. Execute: debug_atividades.gerar_relatorio_creme()")
+    print("5. Analise o arquivo JSON gerado para identificar o problema")
+    print("="*50)

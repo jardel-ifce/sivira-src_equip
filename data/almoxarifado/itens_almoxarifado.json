@@ -751,7 +751,7 @@
     "nome": "creme_de_queijo",
     "descricao": "Creme de queijo",
     "tipo_item": "SUBPRODUTO",
-    "politica_producao": "SOB_DEMANDA",
+    "politica_producao": "ESTOCADO",
     "peso": 1000,
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
