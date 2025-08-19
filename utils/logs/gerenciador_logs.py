@@ -1,18 +1,316 @@
-# utils/gerenciador_logs.py
+# utils/logs/gerenciador_logs.py
 import os
 import sys
+import glob
 from utils.logs.logger_factory import setup_logger
 from datetime import datetime
 import traceback 
 
 logger = setup_logger("GerenciadorLogs")
 
-
 PASTAS = [
     "logs/erros",
     "logs/funcionarios",
     "logs/equipamentos"
 ]
+
+# 🆕 Pastas para limpeza na inicialização
+PASTAS_INICIALIZACAO = [
+    "logs/funcionarios",
+    "logs/equipamentos", 
+    "logs/erros",
+    "logs/execucoes"
+]
+
+def limpar_arquivo_pedidos_salvos():
+    """
+    🆕 Remove arquivo de pedidos salvos na inicialização.
+    
+    Returns:
+        bool: True se arquivo foi removido, False se não existia
+    """
+    arquivo_pedidos = "data/pedidos/pedidos_salvos.json"
+    
+    try:
+        if os.path.exists(arquivo_pedidos):
+            os.remove(arquivo_pedidos)
+            print(f"🗑️ Arquivo de pedidos salvos removido: {arquivo_pedidos}")
+            return True
+        else:
+            print(f"📄 Arquivo de pedidos salvos não existe: {arquivo_pedidos}")
+            return False
+    except Exception as e:
+        print(f"⚠️ Erro ao remover arquivo de pedidos salvos: {e}")
+        return False
+
+def limpar_logs_inicializacao():
+    """
+    🧹 Limpa logs na inicialização do sistema.
+    
+    Remove todos os arquivos .log e .json das pastas:
+    - logs/funcionarios
+    - logs/equipamentos
+    - logs/erros  
+    - logs/execucoes
+    
+    🆕 NOVA FUNCIONALIDADE: Também limpa logs gerais execucao_pedidos_*.log
+    
+    Returns:
+        str: Relatório formatado da limpeza realizada
+    """
+    relatorio = {
+        'total_arquivos_removidos': 0,
+        'pastas_processadas': {},
+        'logs_gerais_removidos': 0,
+        'erros': [],
+        'sucesso': True
+    }
+    
+    print("🧹 Limpando logs anteriores...")
+    
+    # Limpar pastas específicas
+    for pasta in PASTAS_INICIALIZACAO:
+        relatorio['pastas_processadas'][pasta] = {
+            'logs_removidos': 0,
+            'jsons_removidos': 0,
+            'outros_removidos': 0,
+            'total': 0
+        }
+        
+        # Cria pasta se não existir
+        try:
+            os.makedirs(pasta, exist_ok=True)
+        except Exception as e:
+            relatorio['erros'].append(f"Erro ao criar pasta {pasta}: {e}")
+            continue
+        
+        if not os.path.exists(pasta):
+            relatorio['erros'].append(f"📁 Pasta não encontrada: {pasta}")
+            continue
+
+        # Conta e remove arquivos
+        try:
+            arquivos = os.listdir(pasta)
+            if not arquivos:
+                print(f"   📂 {pasta}: já está vazia")
+                continue
+                
+            for nome_arquivo in arquivos:
+                caminho = os.path.join(pasta, nome_arquivo)
+                
+                try:
+                    if os.path.isfile(caminho):
+                        # Remove arquivos .log
+                        if nome_arquivo.endswith(".log"):
+                            os.remove(caminho)
+                            relatorio['pastas_processadas'][pasta]['logs_removidos'] += 1
+                        
+                        # Remove arquivos .json
+                        elif nome_arquivo.endswith(".json"):
+                            os.remove(caminho)
+                            relatorio['pastas_processadas'][pasta]['jsons_removidos'] += 1
+                        
+                        # Remove outros arquivos (txt, csv, etc.)
+                        else:
+                            os.remove(caminho)
+                            relatorio['pastas_processadas'][pasta]['outros_removidos'] += 1
+                            
+                except Exception as e:
+                    relatorio['erros'].append(f"Erro ao remover {caminho}: {e}")
+            
+            # Calcula total da pasta
+            pasta_stats = relatorio['pastas_processadas'][pasta]
+            pasta_stats['total'] = (pasta_stats['logs_removidos'] + 
+                                  pasta_stats['jsons_removidos'] + 
+                                  pasta_stats['outros_removidos'])
+            
+            relatorio['total_arquivos_removidos'] += pasta_stats['total']
+            
+            # Mostra resultado da pasta
+            if pasta_stats['total'] > 0:
+                detalhes = []
+                if pasta_stats['logs_removidos'] > 0:
+                    detalhes.append(f"{pasta_stats['logs_removidos']} logs")
+                if pasta_stats['jsons_removidos'] > 0:
+                    detalhes.append(f"{pasta_stats['jsons_removidos']} JSONs")
+                if pasta_stats['outros_removidos'] > 0:
+                    detalhes.append(f"{pasta_stats['outros_removidos']} outros")
+                
+                print(f"   ✅ {pasta}: {pasta_stats['total']} arquivos removidos ({', '.join(detalhes)})")
+            else:
+                print(f"   📂 {pasta}: já estava vazia")
+                
+        except Exception as e:
+            relatorio['erros'].append(f"Erro ao processar pasta {pasta}: {e}")
+            relatorio['sucesso'] = False
+    
+    # 🆕 Limpar logs gerais na pasta raiz de logs
+    try:
+        pasta_logs = "logs"
+        if os.path.exists(pasta_logs):
+            # Busca por arquivos execucao_pedidos_*.log
+            pattern = os.path.join(pasta_logs, "execucao_pedidos_*.log")
+            arquivos_gerais = glob.glob(pattern)
+            
+            for arquivo in arquivos_gerais:
+                try:
+                    os.remove(arquivo)
+                    relatorio['logs_gerais_removidos'] += 1
+                except Exception as e:
+                    relatorio['erros'].append(f"Erro ao remover {arquivo}: {e}")
+            
+            if relatorio['logs_gerais_removidos'] > 0:
+                print(f"   ✅ logs/: {relatorio['logs_gerais_removidos']} logs gerais removidos")
+            
+            relatorio['total_arquivos_removidos'] += relatorio['logs_gerais_removidos']
+            
+    except Exception as e:
+        relatorio['erros'].append(f"Erro ao limpar logs gerais: {e}")
+    
+    # 🆕 Limpar arquivo de pedidos salvos
+    try:
+        pedidos_removido = limpar_arquivo_pedidos_salvos()
+        if pedidos_removido:
+            print("   ✅ data/pedidos/: arquivo de pedidos salvos removido")
+    except Exception as e:
+        relatorio['erros'].append(f"Erro ao limpar pedidos salvos: {e}")
+    
+    # Resumo final
+    if relatorio['total_arquivos_removidos'] > 0:
+        print(f"🗑️ Total: {relatorio['total_arquivos_removidos']} arquivos de log removidos")
+    else:
+        print("📭 Nenhum arquivo de log encontrado para remover")
+    
+    # Mostra erros se houver
+    if relatorio['erros']:
+        print(f"⚠️ {len(relatorio['erros'])} erro(s) durante limpeza:")
+        for erro in relatorio['erros']:
+            print(f"   • {erro}")
+        relatorio['sucesso'] = False
+    
+    # 🆕 Retorna relatório formatado como string
+    resultado = []
+    resultado.append("🧹 LIMPEZA AUTOMÁTICA DE LOGS")
+    resultado.append("=" * 50)
+    
+    for pasta, stats in relatorio['pastas_processadas'].items():
+        emoji = {
+            'logs/equipamentos': '🔧',
+            'logs/funcionarios': '👷',
+            'logs/erros': '❌',
+            'logs/execucoes': '🚀'
+        }.get(pasta, '📄')
+        
+        resultado.append(f"{emoji} {pasta}: {stats['total']} arquivo(s) removido(s)")
+    
+    if relatorio['logs_gerais_removidos'] > 0:
+        resultado.append(f"📊 logs gerais: {relatorio['logs_gerais_removidos']} arquivo(s) removido(s)")
+    
+    resultado.append("─" * 50)
+    resultado.append(f"✅ Total: {relatorio['total_arquivos_removidos']} arquivo(s) de log removido(s)")
+    resultado.append("📁 Pastas equipamentos/, erros/, funcionarios/, execucoes/ preservadas")
+    
+    if relatorio['erros']:
+        resultado.append(f"⚠️ {len(relatorio['erros'])} erro(s) durante limpeza")
+    
+    return "\n".join(resultado)
+
+def limpar_logs_equipamentos():
+    """🔧 Limpa apenas logs de equipamentos"""
+    pasta = "logs/equipamentos"
+    try:
+        if not os.path.exists(pasta):
+            print(f"📁 Pasta não encontrada: {pasta}")
+            return False
+        
+        arquivos = glob.glob(os.path.join(pasta, "*.log"))
+        removidos = 0
+        
+        for arquivo in arquivos:
+            try:
+                os.remove(arquivo)
+                removidos += 1
+            except Exception as e:
+                print(f"⚠️ Erro ao remover {arquivo}: {e}")
+        
+        print(f"🔧 {removidos} arquivo(s) de equipamentos removido(s)")
+        return True
+    except Exception as e:
+        print(f"❌ Erro ao limpar logs de equipamentos: {e}")
+        return False
+
+def limpar_logs_funcionarios():
+    """👷 Limpa apenas logs de funcionários"""
+    pasta = "logs/funcionarios"
+    try:
+        if not os.path.exists(pasta):
+            print(f"📁 Pasta não encontrada: {pasta}")
+            return False
+        
+        arquivos = glob.glob(os.path.join(pasta, "*.log"))
+        removidos = 0
+        
+        for arquivo in arquivos:
+            try:
+                os.remove(arquivo)
+                removidos += 1
+            except Exception as e:
+                print(f"⚠️ Erro ao remover {arquivo}: {e}")
+        
+        print(f"👷 {removidos} arquivo(s) de funcionários removido(s)")
+        return True
+    except Exception as e:
+        print(f"❌ Erro ao limpar logs de funcionários: {e}")
+        return False
+
+def limpar_logs_erros():
+    """❌ Limpa apenas logs de erros"""
+    pasta = "logs/erros"
+    try:
+        if not os.path.exists(pasta):
+            print(f"📁 Pasta não encontrada: {pasta}")
+            return False
+        
+        arquivos = glob.glob(os.path.join(pasta, "*.log"))
+        jsons = glob.glob(os.path.join(pasta, "*.json"))
+        removidos = 0
+        
+        for arquivo in arquivos + jsons:
+            try:
+                os.remove(arquivo)
+                removidos += 1
+            except Exception as e:
+                print(f"⚠️ Erro ao remover {arquivo}: {e}")
+        
+        print(f"❌ {removidos} arquivo(s) de erros removido(s)")
+        return True
+    except Exception as e:
+        print(f"❌ Erro ao limpar logs de erros: {e}")
+        return False
+
+def limpar_logs_execucoes():
+    """🚀 Limpa apenas logs de execuções"""
+    pasta = "logs/execucoes"
+    try:
+        if not os.path.exists(pasta):
+            print(f"📁 Pasta não encontrada: {pasta}")
+            return False
+        
+        arquivos = glob.glob(os.path.join(pasta, "*.log"))
+        removidos = 0
+        
+        for arquivo in arquivos:
+            try:
+                os.remove(arquivo)
+                removidos += 1
+            except Exception as e:
+                print(f"⚠️ Erro ao remover {arquivo}: {e}")
+        
+        print(f"🚀 {removidos} arquivo(s) de execuções removido(s)")
+        return True
+    except Exception as e:
+        print(f"❌ Erro ao limpar logs de execuções: {e}")
+        return False
 
 def limpar_todos_os_logs():
     """
@@ -54,14 +352,13 @@ def limpar_todos_os_logs():
                         print(f"ℹ️ JSON mantido (não é arquivo de erro): {nome_arquivo}")
                         
             except Exception as e:
-                print(f"❌ Erro ao remover {caminho}: {e}")
+                print(f"⚠️ Erro ao remover {caminho}: {e}")
         
         # Relatório por pasta
         if logs_removidos > 0 or jsons_removidos > 0:
             print(f"📊 Pasta {pasta}: {logs_removidos} logs + {jsons_removidos} JSONs removidos")
     
     print("✅ Limpeza de logs concluída!")
-
 
 def limpar_apenas_jsons_erros():
     """
@@ -91,10 +388,9 @@ def limpar_apenas_jsons_erros():
                     jsons_removidos += 1
                     print(f"🗑️ JSON de erro removido: {caminho}")
                 except Exception as e:
-                    print(f"❌ Erro ao remover {caminho}: {e}")
+                    print(f"⚠️ Erro ao remover {caminho}: {e}")
     
     print(f"📊 {jsons_removidos} arquivos JSON de erros removidos da pasta {pasta_erros}")
-
 
 def limpar_jsons_erros_por_tipo(tipo_erro: str):
     """
@@ -117,7 +413,7 @@ def limpar_jsons_erros_por_tipo(tipo_erro: str):
     }
     
     if tipo_erro not in prefixos_validos:
-        print(f"❌ Tipo de erro inválido: {tipo_erro}. Opções: {list(prefixos_validos.keys())}")
+        print(f"⚠️ Tipo de erro inválido: {tipo_erro}. Opções: {list(prefixos_validos.keys())}")
         return
     
     prefixos = prefixos_validos[tipo_erro]
@@ -132,10 +428,9 @@ def limpar_jsons_erros_por_tipo(tipo_erro: str):
                     jsons_removidos += 1
                     print(f"🗑️ JSON removido: {caminho}")
                 except Exception as e:
-                    print(f"❌ Erro ao remover {caminho}: {e}")
+                    print(f"⚠️ Erro ao remover {caminho}: {e}")
     
     print(f"📊 {jsons_removidos} arquivos JSON do tipo '{tipo_erro}' removidos")
-
 
 def remover_logs_pedido(id_pedido: int):
     """
@@ -157,11 +452,11 @@ def registrar_erro_execucao_pedido(id_ordem: int, id_pedido: int, erro: Exceptio
     """
     🔥 Registra erro de execução no terminal e em arquivo de log (snapshot).
     """
-    logger.error(f"❌ Erro na execução do pedido {id_pedido}: {erro.__class__.__name__}: {erro}")
+    logger.error(f"⚠️ Erro na execução do pedido {id_pedido}: {erro.__class__.__name__}: {erro}")
     
     # Captura traceback da exceção atual
     traceback_str = traceback.format_exc()
-    logger.error("🔍 Traceback completo abaixo:")
+    logger.error("📋 Traceback completo abaixo:")
     logger.error(traceback_str)
 
     # Localização exata do erro
@@ -181,7 +476,7 @@ def registrar_erro_execucao_pedido(id_ordem: int, id_pedido: int, erro: Exceptio
             f.write("==============================================\n")
             f.write(f"📅 Data/Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write(f"🧾 Ordem: {id_ordem} | Pedido: {id_pedido}\n")
-            f.write(f"❌ Erro: {erro.__class__.__name__}: {erro}\n")
+            f.write(f"⚠️ Erro: {erro.__class__.__name__}: {erro}\n")
             if exc_traceback:
                 f.write(f"📍 Local: {ultima_chamada.filename}, linha {ultima_chamada.lineno}, função {ultima_chamada.name}\n")
             f.write("--------------------------------------------------\n")
@@ -189,7 +484,6 @@ def registrar_erro_execucao_pedido(id_ordem: int, id_pedido: int, erro: Exceptio
             f.write("==============================================\n")
     except Exception as log_erro:
         logger.warning(f"⚠️ Falha ao registrar erro em arquivo: {log_erro}")
-
 
 def registrar_log_equipamentos(id_ordem: int, id_pedido: int, id_atividade: int, nome_item: str,
                                nome_atividade: str, equipamentos_alocados: list[tuple]): 
@@ -217,7 +511,6 @@ def registrar_log_equipamentos(id_ordem: int, id_pedido: int, id_atividade: int,
                     f"{nomes_equipamentos} | {str_inicio} | {str_fim} \n"
                 )
                 arq.write(linha)
-
 
 def registrar_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int, 
                                funcionarios_alocados: list[tuple], nome_item: str, 
@@ -250,7 +543,7 @@ def apagar_logs_por_pedido_e_ordem(id_ordem: int, id_pedido: int):
     PASTAS = [
         "logs/equipamentos",
         "logs/funcionarios",
-        # ❌ NÃO incluir "logs/erros"
+        # ⚠️ NÃO incluir "logs/erros"
     ]
 
     for pasta in PASTAS:
@@ -261,7 +554,6 @@ def apagar_logs_por_pedido_e_ordem(id_ordem: int, id_pedido: int):
                 print(f"🗑️ Apagado: {caminho}")
             except Exception as e:
                 logger.warning(f"⚠️ Falha ao apagar {caminho}: {e}")
-
 
 def remover_log_equipamentos(id_ordem: int, id_pedido: int = None, id_atividade: int = None):
     """
@@ -281,7 +573,7 @@ def remover_log_equipamentos(id_ordem: int, id_pedido: int = None, id_atividade:
                     os.remove(caminho)
                     print(f"🗑️ Removido: {caminho}")
                 except Exception as e:
-                    print(f"❌ Erro ao remover {caminho}: {e}")
+                    print(f"⚠️ Erro ao remover {caminho}: {e}")
         return
 
     caminho = f"{pasta_logs}/ordem: {id_ordem} | pedido: {id_pedido}.log"
@@ -294,7 +586,7 @@ def remover_log_equipamentos(id_ordem: int, id_pedido: int = None, id_atividade:
             os.remove(caminho)
             print(f"🗑️ Removido: {caminho}")
         except Exception as e:
-            print(f"❌ Erro ao remover {caminho}: {e}")
+            print(f"⚠️ Erro ao remover {caminho}: {e}")
         return
 
     # Caso 3: remover apenas as linhas da atividade
@@ -335,7 +627,7 @@ def salvar_erro_em_log(id_ordem: int, id_pedido: int, excecao: Exception):
         f.write("==============================================\n")
         f.write(f"📅 Data/Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write(f"🧾 Ordem: {id_ordem} | Pedido: {id_pedido}\n")
-        f.write("❌ Motivo do erro:\n")
+        f.write("⚠️ Motivo do erro:\n")
         f.write("--------------------------------------------------\n")
         f.write(traceback.format_exc())
         f.write("==============================================\n")

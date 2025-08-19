@@ -264,7 +264,58 @@ def listar_todas_atividades() -> Dict[str, list]:
             logger.error(f"❌ Erro ao processar subproduto {arquivo}: {e}")
     
     return resultado
-
+# ==========================================================
+# 🆕 Função para obter faixa de quantidade de um item
+# ==========================================================
+def obter_faixa_quantidade(id_item: int) -> Tuple[int, int]:
+    """
+    Obtém a faixa de quantidade (min, max) de um item baseado nas faixas
+    da primeira atividade do arquivo JSON.
+    
+    Args:
+        id_item: ID do item (ex: 1001)
+        
+    Returns:
+        Tuple[int, int]: (quantidade_min, quantidade_max)
+        
+    Raises:
+        FileNotFoundError: Se o arquivo não for encontrado
+        ValueError: Se as faixas não forem encontradas ou forem inválidas
+    """
+    logger.info(f"🔍 DEBUG: Buscando faixa de quantidade para item {id_item}")
+    
+    try:
+        # Encontra e carrega o arquivo
+        caminho_arquivo, tipo_determinado = encontrar_arquivo_por_id(id_item)
+        
+        with open(caminho_arquivo, "r", encoding="utf-8") as f:
+            dados = json.loads(f.read())
+        
+        # Obtém primeira atividade
+        atividades = dados.get("atividades", [])
+        if not atividades:
+            raise ValueError(f"❌ Nenhuma atividade encontrada no item {id_item}")
+        
+        primeira_atividade = atividades[0]
+        faixas = primeira_atividade.get("faixas", [])
+        
+        if not faixas:
+            raise ValueError(f"❌ Nenhuma faixa encontrada na primeira atividade do item {id_item}")
+        
+        # Extrai quantidade mínima e máxima de todas as faixas
+        quantidade_min = min(faixa.get("quantidade_min", 0) for faixa in faixas)
+        quantidade_max = max(faixa.get("quantidade_max", 0) for faixa in faixas)
+        
+        if quantidade_min <= 0 or quantidade_max <= 0:
+            raise ValueError(f"❌ Faixas inválidas encontradas no item {id_item}: min={quantidade_min}, max={quantidade_max}")
+        
+        logger.info(f"✅ Faixa encontrada para item {id_item}: {quantidade_min} a {quantidade_max} unidades")
+        return quantidade_min, quantidade_max
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter faixa de quantidade para item {id_item}: {e}")
+        raise
+    
 # 🎯 Main de testes
 if __name__ == "__main__":
     print("=" * 60)

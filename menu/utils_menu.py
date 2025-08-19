@@ -3,6 +3,7 @@ Utilitários do Menu
 ==================
 
 Funções auxiliares para interface do usuário e validações.
+🆕 NOVIDADE: Validação de faixas de quantidade baseada nos JSONs
 """
 
 import os
@@ -38,12 +39,13 @@ class MenuUtils:
             if tipo_item is None:
                 return None
             
-            # 3. Valida se item existe
-            if not self._validar_item_existe(id_item, tipo_item):
+            # 3. Valida se item existe E obtém faixa de quantidade
+            faixa_quantidade = self._validar_item_existe(id_item, tipo_item)
+            if faixa_quantidade is None:
                 return None
             
-            # 4. Coleta quantidade
-            quantidade = self._coletar_quantidade()
+            # 4. Coleta quantidade (agora com validação de faixa)
+            quantidade = self._coletar_quantidade(faixa_quantidade)
             if quantidade is None:
                 return None
             
@@ -60,7 +62,7 @@ class MenuUtils:
             }
             
         except KeyboardInterrupt:
-            print("\n\n⏹️ Registro cancelado pelo usuário.")
+            print("\n\nℹ️ Registro cancelado pelo usuário.")
             return None
         except Exception as e:
             print(f"\n❌ Erro ao coletar dados: {e}")
@@ -73,7 +75,7 @@ class MenuUtils:
                 entrada = input("📦 Digite o ID do item (ex: 1001): ").strip()
                 
                 if not entrada:
-                    print("⏹️ Operação cancelada.")
+                    print("ℹ️ Operação cancelada.")
                     return None
                 
                 id_item = int(entrada)
@@ -91,7 +93,7 @@ class MenuUtils:
     
     def _coletar_tipo_item(self) -> Optional[str]:
         """Coleta tipo do item do usuário"""
-        print("\n📝 Tipo do item:")
+        print("\n🔍 Tipo do item:")
         print("1 - PRODUTO")
         print("2 - SUBPRODUTO")
         
@@ -100,7 +102,7 @@ class MenuUtils:
                 entrada = input("🎯 Escolha (1/2): ").strip()
                 
                 if not entrada:
-                    print("⏹️ Operação cancelada.")
+                    print("ℹ️ Operação cancelada.")
                     return None
                 
                 if entrada == "1":
@@ -113,8 +115,14 @@ class MenuUtils:
             except KeyboardInterrupt:
                 return None
     
-    def _validar_item_existe(self, id_item: int, tipo_item: str) -> bool:
-        """Valida se o item existe nos arquivos"""
+    def _validar_item_existe(self, id_item: int, tipo_item: str) -> Optional[Tuple[int, int]]:
+        """
+        Valida se o item existe nos arquivos E obtém faixa de quantidade.
+        🆕 NOVIDADE: Também exibe faixa de produção do item
+        
+        Returns:
+            Tuple[int, int] com (faixa_min, faixa_max) se item existe, None caso contrário
+        """
         from menu.gerenciador_pedidos import GerenciadorPedidos
         
         gerenciador = GerenciadorPedidos()
@@ -122,7 +130,30 @@ class MenuUtils:
         
         if existe:
             print(f"✅ Item encontrado: {resultado}")
-            return True
+            
+            # 🆕 NOVA FUNCIONALIDADE: Obter e mostrar faixa de quantidade
+            try:
+                # Importa função do carregador
+                import sys
+                import os
+                sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                from parser.carregador_json_atividades import obter_faixa_quantidade
+                
+                # Obtém faixa
+                faixa_min, faixa_max = obter_faixa_quantidade(id_item)
+                
+                # Exibe para o usuário
+                print(f"📊 Faixa de produção: {faixa_min} a {faixa_max} unidades")
+                print(f"💡 Você pode produzir entre {faixa_min} e {faixa_max} unidades deste item")
+                
+                # Retorna a faixa
+                return (faixa_min, faixa_max)
+                
+            except Exception as e:
+                print(f"⚠️ Aviso: Não foi possível obter faixa de quantidade: {e}")
+                print("💡 Sistema continuará, mas sem validação de faixa")
+                # Retorna faixa "liberada" (sem validação)
+                return (1, 999999)
         else:
             print(f"❌ {resultado}")
             
@@ -138,16 +169,27 @@ class MenuUtils:
             else:
                 print("   (Nenhum item encontrado)")
             
-            return False
+            return None
     
-    def _coletar_quantidade(self) -> Optional[int]:
-        """Coleta quantidade do usuário"""
+    def _coletar_quantidade(self, faixa_quantidade: Optional[Tuple[int, int]] = None) -> Optional[int]:
+        """
+        Coleta quantidade do usuário.
+        🆕 NOVIDADE: Valida contra faixa obtida do JSON
+        
+        Args:
+            faixa_quantidade: Tuple (min, max) para validação, ou None para não validar
+        """
         while True:
             try:
-                entrada = input("\n📊 Digite a quantidade: ").strip()
+                # Mostra faixa se disponível
+                if faixa_quantidade:
+                    faixa_min, faixa_max = faixa_quantidade
+                    entrada = input(f"\n📊 Digite a quantidade ({faixa_min}-{faixa_max}): ").strip()
+                else:
+                    entrada = input("\n📊 Digite a quantidade: ").strip()
                 
                 if not entrada:
-                    print("⏹️ Operação cancelada.")
+                    print("ℹ️ Operação cancelada.")
                     return None
                 
                 quantidade = int(entrada)
@@ -156,6 +198,19 @@ class MenuUtils:
                     print("❌ Quantidade deve ser maior que zero!")
                     continue
                 
+                # 🆕 VALIDAÇÃO DE FAIXA
+                if faixa_quantidade:
+                    faixa_min, faixa_max = faixa_quantidade
+                    
+                    # Só valida se não for a faixa "liberada" (999999)
+                    if faixa_max < 999999 and (quantidade < faixa_min or quantidade > faixa_max):
+                        print(f"❌ Quantidade deve estar entre {faixa_min} e {faixa_max} unidades!")
+                        print(f"💡 Você digitou {quantidade}, mas este item só aceita quantidades nessa faixa")
+                        continue
+                    else:
+                        print(f"✅ Quantidade {quantidade} está dentro da faixa permitida!")
+                
+                # Validação adicional para quantidades muito altas (mantida)
                 if quantidade > 10000:
                     print("⚠️ Quantidade muito alta! Tem certeza?")
                     confirmacao = input("   Digite 's' para confirmar: ").strip().lower()
@@ -220,7 +275,7 @@ class MenuUtils:
                 return fim_jornada
                 
             except KeyboardInterrupt:
-                print("\n⏹️ Operação cancelada.")
+                print("\nℹ️ Operação cancelada.")
                 return None
     
     def _parsear_data_hora(self, entrada: str) -> Optional[datetime]:

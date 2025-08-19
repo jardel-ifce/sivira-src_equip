@@ -6,7 +6,7 @@ from models.almoxarifado.almoxarifado import Almoxarifado
 from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
 from factory.fabrica_funcionarios import funcionarios_disponiveis
 from parser.carregador_json_itens_almoxarifado import carregar_itens_almoxarifado
-from utils.logs.gerenciador_logs import limpar_todos_os_logs
+from utils.logs.gerenciador_logs import limpar_todos_os_logs, limpar_logs_erros, limpar_logs_inicializacao
 from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva
 from utils.comandas.limpador_comandas import apagar_todas_as_comandas
 from utils.ordenador.ordenador_pedidos import ordenar_pedidos_por_restricoes
@@ -149,7 +149,8 @@ class TesteSistemaProducao:
         # Limpar dados anteriores
         apagar_todas_as_comandas()
         limpar_todos_os_logs()
-        
+        limpar_logs_erros()
+        limpar_logs_inicializacao()
         # Inicializar almoxarifado
         self.almoxarifado = Almoxarifado()
         for item in itens:
@@ -178,23 +179,31 @@ class TesteSistemaProducao:
         
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
-            # CONJUNTO INICIAL - Para testar otimizador
-            #{"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
-           # {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
-           # {"produto": "Pão de Forma", "quantidade": 80, "hora_fim": 7},
-            # {"produto": "Pão Baguete", "quantidade": 50, "hora_fim": 7},
-            {"produto": "Pão Trança de Queijo finos", "quantidade": 70, "hora_fim": 7},
+           # CONJUNTO INICIAL 
+            {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 7},
+            {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
+            {"produto": "Pão de Forma", "quantidade": 60, "hora_fim": 7},
+            {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 7},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 7},
 
-            # # CONJUNTO ADICIONAL - Para testar conflitos
-            # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},
-            # {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 9},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 15, "hora_fim": 9},
+            # # # CONJUNTO ADICIONAL 
+            {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
+            {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
+            #{"produto": "Pão Trança de Queijo finos", "quantidade": 12, "hora_fim": 9},
             
-            # # CONJUNTO VESPERTINO
-            # {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 15},
-            # {"produto": "Pão Hambúrguer", "quantidade": 60, "hora_fim": 15},
-            # {"produto": "Pão de Forma", "quantidade": 25, "hora_fim": 15},
+            # # # CONJUNTO VESPERTINO
+            # {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 15},
+            # {"produto": "Pão Hambúrguer", "quantidade": 59, "hora_fim": 15},
+            # {"produto": "Pão de Forma", "quantidade": 12, "hora_fim": 15},
             # {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 15},
+            # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 15},
+            
+            
+            # ## CONJUNTO NOTURNO
+            # {"produto": "Pão Francês", "quantidade": 298, "hora_fim": 17},
+            # {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 17},
+            # {"produto": "Pão Trança de Queijo finos", "quantidade": 11, "hora_fim": 17},
+
         ]
         
         id_pedido_counter = 1
@@ -474,7 +483,7 @@ def main():
     ✅ CORRIGIDO com janela temporal adequada para otimizador PL.
     """
     # Configuração do modo de execução
-    USAR_OTIMIZACAO = True  # Altere para False para modo sequencial
+    USAR_OTIMIZACAO = False  # Altere para False para modo sequencial
     RESOLUCAO_MINUTOS = 30  # Resolução temporal (30min = bom compromisso)
     TIMEOUT_PL = 300        # 5 minutos para resolução PL
     
@@ -552,6 +561,7 @@ def exemplo_uso_comparativo():
 
 
 if __name__ == "__main__":
+    
     main()
     
     # Para testar comparação, descomente:

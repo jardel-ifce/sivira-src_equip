@@ -123,29 +123,30 @@ class TesteSistemaProducao:
         
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
-            # Horário 07:00
-            {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
+            # CONJUNTO INICIAL 
+            {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 7},
             {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
-            {"produto": "Pão de Forma", "quantidade": 70, "hora_fim": 7},
-            {"produto": "Pão Baguete", "quantidade": 60, "hora_fim": 7},
-            {"produto": "Pão Trança de Queijo finos", "quantidade": 70, "hora_fim": 7},
+            {"produto": "Pão de Forma", "quantidade": 60, "hora_fim": 7},
+            {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 7},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 7},
 
-            # # # Horário 09:00
-           # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},
-            #{"produto": "Pão Baguete", "quantidade": 50, "hora_fim": 9},
-           # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 9},
+            # # # CONJUNTO ADICIONAL 
+            {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
+            {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 12, "hora_fim": 9},
             
-            # # # Horário 15:00
-            # {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 15},
-            # {"produto": "Pão Hambúrguer", "quantidade": 60, "hora_fim": 15},
-            # {"produto": "Pão de Forma", "quantidade": 10, "hora_fim": 15},
+            # # # CONJUNTO VESPERTINO
+            # {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 15},
+            # {"produto": "Pão Hambúrguer", "quantidade": 59, "hora_fim": 15},
+            # {"produto": "Pão de Forma", "quantidade": 12, "hora_fim": 15},
             # {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 15},
             # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 15},
             
-            # # # Horário 17:00
-            # {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 17},
-            # {"produto": "Pão Baguete", "quantidade": 50, "hora_fim": 17},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 20, "hora_fim": 17},
+            
+            # ## CONJUNTO NOTURNO
+            # {"produto": "Pão Francês", "quantidade": 298, "hora_fim": 17},
+            # {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 17},
+            # {"produto": "Pão Trança de Queijo finos", "quantidade": 11, "hora_fim": 17},
         ]
         
         id_pedido_counter = 1

@@ -1,39 +1,28 @@
 """
-Módulo Menu - Sistema de Produção
-=================================
+Menu do Sistema de Produção - DESACOPLADO
+==========================================
 
-Sistema de menu interativo para registro e execução de pedidos
-com suporte a otimização por Programação Linear.
+Módulo do menu interativo para registro e execução de pedidos.
+Agora usa a nova arquitetura services/gestor_producao.
 
-Estrutura:
-- main_menu.py: Menu principal e interface do usuário
-- gerenciador_pedidos.py: Gerenciamento de pedidos (registrar, listar, converter)
-- executor_producao.py: Execução sequencial e otimizada
-- utils_menu.py: Utilitários e validações
-
-Uso:
-    python main_menu.py
-    
-    ou
-    
-    from menu.main_menu import MenuPrincipal
-    menu = MenuPrincipal()
-    menu.executar()
+✅ NOVIDADES:
+- Desacoplado dos scripts de teste (producao_paes*)
+- Usa services/gestor_producao
+- Arquitetura independente e limpa
 """
 
-__version__ = "1.0.0"
-__author__ = "Sistema de Produção"
-
-# Importações principais
-from .main_menu import MenuPrincipal
 from .gerenciador_pedidos import GerenciadorPedidos, DadosPedidoMenu
-from .executor_producao import ExecutorProducao
 from .utils_menu import MenuUtils
 
+# ❌ REMOVIDO: ExecutorProducao (substituído por services/gestor_producao)
+# from .executor_producao import ExecutorProducao
+
 __all__ = [
-    'MenuPrincipal',
-    'GerenciadorPedidos', 
-    'DadosPedidoMenu',
-    'ExecutorProducao',
+    'GerenciadorPedidos',
+    'DadosPedidoMenu', 
     'MenuUtils'
 ]
+
+__version__ = '2.0.0'
+__author__ = 'Sistema de Produção'
+__description__ = 'Menu interativo desacoplado com nova arquitetura independente'

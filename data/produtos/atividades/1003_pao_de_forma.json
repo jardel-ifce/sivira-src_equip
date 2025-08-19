@@ -273,7 +273,7 @@
         "ARMARIOS_PARA_FERMENTACAO": 1
       },
       "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
-      "tempo_maximo_de_espera": "05:00:00",
+      "tempo_maximo_de_espera": "00:00:00",
       "fips_equipamentos": { 
         "armario_fermentador_1": 2,
         "armario_fermentador_2": 2,

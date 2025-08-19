@@ -1,0 +1,79 @@
+{
+  "id_ordem": 1,
+  "id_pedido": 3,
+  "data_reserva": "2025-06-23",
+  "itens": [
+    {
+      "id_item": 1003,
+      "nome": "Pão de Forma",
+      "politica_producao": "SOB_DEMANDA",
+      "quantidade_necessaria": 60,
+      "itens_necessarios": [
+        {
+          "id_item": 2002,
+          "nome": "Massa Suave",
+          "politica_producao": "SOB_DEMANDA",
+          "quantidade_necessaria": 3900.0,
+          "itens_necessarios": [
+            {
+              "id_item": 3,
+              "nome": "Farinha de trigo para pães",
+              "quantidade_necessaria": 2317.29,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 4,
+              "nome": "Gelo para alimentos",
+              "quantidade_necessaria": 1274.51,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 5,
+              "nome": "Sal refinado",
+              "quantidade_necessaria": 23.17,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 6,
+              "nome": "Fermento biológico seco",
+              "quantidade_necessaria": 46.35,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 13,
+              "nome": "Açúcar cristal",
+              "quantidade_necessaria": 115.86,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 14,
+              "nome": "Margarina com sal",
+              "quantidade_necessaria": 115.86,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 7,
+              "nome": "Aditivo em pasta",
+              "quantidade_necessaria": 6.95,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
