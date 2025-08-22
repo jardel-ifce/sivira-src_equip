@@ -25,12 +25,13 @@ from utils.logs.timing_exceptions import (
     IntraActivityTimingError,
     MaximumWaitTimeExceededError  # Para compatibilidade
 )
-from utils.logs.timing_logger import log_inter_activity_timing_error
+from utils.logs.timing_logger import timing_logger
+from utils.logs.formatador_timing_limpo import reformatar_erro_timing_para_novo_formato
 from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva as gerar_comanda_reserva_modulo
 
 logger = setup_logger("PedidoDeProducao")
 
-# 🔍 DEBUG - Sistema de debug para rastreamento
+# Debug - Sistema de debug para rastreamento
 from datetime import datetime
 import json
 
@@ -48,13 +49,13 @@ class DebugAtividades:
             "dados": dados
         }
         self.logs.append(evento)
-        print(f"🔍 [{categoria}] Item {item_id} ({item_nome}): {dados}")
+        print(f"DEBUG [{categoria}] Item {item_id} ({item_nome}): {dados}")
     
     def salvar_logs(self):
         arquivo = f"debug_pedido_producao_{self.timestamp}.json"
         with open(arquivo, 'w', encoding='utf-8') as f:
             json.dump({"eventos": self.logs}, f, indent=2, ensure_ascii=False)
-        print(f"💾 Debug salvo em: {arquivo}")
+        print(f"Debug salvo em: {arquivo}")
         return arquivo
 
 debug_atividades = DebugAtividades()
@@ -64,10 +65,10 @@ class PedidoDeProducao:
     """
     Classe principal para gerenciar um pedido de produção.
     Coordena a criação e execução de atividades modulares com verificação inteligente de estoque.
-    ✅ CORRIGIDO: Implementa cancelamento em cascata se atividades do PRODUTO falharem.
-    ✅ CORRIGIDO: Sincronização perfeita entre produto e subprodutos.
+    CORRIGIDO: Implementa cancelamento em cascata se atividades do PRODUTO falharem.
+    CORRIGIDO: Sincronização perfeita entre produto e subprodutos.
     
-    ✅ SISTEMA DE TIMING INTEGRADO:
+    SISTEMA DE TIMING INTEGRADO:
     - Detecta erros de tempo entre atividades (INTER-ATIVIDADE)
     - Detecta erros de tempo dentro de atividades (INTRA-ATIVIDADE via AtividadeModular)
     - Registra logs estruturados para ambos os tipos
@@ -132,7 +133,7 @@ class PedidoDeProducao:
         
         # Log de inicialização
         logger.info(
-            f"🆔 Criando pedido {self.id_pedido} da ordem {self.id_ordem} | "
+            f"Criando pedido {self.id_pedido} da ordem {self.id_ordem} | "
             f"Produto: {self.id_produto} ({self.tipo_item.name}) | "
             f"Quantidade: {self.quantidade} | "
             f"Período: {self.inicio_jornada.strftime('%d/%m %H:%M')} - {self.fim_jornada.strftime('%d/%m %H:%M')}"
@@ -145,7 +146,7 @@ class PedidoDeProducao:
     def montar_estrutura(self):
         """Monta a estrutura técnica do pedido baseada na ficha técnica"""
         try:
-            logger.info(f"🔄 Montando estrutura técnica do pedido {self.id_pedido}")
+            logger.info(f"Montando estrutura técnica do pedido {self.id_pedido}")
             
             _, dados_ficha = buscar_ficha_tecnica_por_id(self.id_produto, tipo_item=self.tipo_item)
             self.ficha_tecnica_modular = FichaTecnicaModular(
@@ -157,11 +158,11 @@ class PedidoDeProducao:
             self.funcionarios_elegiveis = self._filtrar_funcionarios_abrangente()
             
             logger.info(
-                f"✅ Estrutura montada: {len(self.funcionarios_elegiveis)} funcionários elegíveis"
+                f"Estrutura montada: {len(self.funcionarios_elegiveis)} funcionários elegíveis"
             )
             
         except Exception as e:
-            logger.error(f"❌ Erro ao montar estrutura do pedido {self.id_pedido}: {e}")
+            logger.error(f"Erro ao montar estrutura do pedido {self.id_pedido}: {e}")
             raise
         
     def _filtrar_funcionarios_abrangente(self) -> List[Funcionario]:
@@ -170,7 +171,7 @@ class PedidoDeProducao:
         Garante que todos os tipos profissionais necessários estejam disponíveis.
         """
         if not self.ficha_tecnica_modular:
-            logger.warning("⚠️ Ficha técnica não montada, retornando todos os funcionários")
+            logger.warning("Ficha técnica não montada, retornando todos os funcionários")
             return self.todos_funcionarios
             
         tipos_necessarios = set()
@@ -179,7 +180,7 @@ class PedidoDeProducao:
             # Adicionar tipos do produto principal
             tipos_produto = buscar_tipos_profissionais_por_id_item(self.id_produto)
             tipos_necessarios.update(tipos_produto)
-            logger.debug(f"📋 Tipos para produto principal {self.id_produto}: {tipos_produto}")
+            logger.debug(f"Tipos para produto principal {self.id_produto}: {tipos_produto}")
             
             # Adicionar tipos dos subprodutos
             estimativas = self.ficha_tecnica_modular.calcular_quantidade_itens()
@@ -189,7 +190,7 @@ class PedidoDeProducao:
                     if sub_id:
                         tipos_sub = buscar_tipos_profissionais_por_id_item(sub_id)
                         tipos_necessarios.update(tipos_sub)
-                        logger.debug(f"📋 Tipos para subproduto {sub_id}: {tipos_sub}")
+                        logger.debug(f"Tipos para subproduto {sub_id}: {tipos_sub}")
             
             funcionarios_filtrados = [
                 f for f in self.todos_funcionarios 
@@ -197,14 +198,14 @@ class PedidoDeProducao:
             ]
             
             logger.info(
-                f"👥 Funcionários filtrados: {len(funcionarios_filtrados)}/{len(self.todos_funcionarios)} "
+                f"Funcionários filtrados: {len(funcionarios_filtrados)}/{len(self.todos_funcionarios)} "
                 f"para tipos {[t.name for t in tipos_necessarios]}"
             )
             
             return funcionarios_filtrados
             
         except Exception as e:
-            logger.error(f"❌ Erro ao filtrar funcionários: {e}")
+            logger.error(f"Erro ao filtrar funcionários: {e}")
             return self.todos_funcionarios
 
     # =============================================================================
@@ -213,9 +214,9 @@ class PedidoDeProducao:
 
     def _verificar_estoque_suficiente(self, id_item: int, quantidade_necessaria: float) -> bool:
         """
-        ✅ VERSÃO COM DEBUG: Verifica se há estoque suficiente para um item específico.
+        VERSÃO COM DEBUG: Verifica se há estoque suficiente para um item específico.
         """
-        # 🔍 DEBUG - Início verificação de estoque
+        # DEBUG - Início verificação de estoque
         debug_atividades.log(
             categoria="VERIFICACAO_ESTOQUE_INICIO",
             item_id=id_item,
@@ -233,7 +234,7 @@ class PedidoDeProducao:
                 item_nome=f"item_{id_item}",
                 dados={"erro": "Gestor almoxarifado não disponível"}
             )
-            logger.warning("⚠️ Gestor de almoxarifado não disponível. Assumindo necessidade de produção.")
+            logger.warning("Gestor de almoxarifado não disponível. Assumindo necessidade de produção.")
             return False
         
         try:
@@ -246,13 +247,13 @@ class PedidoDeProducao:
                     item_nome=f"item_{id_item}",
                     dados={"erro": "Item não encontrado no almoxarifado"}
                 )
-                logger.warning(f"⚠️ Item {id_item} não encontrado no almoxarifado")
+                logger.warning(f"Item {id_item} não encontrado no almoxarifado")
                 return False
             
-            # ✅ CORREÇÃO: Usar ENUM diretamente, não string
+            # CORREÇÃO: Usar ENUM diretamente, não string
             politica_enum = item.politica_producao
             
-            # 🔍 DEBUG - Item encontrado
+            # DEBUG - Item encontrado
             debug_atividades.log(
                 categoria="ITEM_ENCONTRADO",
                 item_id=id_item,
@@ -277,7 +278,7 @@ class PedidoDeProducao:
                     }
                 )
                 logger.debug(
-                    f"🔄 Item '{item.descricao}' (ID {id_item}) é SOB_DEMANDA. "
+                    f"Item '{item.descricao}' (ID {id_item}) é SOB_DEMANDA. "
                     f"Produção será realizada independente do estoque."
                 )
                 return False  # Retorna False para forçar produção
@@ -290,7 +291,7 @@ class PedidoDeProducao:
                 
                 estoque_atual = self.gestor_almoxarifado.obter_estoque_atual(id_item)
                 
-                # 🔍 DEBUG - Decisão de estoque
+                # DEBUG - Decisão de estoque
                 debug_atividades.log(
                     categoria="DECISAO_ESTOQUE",
                     item_id=id_item,
@@ -305,11 +306,11 @@ class PedidoDeProducao:
                 )
                 
                 logger.info(
-                    f"📦 Item '{item.descricao}' (ID {id_item}): "
+                    f"Item '{item.descricao}' (ID {id_item}): "
                     f"Estoque atual: {estoque_atual} | "
                     f"Necessário: {quantidade_necessaria} | "
                     f"Política: {politica_enum.value} | "
-                    f"Suficiente: {'✅' if tem_estoque_suficiente else '❌'}"
+                    f"Suficiente: {'SIM' if tem_estoque_suficiente else 'NAO'}"
                 )
                 
                 return tem_estoque_suficiente
@@ -324,7 +325,7 @@ class PedidoDeProducao:
                     "decisao": "PRODUZIR_POR_SEGURANCA"
                 }
             )
-            logger.warning(f"⚠️ Política de produção desconhecida '{politica_enum}' para item {id_item}")
+            logger.warning(f"Política de produção desconhecida '{politica_enum}' para item {id_item}")
             return False
             
         except Exception as e:
@@ -337,7 +338,7 @@ class PedidoDeProducao:
                     "tipo_erro": type(e).__name__
                 }
             )
-            logger.warning(f"⚠️ Erro ao verificar estoque do item {id_item}: {e}")
+            logger.warning(f"Erro ao verificar estoque do item {id_item}: {e}")
             return False
         
     def _verificar_estoque_multiplos_itens(self, itens_necessarios: List[tuple]) -> dict:
@@ -354,11 +355,11 @@ class PedidoDeProducao:
                 itens_necessarios, self.inicio_jornada.date()
             )
             
-            logger.debug(f"📦 Verificação em lote: {len(itens_necessarios)} itens verificados")
+            logger.debug(f"Verificação em lote: {len(itens_necessarios)} itens verificados")
             return resultado
             
         except Exception as e:
-            logger.error(f"❌ Erro na verificação em lote: {e}")
+            logger.error(f"Erro na verificação em lote: {e}")
             return {id_item: False for id_item, _ in itens_necessarios}
 
     # =============================================================================
@@ -368,23 +369,23 @@ class PedidoDeProducao:
     def criar_atividades_modulares_necessarias(self):
         """
         Cria todas as atividades modulares necessárias baseadas na ficha técnica.
-        ✅ CORRIGIDO: Verifica se atividades do PRODUTO foram criadas com sucesso.
+        CORRIGIDO: Verifica se atividades do PRODUTO foram criadas com sucesso.
         Se nenhuma atividade do PRODUTO for criada, cancela o pedido inteiro.
         """
         if not self.ficha_tecnica_modular:
             raise ValueError("Ficha técnica ainda não foi montada")
 
-        logger.info(f"🔄 Criando atividades modulares para pedido {self.id_pedido}")
+        logger.info(f"Criando atividades modulares para pedido {self.id_pedido}")
         
         self.atividades_modulares = []
         
-        # ✅ NOVA LÓGICA: Separar contadores por tipo
+        # NOVA LÓGICA: Separar contadores por tipo
         atividades_produto_criadas = 0
         atividades_subproduto_criadas = 0
         
         self._criar_atividades_recursivas(self.ficha_tecnica_modular)
         
-        # ✅ CONTABILIZAR ATIVIDADES POR TIPO
+        # CONTABILIZAR ATIVIDADES POR TIPO
         for atividade in self.atividades_modulares:
             if atividade.tipo_item == TipoItem.PRODUTO:
                 atividades_produto_criadas += 1
@@ -392,15 +393,15 @@ class PedidoDeProducao:
                 atividades_subproduto_criadas += 1
         
         logger.info(
-            f"📊 Atividades criadas para pedido {self.id_pedido}: "
+            f"Atividades criadas para pedido {self.id_pedido}: "
             f"PRODUTO: {atividades_produto_criadas}, SUBPRODUTO: {atividades_subproduto_criadas}, "
             f"Total: {len(self.atividades_modulares)}"
         )
         
-        # ✅ VALIDAÇÃO CRÍTICA: Se é um pedido de PRODUTO mas nenhuma atividade foi criada
+        # VALIDAÇÃO CRÍTICA: Se é um pedido de PRODUTO mas nenhuma atividade foi criada
         if self.tipo_item == TipoItem.PRODUTO and atividades_produto_criadas == 0:
             erro_msg = (
-                f"❌ FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: "
+                f"FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: "
                 f"Pedido {self.id_pedido} é do tipo PRODUTO (ID {self.id_produto}) "
                 f"mas NENHUMA atividade do produto foi criada com sucesso. "
                 f"Isso indica incompatibilidade nas faixas de quantidade ou configuração. "
@@ -408,17 +409,17 @@ class PedidoDeProducao:
             )
             logger.error(erro_msg)
             
-            # ✅ LIMPAR ATIVIDADES DE SUBPRODUTO JÁ CRIADAS
+            # LIMPAR ATIVIDADES DE SUBPRODUTO JÁ CRIADAS
             self.atividades_modulares.clear()
             
             raise RuntimeError(erro_msg)
 
     def _criar_atividades_recursivas(self, ficha_modular: FichaTecnicaModular):
         """
-        ✅ VERSÃO COM DEBUG: Cria atividades de forma recursiva para produtos e subprodutos.
+        VERSÃO COM DEBUG: Cria atividades de forma recursiva para produtos e subprodutos.
         """
         try:
-            # 🔍 DEBUG - Início criação atividades recursivas
+            # DEBUG - Início criação atividades recursivas
             debug_atividades.log(
                 categoria="CRIAR_ATIVIDADES_INICIO",
                 item_id=ficha_modular.id_item,
@@ -430,16 +431,16 @@ class PedidoDeProducao:
             )
             
             logger.info(
-                f"🔄 Analisando necessidade de produção para ID {ficha_modular.id_item} "
+                f"Analisando necessidade de produção para ID {ficha_modular.id_item} "
                 f"({ficha_modular.tipo_item.name}) - Quantidade: {ficha_modular.quantidade_requerida}"
             )
             
-            # ✅ NOVA LÓGICA: Verificação de estoque baseada no tipo de item e política
+            # NOVA LÓGICA: Verificação de estoque baseada no tipo de item e política
             
             # PRODUTOS sempre devem ser produzidos (não verificar estoque para produtos finais)
             if ficha_modular.tipo_item == TipoItem.PRODUTO:
                 logger.info(
-                    f"🎯 PRODUTO ID {ficha_modular.id_item} será sempre produzido "
+                    f"PRODUTO ID {ficha_modular.id_item} será sempre produzido "
                     f"(produtos finais não usam estoque)"
                 )
                 deve_produzir = True
@@ -454,13 +455,13 @@ class PedidoDeProducao:
                 
                 if tem_estoque_suficiente:
                     logger.info(
-                        f"✅ Estoque suficiente para SUBPRODUTO ID {ficha_modular.id_item}. "
+                        f"Estoque suficiente para SUBPRODUTO ID {ficha_modular.id_item}. "
                         f"Produção não necessária - usando estoque disponível."
                     )
                     deve_produzir = False
                 else:
                     logger.info(
-                        f"📦 Estoque insuficiente para SUBPRODUTO ID {ficha_modular.id_item}. "
+                        f"Estoque insuficiente para SUBPRODUTO ID {ficha_modular.id_item}. "
                         f"Produção será realizada com quantidade total: {ficha_modular.quantidade_requerida}"
                     )
                     deve_produzir = True
@@ -468,12 +469,12 @@ class PedidoDeProducao:
             else:
                 # INSUMOS ou outros tipos - normalmente não deveriam chegar aqui
                 logger.warning(
-                    f"⚠️ Tipo de item inesperado: {ficha_modular.tipo_item.name} "
+                    f"Tipo de item inesperado: {ficha_modular.tipo_item.name} "
                     f"para ID {ficha_modular.id_item}"
                 )
                 deve_produzir = True
             
-            # 🔍 DEBUG - Decisão de produção
+            # DEBUG - Decisão de produção
             debug_atividades.log(
                 categoria="DECISAO_PRODUCAO",
                 item_id=ficha_modular.id_item,
@@ -495,7 +496,7 @@ class PedidoDeProducao:
                 )
                 return
             
-            # ✅ PRODUÇÃO NECESSÁRIA: Buscar e criar atividades para o item atual
+            # PRODUÇÃO NECESSÁRIA: Buscar e criar atividades para o item atual
             atividades = buscar_atividades_por_id_item(ficha_modular.id_item, ficha_modular.tipo_item)
             
             if not atividades:
@@ -506,7 +507,7 @@ class PedidoDeProducao:
                     dados={"erro": "Nenhuma atividade encontrada"}
                 )
                 logger.warning(
-                    f"⚠️ Nenhuma atividade encontrada para ID {ficha_modular.id_item} "
+                    f"Nenhuma atividade encontrada para ID {ficha_modular.id_item} "
                     f"({ficha_modular.tipo_item.name})"
                 )
                 return
@@ -546,7 +547,7 @@ class PedidoDeProducao:
                         id=len(self.atividades_modulares) + 1,
                         id_atividade=dados_atividade["id_atividade"],
                         tipo_item=ficha_modular.tipo_item,
-                        quantidade=ficha_modular.quantidade_requerida,  # ✅ Quantidade total (sem subtração)
+                        quantidade=ficha_modular.quantidade_requerida,  # Quantidade total (sem subtração)
                         id_pedido=self.id_pedido,
                         id_produto=self.id_produto,
                         funcionarios_elegiveis=self.funcionarios_elegiveis,
@@ -568,7 +569,7 @@ class PedidoDeProducao:
                         }
                     )
                     logger.error(
-                        f"❌ Erro ao criar atividade {dados_atividade.get('id_atividade', 'N/A')}: {e}"
+                        f"Erro ao criar atividade {dados_atividade.get('id_atividade', 'N/A')}: {e}"
                     )
                     continue
 
@@ -583,7 +584,7 @@ class PedidoDeProducao:
             )
             
             logger.info(
-                f"✅ {atividades_criadas} atividades criadas para ID {ficha_modular.id_item} "
+                f"{atividades_criadas} atividades criadas para ID {ficha_modular.id_item} "
                 f"({ficha_modular.tipo_item.name}) - Quantidade total: {ficha_modular.quantidade_requerida}"
             )
 
@@ -597,9 +598,9 @@ class PedidoDeProducao:
                     "tipo_erro": type(e).__name__
                 }
             )
-            logger.error(f"❌ Erro ao processar item {ficha_modular.id_item}: {e}")
+            logger.error(f"Erro ao processar item {ficha_modular.id_item}: {e}")
 
-        # ✅ PROCESSAR SUBPRODUTOS RECURSIVAMENTE (independente se o item atual será produzido)
+        # PROCESSAR SUBPRODUTOS RECURSIVAMENTE (independente se o item atual será produzido)
         # Os subprodutos podem ter estoque próprio e devem ser avaliados individualmente
         try:
             estimativas = ficha_modular.calcular_quantidade_itens()
@@ -636,11 +637,11 @@ class PedidoDeProducao:
                                 "item_pai": ficha_modular.id_item
                             }
                         )
-                        logger.error(f"❌ Erro ao processar subproduto {id_ficha}: {e}")
+                        logger.error(f"Erro ao processar subproduto {id_ficha}: {e}")
                         continue
             
             if subprodutos_processados > 0:
-                logger.info(f"✅ {subprodutos_processados} subprodutos processados recursivamente")
+                logger.info(f"{subprodutos_processados} subprodutos processados recursivamente")
                 
         except Exception as e:
             debug_atividades.log(
@@ -652,7 +653,7 @@ class PedidoDeProducao:
                     "tipo_erro": type(e).__name__
                 }
             )
-            logger.error(f"❌ Erro ao processar subprodutos: {e}")
+            logger.error(f"Erro ao processar subprodutos: {e}")
 
     # =============================================================================
     #                        EXECUÇÃO DAS ATIVIDADES - CORRIGIDA
@@ -660,7 +661,7 @@ class PedidoDeProducao:
 
     def executar_atividades_em_ordem(self):
         """
-        ✅ VERSÃO CORRIGIDA: Executa atividades com agendamento temporal em cascata.
+        VERSÃO CORRIGIDA: Executa atividades com agendamento temporal em cascata.
         
         CORREÇÃO PRINCIPAL: Subprodutos agora terminam exatamente quando a primeira 
         atividade do produto começa (timing perfeito).
@@ -672,38 +673,38 @@ class PedidoDeProducao:
         """
         total_atividades = len(self.atividades_modulares)
         logger.info(
-            f"🚀 Iniciando execução em CASCATA CORRIGIDA do pedido {self.id_pedido} com {total_atividades} atividades"
+            f"Iniciando execução em CASCATA CORRIGIDA do pedido {self.id_pedido} com {total_atividades} atividades"
         )
         
         if total_atividades == 0:
-            logger.warning(f"⚠️ Nenhuma atividade para executar no pedido {self.id_pedido}")
+            logger.warning(f"Nenhuma atividade para executar no pedido {self.id_pedido}")
             return
         
         try:
-            # ✅ NOVA ESTRATÉGIA: Executar PRODUTO primeiro, depois SUBPRODUTOS
+            # NOVA ESTRATÉGIA: Executar PRODUTO primeiro, depois SUBPRODUTOS
             inicio_real_produto = self._executar_produto_e_capturar_inicio()
             
-            # ✅ Executar SUBPRODUTOS com timing perfeito
+            # Executar SUBPRODUTOS com timing perfeito
             if inicio_real_produto:
                 self._executar_subprodutos_com_timing_perfeito(inicio_real_produto)
             else:
-                logger.info("ℹ️ Nenhuma atividade de produto para sincronizar subprodutos")
+                logger.info("Nenhuma atividade de produto para sincronizar subprodutos")
             
             logger.info(
-                f"✅ Pedido {self.id_pedido} executado com sucesso em CASCATA CORRIGIDA! "
+                f"Pedido {self.id_pedido} executado com sucesso em CASCATA CORRIGIDA! "
                 f"Total de atividades executadas: {len(self.atividades_executadas)}"
             )
             
         except Exception as e:
-            logger.error(f"❌ Falha na execução em cascata do pedido {self.id_pedido}: {e}")
+            logger.error(f"Falha na execução em cascata do pedido {self.id_pedido}: {e}")
             
-            # ✅ CANCELAMENTO EM CASCATA
+            # CANCELAMENTO EM CASCATA
             self._cancelar_pedido_completo(str(e))
             raise
 
     def _executar_produto_e_capturar_inicio(self) -> Optional[datetime]:
         """
-        ✅ NOVO MÉTODO: Executa atividades do produto e captura o horário real de início.
+        NOVO MÉTODO: Executa atividades do produto e captura o horário real de início.
         Retorna o horário de início da primeira atividade do produto.
         """
         atividades_produto = [
@@ -712,10 +713,10 @@ class PedidoDeProducao:
         ]
         
         if not atividades_produto:
-            logger.info("ℹ️ Nenhuma atividade de PRODUTO para executar")
+            logger.info("Nenhuma atividade de PRODUTO para executar")
             return None
         
-        logger.info(f"🎯 Executando {len(atividades_produto)} atividades de PRODUTO primeiro")
+        logger.info(f"Executando {len(atividades_produto)} atividades de PRODUTO primeiro")
         
         # Executar em backward scheduling normal
         self._executar_grupo_backward_scheduling(
@@ -724,7 +725,7 @@ class PedidoDeProducao:
             'PRODUTO'
         )
         
-        # ✅ CAPTURAR HORÁRIO REAL DE INÍCIO da primeira atividade executada
+        # CAPTURAR HORÁRIO REAL DE INÍCIO da primeira atividade executada
         atividades_produto_executadas = [
             a for a in self.atividades_executadas 
             if a.tipo_item == TipoItem.PRODUTO and hasattr(a, 'inicio_real')
@@ -733,17 +734,17 @@ class PedidoDeProducao:
         if atividades_produto_executadas:
             inicio_real = min([a.inicio_real for a in atividades_produto_executadas])
             logger.info(
-                f"✅ PRODUTO executado! Início real capturado: {inicio_real.strftime('%H:%M')} "
+                f"PRODUTO executado! Início real capturado: {inicio_real.strftime('%H:%M')} "
                 f"(primeira atividade de {len(atividades_produto_executadas)} executadas)"
             )
             return inicio_real
         else:
-            logger.warning("⚠️ Nenhuma atividade de produto foi executada com sucesso")
+            logger.warning("Nenhuma atividade de produto foi executada com sucesso")
             return None
 
     def _executar_subprodutos_com_timing_perfeito(self, inicio_produto: datetime):
         """
-        ✅ NOVO MÉTODO: Executa subprodutos com timing perfeito.
+        NOVO MÉTODO: Executa subprodutos com timing perfeito.
         Todos os subprodutos terminam exatamente quando o produto começa.
         """
         atividades_subproduto = [
@@ -752,11 +753,11 @@ class PedidoDeProducao:
         ]
         
         if not atividades_subproduto:
-            logger.info("ℹ️ Nenhuma atividade de SUBPRODUTO para executar")
+            logger.info("Nenhuma atividade de SUBPRODUTO para executar")
             return
         
         logger.info(
-            f"🧩 Executando {len(atividades_subproduto)} atividades de SUBPRODUTO "
+            f"Executando {len(atividades_subproduto)} atividades de SUBPRODUTO "
             f"para terminar EXATAMENTE às {inicio_produto.strftime('%H:%M')} (timing perfeito)"
         )
         
@@ -766,25 +767,25 @@ class PedidoDeProducao:
         # Executar cada grupo para terminar no horário exato
         for grupo_nome, atividades_grupo in grupos_subprodutos.items():
             logger.info(
-                f"🔧 Executando grupo SUBPRODUTO '{grupo_nome}': {len(atividades_grupo)} atividades "
+                f"Executando grupo SUBPRODUTO '{grupo_nome}': {len(atividades_grupo)} atividades "
                 f"→ terminando às {inicio_produto.strftime('%H:%M')}"
             )
             
             try:
                 self._executar_grupo_backward_scheduling(
                     atividades_grupo, 
-                    inicio_produto,  # ✅ TIMING PERFEITO
+                    inicio_produto,  # TIMING PERFEITO
                     f'SUBPRODUTO_{grupo_nome}'
                 )
                 
-                logger.info(f"✅ Grupo SUBPRODUTO '{grupo_nome}' executado com timing perfeito!")
+                logger.info(f"Grupo SUBPRODUTO '{grupo_nome}' executado com timing perfeito!")
                 
             except Exception as e:
-                logger.error(f"❌ Falha no grupo SUBPRODUTO '{grupo_nome}': {e}")
+                logger.error(f"Falha no grupo SUBPRODUTO '{grupo_nome}': {e}")
                 
                 # Se produto já foi executado, falha em subproduto é crítica
                 raise RuntimeError(
-                    f"❌ FALHA CRÍTICA: Subproduto '{grupo_nome}' falhou após produto ser executado: {e}"
+                    f"FALHA CRÍTICA: Subproduto '{grupo_nome}' falhou após produto ser executado: {e}"
                 )
 
     def _executar_grupo_backward_scheduling(
@@ -794,7 +795,7 @@ class PedidoDeProducao:
         nome_grupo: str
     ):
         """
-        ✅ MÉTODO REFATORADO: Executa um grupo de atividades em backward scheduling.
+        MÉTODO REFATORADO: Executa um grupo de atividades em backward scheduling.
         """
         # Ordenar atividades em ordem reversa para backward scheduling
         atividades_ordenadas = sorted(
@@ -804,11 +805,11 @@ class PedidoDeProducao:
         )
         
         logger.info(
-            f"🔄 Executando {len(atividades_ordenadas)} atividades do grupo '{nome_grupo}' "
+            f"Executando {len(atividades_ordenadas)} atividades do grupo '{nome_grupo}' "
             f"em backward scheduling até {fim_jornada_grupo.strftime('%H:%M')}"
         )
         
-        # ✅ MARCAR A ÚLTIMA ATIVIDADE DO GRUPO (primeira na ordem reversa)
+        # MARCAR A ÚLTIMA ATIVIDADE DO GRUPO (primeira na ordem reversa)
         if atividades_ordenadas:
             primeira_atividade = atividades_ordenadas[0]
             primeira_atividade.eh_ultima_atividade_grupo = True
@@ -819,7 +820,7 @@ class PedidoDeProducao:
                 primeira_atividade.tempo_maximo_de_espera == timedelta(0)):
                 primeira_atividade.fim_obrigatorio = fim_jornada_grupo
                 logger.info(
-                    f"⏰ Atividade {primeira_atividade.id_atividade} deve terminar "
+                    f"Atividade {primeira_atividade.id_atividade} deve terminar "
                     f"EXATAMENTE às {fim_jornada_grupo.strftime('%H:%M')}"
                 )
         
@@ -830,7 +831,7 @@ class PedidoDeProducao:
 
         for i, atividade in enumerate(atividades_ordenadas):
             logger.info(
-                f"🔄 Executando atividade {i+1}/{len(atividades_ordenadas)} do grupo '{nome_grupo}': "
+                f"Executando atividade {i+1}/{len(atividades_ordenadas)} do grupo '{nome_grupo}': "
                 f"{atividade.nome_atividade} (ID {atividade.id_atividade})"
             )
             
@@ -839,30 +840,30 @@ class PedidoDeProducao:
                     atividade, current_fim, atividade_sucessora, inicio_prox_atividade
                 )
                 
-                # ✅ VALIDAÇÃO CRÍTICA: Se falhou, cancela GRUPO
+                # VALIDAÇÃO CRÍTICA: Se falhou, cancela GRUPO
                 if not sucesso:
                     erro_msg = (
-                        f"❌ FALHA NO GRUPO '{nome_grupo}': Atividade {atividade.id_atividade} "
+                        f"FALHA NO GRUPO '{nome_grupo}': Atividade {atividade.id_atividade} "
                         f"({atividade.nome_atividade}) não pôde ser alocada."
                     )
                     logger.error(erro_msg)
                     raise RuntimeError(erro_msg)
                 
-                # ✅ VALIDAÇÃO DE PONTUALIDADE para última atividade de PRODUTO
+                # VALIDAÇÃO DE PONTUALIDADE para última atividade de PRODUTO
                 if (i == 0 and nome_grupo == 'PRODUTO' and 
                     hasattr(atividade, 'tempo_maximo_de_espera') and 
                     atividade.tempo_maximo_de_espera == timedelta(0)):
                     if fim_atual != fim_jornada_grupo:
                         diferenca = fim_jornada_grupo - fim_atual
                         erro_msg = (
-                            f"❌ FALHA DE PONTUALIDADE NO PRODUTO: Atividade {atividade.id_atividade} "
+                            f"FALHA DE PONTUALIDADE NO PRODUTO: Atividade {atividade.id_atividade} "
                             f"deveria terminar exatamente às {fim_jornada_grupo.strftime('%H:%M')}, "
                             f"mas terminou às {fim_atual.strftime('%H:%M')}. Diferença: {diferenca}."
                         )
                         logger.error(erro_msg)
                         raise RuntimeError(erro_msg)
                 
-                # ✅ REGISTRO DE SUCESSO
+                # REGISTRO DE SUCESSO
                 self.atividades_executadas.append(atividade)
                 
                 # Atualizar para próxima iteração
@@ -871,7 +872,7 @@ class PedidoDeProducao:
                 current_fim = atividade.inicio_real
                 
                 logger.info(
-                    f"✅ Atividade do grupo '{nome_grupo}' executada: "
+                    f"Atividade do grupo '{nome_grupo}' executada: "
                     f"{atividade.id_atividade} ({inicio_atual.strftime('%H:%M')} - {fim_atual.strftime('%H:%M')})"
                 )
                 
@@ -884,23 +885,23 @@ class PedidoDeProducao:
                     "QUANTIDADE_EXCEDE_MAXIMO",
                     "Erro de quantidade"
                 ]):
-                    logger.error(f"🚫 ERRO DE QUANTIDADE no grupo '{nome_grupo}' - atividade {atividade.id_atividade}")
+                    logger.error(f"ERRO DE QUANTIDADE no grupo '{nome_grupo}' - atividade {atividade.id_atividade}")
                 elif "Erro de tempo entre equipamentos" in erro_msg_str:
-                    logger.error(f"🔧 ERRO DE TEMPO INTRA-ATIVIDADE no grupo '{nome_grupo}' - atividade {atividade.id_atividade}")
+                    logger.error(f"ERRO DE TEMPO INTRA-ATIVIDADE no grupo '{nome_grupo}' - atividade {atividade.id_atividade}")
                 elif "Tempo máximo de espera excedido" in erro_msg_str:
-                    logger.error(f"🔄 ERRO DE TEMPO INTER-ATIVIDADE no grupo '{nome_grupo}' - atividade {atividade.id_atividade}")
+                    logger.error(f"ERRO DE TEMPO INTER-ATIVIDADE no grupo '{nome_grupo}' - atividade {atividade.id_atividade}")
                 
                 # Re-lançar para tratamento no nível superior
                 raise e
         
         logger.info(
-            f"✅ Grupo '{nome_grupo}' concluído com sucesso: "
+            f"Grupo '{nome_grupo}' concluído com sucesso: "
             f"{len(atividades_ordenadas)} atividades executadas"
         )
 
     def _agrupar_subprodutos_por_dependencia(self, atividades_subproduto: list) -> dict:
         """
-        ✅ MÉTODO MANTIDO: Agrupa subprodutos por nível de dependência.
+        MÉTODO MANTIDO: Agrupa subprodutos por nível de dependência.
         """
         # Implementação inicial: agrupar por ID do item (diferentes subprodutos)
         grupos = {}
@@ -913,7 +914,7 @@ class PedidoDeProducao:
                 grupos[nome_subproduto] = []
             grupos[nome_subproduto].append(atividade)
         
-        logger.info(f"🔍 Identificados {len(grupos)} grupos de subprodutos: {list(grupos.keys())}")
+        logger.info(f"Identificados {len(grupos)} grupos de subprodutos: {list(grupos.keys())}")
         
         return grupos
 
@@ -925,12 +926,10 @@ class PedidoDeProducao:
         inicio_prox_atividade: datetime
     ):
         """
-        ✅ VERSÃO ATUALIZADA: Executa uma atividade individual com tratamento otimizado 
-        de erros de quantidade E ambos os tipos de tempo (inter + intra atividade),
-        com logging estruturado dedicado para cada tipo.
+        VERSÃO CORRIGIDA: Intercepta erros de timing e gera log limpo.
         """
         logger.debug(
-            f"🔧 Tentando alocar atividade {atividade.id_atividade} "
+            f"Tentando alocar atividade {atividade.id_atividade} "
             f"com fim em {current_fim.strftime('%H:%M')}"
         )
         
@@ -941,10 +940,10 @@ class PedidoDeProducao:
             )
             
             if not sucesso:
-                logger.warning(f"❌ Falha na alocação da atividade {atividade.id_atividade}")
+                logger.warning(f"Falha na alocação da atividade {atividade.id_atividade}")
                 return False, None, None
 
-            logger.debug(f"📦 Equipamentos alocados: {len(equipamentos_alocados) if equipamentos_alocados else 0}")
+            logger.debug(f"Equipamentos alocados: {len(equipamentos_alocados) if equipamentos_alocados else 0}")
 
             # Verificar tempo máximo de espera INTER-ATIVIDADE se houver atividade sucessora
             if atividade_sucessora and fim_atual and inicio_prox_atividade:
@@ -952,33 +951,41 @@ class PedidoDeProducao:
                     self._verificar_tempo_maximo_espera(
                         atividade, atividade_sucessora, fim_atual, inicio_prox_atividade
                     )
-                    logger.debug("✅ Verificação de tempo máximo de espera INTER-ATIVIDADE passou")
+                    logger.debug("Verificação de tempo máximo de espera INTER-ATIVIDADE passou")
                     
                 except RuntimeError as timing_err:
-                    # ✅ DETECTAR AUTOMATICAMENTE ERROS DE TEMPO INTER-ATIVIDADE
+                    # INTERCEPTAR ERRO DE TIMING E GERAR LOG LIMPO
                     erro_msg_str = str(timing_err)
                     
                     if "Tempo máximo de espera excedido entre atividades" in erro_msg_str:
                         logger.error(
-                            f"🔄 ERRO DE TEMPO INTER-ATIVIDADE detectado entre atividades "
+                            f"ERRO DE TEMPO INTER-ATIVIDADE detectado entre atividades "
                             f"{atividade.id_atividade} → {atividade_sucessora.id_atividade}"
                         )
                         
-                        # Log da funcionalidade específica
-                        logger.info(
-                            f"📊 FUNCIONALIDADE: Sistema de logging de tempo INTER-ATIVIDADE ativado. "
-                            f"Erro de sequenciamento entre atividades registrado com detalhes completos."
-                        )
-                        
-                    else:
-                        # Outro tipo de erro temporal
-                        logger.error(f"❌ Erro temporal genérico inter-atividade: {timing_err}")
-                    
-                    # ✅ REGISTRAR ERRO ADICIONAL NO SISTEMA GERAL
-                    try:
-                        registrar_erro_execucao_pedido(self.id_ordem, self.id_pedido, timing_err)
-                    except Exception as log_err:
-                        logger.warning(f"⚠️ Erro ao registrar no sistema geral: {log_err}")
+                        # GERAR LOG LIMPO IMEDIATAMENTE
+                        try:
+                            from utils.logs.formatador_timing_limpo import reformatar_erro_timing_para_novo_formato
+                            
+                            log_limpo = reformatar_erro_timing_para_novo_formato(
+                                id_ordem=atividade.id_ordem,
+                                id_pedido=atividade.id_pedido,
+                                erro_original=erro_msg_str,
+                                atividade_atual_obj=atividade,
+                                atividade_sucessora_obj=atividade_sucessora
+                            )
+                            
+                            import os
+                            os.makedirs("logs/erros", exist_ok=True)
+                            nome_arquivo = f"logs/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
+                            
+                            with open(nome_arquivo, "w", encoding="utf-8") as f:
+                                f.write(log_limpo)
+                            
+                            logger.info(f"Log de timing limpo gerado: {nome_arquivo}")
+                            
+                        except Exception as format_err:
+                            logger.warning(f"Falha ao gerar log limpo: {format_err}")
                     
                     # Re-lançar exceção para tratamento no nível superior
                     raise timing_err
@@ -986,7 +993,7 @@ class PedidoDeProducao:
             # Registrar equipamentos alocados no pedido
             if sucesso and equipamentos_alocados:
                 self.equipamentos_alocados_no_pedido.extend(equipamentos_alocados)
-                logger.debug(f"📋 Total de equipamentos no pedido: {len(self.equipamentos_alocados_no_pedido)}")
+                logger.debug(f"Total de equipamentos no pedido: {len(self.equipamentos_alocados_no_pedido)}")
             
             return sucesso, inicio_atual, fim_atual
             
@@ -994,53 +1001,8 @@ class PedidoDeProducao:
             # Detectar automaticamente diferentes tipos de erro baseado na mensagem
             erro_msg = str(e)
             
-            # 🔍 DETECÇÃO AUTOMÁTICA DE TIPOS DE ERRO DE QUANTIDADE
-            if any(keyword in erro_msg for keyword in [
-                "QUANTIDADE_ABAIXO_MINIMO", 
-                "QUANTIDADE_EXCEDE_MAXIMO",
-                "Erro de quantidade"
-            ]):
-                # Erro de quantidade detectado - economia de processamento
-                logger.error(
-                    f"🚫 ERRO DE QUANTIDADE detectado na atividade {atividade.id_atividade}: {e}"
-                )
-                
-                # Log da economia automática
-                logger.info(
-                    f"💡 ECONOMIA AUTOMÁTICA: Erro de quantidade detectado. "
-                    f"Backward scheduling desnecessário evitado para atividade {atividade.id_atividade}. "
-                    f"Economia estimada: 99% de redução no tempo de processamento."
-                )
-                
-            elif "Tempo máximo de espera excedido entre atividades" in erro_msg:
-                # 🔄 ERRO DE TEMPO INTER-ATIVIDADE
-                logger.error(
-                    f"🔄 ERRO DE TEMPO INTER-ATIVIDADE detectado na atividade {atividade.id_atividade}"
-                )
-                
-                # Log da funcionalidade
-                logger.info(
-                    f"📊 FUNCIONALIDADE: Sistema de logging de tempo INTER-ATIVIDADE ativado. "
-                    f"Erro de sequenciamento entre atividades registrado para "
-                    f"atividade {atividade.id_atividade}."
-                )
-                
-            elif "Erro de tempo entre equipamentos" in erro_msg:
-                # 🔧 ERRO DE TEMPO INTRA-ATIVIDADE
-                logger.error(
-                    f"🔧 ERRO DE TEMPO INTRA-ATIVIDADE detectado na atividade {atividade.id_atividade}"
-                )
-                
-                # Log da funcionalidade
-                logger.info(
-                    f"📊 FUNCIONALIDADE: Sistema de logging de tempo INTRA-ATIVIDADE ativado. "
-                    f"Erro de sequenciamento entre equipamentos registrado para "
-                    f"atividade {atividade.id_atividade}."
-                )
-                
-            else:
-                # Outro tipo de erro - tratamento normal
-                logger.error(f"❌ Erro genérico na atividade {atividade.id_atividade}: {e}")
+            # Outros tipos de erro...
+            logger.error(f"Erro na atividade {atividade.id_atividade}: {e}")
             
             # Re-lançar exceção para tratamento no nível superior
             raise e
@@ -1053,28 +1015,73 @@ class PedidoDeProducao:
         inicio_prox_atividade: datetime
     ):
         """
-        ✅ VERSÃO ATUALIZADA: Verifica se o tempo de espera ENTRE ATIVIDADES não excede o limite máximo.
-        Agora com logging estruturado de erros de tempo INTER-ATIVIDADE.
-        Agora valida corretamente tempo_maximo_de_espera = timedelta(0)
+        VERSÃO CORRIGIDA: Gera log no formato limpo ANTES de lançar exceção.
         """
-        # ✅ VERIFICAÇÃO CORRIGIDA: Verificar se o atributo existe e não é None
         if not hasattr(atividade_sucessora, 'tempo_maximo_de_espera') or atividade_sucessora.tempo_maximo_de_espera is None:
-            logger.debug("ℹ️ Atividade sucessora não possui tempo máximo de espera definido")
+            logger.debug("Atividade sucessora não possui tempo máximo de espera definido")
             return
         
         tempo_max_espera = atividade_sucessora.tempo_maximo_de_espera
         atraso = inicio_prox_atividade - fim_atual
 
         logger.debug(
-            f"⏱️ Verificação de tempo ENTRE atividades:\n"
+            f"Verificação de tempo ENTRE atividades:\n"
             f"   Atual: {atividade_atual.id_atividade} (fim: {fim_atual.strftime('%H:%M:%S')})\n"
             f"   Sucessora: {atividade_sucessora.id_atividade} (início: {inicio_prox_atividade.strftime('%H:%M:%S')})\n"
             f"   Atraso: {atraso} | Máximo permitido: {tempo_max_espera}"
         )
 
-        # ✅ VALIDAÇÃO RIGOROSA: Agora funciona corretamente para tempo_max_espera = timedelta(0)
         if atraso > tempo_max_espera:
-            # ✅ CRIAR EXCEÇÃO ESPECÍFICA DE TEMPO INTER-ATIVIDADE
+            # PRIMEIRO: Gerar log no formato limpo ANTES de qualquer exceção
+            try:
+                from utils.logs.formatador_timing_limpo import FormatadorTimingLimpo
+                
+                # Preparar dados para o formatador
+                atividade_atual_dados = {
+                    'nome': atividade_atual.nome_atividade,
+                    'fim': fim_atual.strftime('%d/%m %H:%M:%S'),
+                    'duracao_estimada': str(getattr(atividade_atual, 'duracao', timedelta(minutes=30)))
+                }
+                
+                atividade_sucessora_dados = {
+                    'nome': atividade_sucessora.nome_atividade,
+                    'inicio': inicio_prox_atividade.strftime('%d/%m %H:%M:%S')
+                }
+                
+                timing_violation_dados = {
+                    'tempo_maximo': str(tempo_max_espera),
+                    'excesso': str(atraso - tempo_max_espera)
+                }
+                
+                # Obter equipamentos
+                equipamentos = FormatadorTimingLimpo.obter_equipamentos_atividade(atividade_atual)
+                if len(equipamentos) < 3:
+                    equipamentos.extend(FormatadorTimingLimpo.obter_equipamentos_atividade(atividade_sucessora))
+                
+                # Gerar log limpo
+                log_formatado = FormatadorTimingLimpo.formatar_erro_timing_inter_atividade(
+                    id_ordem=atividade_atual.id_ordem,
+                    id_pedido=atividade_atual.id_pedido,
+                    atividade_atual=atividade_atual_dados,
+                    atividade_sucessora=atividade_sucessora_dados,
+                    timing_violation=timing_violation_dados,
+                    equipamentos_envolvidos=equipamentos[:3]
+                )
+                
+                # Salvar arquivo
+                import os
+                os.makedirs("logs/erros", exist_ok=True)
+                nome_arquivo = f"logs/erros/ordem: {atividade_atual.id_ordem} | pedido: {atividade_atual.id_pedido}.log"
+                
+                with open(nome_arquivo, "w", encoding="utf-8") as f:
+                    f.write(log_formatado)
+                
+                logger.info(f"Log de timing limpo salvo com sucesso: {nome_arquivo}")
+                
+            except Exception as format_err:
+                logger.warning(f"Falha ao gerar log limpo: {format_err}")
+            
+            # SEGUNDO: Criar exceção estruturada para sistema JSON (opcional)
             timing_error = InterActivityTimingError(
                 current_activity_id=atividade_atual.id_atividade,
                 current_activity_name=atividade_atual.nome_atividade,
@@ -1086,31 +1093,9 @@ class PedidoDeProducao:
                 actual_delay=atraso
             )
             
-            # ✅ REGISTRAR NO SISTEMA DE LOGS DE TEMPO INTER-ATIVIDADE
-            try:
-                log_inter_activity_timing_error(
-                    id_ordem=atividade_atual.id_ordem,
-                    id_pedido=atividade_atual.id_pedido,
-                    current_activity_id=atividade_atual.id_atividade,
-                    current_activity_name=atividade_atual.nome_atividade,
-                    successor_activity_id=atividade_sucessora.id_atividade,
-                    successor_activity_name=atividade_sucessora.nome_atividade,
-                    current_end_time=fim_atual,
-                    successor_start_time=inicio_prox_atividade,
-                    maximum_wait_time=tempo_max_espera
-                )
-                
-                logger.info(
-                    f"📝 Erro de tempo inter-atividade registrado no sistema de logs: "
-                    f"{timing_error.error_type}"
-                )
-                
-            except Exception as log_err:
-                logger.warning(f"⚠️ Falha ao registrar log inter-atividade: {log_err}")
-            
-            # ✅ LANÇAR EXCEÇÃO ORIGINAL PARA MANTER COMPATIBILIDADE
+            # TERCEIRO: Lançar exceção original (mantém compatibilidade)
             raise RuntimeError(
-                f"❌ Tempo máximo de espera excedido entre atividades:\n"
+                f"Tempo máximo de espera excedido entre atividades:\n"
                 f"   Atividade atual: {atividade_atual.id_atividade} ({atividade_atual.nome_atividade})\n"
                 f"   Atividade sucessora: {atividade_sucessora.id_atividade} ({atividade_sucessora.nome_atividade})\n"
                 f"   Fim da atual: {fim_atual.strftime('%d/%m %H:%M:%S')}\n"
@@ -1120,14 +1105,14 @@ class PedidoDeProducao:
                 f"   Excesso: {atraso - tempo_max_espera}"
             ) from timing_error
         else:
-            logger.debug(f"✅ Tempo de espera ENTRE atividades dentro do limite permitido")
+            logger.debug(f"Tempo de espera ENTRE atividades dentro do limite permitido")
 
     def _cancelar_pedido_completo(self, motivo: str):
         """
-        ✅ NOVO MÉTODO: Cancela o pedido completo fazendo rollback de todas as atividades.
+        NOVO MÉTODO: Cancela o pedido completo fazendo rollback de todas as atividades.
         """
         logger.error(
-            f"🚫 CANCELANDO PEDIDO COMPLETO {self.id_pedido} - Motivo: {motivo}"
+            f"CANCELANDO PEDIDO COMPLETO {self.id_pedido} - Motivo: {motivo}"
         )
         
         self.pedido_cancelado = True
@@ -1135,7 +1120,7 @@ class PedidoDeProducao:
         # Fazer rollback de todas as atividades executadas com sucesso até agora
         if self.atividades_executadas:
             logger.info(
-                f"🔁 Fazendo rollback de {len(self.atividades_executadas)} atividades já executadas"
+                f"Fazendo rollback de {len(self.atividades_executadas)} atividades já executadas"
             )
             
             for atividade in self.atividades_executadas:
@@ -1148,19 +1133,19 @@ class PedidoDeProducao:
                             id_pedido=self.id_pedido,
                             id_atividade=atividade.id_atividade
                         )
-                        logger.debug(f"🔄 Rollback equipamentos atividade {atividade.id_atividade}")
+                        logger.debug(f"Rollback equipamentos atividade {atividade.id_atividade}")
                     
                     # Marcar atividade como não alocada
                     atividade.alocada = False
                     
                 except Exception as e:
-                    logger.error(f"❌ Erro no rollback da atividade {atividade.id_atividade}: {e}")
+                    logger.error(f"Erro no rollback da atividade {atividade.id_atividade}: {e}")
         
         # Rollback completo adicional
         self._executar_rollback_completo()
         
         logger.error(
-            f"🚫 PEDIDO {self.id_pedido} CANCELADO COMPLETAMENTE. "
+            f"PEDIDO {self.id_pedido} CANCELADO COMPLETAMENTE. "
             f"Motivo: {motivo}"
         )
 
@@ -1170,7 +1155,7 @@ class PedidoDeProducao:
 
     def _executar_rollback_completo(self):
         """Executa rollback completo do pedido com logs detalhados"""
-        logger.info(f"🔁 Executando rollback completo do pedido {self.id_pedido} da ordem {self.id_ordem}")
+        logger.info(f"Executando rollback completo do pedido {self.id_pedido} da ordem {self.id_ordem}")
 
         equipamentos_liberados = 0
         funcionarios_liberados = 0
@@ -1200,16 +1185,16 @@ class PedidoDeProducao:
             apagar_logs_por_pedido_e_ordem(self.id_ordem, self.id_pedido)
 
             logger.info(
-                f"✅ Rollback concluído: "
+                f"Rollback concluído: "
                 f"{equipamentos_liberados} equipamentos e {funcionarios_liberados} funcionários liberados"
             )
             
         except Exception as e:
-            logger.error(f"❌ Erro durante rollback: {e}")
+            logger.error(f"Erro durante rollback: {e}")
 
     def rollback_pedido(self):
         """Método público para rollback manual"""
-        logger.info(f"🔄 Rollback manual solicitado para pedido {self.id_pedido}")
+        logger.info(f"Rollback manual solicitado para pedido {self.id_pedido}")
         self._cancelar_pedido_completo("Rollback manual solicitado")
 
     # =============================================================================
@@ -1225,10 +1210,10 @@ class PedidoDeProducao:
             raise ValueError("Ficha técnica ainda não foi montada")
 
         if not self.gestor_almoxarifado:
-            logger.warning("⚠️ Gestor de almoxarifado não disponível - pulando verificação de estoque")
+            logger.warning("Gestor de almoxarifado não disponível - pulando verificação de estoque")
             return
 
-        logger.info(f"🔍 Verificando disponibilidade de estoque para pedido {self.id_pedido}")
+        logger.info(f"Verificando disponibilidade de estoque para pedido {self.id_pedido}")
 
         itens_insuficientes = []
         estimativas = self.ficha_tecnica_modular.calcular_quantidade_itens()
@@ -1240,13 +1225,13 @@ class PedidoDeProducao:
             politica = item_dict.get("politica_producao", "ESTOCADO")
 
             logger.debug(
-                f"🧪 Verificando item '{nome_item}' (ID {id_item}) | "
+                f"Verificando item '{nome_item}' (ID {id_item}) | "
                 f"Tipo: {tipo_item} | Política: {politica} | Quantidade: {quantidade}"
             )
 
             # Itens SOB_DEMANDA não precisam verificação de estoque
             if tipo_item in {"SUBPRODUTO", "PRODUTO"} and politica == "SOB_DEMANDA":
-                logger.debug(f"⏭️ Item {id_item} é SOB_DEMANDA - pulando verificação")
+                logger.debug(f"Item {id_item} é SOB_DEMANDA - pulando verificação")
                 continue
 
             # Verificar disponibilidade para itens ESTOCADOS
@@ -1268,7 +1253,7 @@ class PedidoDeProducao:
                         })
                         
                 except Exception as e:
-                    logger.error(f"❌ Erro ao verificar estoque do item {id_item}: {e}")
+                    logger.error(f"Erro ao verificar estoque do item {id_item}: {e}")
                     itens_insuficientes.append({
                         "id": id_item,
                         "descricao": nome_item,
@@ -1279,7 +1264,7 @@ class PedidoDeProducao:
 
         # Reportar itens insuficientes
         if itens_insuficientes:
-            logger.error(f"❌ Encontrados {len(itens_insuficientes)} itens com estoque insuficiente:")
+            logger.error(f"Encontrados {len(itens_insuficientes)} itens com estoque insuficiente:")
             
             for item in itens_insuficientes:
                 erro_msg = (
@@ -1296,7 +1281,7 @@ class PedidoDeProducao:
                 f"{len(itens_insuficientes)} itens com estoque insuficiente."
             )
         else:
-            logger.info(f"✅ Estoque suficiente para todos os itens do pedido {self.id_pedido}")
+            logger.info(f"Estoque suficiente para todos os itens do pedido {self.id_pedido}")
 
     def gerar_comanda_de_reserva(self, data_execucao: datetime):
         """
@@ -1306,10 +1291,10 @@ class PedidoDeProducao:
             raise ValueError("Ficha técnica ainda não foi montada")
 
         if not self.gestor_almoxarifado:
-            logger.warning("⚠️ Gestor de almoxarifado não disponível - pulando geração de comanda")
+            logger.warning("Gestor de almoxarifado não disponível - pulando geração de comanda")
             return
 
-        logger.info(f"📋 Gerando comanda de reserva para pedido {self.id_pedido}")
+        logger.info(f"Gerando comanda de reserva para pedido {self.id_pedido}")
 
         try:
             gerar_comanda_reserva_modulo(
@@ -1320,10 +1305,10 @@ class PedidoDeProducao:
                 data_execucao=data_execucao
             )
             
-            logger.info(f"✅ Comanda de reserva gerada com sucesso para pedido {self.id_pedido}")
+            logger.info(f"Comanda de reserva gerada com sucesso para pedido {self.id_pedido}")
             
         except Exception as e:
-            logger.error(f"❌ Erro ao gerar comanda de reserva: {e}")
+            logger.error(f"Erro ao gerar comanda de reserva: {e}")
             raise
 
     # =============================================================================
@@ -1332,21 +1317,21 @@ class PedidoDeProducao:
 
     def exibir_historico_de_funcionarios(self):
         """Exibe histórico de ocupação de todos os funcionários"""
-        logger.info("📊 Exibindo histórico de funcionários")
+        logger.info("Exibindo histórico de funcionários")
         
         try:
             for funcionario in funcionarios_disponiveis:
                 funcionario.mostrar_agenda()
         except Exception as e:
-            logger.error(f"❌ Erro ao exibir histórico de funcionários: {e}")
+            logger.error(f"Erro ao exibir histórico de funcionários: {e}")
 
     def mostrar_estrutura(self):
         """Mostra a estrutura da ficha técnica"""
         if self.ficha_tecnica_modular:
-            logger.info(f"📋 Mostrando estrutura da ficha técnica do pedido {self.id_pedido}")
+            logger.info(f"Mostrando estrutura da ficha técnica do pedido {self.id_pedido}")
             self.ficha_tecnica_modular.mostrar_estrutura()
         else:
-            logger.warning(f"⚠️ Ficha técnica não montada para pedido {self.id_pedido}")
+            logger.warning(f"Ficha técnica não montada para pedido {self.id_pedido}")
 
     def obter_resumo_pedido(self) -> dict:
         """Retorna um resumo completo do pedido"""
@@ -1393,18 +1378,18 @@ class PedidoDeProducao:
             ]
             
             logger.debug(
-                f"👥 Funcionários filtrados para item {id_item}: "
+                f"Funcionários filtrados para item {id_item}: "
                 f"{len(funcionarios_filtrados)}/{len(self.todos_funcionarios)}"
             )
             
             return funcionarios_filtrados
             
         except Exception as e:
-            logger.error(f"❌ Erro ao filtrar funcionários para item {id_item}: {e}")
+            logger.error(f"Erro ao filtrar funcionários para item {id_item}: {e}")
             return self.todos_funcionarios
 
     def salvar_debug_logs(self):
-        """🔍 Salva os logs de debug em arquivo"""
+        """Salva os logs de debug em arquivo"""
         return debug_atividades.salvar_logs()
 
     def __repr__(self):

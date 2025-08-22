@@ -7,18 +7,18 @@
       "id_item": 1004,
       "nome": "Pão Baguete",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 6,
+      "quantidade_necessaria": 10,
       "itens_necessarios": [
         {
           "id_item": 2002,
           "nome": "Massa Suave",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 388.72,
+          "quantidade_necessaria": 647.86,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 230.97,
+              "quantidade_necessaria": 384.94,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -26,7 +26,7 @@
             {
               "id_item": 4,
               "nome": "Gelo para alimentos",
-              "quantidade_necessaria": 127.03,
+              "quantidade_necessaria": 211.72,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -34,7 +34,7 @@
             {
               "id_item": 5,
               "nome": "Sal refinado",
-              "quantidade_necessaria": 2.31,
+              "quantidade_necessaria": 3.85,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -42,7 +42,7 @@
             {
               "id_item": 6,
               "nome": "Fermento biológico seco",
-              "quantidade_necessaria": 4.62,
+              "quantidade_necessaria": 7.7,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -50,7 +50,7 @@
             {
               "id_item": 13,
               "nome": "Açúcar cristal",
-              "quantidade_necessaria": 11.55,
+              "quantidade_necessaria": 19.25,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -58,7 +58,7 @@
             {
               "id_item": 14,
               "nome": "Margarina com sal",
-              "quantidade_necessaria": 11.55,
+              "quantidade_necessaria": 19.25,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -66,7 +66,7 @@
             {
               "id_item": 7,
               "nome": "Aditivo em pasta",
-              "quantidade_necessaria": 0.69,
+              "quantidade_necessaria": 1.15,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -76,7 +76,7 @@
         {
           "id_item": 50,
           "nome": "Gergelim Branco",
-          "quantidade_necessaria": 1.28,
+          "quantidade_necessaria": 2.14,
           "unidade_medida": "GRAMAS",
           "tipo_item": "INSUMO",
           "politica_producao": "ESTOCADO"

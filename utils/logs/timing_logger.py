@@ -13,6 +13,7 @@ from utils.logs.logger_factory import setup_logger
 logger = setup_logger('TimingLogger')
 
 
+
 class TimingLogger:
     """
     Logger especializado para erros de tempo e sequenciamento.
@@ -22,7 +23,107 @@ class TimingLogger:
     def __init__(self, base_dir: str = "logs/erros"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
+    
+    def log_inter_activity_timing_error_with_clean_format(
+        self,
+        id_ordem: int, id_pedido: int,
+        current_activity_id: int, current_activity_name: str,
+        successor_activity_id: int, successor_activity_name: str,
+        current_end_time: datetime, successor_start_time: datetime,
+        maximum_wait_time: timedelta,
+        current_activity_obj=None, successor_activity_obj=None
+    ):
+        """
+        Função aprimorada que registra erro de timing ENTRE atividades 
+        tanto no formato JSON (sistema existente) quanto no formato limpo especificado.
         
+        Args:
+            id_ordem: ID da ordem de produção
+            id_pedido: ID do pedido
+            current_activity_id: ID da atividade atual
+            current_activity_name: Nome da atividade atual
+            successor_activity_id: ID da atividade sucessora
+            successor_activity_name: Nome da atividade sucessora
+            current_end_time: Horário de término da atividade atual
+            successor_start_time: Horário de início da atividade sucessora
+            maximum_wait_time: Tempo máximo de espera permitido
+            current_activity_obj: Objeto AtividadeModular da atividade atual (opcional)
+            successor_activity_obj: Objeto AtividadeModular da sucessora (opcional)
+            
+        Returns:
+            Tuple com caminhos dos arquivos criados: (arquivo_json, arquivo_limpo)
+        """
+        from utils.logs.timing_exceptions import InterActivityTimingError
+        from utils.logs.formatador_timing_limpo import reformatar_erro_timing_para_novo_formato
+        
+        actual_delay = successor_start_time - current_end_time
+        
+        # 1. Criar exceção estruturada
+        error = InterActivityTimingError(
+            current_activity_id=current_activity_id,
+            current_activity_name=current_activity_name,
+            successor_activity_id=successor_activity_id,
+            successor_activity_name=successor_activity_name,
+            current_end_time=current_end_time,
+            successor_start_time=successor_start_time,
+            maximum_wait_time=maximum_wait_time,
+            actual_delay=actual_delay
+        )
+        
+        # 2. Registrar no formato JSON existente
+        arquivo_json = timing_logger.log_inter_activity_timing_error(
+            id_ordem=id_ordem,
+            id_pedido=id_pedido,
+            current_activity_id=current_activity_id,
+            current_activity_name=current_activity_name,
+            successor_activity_id=successor_activity_id,
+            successor_activity_name=successor_activity_name,
+            timing_error=error
+        )
+        
+        # 3. Gerar log no formato limpo especificado
+        arquivo_limpo = None
+        try:
+            # Construir string do erro original para compatibilidade
+            erro_original = (
+                f"❌ Tempo máximo de espera excedido entre atividades:\n"
+                f"   Atividade atual: {current_activity_id} ({current_activity_name})\n"
+                f"   Atividade sucessora: {successor_activity_id} ({successor_activity_name})\n"
+                f"   Fim da atual: {current_end_time.strftime('%d/%m %H:%M:%S')}\n"
+                f"   Início da sucessora: {successor_start_time.strftime('%d/%m %H:%M:%S')}\n"
+                f"   Atraso detectado: {actual_delay}\n"
+                f"   Máximo permitido: {maximum_wait_time}\n"
+                f"   Excesso: {actual_delay - maximum_wait_time}"
+            )
+            
+            # Gerar log limpo
+            log_limpo = reformatar_erro_timing_para_novo_formato(
+                id_ordem=id_ordem,
+                id_pedido=id_pedido,
+                erro_original=erro_original,
+                atividade_atual_obj=current_activity_obj,
+                atividade_sucessora_obj=successor_activity_obj
+            )
+            
+            # Salvar em arquivo específico do formato limpo
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+            nome_arquivo_limpo = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+            
+            with open(nome_arquivo_limpo, "w", encoding="utf-8") as f:
+                f.write(log_limpo)
+            
+            arquivo_limpo = nome_arquivo_limpo
+            
+            logger.info(
+                f"📄 Log de timing criado em AMBOS os formatos: "
+                f"JSON estruturado + Formato limpo especificado"
+            )
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Falha ao gerar log no formato limpo: {e}")
+        
+        return arquivo_json, arquivo_limpo
+
     def log_intra_activity_timing_error(self, id_ordem: int, id_pedido: int, 
                                         activity_id: int, activity_name: str,
                                         current_equipment: str, successor_equipment: str,
@@ -78,63 +179,26 @@ class TimingLogger:
         
         return str(arquivo_json)
 
-    def log_inter_activity_timing_error(self, id_ordem: int, id_pedido: int, 
-                                       current_activity_id: int, current_activity_name: str,
-                                       successor_activity_id: int, successor_activity_name: str,
-                                       timing_error):
+    def log_inter_activity_timing_error(id_ordem: int, id_pedido: int,
+                                    current_activity_id: int, current_activity_name: str,
+                                    successor_activity_id: int, successor_activity_name: str,
+                                    current_end_time: datetime, successor_start_time: datetime,
+                                    maximum_wait_time: timedelta):
         """
-        Registra erro de tempo ENTRE atividades diferentes.
-        
-        Args:
-            id_ordem: ID da ordem de produção
-            id_pedido: ID do pedido
-            current_activity_id: ID da atividade atual
-            current_activity_name: Nome da atividade atual
-            successor_activity_id: ID da atividade sucessora
-            successor_activity_name: Nome da atividade sucessora
-            timing_error: Instância de InterActivityTimingError
-            
-        Returns:
-            Caminho do arquivo de log criado
+        Função de conveniência ATUALIZADA para log de erro de tempo ENTRE atividades.
+        Agora gera logs tanto no formato JSON quanto no formato limpo especificado.
         """
-        timestamp = datetime.now()
-        
-        error_data = {
-            "timestamp": timestamp.isoformat(),
-            "identificacao": {
-                "id_ordem": id_ordem,
-                "id_pedido": id_pedido,
-                "atividade_atual": {
-                    "id": current_activity_id,
-                    "nome": current_activity_name
-                },
-                "atividade_sucessora": {
-                    "id": successor_activity_id,
-                    "nome": successor_activity_name
-                }
-            },
-            "erro_tempo": timing_error.to_dict(),
-            "sistema": {
-                "tipo_validacao": "SEQUENCIAMENTO_INTER_ATIVIDADE",
-                "backward_scheduling_executado": True,
-                "impacto_estimado": "Pedido pode ser cancelado ou replanejado"
-            }
-        }
-        
-        # Salvar em arquivo JSON estruturado
-        arquivo_json = self._salvar_erro_json(error_data, timing_error.error_type)
-        
-        # Manter compatibilidade com sistema existente
-        self._salvar_erro_compatibilidade(error_data)
-        
-        logger.error(
-            f"🔄 ERRO DE TEMPO INTER-ATIVIDADE: {timing_error.error_type} - "
-            f"Entre atividades {current_activity_id} ({current_activity_name}) → "
-            f"{successor_activity_id} ({successor_activity_name}) no pedido {id_pedido}. "
-            f"Log salvo: {arquivo_json.name}"
+        return timing_logger.log_inter_activity_timing_error_with_clean_format(
+            id_ordem=id_ordem,
+            id_pedido=id_pedido,
+            current_activity_id=current_activity_id,
+            current_activity_name=current_activity_name,
+            successor_activity_id=successor_activity_id,
+            successor_activity_name=successor_activity_name,
+            current_end_time=current_end_time,
+            successor_start_time=successor_start_time,
+            maximum_wait_time=maximum_wait_time
         )
-        
-        return str(arquivo_json)
         
     def log_sequencing_error(self, id_ordem: int, id_pedido: int, 
                            atividades_afetadas: list, timing_error):

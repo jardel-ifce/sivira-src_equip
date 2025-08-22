@@ -1,0 +1,63 @@
+{
+  "id_ordem": 1,
+  "id_pedido": 9,
+  "data_reserva": "2025-06-23",
+  "itens": [
+    {
+      "id_item": 1001,
+      "nome": "Pão Francês",
+      "politica_producao": "SOB_DEMANDA",
+      "quantidade_necessaria": 450,
+      "itens_necessarios": [
+        {
+          "id_item": 2001,
+          "nome": "Massa Crocante",
+          "politica_producao": "SOB_DEMANDA",
+          "quantidade_necessaria": 29250.0,
+          "itens_necessarios": [
+            {
+              "id_item": 3,
+              "nome": "Farinha de trigo para pães",
+              "quantidade_necessaria": 17911.82,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 4,
+              "nome": "Gelo para alimentos",
+              "quantidade_necessaria": 10747.09,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 5,
+              "nome": "Sal refinado",
+              "quantidade_necessaria": 358.24,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 6,
+              "nome": "Fermento biológico seco",
+              "quantidade_necessaria": 179.12,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 7,
+              "nome": "Aditivo em pasta",
+              "quantidade_necessaria": 53.74,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

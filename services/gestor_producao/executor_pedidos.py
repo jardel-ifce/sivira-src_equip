@@ -1,8 +1,9 @@
 """
-Executor de Pedidos - IMPLEMENTADO
-==================================
+Executor de Pedidos - CORRIGIDO
+===============================
 
-Executa pedidos de produção REAL gerando logs de equipamentos.
+Executa pedidos de produção REAL gerando comandas e logs de equipamentos.
+✅ CORREÇÃO: Agora gera comandas antes da execução!
 """
 
 from typing import List, Dict, Optional
@@ -17,6 +18,7 @@ class ExecutorPedidos:
     - Execução sequencial de pedidos
     - Execução otimizada com PL  
     - Coleta de estatísticas
+    - 🎯 GERAÇÃO DE COMANDAS (CORRIGIDO!)
     - 🎯 GERAÇÃO DE LOGS DE EQUIPAMENTOS
     """
     
@@ -35,7 +37,7 @@ class ExecutorPedidos:
         """
         Executa pedidos em modo sequencial REAL.
         
-        🎯 AQUI QUE OS LOGS DE EQUIPAMENTOS SÃO GERADOS!
+        🎯 AQUI QUE AS COMANDAS E LOGS DE EQUIPAMENTOS SÃO GERADOS!
         
         Args:
             pedidos_convertidos: Lista de PedidoDeProducao convertidos
@@ -45,11 +47,21 @@ class ExecutorPedidos:
         """
         try:
             print(f"🔄 Executando {len(pedidos_convertidos)} pedidos sequencialmente...")
-            print("🎯 MODO REAL: Logs de equipamentos serão gerados automaticamente!")
+            print("🎯 MODO REAL: Comandas e logs de equipamentos serão gerados automaticamente!")
+            
+            # ✅ CORREÇÃO: Importa geração de comandas
+            try:
+                from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva
+                print("   📋 Módulo de comandas carregado")
+            except ImportError as e:
+                print(f"   ❌ Erro ao importar geração de comandas: {e}")
+                print("   ⚠️ Continuando sem geração de comandas...")
+                gerar_comanda_reserva = None
             
             inicio_execucao = datetime.now()
             pedidos_executados = 0
             pedidos_com_erro = 0
+            comandas_geradas = 0
             
             for idx, pedido in enumerate(pedidos_convertidos, 1):
                 print(f"\n📋 Executando pedido {idx}/{len(pedidos_convertidos)}: {pedido.id_pedido}")
@@ -57,19 +69,44 @@ class ExecutorPedidos:
                 print(f"   ⏰ Prazo: {pedido.fim_jornada.strftime('%d/%m %H:%M')}")
                 
                 try:
-                    # ✅ PASSO 1: Criar atividades modulares
+                    # ✅ CORREÇÃO: PASSO 1 - Gerar comanda ANTES da execução
+                    if gerar_comanda_reserva:
+                        print(f"   📋 Gerando comanda para pedido {pedido.id_pedido}...")
+                        
+                        # Verifica se o pedido tem gestor_almoxarifado
+                        if not hasattr(pedido, 'gestor_almoxarifado') or not pedido.gestor_almoxarifado:
+                            print(f"   ⚠️ AVISO: Pedido {pedido.id_pedido} sem gestor_almoxarifado!")
+                            print(f"   💡 Tentando usar ficha técnica mesmo assim...")
+                        
+                        try:
+                            gerar_comanda_reserva(
+                                id_ordem=pedido.id_ordem,
+                                id_pedido=pedido.id_pedido,
+                                ficha=pedido.ficha_tecnica_modular,
+                                gestor=pedido.gestor_almoxarifado,
+                                data_execucao=pedido.inicio_jornada
+                            )
+                            print(f"   ✅ Comanda gerada: data/comandas/comanda_ordem_{pedido.id_ordem}_pedido_{pedido.id_pedido}.json")
+                            comandas_geradas += 1
+                        except Exception as e_comanda:
+                            print(f"   ⚠️ Erro ao gerar comanda: {e_comanda}")
+                            print(f"   💡 Continuando com execução mesmo sem comanda...")
+                    else:
+                        print(f"   ⚠️ Geração de comandas não disponível")
+                    
+                    # ✅ PASSO 2: Criar atividades modulares
                     print(f"   🏗️ Criando atividades modulares...")
                     pedido.criar_atividades_modulares_necessarias()
                     print(f"   ✅ {len(pedido.atividades_modulares)} atividades criadas")
                     
-                    # ✅ PASSO 2: Executar atividades (AQUI OS LOGS SÃO GERADOS!)
+                    # ✅ PASSO 3: Executar atividades (AQUI OS LOGS SÃO GERADOS!)
                     print(f"   ⚡ Executando atividades em ordem...")
-                    print(f"   📝 LOGS SENDO GERADOS: logs/equipamentos/ordem: 1 | pedido: {pedido.id_pedido}.log")
+                    print(f"   📝 LOG SENDO GERADO: logs/equipamentos/ordem: {pedido.id_ordem} | pedido: {pedido.id_pedido}.log")
                     
                     pedido.executar_atividades_em_ordem()
                     
                     print(f"   ✅ Pedido {pedido.id_pedido} executado com sucesso!")
-                    print(f"   📁 Log salvo em: logs/equipamentos/ordem: 1 | pedido: {pedido.id_pedido}.log")
+                    print(f"   📝 Log salvo em: logs/equipamentos/ordem: {pedido.id_ordem} | pedido: {pedido.id_pedido}.log")
                     pedidos_executados += 1
                     
                 except RuntimeError as e:
@@ -78,7 +115,7 @@ class ExecutorPedidos:
                     
                     # Log do erro (mas continua execução)
                     erro_resumido = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
-                    print(f"   🔍 Erro resumido: {erro_resumido}")
+                    print(f"   📝 Erro resumido: {erro_resumido}")
                     continue
                     
                 except Exception as e:
@@ -95,6 +132,7 @@ class ExecutorPedidos:
                 'total_pedidos': len(pedidos_convertidos),
                 'pedidos_executados': pedidos_executados,
                 'pedidos_com_erro': pedidos_com_erro,
+                'comandas_geradas': comandas_geradas,  # ✅ NOVA MÉTRICA
                 'tempo_execucao': tempo_total,
                 'inicio_execucao': inicio_execucao.isoformat(),
                 'fim_execucao': fim_execucao.isoformat()
@@ -104,11 +142,13 @@ class ExecutorPedidos:
             print(f"\n📊 RELATÓRIO DE EXECUÇÃO SEQUENCIAL:")
             print(f"   ✅ Executados: {pedidos_executados}/{len(pedidos_convertidos)}")
             print(f"   ❌ Com erro: {pedidos_com_erro}")
+            print(f"   📋 Comandas geradas: {comandas_geradas}")  # ✅ NOVA INFORMAÇÃO
             print(f"   ⏱️ Tempo total: {tempo_total:.1f}s")
-            print(f"   📁 Logs gerados em: logs/equipamentos/")
+            print(f"   📝 Logs gerados em: logs/equipamentos/")
+            print(f"   📋 Comandas salvas em: data/comandas/")  # ✅ NOVA INFORMAÇÃO
             
-            # ✅ LISTAR LOGS GERADOS
-            self._listar_logs_gerados()
+            # ✅ LISTAR ARQUIVOS GERADOS
+            self._listar_arquivos_gerados()
             
             sucesso_geral = pedidos_executados > 0
             if sucesso_geral:
@@ -145,11 +185,16 @@ class ExecutorPedidos:
                 print("   ❌ OR-Tools não encontrado!")
                 return False
             
-            inicio_execucao = datetime.now()
+            # ✅ CORREÇÃO: Importa geração de comandas
+            try:
+                from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva
+                print("   📋 Módulo de comandas carregado")
+            except ImportError as e:
+                print(f"   ❌ Erro ao importar geração de comandas: {e}")
+                print("   ⚠️ Continuando sem geração de comandas...")
+                gerar_comanda_reserva = None
             
-            # ✅ IMPORTA OTIMIZADOR REAL
-            print("   📦 Importando otimizador integrado...")
-            from otimizador.otimizador_integrado import OtimizadorIntegrado
+            inicio_execucao = datetime.now()
             
             # ✅ CONFIGURA OTIMIZADOR
             resolucao_minutos = self.configuracoes.get('resolucao_minutos', 30)
@@ -157,25 +202,33 @@ class ExecutorPedidos:
             
             print(f"   ⚙️ Configuração PL: {resolucao_minutos}min, timeout: {timeout_pl}s")
             
-            otimizador = OtimizadorIntegrado(
-                resolucao_minutos=resolucao_minutos,
-                timeout_segundos=timeout_pl
-            )
-            
-            # ✅ CORREÇÃO CRÍTICA: Usar ExecutorPedidos.executar_sequencial em vez de TesteSistemaProducao
-            print(f"   🎯 Executando com otimização PL...")
-            print(f"   📝 LOGS SENDO GERADOS: logs/equipamentos/")
-            
-            # ✅ NOVA ABORDAGEM: Usar os próprios pedidos convertidos diretamente
-            # Em vez de criar TesteSistemaProducao, usar a lógica real
-            
+            # ✅ EXECUÇÃO SIMPLIFICADA COM COMANDAS
             pedidos_executados = 0
             pedidos_com_erro = 0
+            comandas_geradas = 0
             
             for idx, pedido in enumerate(pedidos_convertidos, 1):
                 print(f"\n📋 Executando pedido otimizado {idx}/{len(pedidos_convertidos)}: {pedido.id_pedido}")
                 
                 try:
+                    # ✅ CORREÇÃO: PASSO 1 - Gerar comanda ANTES da execução
+                    if gerar_comanda_reserva:
+                        print(f"   📋 Gerando comanda para pedido {pedido.id_pedido}...")
+                        
+                        try:
+                            gerar_comanda_reserva(
+                                id_ordem=pedido.id_ordem,
+                                id_pedido=pedido.id_pedido,
+                                ficha=pedido.ficha_tecnica_modular,
+                                gestor=pedido.gestor_almoxarifado,
+                                data_execucao=pedido.inicio_jornada
+                            )
+                            print(f"   ✅ Comanda gerada: data/comandas/comanda_ordem_{pedido.id_ordem}_pedido_{pedido.id_pedido}.json")
+                            comandas_geradas += 1
+                        except Exception as e_comanda:
+                            print(f"   ⚠️ Erro ao gerar comanda: {e_comanda}")
+                            print(f"   💡 Continuando com execução mesmo sem comanda...")
+                    
                     # ✅ CRIAR ATIVIDADES
                     print(f"   🏗️ Criando atividades modulares...")
                     pedido.criar_atividades_modulares_necessarias()
@@ -183,12 +236,12 @@ class ExecutorPedidos:
                     
                     # ✅ EXECUTAR ATIVIDADES (GERA LOGS!)
                     print(f"   ⚡ Executando atividades em ordem...")
-                    print(f"   📝 LOG SENDO GERADO: logs/equipamentos/ordem: 1 | pedido: {pedido.id_pedido}.log")
+                    print(f"   📝 LOG SENDO GERADO: logs/equipamentos/ordem: {pedido.id_ordem} | pedido: {pedido.id_pedido}.log")
                     
                     pedido.executar_atividades_em_ordem()
                     
                     print(f"   ✅ Pedido {pedido.id_pedido} executado com sucesso!")
-                    print(f"   📁 Log salvo em: logs/equipamentos/ordem: 1 | pedido: {pedido.id_pedido}.log")
+                    print(f"   📝 Log salvo em: logs/equipamentos/ordem: {pedido.id_ordem} | pedido: {pedido.id_pedido}.log")
                     pedidos_executados += 1
                     
                 except RuntimeError as e:
@@ -211,6 +264,7 @@ class ExecutorPedidos:
                     'total_pedidos': len(pedidos_convertidos),
                     'pedidos_executados': pedidos_executados,
                     'pedidos_com_erro': pedidos_com_erro,
+                    'comandas_geradas': comandas_geradas,  # ✅ NOVA MÉTRICA
                     'tempo_execucao': tempo_total,
                     'tempo_otimizacao': 0,  # Simplificado
                     'status_solver': 'SIMPLIFIED',
@@ -220,10 +274,11 @@ class ExecutorPedidos:
                 print(f"🎉 Execução otimizada concluída!")
                 print(f"   📊 Executados: {pedidos_executados}/{len(pedidos_convertidos)}")
                 print(f"   ❌ Falhas: {pedidos_com_erro}")
+                print(f"   📋 Comandas geradas: {comandas_geradas}")  # ✅ NOVA INFORMAÇÃO
                 print(f"   ⏱️ Tempo total: {tempo_total:.2f}s")
                 
-                # ✅ LISTAR LOGS GERADOS
-                self._listar_logs_gerados()
+                # ✅ LISTAR ARQUIVOS GERADOS
+                self._listar_arquivos_gerados()
                 
                 return True
             else:
@@ -240,33 +295,53 @@ class ExecutorPedidos:
             traceback.print_exc()
             return False
     
-    def _listar_logs_gerados(self):
-        """Lista logs de equipamentos gerados"""
+    def _listar_arquivos_gerados(self):
+        """✅ CORRIGIDO: Lista tanto logs quanto comandas geradas"""
         try:
             import os
+            
+            # ✅ LISTAR LOGS DE EQUIPAMENTOS
             pasta_logs = "logs/equipamentos"
-            
-            if not os.path.exists(pasta_logs):
-                print(f"   📁 Pasta de logs não encontrada: {pasta_logs}")
-                return
-            
-            arquivos_log = [f for f in os.listdir(pasta_logs) if f.endswith(".log")]
-            
-            if arquivos_log:
-                print(f"\n📁 LOGS DE EQUIPAMENTOS GERADOS ({len(arquivos_log)} arquivo(s)):")
-                for arquivo in sorted(arquivos_log):
-                    caminho = os.path.join(pasta_logs, arquivo)
-                    try:
-                        with open(caminho, 'r', encoding='utf-8') as f:
-                            linhas = f.readlines()
-                        print(f"   📄 {arquivo} ({len(linhas)} linhas)")
-                    except Exception:
-                        print(f"   📄 {arquivo} (erro ao ler)")
+            if os.path.exists(pasta_logs):
+                arquivos_log = [f for f in os.listdir(pasta_logs) if f.endswith(".log")]
+                
+                if arquivos_log:
+                    print(f"\n📝 LOGS DE EQUIPAMENTOS GERADOS ({len(arquivos_log)} arquivo(s)):")
+                    for arquivo in sorted(arquivos_log):
+                        caminho = os.path.join(pasta_logs, arquivo)
+                        try:
+                            with open(caminho, 'r', encoding='utf-8') as f:
+                                linhas = f.readlines()
+                            print(f"   📄 {arquivo} ({len(linhas)} linhas)")
+                        except Exception:
+                            print(f"   📄 {arquivo} (erro ao ler)")
+                else:
+                    print(f"   📝 Nenhum log encontrado em {pasta_logs}")
             else:
-                print(f"   📁 Nenhum log encontrado em {pasta_logs}")
+                print(f"   📝 Pasta de logs não encontrada: {pasta_logs}")
+            
+            # ✅ LISTAR COMANDAS GERADAS
+            pasta_comandas = "data/comandas"
+            if os.path.exists(pasta_comandas):
+                arquivos_comanda = [f for f in os.listdir(pasta_comandas) if f.endswith(".json")]
+                
+                if arquivos_comanda:
+                    print(f"\n📋 COMANDAS GERADAS ({len(arquivos_comanda)} arquivo(s)):")
+                    for arquivo in sorted(arquivos_comanda):
+                        caminho = os.path.join(pasta_comandas, arquivo)
+                        try:
+                            # Verifica se é uma comanda recente (baseado no nome)
+                            if "ordem_" in arquivo and "pedido_" in arquivo:
+                                print(f"   📄 {arquivo}")
+                        except Exception:
+                            print(f"   📄 {arquivo} (erro ao verificar)")
+                else:
+                    print(f"   📋 Nenhuma comanda encontrada em {pasta_comandas}")
+            else:
+                print(f"   📋 Pasta de comandas não encontrada: {pasta_comandas}")
                 
         except Exception as e:
-            print(f"   ⚠️ Erro ao listar logs: {e}")
+            print(f"   ⚠️ Erro ao listar arquivos: {e}")
     
     def obter_estatisticas(self) -> Dict:
         """

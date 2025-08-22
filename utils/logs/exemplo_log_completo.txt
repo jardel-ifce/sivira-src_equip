@@ -1,0 +1,37 @@
+==============================================
+📅 Data/Hora: 2025-08-22 09:22:04
+🧾 Ordem: 99 | Pedido: 2
+⚠️ Tipo de Erro: TEMPO
+--------------------------------------------------
+
+❌ ERRO DE TEMPO/CONFLITO
+
+Problema: Tempo máximo de espera excedido entre atividades. Excesso de tempo: 5:52:00
+
+📋 Atividade atual:
+   • Nome: divisao_de_massas_para_pao_frances
+   • Início: 26/06 04:45:00
+   • Término: 26/06 04:48:00
+   • Início esperado: 26/06 10:37:00
+   • Término esperado: 26/06 10:40:00
+
+📋 Atividade sucessora:
+   • Nome: modelagem_de_pao_frances
+   • Início: 26/06 10:40:00
+
+🕐 Análise temporal detalhada:
+   • Tempo máximo permitido: 0:00:00
+   • Excesso de tempo: 5:52:00
+
+🔧 Equipamentos envolvidos:
+   • Divisora_Boleadora_01 (DIVISORAS_BOLEADORAS) - Capacidade: 500g - 2000g
+   • Batedeira_Planetaria_02 (BATEDEIRAS) - Capacidade: 1000g - 5000g
+   • Balanca_Digital_01 (BALANCAS) - Capacidade: 1g - 10000g
+
+💡 Sugestões:
+   • Verificar disponibilidade de equipamentos
+   • Ajustar sequenciamento das atividades
+   • Considerar recursos alternativos
+   • Analisar janela temporal para identificar gargalos
+
+==============================================

@@ -1,0 +1,24 @@
+==============================================
+📅 Data/Hora: 2025-08-22 12:46:46
+🧾 Ordem: 1 | Pedido: 8
+⚠️ Motivo do erro:
+--------------------------------------------------
+❌ ERRO DE QUANTIDADE
+
+Problema: Quantidade 2500.0g está abaixo da capacidade mínima (3000g) para equipamentos do tipo MISTURADORAS
+
+📊 Detalhes:
+   • Quantidade solicitada: 2500.0g
+   • Capacidade mínima: 3000g
+   • Diferença: 500.0g
+   • Tipo de equipamento: MISTURADORAS
+
+🔧 Equipamentos disponíveis:
+   • Masseira 1: 3000g - 50000g
+   • Masseira 2: 3000g - 30000g
+
+💡 Sugestões:
+   • Aumentar a quantidade para pelo menos 3000g
+   • Verificar se há equipamentos com capacidade menor disponíveis
+   • Considerar produção em lotes maiores
+==============================================

@@ -180,29 +180,29 @@ class TesteSistemaProducao:
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
            # CONJUNTO INICIAL 
-            {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 7},
+            {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 7},
             {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
-            {"produto": "Pão de Forma", "quantidade": 60, "hora_fim": 7},
+            {"produto": "Pão de Forma", "quantidade": 20, "hora_fim": 7},
             {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 7},
             {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 7},
 
             # # # CONJUNTO ADICIONAL 
-            {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
-            {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
-            #{"produto": "Pão Trança de Queijo finos", "quantidade": 12, "hora_fim": 9},
+            {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 9},
+            {"produto": "Pão Baguete", "quantidade": 10, "hora_fim": 9},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 9},
             
             # # # CONJUNTO VESPERTINO
-            # {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 15},
-            # {"produto": "Pão Hambúrguer", "quantidade": 59, "hora_fim": 15},
-            # {"produto": "Pão de Forma", "quantidade": 12, "hora_fim": 15},
-            # {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 15},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 15},
+            {"produto": "Pão Francês", "quantidade": 450, "hora_fim": 15},
+            {"produto": "Pão Hambúrguer", "quantidade": 60, "hora_fim": 15},
+            {"produto": "Pão de Forma", "quantidade": 10, "hora_fim": 15},
+            {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 15},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 15},
             
             
             # ## CONJUNTO NOTURNO
-            # {"produto": "Pão Francês", "quantidade": 298, "hora_fim": 17},
-            # {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 17},
-            # {"produto": "Pão Trança de Queijo finos", "quantidade": 11, "hora_fim": 17},
+            {"produto": "Pão Francês", "quantidade": 300, "hora_fim": 17},
+            {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 17},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 17},
 
         ]
         
@@ -483,7 +483,7 @@ def main():
     ✅ CORRIGIDO com janela temporal adequada para otimizador PL.
     """
     # Configuração do modo de execução
-    USAR_OTIMIZACAO = False  # Altere para False para modo sequencial
+    USAR_OTIMIZACAO = True  # Altere para False para modo sequencial
     RESOLUCAO_MINUTOS = 30  # Resolução temporal (30min = bom compromisso)
     TIMEOUT_PL = 300        # 5 minutos para resolução PL
     

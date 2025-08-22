@@ -14,6 +14,7 @@ usando o novo GestorProducao independente dos scripts de teste.
 - 🆕 Limpeza automática de logs na inicialização
 - 🆕 Sistema de Ordens/Sessões para agrupamento de pedidos
 - 🆕 MODIFICAÇÃO: Limpeza automática de pedidos salvos (data/pedidos/pedidos_salvos.json)
+- 🆕 AGENDA: Visualização de agenda de equipamentos integrada
 """
 
 import os
@@ -35,11 +36,14 @@ class MenuPrincipal:
     def __init__(self):
         print("🚀 Inicializando Sistema de Produção...")
         
-        # 🆕 LIMPEZA AUTOMÁTICA DE LOGS
+        # 🆕 LIMPEZA AUTOMÁTICA DE LOGS E COMANDAS
         try:
-            # 🆕 MODIFICAÇÃO: Agora limpar_logs_inicializacao() já inclui limpeza de pedidos salvos
+            # 🆕 MODIFICAÇÃO: Agora limpar_logs_inicializacao() já inclui limpeza de comandas
+            from utils.comandas.limpador_comandas import apagar_todas_as_comandas
             relatorio_limpeza = limpar_logs_inicializacao()
-            
+            apagar_todas_as_comandas()
+
+
             # Como agora retorna string formatada, vamos exibir
             if isinstance(relatorio_limpeza, str):
                 print(relatorio_limpeza)
@@ -47,14 +51,14 @@ class MenuPrincipal:
                 # Compatibilidade com versão antiga
                 if relatorio_limpeza['sucesso']:
                     if relatorio_limpeza['total_arquivos_removidos'] > 0:
-                        print("✅ Ambiente de logs limpo e pronto!")
+                        print("✅ Ambiente de logs e comandas limpo e pronto!")  # ✅ MODIFICADO
                     else:
-                        print("📭 Ambiente de logs já estava limpo!")
+                        print("🔭 Ambiente de logs e comandas já estava limpo!")  # ✅ MODIFICADO
                 else:
-                    print("⚠️ Limpeza de logs concluída com alguns erros (sistema continuará)")
+                    print("⚠️ Limpeza de logs/comandas concluída com alguns erros (sistema continuará)")  # ✅ MODIFICADO
                 
         except Exception as e:
-            print(f"⚠️ Erro durante limpeza de logs: {e}")
+            print(f"⚠️ Erro durante limpeza de logs/comandas: {e}")  # ✅ MODIFICADO
             print("🔄 Sistema continuará normalmente...")
         
         print("🔧 Carregando nova arquitetura desacoplada...")
@@ -67,6 +71,7 @@ class MenuPrincipal:
         
         print("✅ Sistema inicializado com arquitetura independente!")
         print(f"📦 Sistema de Ordens ativo - Ordem atual: {self.gerenciador.obter_ordem_atual()}")
+
     
     def executar(self):
         """Executa o menu principal"""
@@ -95,8 +100,9 @@ class MenuPrincipal:
         print("🔧 Suporte a execução sequencial e otimizada (PL)")
         print("✅ Desacoplado dos scripts de teste (producao_paes*)")
         print("🎯 Nova arquitetura: services/gestor_producao")
-        print("🧹 Limpeza automática integrada")
+        print("🧹 Limpeza automática integrada (logs + comandas)")  # ✅ MODIFICADO
         print("📦 Sistema de Ordens/Sessões para agrupamento")
+        print("📅 Visualização de agenda de equipamentos")
         print()
     
     def mostrar_menu_principal(self):
@@ -125,9 +131,10 @@ class MenuPrincipal:
                 print(f"⚠️ ATENÇÃO: {total_pedidos - ids_unicos} duplicata(s) detectada(s)")
         
         # Status do sistema
-        print("🏗️ Arquitetura: Independente (services/gestor_producao)")
+        print("🗗 Arquitetura: Independente (services/gestor_producao)")
         print("🧹 Limpeza: Automática (logs limpos na inicialização)")
         print("📦 Sistema: Ordens/Sessões ativo")
+        print("📅 Agenda: Visualização de equipamentos disponível")
         
         if pedidos_ordem_atual == 0:
             print(f"📄 Ordem {ordem_atual}: Pronta para novos pedidos")
@@ -148,12 +155,15 @@ class MenuPrincipal:
         print("6️⃣  Executar Ordem Atual (SEQUENCIAL)")
         print("7️⃣  Executar Ordem Atual (OTIMIZADO PL)")
         print()
+        print("📅 AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
+        print("D️⃣  Ver Agenda de Equipamentos")
+        print()
         print("⚙️ SISTEMA:")
         print("8️⃣  Testar Sistema")
         print("9️⃣  Configurações")
         print("A️⃣  Limpar Logs Manualmente")
-        print("B️⃣  Histórico de Ordens")  # 🆕 Nova opção
-        print("C️⃣  Debug Sistema Ordens")  # 🆕 Debug option
+        print("B️⃣  Histórico de Ordens")
+        print("C️⃣  Debug Sistema Ordens")
         print("0️⃣  Ajuda")
         print("[S]  Sair")
         print("─" * 60)
@@ -186,6 +196,9 @@ class MenuPrincipal:
         elif opcao == "7":
             self.executar_otimizado()
         
+        elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
+            self.mostrar_submenu_agenda()
+        
         elif opcao == "8":
             self.testar_sistema()
         
@@ -195,10 +208,10 @@ class MenuPrincipal:
         elif opcao.lower() == "a":
             self.limpar_logs_manualmente()
         
-        elif opcao.lower() == "b":  # 🆕 Nova opção
+        elif opcao.lower() == "b":
             self.mostrar_historico_ordens()
         
-        elif opcao.lower() == "c":  # 🆕 Debug option
+        elif opcao.lower() == "c":
             self.debug_sistema_ordens()
         
         elif opcao == "0":
@@ -210,6 +223,249 @@ class MenuPrincipal:
         else:
             print(f"\n⌨ Opção '{opcao}' inválida!")
             input("Pressione Enter para continuar...")
+    
+    # =========================================================================
+    #                       🆕 SUBMENU AGENDA DE EQUIPAMENTOS
+    # =========================================================================
+    
+    def mostrar_submenu_agenda(self):
+        """Submenu para visualização de agenda de equipamentos"""
+        try:
+            from menu.visualizador_agenda import VisualizadorAgenda
+            from menu.integrador_equipamentos import IntegradorEquipamentos
+            
+            visualizador = VisualizadorAgenda()
+            integrador = IntegradorEquipamentos()
+            rodando_agenda = True
+            
+            while rodando_agenda:
+                try:
+                    self.utils.limpar_tela()
+                    print("📅 SISTEMA DE PRODUÇÃO - AGENDA DE EQUIPAMENTOS")
+                    print("=" * 60)
+                    
+                    # Status da integração
+                    if integrador.sistema_disponivel():
+                        print("✅ Sistema de equipamentos: ATIVO")
+                        info_sistema = integrador.obter_info_sistema()
+                        print(f"🔧 Total de equipamentos: {info_sistema.get('total_equipamentos', 'N/A')}")
+                        print(f"🏭 Tipos disponíveis: {info_sistema.get('total_tipos', 'N/A')}")
+                    else:
+                        print("⚠️ Sistema de equipamentos: LIMITADO (apenas logs)")
+                    
+                    print()
+                    
+                    # Menu expandido
+                    print("OPÇÕES DISPONÍVEIS:")
+                    print()
+                    print("📋 VISUALIZAÇÃO BASEADA EM LOGS:")
+                    print("1️⃣  Agenda Geral (todos os equipamentos)")
+                    print("2️⃣  Agenda por Tipo de Equipamento")
+                    print("3️⃣  Agenda de Equipamento Específico")
+                    print("4️⃣  Buscar Atividades por Item")
+                    print("5️⃣  Timeline por Ordem/Pedido")
+                    print("6️⃣  Verificar Conflitos de Horário")
+                    print()
+                    print("🔧 SISTEMA REAL DE EQUIPAMENTOS:")
+                    if integrador.sistema_disponivel():
+                        print("7️⃣  Agenda de Equipamento Real (mostrar_agenda)")
+                        print("8️⃣  Agenda de Gestor por Tipo")
+                        print("9️⃣  Listar Todos os Equipamentos Disponíveis")
+                        print("A️⃣  Verificar Status de Equipamento")
+                    else:
+                        print("7️⃣  [INDISPONÍVEL] Sistema de equipamentos não carregado")
+                        print("8️⃣  [INDISPONÍVEL] Gestores não acessíveis")
+                    print()
+                    print("📊 RELATÓRIOS E UTILITÁRIOS:")
+                    print("E️⃣  Estatísticas de Utilização")
+                    print("X️⃣  Exportar Agenda para Arquivo")
+                    print("R️⃣  Recarregar Dados dos Logs")
+                    print("[V]  Voltar ao Menu Principal")
+                    print("─" * 60)
+                    
+                    opcao_agenda = input("🎯 Escolha uma opção: ").strip().lower()
+                    
+                    # Processa opções tradicionais (baseadas em logs)
+                    if opcao_agenda in ['1', '2', '3', '4', '5', '6', 'e', 'x', 'r']:
+                        visualizador.processar_opcao_agenda(opcao_agenda)
+                        input("\nPressione Enter para continuar...")
+                    
+                    # Processa opções do sistema real
+                    elif opcao_agenda == '7':
+                        self._agenda_equipamento_real(integrador)
+                        input("\nPressione Enter para continuar...")
+                    elif opcao_agenda == '8':
+                        self._agenda_gestor_tipo(integrador)
+                        input("\nPressione Enter para continuar...")
+                    elif opcao_agenda == '9':
+                        self._listar_equipamentos_reais(integrador)
+                        input("\nPressione Enter para continuar...")
+                    elif opcao_agenda == 'a':
+                        self._verificar_status_equipamento(integrador)
+                        input("\nPressione Enter para continuar...")
+                    elif opcao_agenda == 'v':
+                        rodando_agenda = False
+                    else:
+                        print(f"\n❌ Opção '{opcao_agenda}' inválida!")
+                        input("Pressione Enter para continuar...")
+                            
+                except KeyboardInterrupt:
+                    print("\n\n🔙 Voltando ao menu principal...")
+                    rodando_agenda = False
+                except Exception as e:
+                    print(f"\n❌ Erro no submenu de agenda: {e}")
+                    input("Pressione Enter para continuar...")
+            
+        except ImportError as e:
+            print(f"\n❌ Erro ao carregar módulos de agenda: {e}")
+            print("📋 Verifique se os arquivos estão no diretório menu/:")
+            print("   - menu/visualizador_agenda.py")
+            print("   - menu/integrador_equipamentos.py")
+            input("\nPressione Enter para continuar...")
+        except Exception as e:
+            print(f"\n❌ Erro inesperado no submenu de agenda: {e}")
+            input("Pressione Enter para continuar...")
+    
+    def _agenda_equipamento_real(self, integrador):
+        """Mostra agenda de um equipamento real usando mostrar_agenda()"""
+        print("\n🔧 AGENDA DE EQUIPAMENTO REAL")
+        print("=" * 30)
+        
+        if not integrador.sistema_disponivel():
+            print("❌ Sistema de equipamentos não disponível")
+            return
+        
+        # Lista equipamentos disponíveis
+        equipamentos_por_tipo = integrador.listar_equipamentos_disponiveis()
+        
+        if not equipamentos_por_tipo:
+            print("📭 Nenhum equipamento encontrado")
+            return
+        
+        print("Equipamentos disponíveis por tipo:")
+        todos_equipamentos = []
+        for tipo, equipamentos in equipamentos_por_tipo.items():
+            print(f"\n🏭 {tipo}:")
+            for equipamento in equipamentos:
+                todos_equipamentos.append(equipamento)
+                print(f"  • {equipamento}")
+        
+        print(f"\nTotal: {len(todos_equipamentos)} equipamentos")
+        
+        nome_equipamento = input("\nDigite o nome exato do equipamento: ").strip()
+        
+        if nome_equipamento:
+            print(f"\n📋 Obtendo agenda de '{nome_equipamento}'...")
+            agenda = integrador.obter_agenda_equipamento_especifico(nome_equipamento)
+            
+            if agenda:
+                print("─" * 50)
+                print(agenda)
+                print("─" * 50)
+            else:
+                print(f"❌ Não foi possível obter agenda de '{nome_equipamento}'")
+
+    def _agenda_gestor_tipo(self, integrador):
+        """Mostra agenda de um gestor por tipo"""
+        print("\n🏭 AGENDA DE GESTOR POR TIPO")
+        print("=" * 30)
+        
+        if not integrador.sistema_disponivel():
+            print("❌ Sistema de equipamentos não disponível")
+            return
+        
+        tipos_disponiveis = integrador.listar_tipos_equipamento()
+        
+        if not tipos_disponiveis:
+            print("📭 Nenhum tipo de equipamento encontrado")
+            return
+        
+        print("Tipos de equipamento disponíveis:")
+        for i, tipo in enumerate(tipos_disponiveis, 1):
+            print(f"  {i}. {tipo}")
+        
+        try:
+            escolha = input(f"\nEscolha um tipo (1-{len(tipos_disponiveis)}): ").strip()
+            indice = int(escolha) - 1
+            
+            if 0 <= indice < len(tipos_disponiveis):
+                tipo_escolhido = tipos_disponiveis[indice]
+                print(f"\n📋 Obtendo agenda do gestor '{tipo_escolhido}'...")
+                
+                agenda = integrador.obter_agenda_gestor_tipo(tipo_escolhido)
+                
+                if agenda:
+                    print("─" * 50)
+                    print(agenda)
+                    print("─" * 50)
+                else:
+                    print(f"❌ Não foi possível obter agenda do gestor '{tipo_escolhido}'")
+            else:
+                print("❌ Opção inválida!")
+                
+        except ValueError:
+            print("❌ Digite um número válido!")
+
+    def _listar_equipamentos_reais(self, integrador):
+        """Lista todos os equipamentos disponíveis no sistema real"""
+        print("\n📋 EQUIPAMENTOS DISPONÍVEIS NO SISTEMA")
+        print("=" * 40)
+        
+        if not integrador.sistema_disponivel():
+            print("❌ Sistema de equipamentos não disponível")
+            return
+        
+        estatisticas = integrador.obter_estatisticas_equipamentos()
+        
+        if "erro" in estatisticas:
+            print(f"❌ {estatisticas['erro']}")
+            return
+        
+        print(f"📊 Total de equipamentos: {estatisticas['total_equipamentos']}")
+        print(f"🏭 Total de tipos: {estatisticas['total_tipos']}")
+        print()
+        
+        # Lista por tipo
+        for tipo, equipamentos in estatisticas['equipamentos_por_tipo'].items():
+            stats_tipo = estatisticas['estatisticas_por_tipo'][tipo]
+            print(f"🔧 {tipo} ({stats_tipo['quantidade']} equipamentos - {stats_tipo['porcentagem']:.1f}%)")
+            for equipamento in equipamentos:
+                print(f"   • {equipamento}")
+            print()
+
+    def _verificar_status_equipamento(self, integrador):
+        """Verifica status detalhado de um equipamento"""
+        print("\n🔍 VERIFICAR STATUS DE EQUIPAMENTO")
+        print("=" * 35)
+        
+        if not integrador.sistema_disponivel():
+            print("❌ Sistema de equipamentos não disponível")
+            return
+        
+        nome_equipamento = input("Digite o nome do equipamento: ").strip()
+        
+        if not nome_equipamento:
+            print("❌ Nome não pode estar vazio")
+            return
+        
+        print(f"\n🔍 Verificando '{nome_equipamento}'...")
+        
+        info = integrador.verificar_disponibilidade_equipamento(nome_equipamento)
+        
+        if "erro" in info:
+            print(f"❌ {info['erro']}")
+            return
+        
+        print("✅ Equipamento encontrado!")
+        print(f"📛 Nome: {info['nome']}")
+        print(f"🏷️ Tipo: {info['tipo']}")
+        print(f"📅 Tem agenda: {'✅ Sim' if info['tem_agenda'] else '❌ Não'}")
+        print(f"🔧 Métodos disponíveis: {len(info['metodos_disponiveis'])}")
+        
+        if info['metodos_disponiveis']:
+            print("\nMétodos públicos:")
+            for metodo in sorted(info['metodos_disponiveis']):
+                print(f"   • {metodo}")
     
     # =========================================================================
     #                           GESTÃO DE PEDIDOS
@@ -257,7 +513,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido registrado ainda.")
+            print("🔭 Nenhum pedido registrado ainda.")
             print("\n💡 Use a opção '1' para registrar novos pedidos")
         else:
             self.gerenciador.listar_pedidos()
@@ -287,7 +543,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido para remover.")
+            print("🔭 Nenhum pedido para remover.")
             input("\nPressione Enter para continuar...")
             return
         
@@ -341,7 +597,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not pedidos_ordem:
-            print(f"📭 Ordem {ordem_atual} não possui pedidos para limpar.")
+            print(f"🔭 Ordem {ordem_atual} não possui pedidos para limpar.")
             input("\nPressione Enter para continuar...")
             return
         
@@ -367,7 +623,7 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
-            print("📭 Nenhum pedido para limpar.")
+            print("🔭 Nenhum pedido para limpar.")
             input("\nPressione Enter para continuar...")
             return
         
@@ -401,12 +657,12 @@ class MenuPrincipal:
         ordem_atual = self.gerenciador.obter_ordem_atual()
         pedidos_ordem = self.gerenciador.obter_pedidos_ordem_atual()
         
-        print("🔄 EXECUÇÃO SEQUENCIAL")
+        print("📄 EXECUÇÃO SEQUENCIAL")
         print("=" * 40)
         print(f"📦 Executando Ordem: {ordem_atual}")
         
         if not pedidos_ordem:
-            print(f"📭 Ordem {ordem_atual} não possui pedidos para executar.")
+            print(f"🔭 Ordem {ordem_atual} não possui pedidos para executar.")
             print("\n💡 Use a opção '1' para registrar pedidos primeiro")
             input("\nPressione Enter para continuar...")
             return
@@ -481,7 +737,7 @@ class MenuPrincipal:
         print(f"📦 Executando Ordem: {ordem_atual}")
         
         if not pedidos_ordem:
-            print(f"📭 Ordem {ordem_atual} não possui pedidos para executar.")
+            print(f"🔭 Ordem {ordem_atual} não possui pedidos para executar.")
             print("\n💡 Use a opção '1' para registrar pedidos primeiro")
             input("\nPressione Enter para continuar...")
             return
@@ -582,7 +838,7 @@ class MenuPrincipal:
             else:
                 print(f"⚠️ {total_testes - testes_ok} problema(s) encontrado(s)")
             
-            print(f"🏗️ Arquitetura: Independente (services/gestor_producao)")
+            print(f"🗗 Arquitetura: Independente (services/gestor_producao)")
             print(f"📦 Sistema de Ordens: Ativo (Ordem atual: {self.gerenciador.obter_ordem_atual()})")
             
         except Exception as e:
@@ -610,7 +866,7 @@ class MenuPrincipal:
         print()
         
         # Arquitetura
-        print(f"🏗️ Nova Arquitetura:")
+        print(f"🗗 Nova Arquitetura:")
         print(f"   Gestor: services/gestor_producao/")
         print(f"   Independente: ✅ Desacoplado dos scripts de teste")
         print(f"   Limpeza: ✅ Automática integrada")
@@ -761,7 +1017,7 @@ class MenuPrincipal:
         ordem_atual = self.gerenciador.obter_ordem_atual()
         
         if not ordens_existentes:
-            print("📭 Nenhuma ordem registrada ainda.")
+            print("🔭 Nenhuma ordem registrada ainda.")
             input("\nPressione Enter para continuar...")
             return
         
@@ -837,7 +1093,7 @@ class MenuPrincipal:
                 print(f"   📄 Arquivo de pedidos: {info.get('arquivo_pedidos_existe', False)}")
                 if info.get('tamanho_arquivo'):
                     print(f"   📊 Tamanho: {info['tamanho_arquivo']} bytes")
-                    print(f"   🕒 Modificado: {info.get('modificado_em', 'N/A')}")
+                    print(f"   🕐 Modificado: {info.get('modificado_em', 'N/A')}")
             print()
         
         input("\nPressione Enter para continuar...")
@@ -877,7 +1133,14 @@ class MenuPrincipal:
         print("   • Limpar Ordem: Remove apenas pedidos da ordem atual")
         print("   • Limpar Todos: Remove todos os pedidos de todas as ordens")
         print()
-        print("🏗️ ARQUITETURA:")
+        print("5️⃣ AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
+        print("   • Visualização hierárquica por tipo de equipamento")
+        print("   • Agenda geral ou equipamento específico")
+        print("   • Estatísticas de utilização")
+        print("   • Verificação de disponibilidade")
+        print("   • Busca por período ou item específico")
+        print()
+        print("🗗 ARQUITETURA:")
         print("   • Independente: Não depende de scripts de teste")
         print("   • Modular: services/gestor_producao")
         print("   • Limpa: Limpeza automática de logs")
@@ -922,9 +1185,10 @@ class MenuPrincipal:
                     print(f"⌨ Erro ao salvar: {e}")
         
         print("\n🎉 Obrigado por usar o Sistema de Produção!")
-        print("🏗️ Nova arquitetura independente (services/gestor_producao)")
+        print("🗗 Nova arquitetura independente (services/gestor_producao)")
         print("🧹 Limpeza automática ativa")
         print("📦 Sistema de Ordens/Sessões implementado")
+        print("📅 Visualização de agenda de equipamentos disponível")
         print("=" * 40)
         self.rodando = False
 

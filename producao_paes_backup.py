@@ -123,19 +123,19 @@ class TesteSistemaProducao:
         
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
-            # CONJUNTO INICIAL 
+           # CONJUNTO INICIAL 
             {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 7},
             {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
             {"produto": "Pão de Forma", "quantidade": 60, "hora_fim": 7},
-            {"produto": "Pão Baguete", "quantidade": 20, "hora_fim": 7},
-            {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 7},
+            {"produto": "Pão Baguete", "quantidade": 60, "hora_fim": 7},
+            {"produto": "Pão Trança de Queijo finos", "quantidade": 50, "hora_fim": 7},
 
             # # # CONJUNTO ADICIONAL 
-            {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
-            {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
-            {"produto": "Pão Trança de Queijo finos", "quantidade": 12, "hora_fim": 9},
+           # {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
+           # {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
+            # {"produto": "Pão Trança de Queijo finos", "quantidade": 12, "hora_fim": 9},
             
-            # # # CONJUNTO VESPERTINO
+            # # # # CONJUNTO VESPERTINO
             # {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 15},
             # {"produto": "Pão Hambúrguer", "quantidade": 59, "hora_fim": 15},
             # {"produto": "Pão de Forma", "quantidade": 12, "hora_fim": 15},
@@ -143,10 +143,12 @@ class TesteSistemaProducao:
             # {"produto": "Pão Trança de Queijo finos", "quantidade": 10, "hora_fim": 15},
             
             
-            # ## CONJUNTO NOTURNO
+            # # ## CONJUNTO NOTURNO
             # {"produto": "Pão Francês", "quantidade": 298, "hora_fim": 17},
             # {"produto": "Pão Baguete", "quantidade": 30, "hora_fim": 17},
             # {"produto": "Pão Trança de Queijo finos", "quantidade": 11, "hora_fim": 17},
+
+
         ]
         
         id_pedido_counter = 1
@@ -157,6 +159,9 @@ class TesteSistemaProducao:
             try:
                 # Calcular datas de início e fim da jornada
                 fim_jornada = data_base.replace(hour=config['hora_fim'], minute=0, second=0, microsecond=0)
+                
+                # ✅ CORREÇÃO CRÍTICA: SEMPRE usar 3 dias, independente do modo
+                # Isso dá flexibilidade tanto para otimizador quanto para execução real
                 inicio_jornada = fim_jornada - timedelta(days=3)
                 
                 # Obter ID do produto

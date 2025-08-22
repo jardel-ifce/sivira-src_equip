@@ -450,13 +450,14 @@ def remover_logs_pedido(id_pedido: int):
 
 def registrar_erro_execucao_pedido(id_ordem: int, id_pedido: int, erro: Exception):
     """
-    🔥 Registra erro de execução no terminal e em arquivo de log (snapshot).
+    Registra erro de execução no terminal e em arquivo de log.
+    ATUALIZADO: Detecta erros de timing e usa formato limpo.
     """
-    logger.error(f"⚠️ Erro na execução do pedido {id_pedido}: {erro.__class__.__name__}: {erro}")
+    logger.error(f"Erro na execução do pedido {id_pedido}: {erro.__class__.__name__}: {erro}")
     
     # Captura traceback da exceção atual
     traceback_str = traceback.format_exc()
-    logger.error("📋 Traceback completo abaixo:")
+    logger.error("Traceback completo abaixo:")
     logger.error(traceback_str)
 
     # Localização exata do erro
@@ -464,26 +465,21 @@ def registrar_erro_execucao_pedido(id_ordem: int, id_pedido: int, erro: Exceptio
     if exc_traceback:
         ultima_chamada = traceback.extract_tb(exc_traceback)[-1]
         logger.error(
-            f"📍 Local do erro: {ultima_chamada.filename}, "
+            f"Local do erro: {ultima_chamada.filename}, "
             f"linha {ultima_chamada.lineno}, função {ultima_chamada.name}"
         )
 
-    # Salva em arquivo detalhado
-    try:
-        os.makedirs("logs/erros", exist_ok=True)
-        nome_arquivo = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
-        with open(nome_arquivo, "w", encoding="utf-8") as f:
-            f.write("==============================================\n")
-            f.write(f"📅 Data/Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"🧾 Ordem: {id_ordem} | Pedido: {id_pedido}\n")
-            f.write(f"⚠️ Erro: {erro.__class__.__name__}: {erro}\n")
-            if exc_traceback:
-                f.write(f"📍 Local: {ultima_chamada.filename}, linha {ultima_chamada.lineno}, função {ultima_chamada.name}\n")
-            f.write("--------------------------------------------------\n")
-            f.write(traceback_str)
-            f.write("==============================================\n")
-    except Exception as log_erro:
-        logger.warning(f"⚠️ Falha ao registrar erro em arquivo: {log_erro}")
+    # NOVO: Verificar se é erro de timing e usar formato específico
+    erro_str = str(erro)
+    if "Tempo máximo de espera excedido entre atividades" in erro_str:
+        # Tentar salvar no formato limpo
+        if salvar_erro_timing_formato_limpo(id_ordem, id_pedido, erro):
+            logger.info("Erro de timing salvo no formato limpo especificado")
+            return
+    
+    # Para outros tipos de erro, usar formato padrão
+    salvar_erro_em_log(id_ordem, id_pedido, erro)
+
 
 def registrar_log_equipamentos(id_ordem: int, id_pedido: int, id_atividade: int, nome_item: str,
                                nome_atividade: str, equipamentos_alocados: list[tuple]): 
@@ -614,6 +610,230 @@ def remover_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int):
             if f"{id_atividade} |" not in linha:
                 f.write(linha)
 
+def _gerar_descricao_erro_legivel(id_ordem: int, id_pedido: int, excecao: Exception) -> str:
+    """
+    Gera uma descrição legível do erro baseada nos arquivos JSON de erro.
+    """
+    import json
+    import glob
+    
+    descricao = ""
+    
+    # Procurar por arquivos JSON de erro relacionados a este pedido
+    pasta_erros = "logs/erros"
+    
+    # Padrões de arquivos JSON para buscar
+    padroes = [
+        f"{pasta_erros}/quantidade_*_{id_ordem}_{id_pedido}_*.json",
+        f"{pasta_erros}/timing_*_{id_ordem}_{id_pedido}_*.json"
+    ]
+    
+    arquivos_json = []
+    for padrao in padroes:
+        arquivos_json.extend(glob.glob(padrao))
+    
+    # Se encontrar JSONs, extrair informações legíveis
+    if arquivos_json:
+        # Ordenar por timestamp (nome do arquivo)
+        arquivos_json.sort()
+        
+        # Usar o JSON mais recente
+        arquivo_json = arquivos_json[-1]
+        
+        try:
+            with open(arquivo_json, 'r', encoding='utf-8') as f:
+                dados = json.load(f)
+                
+            # Identificar tipo de erro e formatar descrição
+            if 'erro_quantidade' in dados:
+                erro = dados['erro_quantidade']
+                descricao = f"❌ ERRO DE QUANTIDADE\n\n"
+                descricao += f"Problema: {erro.get('message', 'Erro de quantidade')}\n\n"
+                
+                if 'details' in erro:
+                    detalhes = erro['details']
+                    descricao += f"📊 Detalhes:\n"
+                    descricao += f"   • Quantidade solicitada: {detalhes.get('requested_quantity', 'N/A')}g\n"
+                    descricao += f"   • Capacidade mínima: {detalhes.get('minimum_capacity', 'N/A')}g\n"
+                    descricao += f"   • Diferença: {detalhes.get('deficit', 'N/A')}g\n"
+                    descricao += f"   • Tipo de equipamento: {detalhes.get('equipment_type', 'N/A')}\n\n"
+                    
+                    if 'available_equipment' in detalhes:
+                        descricao += f"🔧 Equipamentos disponíveis:\n"
+                        for equip in detalhes['available_equipment']:
+                            descricao += f"   • {equip['nome']}: {equip['capacidade_min']}g - {equip['capacidade_max']}g\n"
+                        descricao += "\n"
+                
+                if 'suggestions' in erro:
+                    descricao += f"💡 Sugestões:\n"
+                    for sugestao in erro['suggestions']:
+                        descricao += f"   • {sugestao}\n"
+                        
+            elif 'erro_tempo' in dados:
+                erro = dados['erro_tempo']
+                descricao = f"❌ ERRO DE TEMPO/CONFLITO\n\n"
+                descricao += f"Problema: {erro.get('message', 'Erro de tempo')}\n\n"
+                
+                if 'details' in erro:
+                    detalhes = erro['details']
+                    
+                    if 'current_activity' in detalhes:
+                        ativ_atual = detalhes['current_activity']
+                        descricao += f"📋 Atividade atual:\n"
+                        descricao += f"   • ID: {ativ_atual.get('id', 'N/A')}\n"
+                        descricao += f"   • Nome: {ativ_atual.get('name', 'N/A')}\n"
+                        descricao += f"   • Término: {ativ_atual.get('end_time_formatted', 'N/A')}\n\n"
+                    
+                    if 'successor_activity' in detalhes:
+                        ativ_sucessora = detalhes['successor_activity']
+                        descricao += f"📋 Atividade sucessora:\n"
+                        descricao += f"   • ID: {ativ_sucessora.get('id', 'N/A')}\n"
+                        descricao += f"   • Nome: {ativ_sucessora.get('name', 'N/A')}\n"
+                        descricao += f"   • Início: {ativ_sucessora.get('start_time_formatted', 'N/A')}\n\n"
+                    
+                    if 'timing_violation' in detalhes:
+                        violacao = detalhes['timing_violation']
+                        descricao += f"⏱️ Violação de tempo:\n"
+                        descricao += f"   • Tempo máximo de espera: {violacao.get('maximum_wait_time_formatted', 'N/A')}\n"
+                        descricao += f"   • Atraso real: {violacao.get('actual_delay_formatted', 'N/A')}\n"
+                        descricao += f"   • Excesso: {violacao.get('excess_time_formatted', 'N/A')}\n\n"
+                
+                if 'suggestions' in erro:
+                    descricao += f"💡 Sugestões:\n"
+                    for sugestao in erro['suggestions']:
+                        descricao += f"   • {sugestao}\n"
+                        
+        except Exception as e:
+            # Se falhar ao ler JSON, tentar usar a mensagem da exceção
+            if excecao and str(excecao):
+                descricao = f"Erro: {str(excecao)}\n"
+    
+    # Se não encontrou JSONs mas tem exceção, usar a mensagem
+    elif excecao and str(excecao) and str(excecao) != "None":
+        descricao = f"Erro: {str(excecao)}\n"
+    
+    return descricao
+def salvar_erro_timing_formato_limpo(id_ordem: int, id_pedido: int, timing_error: Exception):
+    """
+    Salva erro de timing no formato limpo especificado.
+    Esta função tem prioridade sobre salvar_erro_em_log para erros de timing.
+    """
+    from utils.logs.formatador_timing_limpo import reformatar_erro_timing_para_novo_formato
+    
+    try:
+        # Detectar se é erro de timing
+        erro_str = str(timing_error)
+        if "Tempo máximo de espera excedido entre atividades" in erro_str:
+            
+            # Gerar log no formato limpo
+            log_limpo = reformatar_erro_timing_para_novo_formato(
+                id_ordem=id_ordem,
+                id_pedido=id_pedido,
+                erro_original=erro_str
+            )
+            
+            # Salvar arquivo
+            os.makedirs("logs/erros", exist_ok=True)
+            nome_arquivo = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+            
+            with open(nome_arquivo, "w", encoding="utf-8") as f:
+                f.write(log_limpo)
+            
+            logger.info(f"Log de timing limpo salvo: {nome_arquivo}")
+            return True
+            
+    except Exception as e:
+        logger.error(f"Falha ao salvar log de timing limpo: {e}")
+    
+    return False
+
+def salvar_erro_detalhado(id_ordem: int, id_pedido: int, tipo_erro: str, descricao_detalhada: dict):
+    """
+    💾 Salva um log detalhado e legível do erro baseado em informações estruturadas.
+    
+    Args:
+        id_ordem: ID da ordem
+        id_pedido: ID do pedido
+        tipo_erro: Tipo do erro (QUANTIDADE, TEMPO, etc)
+        descricao_detalhada: Dicionário com detalhes do erro
+    """
+    os.makedirs("logs/erros", exist_ok=True)
+    nome_arquivo = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+    
+    with open(nome_arquivo, "w", encoding="utf-8") as f:
+        f.write("==============================================\n")
+        f.write(f"📅 Data/Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"🧾 Ordem: {id_ordem} | Pedido: {id_pedido}\n")
+        f.write(f"⚠️ Tipo de Erro: {tipo_erro}\n")
+        f.write("--------------------------------------------------\n\n")
+        
+        if tipo_erro == "QUANTIDADE":
+            f.write("❌ ERRO DE QUANTIDADE\n\n")
+            f.write(f"Problema: {descricao_detalhada.get('mensagem', 'Erro de quantidade')}\n\n")
+            
+            if 'detalhes' in descricao_detalhada:
+                det = descricao_detalhada['detalhes']
+                f.write("📊 Detalhes:\n")
+                f.write(f"   • Atividade: {det.get('nome_atividade', 'N/A')}\n")
+                f.write(f"   • Quantidade solicitada: {det.get('quantidade_solicitada', 'N/A')}g\n")
+                f.write(f"   • Capacidade mínima: {det.get('capacidade_minima', 'N/A')}g\n")
+                f.write(f"   • Diferença: {det.get('diferenca', 'N/A')}g\n")
+                f.write(f"   • Tipo de equipamento: {det.get('tipo_equipamento', 'N/A')}\n\n")
+                
+                if 'equipamentos' in det:
+                    f.write("🔧 Equipamentos disponíveis:\n")
+                    for equip in det['equipamentos']:
+                        f.write(f"   • {equip['nome']}: {equip['min']}g - {equip['max']}g\n")
+                    f.write("\n")
+            
+            if 'sugestoes' in descricao_detalhada:
+                f.write("💡 Sugestões:\n")
+                for sug in descricao_detalhada['sugestoes']:
+                    f.write(f"   • {sug}\n")
+                    
+        elif tipo_erro == "TEMPO":
+            f.write("❌ ERRO DE TEMPO/CONFLITO\n\n")
+            f.write(f"Problema: {descricao_detalhada.get('mensagem', 'Conflito de tempo')}\n\n")
+            
+            if 'detalhes' in descricao_detalhada:
+                det = descricao_detalhada['detalhes']
+                
+                if 'atividade_atual' in det:
+                    ativ = det['atividade_atual']
+                    f.write("📋 Atividade atual:\n")
+                    f.write(f"   • Nome: {ativ.get('nome', 'N/A')}\n")
+                    f.write(f"   • Término: {ativ.get('fim', 'N/A')}\n\n")
+                
+                if 'atividade_sucessora' in det:
+                    ativ = det['atividade_sucessora']
+                    f.write("📋 Atividade sucessora:\n")
+                    f.write(f"   • Nome: {ativ.get('nome', 'N/A')}\n")
+                    f.write(f"   • Início disponível: {ativ.get('inicio', 'N/A')}\n\n")
+                
+                if 'conflito' in det:
+                    conf = det['conflito']
+                    f.write("⏱️ Conflito:\n")
+                    f.write(f"   • Tempo de espera máximo: {conf.get('tempo_maximo', 'N/A')}\n")
+                    f.write(f"   • Atraso real: {conf.get('atraso', 'N/A')}\n")
+                    f.write(f"   • Excesso: {conf.get('excesso', 'N/A')}\n\n")
+            
+            if 'sugestoes' in descricao_detalhada:
+                f.write("💡 Sugestões:\n")
+                for sug in descricao_detalhada['sugestoes']:
+                    f.write(f"   • {sug}\n")
+        
+        else:
+            # Tipo genérico
+            f.write(f"❌ ERRO: {descricao_detalhada.get('mensagem', 'Erro desconhecido')}\n\n")
+            
+            if 'detalhes' in descricao_detalhada:
+                f.write("📊 Detalhes:\n")
+                for chave, valor in descricao_detalhada['detalhes'].items():
+                    f.write(f"   • {chave}: {valor}\n")
+                f.write("\n")
+        
+        f.write("\n==============================================\n")
+
 def salvar_erro_em_log(id_ordem: int, id_pedido: int, excecao: Exception):
     """
     💾 Salva um snapshot do erro ocorrido durante a execução de um pedido.
@@ -629,5 +849,17 @@ def salvar_erro_em_log(id_ordem: int, id_pedido: int, excecao: Exception):
         f.write(f"🧾 Ordem: {id_ordem} | Pedido: {id_pedido}\n")
         f.write("⚠️ Motivo do erro:\n")
         f.write("--------------------------------------------------\n")
-        f.write(traceback.format_exc())
+        
+        # Tentar obter descrição legível do erro
+        erro_legivel = _gerar_descricao_erro_legivel(id_ordem, id_pedido, excecao)
+        if erro_legivel:
+            f.write(erro_legivel)
+        else:
+            # Fallback para o traceback original se não conseguir gerar descrição
+            tb = traceback.format_exc()
+            if tb and tb.strip() != "NoneType: None":
+                f.write(tb)
+            else:
+                f.write(f"Erro: {str(excecao) if excecao else 'Erro desconhecido'}\n")
+        
         f.write("==============================================\n")
