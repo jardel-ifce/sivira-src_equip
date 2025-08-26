@@ -15,9 +15,9 @@ class Masseira(Equipamento):
     🥣 Classe que representa uma Masseira.
     ✔️ Controle de capacidade por peso.
     ✔️ Suporte a múltiplas velocidades e tipos de mistura.
-    ✔️ Permite ocupações simultâneas de mesmo item com intervalos flexíveis.
+    ✔️ Permite ocupações simultâneas de mesma atividade com intervalos flexíveis.
     ✔️ Validação dinâmica de capacidade considerando picos de sobreposição.
-    ✔️ Gestor controla lógica de compatibilidade e capacidades.
+    ✔️ MODIFICADO: Agrupamento por id_atividade (não mais por id_item).
     """
 
     # ============================================
@@ -52,21 +52,21 @@ class Masseira(Equipamento):
         self.ocupacoes: List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]] = []
 
     # ==========================================================
-    # 🔍 Validação Dinâmica de Capacidade (NOVO)
+    # 🔍 Validação Dinâmica de Capacidade por ATIVIDADE
     # ==========================================================
-    def obter_quantidade_maxima_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> float:
+    def obter_quantidade_maxima_atividade_periodo(self, id_atividade: int, inicio: datetime, fim: datetime) -> float:
         """
-        Calcula a quantidade máxima de um item que estará sendo processado
+        Calcula a quantidade máxima de uma atividade que estará sendo processada
         simultaneamente na masseira durante qualquer momento do período especificado.
         """
         # Lista todos os pontos temporais relevantes (inícios e fins de ocupações)
         pontos_temporais = set()
-        ocupacoes_item = []
+        ocupacoes_atividade = []
         
-        # Coleta ocupações do mesmo item
+        # Coleta ocupações da mesma atividade
         for ocupacao in self.ocupacoes:
-            if ocupacao[3] == id_item:  # mesmo id_item
-                ocupacoes_item.append(ocupacao)
+            if ocupacao[2] == id_atividade:  # mesmo id_atividade
+                ocupacoes_atividade.append(ocupacao)
                 pontos_temporais.add(ocupacao[7])  # início
                 pontos_temporais.add(ocupacao[8])  # fim
         
@@ -89,7 +89,7 @@ class Masseira(Equipamento):
             quantidade_momento = 0.0
             
             # Verifica ocupações existentes
-            for ocupacao in ocupacoes_item:
+            for ocupacao in ocupacoes_atividade:
                 if ocupacao[7] <= momento_meio < ocupacao[8]:  # ocupação ativa neste momento
                     quantidade_momento += ocupacao[4]
             
@@ -97,19 +97,19 @@ class Masseira(Equipamento):
         
         return quantidade_maxima
 
-    def validar_nova_ocupacao_item(self, id_item: int, quantidade_nova: float, 
-                                  inicio: datetime, fim: datetime) -> bool:
+    def validar_nova_ocupacao_atividade(self, id_atividade: int, quantidade_nova: float, 
+                                       inicio: datetime, fim: datetime) -> bool:
         """
         Simula uma nova ocupação e verifica se a capacidade máxima será respeitada
-        em todos os momentos de sobreposição.
+        em todos os momentos de sobreposição para a mesma atividade.
         """
         # Coleta todos os pontos temporais relevantes
         pontos_temporais = set()
-        ocupacoes_item = []
+        ocupacoes_atividade = []
         
         for ocupacao in self.ocupacoes:
-            if ocupacao[3] == id_item:
-                ocupacoes_item.append(ocupacao)
+            if ocupacao[2] == id_atividade:  # mesmo id_atividade
+                ocupacoes_atividade.append(ocupacao)
                 pontos_temporais.add(ocupacao[7])  # início
                 pontos_temporais.add(ocupacao[8])  # fim
         
@@ -129,7 +129,7 @@ class Masseira(Equipamento):
             quantidade_total = 0.0
             
             # Soma ocupações existentes ativas neste momento
-            for ocupacao in ocupacoes_item:
+            for ocupacao in ocupacoes_atividade:
                 if ocupacao[7] <= momento_meio < ocupacao[8]:
                     quantidade_total += ocupacao[4]
             
@@ -140,76 +140,116 @@ class Masseira(Equipamento):
             # Verifica se excede capacidade
             if quantidade_total > self.capacidade_gramas_max:
                 logger.debug(
-                    f"❌ {self.nome} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
+                    f"⛔ {self.nome} | Atividade {id_atividade}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
                     f"({quantidade_total}g > {self.capacidade_gramas_max}g)"
                 )
                 return False
         
         return True
 
-    def esta_disponivel_para_item(self, inicio: datetime, fim: datetime, id_item: int) -> bool:
+    def esta_disponivel_para_atividade(self, inicio: datetime, fim: datetime, id_atividade: int) -> bool:
         """
-        Verifica se a masseira pode receber uma nova ocupação do item especificado.
-        Para o mesmo item, sempre permite (validação de capacidade será feita separadamente).
-        Para itens diferentes, não permite sobreposição.
+        Verifica se a masseira pode receber uma nova ocupação da atividade especificada.
+        Para a mesma atividade, sempre permite (validação de capacidade será feita separadamente).
+        Para atividades diferentes, não permite sobreposição.
         """
         for ocupacao in self.ocupacoes:
-            # Se é o mesmo item, sempre permite (capacidade será validada depois)
-            if ocupacao[3] == id_item:
+            # Se é a mesma atividade, sempre permite (capacidade será validada depois)
+            if ocupacao[2] == id_atividade:
                 continue
                 
-            # Para itens diferentes, não pode haver sobreposição
+            # Para atividades diferentes, não pode haver sobreposição
             if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
                 return False
         
         return True
 
     # ==========================================================
-    # 🔍 Consulta de Ocupação (para o Gestor)
+    # 🔍 Consulta de Ocupação (para o Gestor) - ATUALIZADA
     # ==========================================================
-    def item_ja_alocado_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> bool:
-        """Verifica se um item específico já está alocado no período (para o Gestor decidir sobreposição)."""
+    def atividade_ja_alocada_periodo(self, id_atividade: int, inicio: datetime, fim: datetime) -> bool:
+        """Verifica se uma atividade específica já está alocada no período (para o Gestor decidir sobreposição)."""
         for ocupacao in self.ocupacoes:
-            if ocupacao[3] == id_item and not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
+            if ocupacao[2] == id_atividade and not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
                 return True
         return False
 
-    def obter_quantidade_alocada_periodo(self, inicio: datetime, fim: datetime, id_item: Optional[int] = None) -> float:
+    def obter_quantidade_alocada_periodo(self, inicio: datetime, fim: datetime, id_atividade: Optional[int] = None) -> float:
         """
-        Retorna a quantidade total alocada no período especificado, opcionalmente filtrada por item.
-        ATENÇÃO: Para mesmo item, retorna PICO MÁXIMO de sobreposição, não soma simples.
+        Retorna a quantidade total alocada no período especificado, opcionalmente filtrada por atividade.
+        ATENÇÃO: Para mesma atividade, retorna PICO MÁXIMO de sobreposição, não soma simples.
         """
-        if id_item is not None:
-            # Para item específico, retorna pico máximo de sobreposição
-            return self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        if id_atividade is not None:
+            # Para atividade específica, retorna pico máximo de sobreposição
+            return self.obter_quantidade_maxima_atividade_periodo(id_atividade, inicio, fim)
         else:
-            # Para todos os itens, soma simples (comportamento original)
+            # Para todas as atividades, soma simples (comportamento original)
             quantidade_total = 0.0
             for ocupacao in self.ocupacoes:
                 if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):  # há sobreposição temporal
                     quantidade_total += ocupacao[4]
             return quantidade_total
 
-    def obter_ocupacoes_periodo(self, inicio: datetime, fim: datetime) -> List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]]:
-        """Retorna todas as ocupações que se sobrepõem ao período especificado."""
-        ocupacoes_periodo = []
+    def obter_ocupacoes_atividade_periodo(self, id_atividade: int, inicio: datetime, fim: datetime) -> List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]]:
+        """Retorna ocupações de uma atividade específica que se sobrepõem ao período."""
+        ocupacoes_atividade = []
         for ocupacao in self.ocupacoes:
-            if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):  # há sobreposição temporal
-                ocupacoes_periodo.append(ocupacao)
-        return ocupacoes_periodo
+            if ocupacao[2] == id_atividade and not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
+                ocupacoes_atividade.append(ocupacao)
+        return ocupacoes_atividade
 
-    def obter_ocupacoes_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]]:
-        """Retorna ocupações de um item específico que se sobrepõem ao período."""
-        ocupacoes_item = []
-        for ocupacao in self.ocupacoes:
-            if ocupacao[3] == id_item and not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
-                ocupacoes_item.append(ocupacao)
-        return ocupacoes_item
+    def obter_capacidade_disponivel_atividade(self, id_atividade: int, inicio: datetime, fim: datetime) -> float:
+        """Retorna a capacidade disponível para uma atividade específica no período."""
+        quantidade_ocupada = self.obter_quantidade_maxima_atividade_periodo(id_atividade, inicio, fim)
+        return max(0.0, self.capacidade_gramas_max - quantidade_ocupada)
+
+    # Manter métodos originais para compatibilidade, mas agora usam lógica de atividade
+    def obter_quantidade_maxima_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> float:
+        """DEPRECIADO: Usar obter_quantidade_maxima_atividade_periodo. Mantido para compatibilidade."""
+        logger.warning("Método depreciado: use obter_quantidade_maxima_atividade_periodo")
+        # Busca por atividades que usam esse item
+        atividades_item = set(oc[2] for oc in self.ocupacoes if oc[3] == id_item)
+        if not atividades_item:
+            return 0.0
+        # Retorna o máximo entre todas as atividades que usam esse item
+        return max(self.obter_quantidade_maxima_atividade_periodo(ativ, inicio, fim) for ativ in atividades_item)
+
+    def esta_disponivel_para_item(self, inicio: datetime, fim: datetime, id_item: int) -> bool:
+        """DEPRECIADO: Usar esta_disponivel_para_atividade. Mantido para compatibilidade."""
+        logger.warning("Método depreciado: use esta_disponivel_para_atividade")
+        # Busca atividades que usam esse item
+        atividades_item = set(oc[2] for oc in self.ocupacoes if oc[3] == id_item)
+        if not atividades_item:
+            return True
+        # Se já há atividades do item, verifica se alguma pode agrupar
+        for id_atividade in atividades_item:
+            if self.esta_disponivel_para_atividade(inicio, fim, id_atividade):
+                return True
+        return False
+
+    def validar_nova_ocupacao_item(self, id_item: int, quantidade_nova: float, 
+                                  inicio: datetime, fim: datetime) -> bool:
+        """DEPRECIADO: Usar validar_nova_ocupacao_atividade. Mantido para compatibilidade."""
+        logger.warning("Método depreciado: use validar_nova_ocupacao_atividade")
+        # Busca atividades que usam esse item
+        atividades_item = [oc[2] for oc in self.ocupacoes if oc[3] == id_item]
+        if not atividades_item:
+            return quantidade_nova <= self.capacidade_gramas_max
+        # Verifica se alguma atividade pode receber a quantidade adicional
+        for id_atividade in set(atividades_item):
+            if self.validar_nova_ocupacao_atividade(id_atividade, quantidade_nova, inicio, fim):
+                return True
+        return False
 
     def obter_capacidade_disponivel_item(self, id_item: int, inicio: datetime, fim: datetime) -> float:
-        """Retorna a capacidade disponível para um item específico no período."""
-        quantidade_ocupada = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
-        return max(0.0, self.capacidade_gramas_max - quantidade_ocupada)
+        """DEPRECIADO: Usar obter_capacidade_disponivel_atividade. Mantido para compatibilidade."""
+        logger.warning("Método depreciado: use obter_capacidade_disponivel_atividade")
+        # Busca atividades que usam esse item
+        atividades_item = set(oc[2] for oc in self.ocupacoes if oc[3] == id_item)
+        if not atividades_item:
+            return self.capacidade_gramas_max
+        # Retorna a maior capacidade disponível entre as atividades
+        return max(self.obter_capacidade_disponivel_atividade(ativ, inicio, fim) for ativ in atividades_item)
 
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
         """Verifica se a masseira está completamente livre no período."""
@@ -217,7 +257,7 @@ class Masseira(Equipamento):
             if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
                 logger.warning(
                     f"⚠️ {self.nome} não disponível entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} "
-                    f"devido ao item {ocupacao[3]} da atividade {ocupacao[2]}."
+                    f"devido à atividade {ocupacao[2]} do item {ocupacao[3]}."
                 )
                 return False
         return True
@@ -233,6 +273,14 @@ class Masseira(Equipamento):
     def obter_todas_ocupacoes(self) -> List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]]:
         """Retorna todas as ocupações da masseira."""
         return self.ocupacoes.copy()
+
+    def obter_ocupacoes_periodo(self, inicio: datetime, fim: datetime) -> List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]]:
+        """Retorna todas as ocupações que se sobrepõem ao período especificado."""
+        ocupacoes_periodo = []
+        for ocupacao in self.ocupacoes:
+            if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):  # há sobreposição temporal
+                ocupacoes_periodo.append(ocupacao)
+        return ocupacoes_periodo
 
     # ==========================================================
     # ✅ Validações (Parâmetros técnicos)
@@ -253,11 +301,11 @@ class Masseira(Equipamento):
             return False
         return True
 
-    def validar_capacidade_total_item(self, id_item: int, quantidade_adicional: float, inicio: datetime, fim: datetime) -> bool:
+    def validar_capacidade_total_atividade(self, id_atividade: int, quantidade_adicional: float, inicio: datetime, fim: datetime) -> bool:
         """
-        Valida se a capacidade total do item não excede o limite considerando picos de sobreposição.
+        Valida se a capacidade total da atividade não excede o limite considerando picos de sobreposição.
         """
-        return self.validar_nova_ocupacao_item(id_item, quantidade_adicional, inicio, fim)
+        return self.validar_nova_ocupacao_atividade(id_atividade, quantidade_adicional, inicio, fim)
 
     def verificar_disponibilidade(
         self, 
@@ -267,10 +315,9 @@ class Masseira(Equipamento):
     ) -> bool:
         """Verifica se os parâmetros são válidos para a masseira (sem verificar período)."""
         return self.validar_capacidade_individual(quantidade)
-        # Validações de velocidades e tipo_mistura removidas conforme solicitado
 
     # ==========================================================
-    # 🔄 Ocupação e Atualização (para o Gestor)
+    # 🔄 Ocupação e Atualização (MODIFICADO)
     # ==========================================================
     def adicionar_ocupacao(
         self,
@@ -285,46 +332,222 @@ class Masseira(Equipamento):
         fim: datetime
     ) -> bool:
         """
-        Adiciona uma ocupação à masseira.
-        Valida capacidade considerando intervalos flexíveis do mesmo item.
+        VERSÃO MODIFICADA: Adiciona ocupação individual com validação de capacidade para mesma atividade.
+        Permite múltiplas ocupações da mesma atividade respeitando capacidade máxima.
         """
+        
         # Validações básicas
         if not self.verificar_disponibilidade(quantidade_alocada, velocidades, tipo_mistura):
             return False
 
-        # Verifica disponibilidade (só impede se for item diferente com sobreposição)
-        if not self.esta_disponivel_para_item(inicio, fim, id_item):
+        # Verifica disponibilidade (só impede se for atividade diferente com sobreposição)
+        if not self.esta_disponivel_para_atividade(inicio, fim, id_atividade):
             logger.warning(
-                f"❌ {self.nome} | Ocupada por item diferente entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"⛔ {self.nome} | Ocupada por atividade diferente entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
             )
             return False
 
-        # Valida se a nova ocupação respeita capacidade em todos os momentos
-        if not self.validar_nova_ocupacao_item(id_item, quantidade_alocada, inicio, fim):
-            quantidade_atual = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
-            logger.error(
-                f"❌ {self.nome} | Item {id_item}: Nova quantidade {quantidade_alocada}g + "
+        # VALIDAÇÃO CHAVE: Capacidade máxima para mesma atividade considerando sobreposições
+        if not self.validar_nova_ocupacao_atividade(id_atividade, quantidade_alocada, inicio, fim):
+            quantidade_atual = self.obter_quantidade_maxima_atividade_periodo(id_atividade, inicio, fim)
+            logger.warning(
+                f"⚠️ {self.nome} | Atividade {id_atividade}: Nova ocupação {quantidade_alocada}g + "
                 f"máximo atual {quantidade_atual}g excederia capacidade máxima ({self.capacidade_gramas_max}g)"
             )
             return False
 
-        # Adiciona ocupação
+        # Adiciona ocupação individual (cada pedido tem sua própria ocupação)
         self.ocupacoes.append(
             (id_ordem, id_pedido, id_atividade, id_item, quantidade_alocada, velocidades, tipo_mistura, inicio, fim)
         )
 
         # Log informativo
-        quantidade_maxima_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim) + quantidade_alocada
+        quantidade_maxima_apos = self.obter_quantidade_maxima_atividade_periodo(id_atividade, inicio, fim) + quantidade_alocada
         velocidades_str = ", ".join([v.name for v in velocidades]) if velocidades else "Nenhuma"
+        
+        # Verifica se há outras ocupações da mesma atividade no mesmo período (economia real)
+        ocupacoes_simultaneas = self.obter_ocupacoes_atividade_periodo(id_atividade, inicio, fim)
+        economia_msg = ""
+        if len(ocupacoes_simultaneas) > 1:
+            outros_pedidos = [str(oc[1]) for oc in ocupacoes_simultaneas if oc[1] != id_pedido]
+            if outros_pedidos:
+                economia_msg = f" | ECONOMIA: Compartilhando equipamento com pedidos {', '.join(outros_pedidos)}"
+
         logger.info(
-            f"🥣 {self.nome} | Item {id_item}: Nova ocupação {quantidade_alocada}g "
+            f"🥣 {self.nome} | Atividade {id_atividade}: Nova ocupação {quantidade_alocada}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Pico máximo do item: {quantidade_maxima_apos}g) "
-            f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
+            f"(Pico máximo da atividade: {quantidade_maxima_apos}g) "
+            f"(Ordem {id_ordem}, Pedido {id_pedido}, Item {id_item}) | "
             f"Velocidades: {velocidades_str} | Mistura: {tipo_mistura.name if tipo_mistura else 'Nenhuma'}"
+            f"{economia_msg}"
         )
         return True
 
+    # ==========================================================
+    # 📊 Métodos de Análise de Consolidação Implícita (ATUALIZADA)
+    # ==========================================================
+    def obter_estatisticas_economia_equipamento(self) -> dict:
+        """
+        Retorna estatísticas de economia de equipamento baseada em ocupações simultâneas
+        da mesma atividade (consolidação implícita).
+        """
+        
+        if not self.ocupacoes:
+            return {'economia_equipamentos': 0, 'detalhes': []}
+        
+        # Agrupar ocupações por período e atividade
+        grupos_simultaneos = {}
+        
+        for ocupacao in self.ocupacoes:
+            id_atividade = ocupacao[2]  # Mudança aqui: usa id_atividade
+            inicio = ocupacao[7]
+            fim = ocupacao[8]
+            chave_periodo = f"{id_atividade}_{inicio.isoformat()}_{fim.isoformat()}"
+            
+            if chave_periodo not in grupos_simultaneos:
+                grupos_simultaneos[chave_periodo] = {
+                    'id_atividade': id_atividade,
+                    'inicio': inicio,
+                    'fim': fim,
+                    'ocupacoes': []
+                }
+            
+            grupos_simultaneos[chave_periodo]['ocupacoes'].append(ocupacao)
+        
+        # Calcular economia
+        economia_total = 0
+        detalhes_economia = []
+        
+        for chave, grupo in grupos_simultaneos.items():
+            num_ocupacoes = len(grupo['ocupacoes'])
+            if num_ocupacoes > 1:
+                economia = num_ocupacoes - 1  # N ocupações usando 1 equipamento = economia de N-1
+                economia_total += economia
+                
+                pedidos_beneficiados = [oc[1] for oc in grupo['ocupacoes']]
+                quantidade_total = sum(oc[4] for oc in grupo['ocupacoes'])
+                
+                detalhes_economia.append({
+                    'id_atividade': grupo['id_atividade'],
+                    'periodo': f"{grupo['inicio'].strftime('%H:%M')} - {grupo['fim'].strftime('%H:%M')}",
+                    'pedidos_consolidados': pedidos_beneficiados,
+                    'quantidade_total': quantidade_total,
+                    'ocupacoes_simultâneas': num_ocupacoes,
+                    'economia_equipamentos': economia
+                })
+        
+        return {
+            'economia_equipamentos': economia_total,
+            'consolidações_implícitas': len(detalhes_economia),
+            'detalhes': detalhes_economia
+        }
+
+    # ==========================================================
+    # 🔓 Liberação (mantida - funciona com ocupações individuais)
+    # ==========================================================
+    def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
+        """Libera ocupações específicas por atividade."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
+                f"para Atividade {id_atividade}, Pedido {id_pedido}, Ordem {id_ordem}."
+            )
+        else:
+            logger.warning(
+                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} "
+                f"para Atividade {id_atividade}, Pedido {id_pedido}, Ordem {id_ordem}."
+            )
+
+    # Outros métodos de liberação permanecem iguais...
+    def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
+        """Libera ocupações específicas por pedido."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
+                f"para Pedido {id_pedido}, Ordem {id_ordem}."
+            )
+
+    def liberar_por_ordem(self, id_ordem: int):
+        """Libera ocupações específicas por ordem."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[0] != id_ordem
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} para Ordem {id_ordem}.")
+
+    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
+        """Libera ocupações que já finalizaram."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if ocupacao[8] > horario_atual
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}.")
+        return liberadas
+
+    def liberar_todas_ocupacoes(self):
+        """Limpa todas as ocupações da masseira."""
+        total = len(self.ocupacoes)
+        self.ocupacoes.clear()
+        logger.info(f"🔓 Todas as {total} ocupações da {self.nome} foram removidas.")
+
+    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
+        """Libera ocupações que se sobrepõem ao intervalo especificado."""
+        antes = len(self.ocupacoes)
+        self.ocupacoes = [
+            ocupacao for ocupacao in self.ocupacoes
+            if not (ocupacao[7] < fim and ocupacao[8] > inicio)
+        ]
+        liberadas = antes - len(self.ocupacoes)
+        
+        if liberadas > 0:
+            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}.")
+
+    # ==========================================================
+    # 🔓 Método de Compatibilidade
+    # ==========================================================
+    def ocupar(
+        self,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
+        quantidade_alocada: float,
+        velocidades: Optional[List[TipoVelocidade]] = None,
+        tipo_mistura: Optional[TipoMistura] = None,
+        inicio: datetime = None,
+        fim: datetime = None
+    ) -> bool:
+        """Método de compatibilidade para ocupação."""
+        return self.adicionar_ocupacao(
+            id_ordem, id_pedido, id_atividade, id_item, quantidade_alocada,
+            velocidades or [], tipo_mistura, inicio, fim
+        )
+
+    # ==========================================================
+    # 🔄 Atualização de ocupações específicas
+    # ==========================================================
     def sobrescrever_ocupacoes(
         self,
         ocupacoes: List[Tuple[int, int, int, int, float, List[TipoVelocidade], TipoMistura, datetime, datetime]]
@@ -377,137 +600,10 @@ class Masseira(Equipamento):
                 return True
 
         logger.warning(
-            f"❌ Ocupação não encontrada para atualizar na {self.nome} | "
+            f"⛔ Ocupação não encontrada para atualizar na {self.nome} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade}"
         )
         return False
-
-    # ==========================================================
-    # 🔐 Ocupação (Método de Compatibilidade)
-    # ==========================================================
-    def ocupar(
-        self,
-        id_ordem: int,
-        id_pedido: int,
-        id_atividade: int,
-        id_item: int,
-        quantidade_alocada: float,
-        velocidades: Optional[List[TipoVelocidade]] = None,
-        tipo_mistura: Optional[TipoMistura] = None,
-        inicio: datetime = None,
-        fim: datetime = None
-    ) -> bool:
-        """Método de compatibilidade para ocupação."""
-        return self.adicionar_ocupacao(
-            id_ordem, id_pedido, id_atividade, id_item, quantidade_alocada,
-            velocidades or [], tipo_mistura, inicio, fim
-        )
-
-    # ==========================================================
-    # 🔓 Liberação
-    # ==========================================================
-    def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
-        """Libera ocupações específicas por atividade."""
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            ocupacao for ocupacao in self.ocupacoes
-            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
-                f"para Atividade {id_atividade}, Pedido {id_pedido}, Ordem {id_ordem}."
-            )
-        else:
-            logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} "
-                f"para Atividade {id_atividade}, Pedido {id_pedido}, Ordem {id_ordem}."
-            )
-
-    def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
-        """Libera ocupações específicas por pedido."""
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            ocupacao for ocupacao in self.ocupacoes
-            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
-                f"para Pedido {id_pedido}, Ordem {id_ordem}."
-            )
-        else:
-            logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} "
-                f"para Pedido {id_pedido}, Ordem {id_ordem}."
-            )
-
-    def liberar_por_ordem(self, id_ordem: int):
-        """Libera ocupações específicas por ordem."""
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            ocupacao for ocupacao in self.ocupacoes
-            if ocupacao[0] != id_ordem
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
-                f"para Ordem {id_ordem}."
-            )
-        else:
-            logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} "
-                f"para Ordem {id_ordem}."
-            )
-
-    def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        """Libera ocupações que já finalizaram."""
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            ocupacao for ocupacao in self.ocupacoes
-            if ocupacao[8] > horario_atual  # fim > horario_atual
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
-            )
-        else:
-            logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}."
-            )
-        return liberadas
-
-    def liberar_todas_ocupacoes(self):
-        """Limpa todas as ocupações da masseira."""
-        total = len(self.ocupacoes)
-        self.ocupacoes.clear()
-        logger.info(f"🔓 Todas as {total} ocupações da {self.nome} foram removidas.")
-
-    def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
-        """Libera ocupações que se sobrepõem ao intervalo especificado."""
-        antes = len(self.ocupacoes)
-        self.ocupacoes = [
-            ocupacao for ocupacao in self.ocupacoes
-            if not (ocupacao[7] < fim and ocupacao[8] > inicio)  # remove qualquer sobreposição
-        ]
-        liberadas = antes - len(self.ocupacoes)
-        
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
-        else:
-            logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
 
     # ==========================================================
     # 📅 Agenda e Relatórios
@@ -519,16 +615,24 @@ class Masseira(Equipamento):
         logger.info("==============================================")
 
         if not self.ocupacoes:
-            logger.info("🔹 Nenhuma ocupação registrada.")
+            logger.info("📹 Nenhuma ocupação registrada.")
             return
 
         for ocupacao in self.ocupacoes:
             velocidades_str = ", ".join([v.name for v in ocupacao[5]]) if ocupacao[5] else "Nenhuma"
+            
             logger.info(
                 f"🥣 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
                 f"{ocupacao[4]:.2f}g | {ocupacao[7].strftime('%H:%M')} → {ocupacao[8].strftime('%H:%M')} | "
                 f"Velocidades: {velocidades_str} | Mistura: {ocupacao[6].name if ocupacao[6] else 'Nenhuma'}"
             )
+        
+        # Mostrar estatísticas de economia se houver
+        economia_stats = self.obter_estatisticas_economia_equipamento()
+        if economia_stats['economia_equipamentos'] > 0:
+            logger.info("==============================================")
+            logger.info(f"📊 Economia de Equipamentos: {economia_stats['economia_equipamentos']}")
+            logger.info(f"📊 Consolidações Implícitas: {economia_stats['consolidações_implícitas']}")
 
     def obter_estatisticas_velocidade(self, inicio: datetime, fim: datetime) -> dict:
         """Retorna estatísticas de uso por velocidade no período."""

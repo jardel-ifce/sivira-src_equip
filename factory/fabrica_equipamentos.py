@@ -253,7 +253,7 @@ class FabricaEquipamentos:
             nome="Masseira 1",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=1,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=50000,  # CORRIGIDO: 5000 → 50000
             tipos_de_mistura_suportados=[TipoMistura.SEMI_RAPIDA],
             velocidades_suportadas=[
@@ -268,7 +268,7 @@ class FabricaEquipamentos:
             id=21,
             nome="Masseira 2",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=30000,
             numero_operadores=1,
             tipos_de_mistura_suportados=[TipoMistura.RAPIDA],

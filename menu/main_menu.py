@@ -15,6 +15,8 @@ usando o novo GestorProducao independente dos scripts de teste.
 - 🆕 Sistema de Ordens/Sessões para agrupamento de pedidos
 - 🆕 MODIFICAÇÃO: Limpeza automática de pedidos salvos (data/pedidos/pedidos_salvos.json)
 - 🆕 AGENDA: Visualização de agenda de equipamentos integrada
+- 🆕 CANCELAR PEDIDO: Liberação de equipamentos alocados
+- 🆕 MÓDULO LIBERADOR: Sistema modular de liberação de equipamentos
 """
 
 import os
@@ -42,7 +44,6 @@ class MenuPrincipal:
             from utils.comandas.limpador_comandas import apagar_todas_as_comandas
             relatorio_limpeza = limpar_logs_inicializacao()
             apagar_todas_as_comandas()
-
 
             # Como agora retorna string formatada, vamos exibir
             if isinstance(relatorio_limpeza, str):
@@ -88,7 +89,7 @@ class MenuPrincipal:
                 print("\n\n🛑 Interrompido pelo usuário...")
                 self.rodando = False
             except Exception as e:
-                print(f"\n⌨ Erro inesperado: {e}")
+                print(f"\n⚡ Erro inesperado: {e}")
                 input("\nPressione Enter para continuar...")
     
     def mostrar_banner(self):
@@ -103,6 +104,7 @@ class MenuPrincipal:
         print("🧹 Limpeza automática integrada (logs + comandas)")  # ✅ MODIFICADO
         print("📦 Sistema de Ordens/Sessões para agrupamento")
         print("📅 Visualização de agenda de equipamentos")
+        print("🔧 Módulo liberador: Sistema modular de equipamentos")
         print()
     
     def mostrar_menu_principal(self):
@@ -131,10 +133,11 @@ class MenuPrincipal:
                 print(f"⚠️ ATENÇÃO: {total_pedidos - ids_unicos} duplicata(s) detectada(s)")
         
         # Status do sistema
-        print("🗗 Arquitetura: Independente (services/gestor_producao)")
+        print("🗃️ Arquitetura: Independente (services/gestor_producao)")
         print("🧹 Limpeza: Automática (logs limpos na inicialização)")
         print("📦 Sistema: Ordens/Sessões ativo")
         print("📅 Agenda: Visualização de equipamentos disponível")
+        print("🔧 Liberador: Sistema modular para equipamentos")
         
         if pedidos_ordem_atual == 0:
             print(f"📄 Ordem {ordem_atual}: Pronta para novos pedidos")
@@ -148,23 +151,24 @@ class MenuPrincipal:
         print("1️⃣  Registrar Novo Pedido")
         print("2️⃣  Listar Pedidos Registrados")
         print("3️⃣  Remover Pedido")
-        print("4️⃣  Limpar Pedidos da Ordem Atual")
-        print("5️⃣  Limpar Todos os Pedidos")
+        print("4️⃣  Cancelar Ordem | Pedido (Liberar Equipamentos)")
+        print("5️⃣  Limpar Pedidos da Ordem Atual")
+        print("6️⃣  Limpar Todos os Pedidos")
         print()
         print("🚀 EXECUÇÃO:")
-        print("6️⃣  Executar Ordem Atual (SEQUENCIAL)")
-        print("7️⃣  Executar Ordem Atual (OTIMIZADO PL)")
+        print("7️⃣  Executar Ordem Atual (SEQUENCIAL)")
+        print("8️⃣  Executar Ordem Atual (OTIMIZADO PL)")
         print()
         print("📅 AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
         print("D️⃣  Ver Agenda de Equipamentos")
         print()
         print("⚙️ SISTEMA:")
-        print("8️⃣  Testar Sistema")
-        print("9️⃣  Configurações")
+        print("9️⃣  Testar Sistema")
+        print("0️⃣  Configurações")
         print("A️⃣  Limpar Logs Manualmente")
         print("B️⃣  Histórico de Ordens")
         print("C️⃣  Debug Sistema Ordens")
-        print("0️⃣  Ajuda")
+        print("Z️⃣  Ajuda")
         print("[S]  Sair")
         print("─" * 60)
     
@@ -185,24 +189,27 @@ class MenuPrincipal:
             self.remover_pedido()
         
         elif opcao == "4":
-            self.limpar_ordem_atual()
+            self.cancelar_ordem_pedido()
         
         elif opcao == "5":
-            self.limpar_todos_pedidos()
+            self.limpar_ordem_atual()
         
         elif opcao == "6":
-            self.executar_sequencial()
+            self.limpar_todos_pedidos()
         
         elif opcao == "7":
+            self.executar_sequencial()
+        
+        elif opcao == "8":
             self.executar_otimizado()
         
         elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
             self.mostrar_submenu_agenda()
         
-        elif opcao == "8":
+        elif opcao == "9":
             self.testar_sistema()
         
-        elif opcao == "9":
+        elif opcao == "0":
             self.mostrar_configuracoes()
         
         elif opcao.lower() == "a":
@@ -214,14 +221,14 @@ class MenuPrincipal:
         elif opcao.lower() == "c":
             self.debug_sistema_ordens()
         
-        elif opcao == "0":
+        elif opcao.lower() == "z":
             self.mostrar_ajuda()
         
         elif opcao.lower() in ["sair", "s", "quit", "exit"]:
             self.sair()
         
         else:
-            print(f"\n⌨ Opção '{opcao}' inválida!")
+            print(f"\n⚡ Opção '{opcao}' inválida!")
             input("Pressione Enter para continuar...")
     
     # =========================================================================
@@ -276,17 +283,13 @@ class MenuPrincipal:
                         print("7️⃣  [INDISPONÍVEL] Sistema de equipamentos não carregado")
                         print("8️⃣  [INDISPONÍVEL] Gestores não acessíveis")
                     print()
-                    print("📊 RELATÓRIOS E UTILITÁRIOS:")
-                    print("E️⃣  Estatísticas de Utilização")
-                    print("X️⃣  Exportar Agenda para Arquivo")
-                    print("R️⃣  Recarregar Dados dos Logs")
                     print("[V]  Voltar ao Menu Principal")
                     print("─" * 60)
                     
                     opcao_agenda = input("🎯 Escolha uma opção: ").strip().lower()
                     
-                    # Processa opções tradicionais (baseadas em logs)
-                    if opcao_agenda in ['1', '2', '3', '4', '5', '6', 'e', 'x', 'r']:
+                    # Processa opções tradicionais (baseadas em logs) 
+                    if opcao_agenda in ['1', '2', '3', '4', '5', '6']:
                         visualizador.processar_opcao_agenda(opcao_agenda)
                         input("\nPressione Enter para continuar...")
                     
@@ -306,40 +309,40 @@ class MenuPrincipal:
                     elif opcao_agenda == 'v':
                         rodando_agenda = False
                     else:
-                        print(f"\n❌ Opção '{opcao_agenda}' inválida!")
+                        print(f"\n⌚ Opção '{opcao_agenda}' inválida!")
                         input("Pressione Enter para continuar...")
                             
                 except KeyboardInterrupt:
-                    print("\n\n🔙 Voltando ao menu principal...")
+                    print("\n\n📙 Voltando ao menu principal...")
                     rodando_agenda = False
                 except Exception as e:
-                    print(f"\n❌ Erro no submenu de agenda: {e}")
+                    print(f"\n⌚ Erro no submenu de agenda: {e}")
                     input("Pressione Enter para continuar...")
             
         except ImportError as e:
-            print(f"\n❌ Erro ao carregar módulos de agenda: {e}")
+            print(f"\n⌚ Erro ao carregar módulos de agenda: {e}")
             print("📋 Verifique se os arquivos estão no diretório menu/:")
             print("   - menu/visualizador_agenda.py")
             print("   - menu/integrador_equipamentos.py")
             input("\nPressione Enter para continuar...")
         except Exception as e:
-            print(f"\n❌ Erro inesperado no submenu de agenda: {e}")
+            print(f"\n⌚ Erro inesperado no submenu de agenda: {e}")
             input("Pressione Enter para continuar...")
     
     def _agenda_equipamento_real(self, integrador):
-        """Mostra agenda de um equipamento real usando mostrar_agenda()"""
+        """Mostra agenda de um equipamento real usando mostrar_agenda() - VERSÃO CORRIGIDA"""
         print("\n🔧 AGENDA DE EQUIPAMENTO REAL")
         print("=" * 30)
         
         if not integrador.sistema_disponivel():
-            print("❌ Sistema de equipamentos não disponível")
+            print("⌚ Sistema de equipamentos não disponível")
             return
         
         # Lista equipamentos disponíveis
         equipamentos_por_tipo = integrador.listar_equipamentos_disponiveis()
         
         if not equipamentos_por_tipo:
-            print("📭 Nenhum equipamento encontrado")
+            print("🔭 Nenhum equipamento encontrado")
             return
         
         print("Equipamentos disponíveis por tipo:")
@@ -358,26 +361,36 @@ class MenuPrincipal:
             print(f"\n📋 Obtendo agenda de '{nome_equipamento}'...")
             agenda = integrador.obter_agenda_equipamento_especifico(nome_equipamento)
             
-            if agenda:
-                print("─" * 50)
-                print(agenda)
-                print("─" * 50)
+            # CORREÇÃO: Verifica se houve erro explícito ou se executou com sucesso
+            if agenda is not None and not (agenda.startswith("Erro") or agenda.startswith("Equipamento") or "não encontrado" in agenda or "não possui método" in agenda):
+                if agenda.strip():
+                    # Se capturou algum conteúdo, mostra
+                    print("─" * 50)
+                    print(agenda)
+                    print("─" * 50)
+                else:
+                    # Agenda executada mas saída foi para o logger (comportamento normal)
+                    print("✅ Agenda do equipamento executada com sucesso!")
+                    print("📋 A agenda foi exibida através do sistema de logs acima.")
+                    print("💡 NOTA: Os equipamentos usam logger.info() em vez de print() para a saída.")
             else:
-                print(f"❌ Não foi possível obter agenda de '{nome_equipamento}'")
+                print(f"⌚ Não foi possível obter agenda de '{nome_equipamento}'")
+                if agenda and (agenda.startswith("Erro") or "não encontrado" in agenda or "não possui método" in agenda):
+                    print(f"   Detalhes: {agenda}")
 
     def _agenda_gestor_tipo(self, integrador):
-        """Mostra agenda de um gestor por tipo"""
+        """Mostra agenda de um gestor por tipo - VERSÃO CORRIGIDA"""
         print("\n🏭 AGENDA DE GESTOR POR TIPO")
         print("=" * 30)
         
         if not integrador.sistema_disponivel():
-            print("❌ Sistema de equipamentos não disponível")
+            print("⌚ Sistema de equipamentos não disponível")
             return
         
         tipos_disponiveis = integrador.listar_tipos_equipamento()
         
         if not tipos_disponiveis:
-            print("📭 Nenhum tipo de equipamento encontrado")
+            print("🔭 Nenhum tipo de equipamento encontrado")
             return
         
         print("Tipos de equipamento disponíveis:")
@@ -392,19 +405,30 @@ class MenuPrincipal:
                 tipo_escolhido = tipos_disponiveis[indice]
                 print(f"\n📋 Obtendo agenda do gestor '{tipo_escolhido}'...")
                 
+                # CORREÇÃO: Captura o resultado mas não depende dele para determinar sucesso
                 agenda = integrador.obter_agenda_gestor_tipo(tipo_escolhido)
                 
-                if agenda:
-                    print("─" * 50)
-                    print(agenda)
-                    print("─" * 50)
+                # Verifica se houve erro explícito ou se executou com sucesso
+                if agenda is not None and not (agenda.startswith("Erro") or agenda.startswith("Gestor não encontrado") or agenda.startswith("Tipo de equipamento") or agenda.startswith("Nenhum equipamento encontrado")):
+                    if agenda.strip():
+                        # Se capturou algum conteúdo, mostra
+                        print("─" * 50)
+                        print(agenda)
+                        print("─" * 50)
+                    else:
+                        # Agenda executada mas saída foi para o logger (comportamento normal)
+                        print("✅ Agenda do gestor executada com sucesso!")
+                        print("📋 A agenda foi exibida através do sistema de logs acima.")
+                        print("💡 NOTA: Os gestores usam logger.info() em vez de print() para a saída.")
                 else:
-                    print(f"❌ Não foi possível obter agenda do gestor '{tipo_escolhido}'")
+                    print(f"⌚ Não foi possível obter agenda do gestor '{tipo_escolhido}'")
+                    if agenda and (agenda.startswith("Erro") or "não encontrado" in agenda):
+                        print(f"   Detalhes: {agenda}")
             else:
-                print("❌ Opção inválida!")
+                print("⌚ Opção inválida!")
                 
         except ValueError:
-            print("❌ Digite um número válido!")
+            print("⌚ Digite um número válido!")
 
     def _listar_equipamentos_reais(self, integrador):
         """Lista todos os equipamentos disponíveis no sistema real"""
@@ -412,13 +436,13 @@ class MenuPrincipal:
         print("=" * 40)
         
         if not integrador.sistema_disponivel():
-            print("❌ Sistema de equipamentos não disponível")
+            print("⌚ Sistema de equipamentos não disponível")
             return
         
         estatisticas = integrador.obter_estatisticas_equipamentos()
         
         if "erro" in estatisticas:
-            print(f"❌ {estatisticas['erro']}")
+            print(f"⌚ {estatisticas['erro']}")
             return
         
         print(f"📊 Total de equipamentos: {estatisticas['total_equipamentos']}")
@@ -439,13 +463,13 @@ class MenuPrincipal:
         print("=" * 35)
         
         if not integrador.sistema_disponivel():
-            print("❌ Sistema de equipamentos não disponível")
+            print("⌚ Sistema de equipamentos não disponível")
             return
         
         nome_equipamento = input("Digite o nome do equipamento: ").strip()
         
         if not nome_equipamento:
-            print("❌ Nome não pode estar vazio")
+            print("⌚ Nome não pode estar vazio")
             return
         
         print(f"\n🔍 Verificando '{nome_equipamento}'...")
@@ -453,13 +477,13 @@ class MenuPrincipal:
         info = integrador.verificar_disponibilidade_equipamento(nome_equipamento)
         
         if "erro" in info:
-            print(f"❌ {info['erro']}")
+            print(f"⌚ {info['erro']}")
             return
         
         print("✅ Equipamento encontrado!")
-        print(f"📛 Nome: {info['nome']}")
+        print(f"🏷️ Nome: {info['nome']}")
         print(f"🏷️ Tipo: {info['tipo']}")
-        print(f"📅 Tem agenda: {'✅ Sim' if info['tem_agenda'] else '❌ Não'}")
+        print(f"📅 Tem agenda: {'✅ Sim' if info['tem_agenda'] else '⌚ Não'}")
         print(f"🔧 Métodos disponíveis: {len(info['metodos_disponiveis'])}")
         
         if info['metodos_disponiveis']:
@@ -497,12 +521,12 @@ class MenuPrincipal:
                     # Auto-salva pedidos após registro
                     self.gerenciador.salvar_pedidos()
                 else:
-                    print(f"\n⌨ {mensagem}")
+                    print(f"\n⚡ {mensagem}")
             else:
                 print("\nℹ️ Registro cancelado.")
                 
         except Exception as e:
-            print(f"\n⌨ Erro ao registrar pedido: {e}")
+            print(f"\n⚡ Erro ao registrar pedido: {e}")
         
         input("\nPressione Enter para continuar...")
     
@@ -539,7 +563,7 @@ class MenuPrincipal:
     def remover_pedido(self):
         """Remove um pedido específico"""
         self.utils.limpar_tela()
-        print("🗑️ REMOVER PEDIDO")
+        print("🗒️ REMOVER PEDIDO")
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
@@ -568,11 +592,11 @@ class MenuPrincipal:
                     id_pedido = int(partes[0])
                     sucesso, mensagem = self.gerenciador.remover_pedido_legado(id_pedido)
                 else:
-                    print("\n⌨ Formato inválido!")
+                    print("\n⚡ Formato inválido!")
                     input("Pressione Enter para continuar...")
                     return
                 
-                print(f"\n{'✅' if sucesso else '⌨'} {mensagem}")
+                print(f"\n{'✅' if sucesso else '⚡'} {mensagem}")
                 
                 if sucesso:
                     # Auto-salva após remoção
@@ -581,19 +605,123 @@ class MenuPrincipal:
                 print("\nℹ️ Remoção cancelada.")
                 
         except ValueError:
-            print("\n⌨ Formato inválido! Use números.")
+            print("\n⚡ Formato inválido! Use números.")
         except Exception as e:
-            print(f"\n⌨ Erro ao remover pedido: {e}")
+            print(f"\n⚡ Erro ao remover pedido: {e}")
         
         input("\nPressione Enter para continuar...")
     
+    def cancelar_ordem_pedido(self):
+        """🆕 Cancela uma ordem/pedido específico liberando todos os equipamentos alocados"""
+        self.utils.limpar_tela()
+        print("🚫 CANCELAR ORDEM | PEDIDO")
+        print("=" * 40)
+        
+        if not self.gerenciador.pedidos:
+            print("🔭 Nenhum pedido registrado para cancelar.")
+            input("\nPressione Enter para continuar...")
+            return
+        
+        # Lista pedidos existentes
+        self.gerenciador.listar_pedidos()
+        
+        try:
+            print("💡 Formato: Digite 'Ordem Pedido' (ex: '1 2' para cancelar Ordem 1 | Pedido 2)")
+            entrada = input("\n🎯 Digite Ordem e Pedido para cancelar (ou Enter para voltar): ").strip()
+            
+            if not entrada:
+                print("\nℹ️ Cancelamento cancelado.")
+                input("\nPressione Enter para continuar...")
+                return
+                
+            partes = entrada.split()
+            
+            if len(partes) != 2:
+                print("\n⚡ Formato inválido! Use: 'ordem pedido' (ex: '1 2')")
+                input("\nPressione Enter para continuar...")
+                return
+                
+            id_ordem = int(partes[0])
+            id_pedido = int(partes[1])
+            
+            # Verifica se o pedido existe
+            pedido = self.gerenciador.obter_pedido(id_ordem, id_pedido)
+            if not pedido:
+                print(f"\n⌚ Ordem {id_ordem} | Pedido {id_pedido} não encontrado!")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            # Mostra informações do pedido
+            print(f"\n📋 Pedido encontrado:")
+            print(f"   🎯 Ordem {pedido.id_ordem} | Pedido {pedido.id_pedido}")
+            print(f"   📦 Item: {pedido.nome_item} (ID: {pedido.id_item})")
+            print(f"   📊 Quantidade: {pedido.quantidade}")
+            print(f"   🏷️ Tipo: {pedido.tipo_item}")
+            
+            # Confirmação
+            confirmacao = input(f"\n⚠️ Confirma cancelamento da Ordem {id_ordem} | Pedido {id_pedido}? (s/N): ").strip().lower()
+            
+            if confirmacao in ['s', 'sim', 'y', 'yes']:
+                # Tenta liberar equipamentos através do novo módulo
+                try:
+                    equipamentos_liberados = self._liberar_equipamentos_pedido(id_ordem, id_pedido)
+                    
+                    print(f"\n✅ Ordem {id_ordem} | Pedido {id_pedido} cancelado com sucesso!")
+                    
+                    if equipamentos_liberados > 0:
+                        print(f"🔧 {equipamentos_liberados} equipamento(s) liberado(s)")
+                    else:
+                        print("ℹ️ Nenhum equipamento estava alocado ou já havia sido liberado")
+                    
+                    print("💡 NOTA: O pedido permanece registrado. Use 'Remover Pedido' para removê-lo completamente.")
+                    
+                except Exception as e:
+                    print(f"\n⚠️ Erro ao liberar equipamentos: {e}")
+                    print("ℹ️ O pedido pode não ter equipamentos alocados ou já foi processado")
+            else:
+                print("\nℹ️ Cancelamento cancelado.")
+                
+        except ValueError:
+            print("\n⚡ Formato inválido! Use números (ex: '1 2')")
+        except Exception as e:
+            print(f"\n⚡ Erro ao cancelar pedido: {e}")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def _liberar_equipamentos_pedido(self, id_ordem: int, id_pedido: int) -> int:
+        """
+        Libera equipamentos alocados para uma ordem/pedido específico usando o novo módulo.
+        
+        Returns:
+            int: Número de equipamentos que tiveram ocupações liberadas
+        """
+        try:
+            from services.gestores_equipamentos.liberador_equipamentos import LiberadorEquipamentos
+            
+            liberador = LiberadorEquipamentos(debug=True)
+            equipamentos_liberados, detalhes = liberador.liberar_equipamentos_pedido(id_ordem, id_pedido)
+            
+            # Mostra detalhes da liberação
+            for detalhe in detalhes:
+                print(detalhe)
+            
+            return equipamentos_liberados
+            
+        except ImportError as e:
+            print(f"   Erro ao carregar módulo liberador: {e}")
+            print("   Verifique se menu/liberador_equipamentos.py existe")
+            return 0
+        except Exception as e:
+            print(f"   Erro geral na liberação: {e}")
+            return 0
+        
     def limpar_ordem_atual(self):
         """🆕 Remove apenas pedidos da ordem atual"""
         self.utils.limpar_tela()
         ordem_atual = self.gerenciador.obter_ordem_atual()
         pedidos_ordem = self.gerenciador.obter_pedidos_ordem_atual()
         
-        print("🗑️ LIMPAR ORDEM ATUAL")
+        print("🗒️ LIMPAR ORDEM ATUAL")
         print("=" * 40)
         
         if not pedidos_ordem:
@@ -619,7 +747,7 @@ class MenuPrincipal:
     def limpar_todos_pedidos(self):
         """Remove todos os pedidos de todas as ordens"""
         self.utils.limpar_tela()
-        print("🗑️ LIMPAR TODOS OS PEDIDOS")
+        print("🗒️ LIMPAR TODOS OS PEDIDOS")
         print("=" * 40)
         
         if not self.gerenciador.pedidos:
@@ -710,13 +838,13 @@ class MenuPrincipal:
                     print(f"📊 Total processado: {stats.get('total_pedidos', 0)} pedidos")
                     print(f"⏱️ Tempo de execução: {stats.get('tempo_execucao', 0):.1f}s")
                 else:
-                    print(f"\n⌨ Falha na execução sequencial da Ordem {ordem_atual}!")
+                    print(f"\n⚡ Falha na execução sequencial da Ordem {ordem_atual}!")
                     print(f"📈 Mesmo assim, sistema avançou para Ordem {nova_ordem}")
                     print("💡 Isso evita conflitos de IDs entre ordens com erro e novas ordens")
                     
             except Exception as e:
                 # 🆕 MESMO EM CASO DE EXCEPTION, incrementa ordem
-                print(f"\n⌨ Erro durante execução: {e}")
+                print(f"\n⚡ Erro durante execução: {e}")
                 nova_ordem = self.gerenciador.incrementar_ordem()
                 self.gerenciador.salvar_pedidos()
                 print(f"📈 Ordem incrementada para {nova_ordem} (devido ao erro)")
@@ -744,7 +872,7 @@ class MenuPrincipal:
         
         # Verifica OR-Tools primeiro
         ortools_ok, ortools_msg = self.utils.validar_or_tools()
-        print(f"🔧 OR-Tools: {'✅' if ortools_ok else '⌨'} {ortools_msg}")
+        print(f"🔧 OR-Tools: {'✅' if ortools_ok else '⚡'} {ortools_msg}")
         
         if not ortools_ok:
             print("\n💡 Para instalar: pip install ortools")
@@ -796,13 +924,13 @@ class MenuPrincipal:
                     if stats.get('modo') == 'otimizado':
                         print(f"🎯 Solução: {stats.get('status_solver', 'N/A')}")
                 else:
-                    print(f"\n⌨ Falha na execução otimizada da Ordem {ordem_atual}!")
+                    print(f"\n⚡ Falha na execução otimizada da Ordem {ordem_atual}!")
                     print(f"📈 Mesmo assim, sistema avançou para Ordem {nova_ordem}")
                     print("💡 Isso evita conflitos de IDs entre ordens com erro e novas ordens")
                     
             except Exception as e:
                 # 🆕 MESMO EM CASO DE EXCEPTION, incrementa ordem
-                print(f"\n⌨ Erro durante execução otimizada: {e}")
+                print(f"\n⚡ Erro durante execução otimizada: {e}")
                 nova_ordem = self.gerenciador.incrementar_ordem()
                 self.gerenciador.salvar_pedidos()
                 print(f"📈 Ordem incrementada para {nova_ordem} (devido ao erro)")
@@ -838,11 +966,11 @@ class MenuPrincipal:
             else:
                 print(f"⚠️ {total_testes - testes_ok} problema(s) encontrado(s)")
             
-            print(f"🗗 Arquitetura: Independente (services/gestor_producao)")
+            print(f"🗃️ Arquitetura: Independente (services/gestor_producao)")
             print(f"📦 Sistema de Ordens: Ativo (Ordem atual: {self.gerenciador.obter_ordem_atual()})")
             
         except Exception as e:
-            print(f"⌨ Erro durante teste: {e}")
+            print(f"⚡ Erro durante teste: {e}")
         
         input("\nPressione Enter para continuar...")
     
@@ -866,17 +994,18 @@ class MenuPrincipal:
         print()
         
         # Arquitetura
-        print(f"🗗 Nova Arquitetura:")
+        print(f"🗃️ Nova Arquitetura:")
         print(f"   Gestor: services/gestor_producao/")
         print(f"   Independente: ✅ Desacoplado dos scripts de teste")
         print(f"   Limpeza: ✅ Automática integrada")
         print(f"   Ordens: ✅ Sistema de sessões ativo")
+        print(f"   Liberador: ✅ Sistema modular para equipamentos")
         print()
         
         # Status do sistema
         stats = self.gerenciador.obter_estatisticas()
         print(f"📋 Status:")
-        print(f"   OR-Tools: {'✅ Disponível' if info_sistema['ortools_disponivel'] else '⌨ Não encontrado'}")
+        print(f"   OR-Tools: {'✅ Disponível' if info_sistema['ortools_disponivel'] else '⚡ Não encontrado'}")
         print(f"   Ordem atual: {stats['ordem_atual']}")
         print(f"   Total de pedidos: {stats['total']} em {stats['total_ordens']} ordem(ns)")
         print(f"   Pedidos na ordem atual: {stats['pedidos_ordem_atual']}")
@@ -907,7 +1036,7 @@ class MenuPrincipal:
                 print("✅ Configurações atualizadas!")
                 
             except ValueError:
-                print("⌨ Valores inválidos!")
+                print("⚡ Valores inválidos!")
         
         elif opcao == "2":  # 🆕 Nova opção
             print(f"\n📦 Resetar ordem atual:")
@@ -960,7 +1089,7 @@ class MenuPrincipal:
                     else:
                         print("⚠️ Limpeza concluída com alguns erros")
             except Exception as e:
-                print(f"⌨ Erro durante limpeza: {e}")
+                print(f"⚡ Erro durante limpeza: {e}")
         
         elif opcao in ["2", "3", "4", "5"]:
             pastas_opcoes = {
@@ -987,7 +1116,7 @@ class MenuPrincipal:
                     print(f"📁 Pasta {pasta} não existe")
                     
             except Exception as e:
-                print(f"⌨ Erro ao limpar {pasta}: {e}")
+                print(f"⚡ Erro ao limpar {pasta}: {e}")
         
         elif opcao == "6":  # 🆕 MODIFICAÇÃO: Nova opção
             print(f"\n🧹 Limpando arquivo de pedidos salvos...")
@@ -998,12 +1127,12 @@ class MenuPrincipal:
                 else:
                     print("📄 Arquivo de pedidos salvos não existia")
             except Exception as e:
-                print(f"⌨ Erro ao limpar arquivo de pedidos: {e}")
+                print(f"⚡ Erro ao limpar arquivo de pedidos: {e}")
         
         elif opcao == "0":
             return
         else:
-            print("⌨ Opção inválida!")
+            print("⚡ Opção inválida!")
         
         input("\nPressione Enter para continuar...")
     
@@ -1071,139 +1200,136 @@ class MenuPrincipal:
         input("\nPressione Enter para continuar...")
     
     def debug_sistema_ordens(self):
-        """🆕 Debug do sistema de ordens"""
+        """Debug do sistema de ordens"""
         self.utils.limpar_tela()
-        print("🔍 DEBUG - SISTEMA DE ORDENS")
+        print("DEBUG - SISTEMA DE ORDENS")
         print("=" * 40)
         
         self.gerenciador.debug_sistema_ordens()
         
-        print("\n🔍 DEBUG - ESTRUTURA DE DIRETÓRIOS")
-        print("=" * 40)
+        print("\nDEBUG - ESTATISTICAS DETALHADAS")
+        print("-" * 40)
         
-        estrutura = self.gerenciador.verificar_estrutura_diretorios()
-        for nome, info in estrutura.items():
-            status = "✅" if info["existe"] and info["eh_diretorio"] else "❌"
-            print(f"{status} {nome.upper()}:")
-            print(f"   📁 Caminho: {info['caminho']}")
-            print(f"   📂 Existe: {info['existe']}")
-            print(f"   📋 É diretório: {info['eh_diretorio']}")
-            
-            if nome == "pedidos_salvos":
-                print(f"   📄 Arquivo de pedidos: {info.get('arquivo_pedidos_existe', False)}")
-                if info.get('tamanho_arquivo'):
-                    print(f"   📊 Tamanho: {info['tamanho_arquivo']} bytes")
-                    print(f"   🕐 Modificado: {info.get('modificado_em', 'N/A')}")
-            print()
+        # Debug adicional do gerenciador
+        stats = self.gerenciador.obter_estatisticas()
+        print(f"Ordem atual: {stats['ordem_atual']}")
+        print(f"Contador pedido: {self.gerenciador.contador_pedido}")
+        print(f"Total de pedidos na memoria: {len(self.gerenciador.pedidos)}")
+        print(f"Pedidos unicos (sem duplicatas): {len(set((p.id_ordem, p.id_pedido) for p in self.gerenciador.pedidos))}")
+        
+        # Verifica consistencia dos IDs
+        ids_completos = [(p.id_ordem, p.id_pedido) for p in self.gerenciador.pedidos]
+        ids_duplicados = [id_ped for id_ped in ids_completos if ids_completos.count(id_ped) > 1]
+        
+        if ids_duplicados:
+            print(f"ATENCAO: IDs duplicados encontrados: {set(ids_duplicados)}")
+        else:
+            print("Consistencia de IDs: OK")
+        
+        # Status do arquivo de salvamento
+        if os.path.exists(self.gerenciador.arquivo_pedidos):
+            stat_arquivo = os.stat(self.gerenciador.arquivo_pedidos)
+            from datetime import datetime
+            modificado = datetime.fromtimestamp(stat_arquivo.st_mtime)
+            print(f"Arquivo de pedidos: {self.gerenciador.arquivo_pedidos}")
+            print(f"Ultima modificacao: {modificado.strftime('%d/%m/%Y %H:%M:%S')}")
+            print(f"Tamanho: {stat_arquivo.st_size} bytes")
+        else:
+            print("Arquivo de pedidos: NAO EXISTE")
         
         input("\nPressione Enter para continuar...")
     
     def mostrar_ajuda(self):
         """Mostra ajuda do sistema"""
         self.utils.limpar_tela()
-        print("❓ AJUDA DO SISTEMA")
+        print("AJUDA - SISTEMA DE PRODUCAO")
         print("=" * 40)
         
-        print("📋 COMO USAR:")
+        print("CONCEITOS PRINCIPAIS:")
+        print("-" * 20)
+        print("ORDEM: Grupo de pedidos executados juntos")
+        print("PEDIDO: Item individual com quantidade e prazo")
+        print("SEQUENCIAL: Execucao tradicional otimizada")
+        print("OTIMIZADO (PL): Programacao Linear para melhor resultado")
         print()
-        print("1️⃣ SISTEMA DE ORDENS:")
-        print("   • Cada sessão de trabalho tem uma ordem (ex: Ordem 1)")
-        print("   • Pedidos são numerados dentro da ordem (ex: Pedido 1, 2, 3...)")
-        print("   • Formato: Ordem X | Pedido Y")
-        print("   • Após execução, ordem é incrementada automaticamente")
+        
+        print("FLUXO RECOMENDADO:")
+        print("-" * 18)
+        print("1. Registre pedidos (opcao 1)")
+        print("2. Revise pedidos registrados (opcao 2)")
+        print("3. Execute ordem atual (opcao 7 ou 8)")
+        print("4. Sistema avanca automaticamente para proxima ordem")
+        print("5. Repita o processo")
         print()
-        print("2️⃣ REGISTRAR PEDIDOS:")
-        print("   • Digite o ID do item (ex: 1001)")
-        print("   • Escolha PRODUTO ou SUBPRODUTO")
-        print("   • Informe a quantidade")
-        print("   • Digite fim da jornada (ex: 07:00:00 11/08/2025)")
-        print("   • O início será calculado automaticamente (3 dias antes)")
-        print("   • Pedido será registrado na ordem atual")
+        
+        print("SISTEMA DE ORDENS:")
+        print("-" * 18)
+        print("• Cada execucao processa APENAS a ordem atual")
+        print("• Apos execucao, ordem incrementa automaticamente")
+        print("• Novos pedidos vao sempre para ordem atual")
+        print("• Isso evita conflitos e organiza historico")
         print()
-        print("3️⃣ EXECUÇÃO:")
-        print("   • Executa APENAS pedidos da ordem atual")
-        print("   • Sequencial: Rápido e eficiente")
-        print("   • Otimizado: Usa Programação Linear (requer OR-Tools)")
-        print("   • Ordem SEMPRE incrementa após execução (sucesso ou falha)")
-        print("   • Isso evita conflitos de IDs entre ordens")
+        
+        print("LIMPEZA AUTOMATICA:")
+        print("-" * 19)
+        print("• Logs limpos na inicializacao")
+        print("• Comandas removidas automaticamente")
+        print("• Pedidos salvos limpos apos execucao bem-sucedida")
+        print("• Ambiente sempre pronto para nova sessao")
         print()
-        print("4️⃣ GERENCIAMENTO:")
-        print("   • Listar: Mostra todos os pedidos agrupados por ordem")
-        print("   • Remover: Remove pedido específico (Ordem X | Pedido Y)")
-        print("   • Limpar Ordem: Remove apenas pedidos da ordem atual")
-        print("   • Limpar Todos: Remove todos os pedidos de todas as ordens")
+        
+        print("AGENDA DE EQUIPAMENTOS:")
+        print("-" * 23)
+        print("• Visualizacao baseada em logs (sempre disponivel)")
+        print("• Integracao com sistema real (quando ativo)")
+        print("• Timeline por ordem/pedido")
+        print("• Deteccao de conflitos de horario")
         print()
-        print("5️⃣ AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
-        print("   • Visualização hierárquica por tipo de equipamento")
-        print("   • Agenda geral ou equipamento específico")
-        print("   • Estatísticas de utilização")
-        print("   • Verificação de disponibilidade")
-        print("   • Busca por período ou item específico")
+        
+        print("LIBERACAO DE EQUIPAMENTOS:")
+        print("-" * 26)
+        print("• Sistema modular para diferentes tipos")
+        print("• Deteccao automatica de estruturas")
+        print("• Bancadas, camaras, armarios, equipamentos padrao")
+        print("• Relatorio detalhado de liberacoes")
         print()
-        print("🗗 ARQUITETURA:")
-        print("   • Independente: Não depende de scripts de teste")
-        print("   • Modular: services/gestor_producao")
-        print("   • Limpa: Limpeza automática de logs")
-        print("   • Organizada: Sistema de ordens para sessões")
-        print()
-        print("📦 EXEMPLO DE FLUXO:")
-        print("   1. Registrar: Ordem 1 | Pedido 1 (Pão)")
-        print("   2. Registrar: Ordem 1 | Pedido 2 (Bolo)")
-        print("   3. Executar Ordem 1 → Sistema avança para Ordem 2")
-        print("   4. Registrar: Ordem 2 | Pedido 1 (Cookie)")
-        print("   5. Executar Ordem 2 com ERRO → Sistema ainda avança para Ordem 3")
-        print("   6. Registrar: Ordem 3 | Pedido 1 (Torta) - SEM conflito de IDs")
-        print("   * Ordens incrementam SEMPRE, evitando conflitos")
-        print()
-        print("⚠️ REQUISITOS:")
-        print("   • OR-Tools: pip install ortools (para otimização)")
-        print("   • Python 3.8+")
-        print("   • Arquivos de atividades nos diretórios corretos")
+        
+        print("DICAS:")
+        print("-" * 6)
+        print("• Use 'Testar Sistema' antes da primeira execucao")
+        print("• SEQUENCIAL e mais rapido, OTIMIZADO e mais eficiente")
+        print("• Agenda mostra historico de todas as execucoes")
+        print("• Sistema salva automaticamente apos cada operacao")
+        print("• Use Debug para investigar problemas")
+        print("• Cancelar pedido libera equipamentos automaticamente")
         
         input("\nPressione Enter para continuar...")
     
     def sair(self):
-        """Sai do sistema"""
-        self.utils.limpar_tela()
-        print("👋 SAINDO DO SISTEMA")
-        print("=" * 40)
-        
-        if self.gerenciador.pedidos:
-            stats = self.gerenciador.obter_estatisticas()
-            print(f"⚠️ Você tem {stats['total']} pedido(s) registrado(s).")
-            print(f"📦 Ordem atual: {stats['ordem_atual']} ({stats['pedidos_ordem_atual']} pedidos)")
-            if stats['total_ordens'] > 1:
-                print(f"📈 Ordens existentes: {stats['ordens_existentes']}")
-            
-            salvar = input("💾 Deseja salvar pedidos antes de sair? (S/n): ").strip().lower()
-            
-            if salvar in ['', 's', 'sim', 'y', 'yes']:
-                try:
-                    self.gerenciador.salvar_pedidos()
-                    print("✅ Pedidos salvos com sucesso!")
-                except Exception as e:
-                    print(f"⌨ Erro ao salvar: {e}")
-        
-        print("\n🎉 Obrigado por usar o Sistema de Produção!")
-        print("🗗 Nova arquitetura independente (services/gestor_producao)")
-        print("🧹 Limpeza automática ativa")
-        print("📦 Sistema de Ordens/Sessões implementado")
-        print("📅 Visualização de agenda de equipamentos disponível")
-        print("=" * 40)
+        """Encerra o sistema"""
+        print("\nEncerrando Sistema de Producao...")
+        print("Sistema salvo automaticamente.")
+        print("Ate a proxima!")
         self.rodando = False
 
 
+# =====================================================================
+#                           PONTO DE ENTRADA
+# =====================================================================
+
 def main():
-    """Função principal"""
+    """Funcao principal"""
     try:
         menu = MenuPrincipal()
         menu.executar()
+    except KeyboardInterrupt:
+        print("\n\nSistema interrompido pelo usuario.")
     except Exception as e:
-        print(f"\n⌨ Erro crítico: {e}")
+        print(f"\nErro critico: {e}")
         import traceback
         traceback.print_exc()
     finally:
-        print("\n📚 Sistema encerrado.")
+        print("Sistema encerrado.")
 
 
 if __name__ == "__main__":

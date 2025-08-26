@@ -124,15 +124,15 @@ class TesteSistemaProducao:
         # Configurações dos pedidos da padaria
         configuracoes_pedidos = [
            # CONJUNTO INICIAL 
-            {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 7},
-            {"produto": "Pão Hambúrguer", "quantidade": 120, "hora_fim": 7},
+          #  {"produto": "Pão Francês", "quantidade": 420, "hora_fim": 7},
+            {"produto": "Pão Hambúrguer", "quantidade": 60, "hora_fim": 7},
             {"produto": "Pão de Forma", "quantidade": 60, "hora_fim": 7},
-            {"produto": "Pão Baguete", "quantidade": 60, "hora_fim": 7},
-            {"produto": "Pão Trança de Queijo finos", "quantidade": 50, "hora_fim": 7},
+            # {"produto": "Pão Baguete", "quantidade": 60, "hora_fim": 7},
+            # {"produto": "Pão Trança de Queijo finos", "quantidade": 50, "hora_fim": 7},
 
             # # # CONJUNTO ADICIONAL 
-           # {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
-           # {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
+            # {"produto": "Pão Francês", "quantidade": 320, "hora_fim": 9},
+            # {"produto": "Pão Baguete", "quantidade": 6, "hora_fim": 9},
             # {"produto": "Pão Trança de Queijo finos", "quantidade": 12, "hora_fim": 9},
             
             # # # # CONJUNTO VESPERTINO

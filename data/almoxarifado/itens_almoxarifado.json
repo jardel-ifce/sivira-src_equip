@@ -607,7 +607,7 @@
     "nome": "massa_suave",
     "descricao": "Massa suave",
     "tipo_item": "SUBPRODUTO",
-    "politica_producao": "SOB_DEMANDA",
+    "politica_producao": "ESTOCADO",
     "peso": 0,
     "unidade_medida": "GRAMAS",
     "estoque_min": 0,

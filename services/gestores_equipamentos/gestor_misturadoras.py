@@ -19,17 +19,19 @@ class GestorMisturadoras:
     🥣 Gestor especializado para controle de masseiras com algoritmos de distribuição otimizada,
     utilizando Backward Scheduling minuto a minuto com FIPs (Fatores de Importância de Prioridade).
     
+    MODIFICADO: Agrupamento por id_atividade em vez de id_item.
+    
     Baseado em:
     - Multiple Knapsack Problem para distribuição ótima
     - First Fit Decreasing (FFD) com restrições de capacidade mínima
     - Binary Space Partitioning para divisão eficiente
-    - Backward scheduling com intervalos flexíveis para mesmo id_item
+    - Backward scheduling com intervalos flexíveis para mesma id_atividade
     
     Funcionalidades:
     - Verificação prévia de viabilidade total
     - Distribuição otimizada respeitando capacidades mín/máx
     - Algoritmo de redistribuição com balanceamento de carga
-    - Permite sobreposição do mesmo id_item com validação dinâmica
+    - Permite sobreposição da mesma id_atividade com validação dinâmica
     - Priorização por FIP com backward scheduling
     - Otimização inteligente: evita tentativas individuais quando distribuição é obrigatória
     
@@ -49,7 +51,7 @@ class GestorMisturadoras:
     # 🚀 OTIMIZAÇÃO: Verificação de Viabilidade em Cascata
     # ==========================================================
     def _verificar_viabilidade_rapida_primeiro(self, atividade: "AtividadeModular", quantidade_total: float,
-                                             id_item: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+                                             id_atividade: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         🚀 OTIMIZAÇÃO PRINCIPAL: Verifica capacidade teórica antes de análise temporal
         
@@ -108,36 +110,37 @@ class GestorMisturadoras:
 
         # 🕐 FASE 4: SÓ AGORA faz análise temporal custosa (se passou nas verificações básicas)
         logger.debug(f"✅ Passou verificações rápidas, iniciando análise temporal detalhada...")
-        return self._verificar_viabilidade_temporal_detalhada(atividade, quantidade_total, id_item, inicio, fim)
+        return self._verificar_viabilidade_temporal_detalhada(atividade, quantidade_total, id_atividade, inicio, fim)
 
     def _verificar_viabilidade_temporal_detalhada(self, atividade: "AtividadeModular", quantidade_total: float,
-                                                id_item: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+                                                id_atividade: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         🕐 Análise temporal detalhada - só executa se passou nas verificações básicas
         Esta é a parte custosa que agora só roda quando realmente necessário
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         capacidade_disponivel_total = 0.0
         masseiras_disponiveis = []
         
         for masseira in self.masseiras:
             # Esta é a parte custosa: verificar ocupações temporais com sobreposições
-            if masseira.esta_disponivel_para_item(inicio, fim, id_item):
+            if masseira.esta_disponivel_para_atividade(inicio, fim, id_atividade):
                 # Verifica parâmetros técnicos (já foi validado rapidamente antes)
                 velocidades = self._obter_velocidades_para_masseira(atividade, masseira)
                 tipo_mistura = self._obter_tipo_mistura_para_masseira(atividade, masseira)
                 
                 if velocidades:  # Pelo menos uma velocidade deve estar definida
                     # Verifica compatibilidade de parâmetros (custoso)
-                    if self._verificar_compatibilidade_parametros(masseira, id_item, velocidades, tipo_mistura, inicio, fim):
-                        # Calcula capacidade disponível considerando ocupações do mesmo item (custoso)
-                        capacidade_disponivel = masseira.obter_capacidade_disponivel_item(id_item, inicio, fim)
+                    if self._verificar_compatibilidade_parametros(masseira, id_atividade, velocidades, tipo_mistura, inicio, fim):
+                        # Calcula capacidade disponível considerando ocupações da mesma atividade (custoso)
+                        capacidade_disponivel = masseira.obter_capacidade_disponivel_atividade(id_atividade, inicio, fim)
                         
                         if capacidade_disponivel >= masseira.capacidade_gramas_min:
                             capacidade_disponivel_total += capacidade_disponivel
                             masseiras_disponiveis.append(masseira)
 
         if not masseiras_disponiveis:
-            return False, "Nenhuma masseira disponível para o item no período"
+            return False, "Nenhuma masseira disponível para a atividade no período"
 
         if quantidade_total > capacidade_disponivel_total:
             return False, f"Quantidade {quantidade_total}g excede capacidade disponível ({capacidade_disponivel_total}g) no período"
@@ -236,12 +239,13 @@ class GestorMisturadoras:
             f"Quantidade {quantidade_total}g está dentro dos limites estruturais."
         )
 
-    def _calcular_capacidade_total_sistema(self, atividade: "AtividadeModular", id_item: int, 
+    def _calcular_capacidade_total_sistema(self, atividade: "AtividadeModular", id_atividade: int, 
                                           inicio: datetime, fim: datetime) -> Tuple[float, float]:
         """
-        🚀 OTIMIZADO: Calcula capacidade total disponível do sistema para um item específico.
+        🚀 OTIMIZADO: Calcula capacidade total disponível do sistema para uma atividade específica.
         Agora usa verificação em cascata para melhor performance.
         Retorna: (capacidade_total_disponivel, capacidade_maxima_teorica)
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         # Primeiro calcular capacidade teórica (rápido)
         capacidade_maxima_teorica = sum(m.capacidade_gramas_max for m in self.masseiras)
@@ -250,16 +254,16 @@ class GestorMisturadoras:
         capacidade_disponivel_total = 0.0
         
         for masseira in self.masseiras:
-            # Verifica se pode receber o item no período (permite sobreposição mesmo item) - análise temporal
-            if masseira.esta_disponivel_para_item(inicio, fim, id_item):
-                # Calcula capacidade disponível considerando ocupações existentes do mesmo item
-                capacidade_disponivel = masseira.obter_capacidade_disponivel_item(id_item, inicio, fim)
+            # Verifica se pode receber a atividade no período (permite sobreposição mesma atividade) - análise temporal
+            if masseira.esta_disponivel_para_atividade(inicio, fim, id_atividade):
+                # Calcula capacidade disponível considerando ocupações existentes da mesma atividade
+                capacidade_disponivel = masseira.obter_capacidade_disponivel_atividade(id_atividade, inicio, fim)
                 capacidade_disponivel_total += max(0, capacidade_disponivel)
         
         return capacidade_disponivel_total, capacidade_maxima_teorica
 
     def _verificar_viabilidade_quantidade(self, atividade: "AtividadeModular", quantidade_total: float,
-                                        id_item: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+                                        id_atividade: int, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         📚 Multiple Knapsack Problem (MKP): Problema clássico de otimização combinatória onde
         múltiplos "recipientes" (knapsacks) têm capacidades limitadas e devem acomodar itens
@@ -267,14 +271,15 @@ class GestorMisturadoras:
         comportar a demanda antes de tentar algoritmos de alocação mais custosos computacionalmente.
         
         🚀 VERSÃO OTIMIZADA: Usa verificação em cascata para evitar análises custosas desnecessárias.
+        MODIFICADO: Usa id_atividade em vez de id_item
         
         Verifica se é teoricamente possível alocar a quantidade solicitada.
         """
         # 🚀 USA A NOVA VERIFICAÇÃO OTIMIZADA
-        return self._verificar_viabilidade_rapida_primeiro(atividade, quantidade_total, id_item, inicio, fim)
+        return self._verificar_viabilidade_rapida_primeiro(atividade, quantidade_total, id_atividade, inicio, fim)
 
     # ==========================================================
-    # 🧮 Algoritmos de Distribuição Otimizada
+    # 🧮 Algoritmos de Distribuição Otimizada (mantidos)
     # ==========================================================
     def _algoritmo_distribuicao_balanceada(self, quantidade_total: float, 
                                           masseiras_disponiveis: List[Tuple[Masseira, float, List[TipoVelocidade], Optional[TipoMistura]]]) -> List[Tuple[Masseira, float, List[TipoVelocidade], Optional[TipoMistura]]]:
@@ -566,13 +571,14 @@ class GestorMisturadoras:
         
         return id_ordem, id_pedido, id_atividade, id_item
 
-    def _verificar_compatibilidade_parametros(self, masseira: Masseira, id_item: int, velocidades: List[TipoVelocidade], tipo_mistura: Optional[TipoMistura], inicio: datetime, fim: datetime) -> bool:
+    def _verificar_compatibilidade_parametros(self, masseira: Masseira, id_atividade: int, velocidades: List[TipoVelocidade], tipo_mistura: Optional[TipoMistura], inicio: datetime, fim: datetime) -> bool:
         """
-        Verifica se os parâmetros são compatíveis com ocupações existentes do mesmo produto.
+        Verifica se os parâmetros são compatíveis com ocupações existentes da mesma atividade.
         🎯 REGRA DE SOBREPOSIÇÃO: Permite apenas simultaneidade exata ou períodos distintos.
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         
-        for ocupacao in masseira.obter_ocupacoes_item_periodo(id_item, inicio, fim):
+        for ocupacao in masseira.obter_ocupacoes_atividade_periodo(id_atividade, inicio, fim):
             # ocupacao = (id_ordem, id_pedido, id_atividade, id_item, quantidade, velocidades, tipo_mistura, inicio, fim)
             inicio_existente = ocupacao[7]
             fim_existente = ocupacao[8]
@@ -602,7 +608,7 @@ class GestorMisturadoras:
         return True
 
     # ==========================================================
-    # 🔄 Alocação Otimizada Individual e Distribuída
+    # 🔄 Alocação Otimizada Individual e Distribuída (MODIFICADA)
     # ==========================================================
     def _tentar_alocacao_individual(
         self, 
@@ -615,7 +621,8 @@ class GestorMisturadoras:
     ) -> Optional[Tuple[Masseira, datetime, datetime]]:
         """
         Tenta alocar toda a quantidade em uma única masseira.
-        Permite sobreposição do mesmo id_item com validação dinâmica de capacidade.
+        Permite sobreposição da mesma id_atividade com validação dinâmica de capacidade.
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         for masseira in masseiras_ordenadas:
             # Obter configurações técnicas
@@ -627,9 +634,9 @@ class GestorMisturadoras:
                 logger.debug(f"❌ {masseira.nome}: não atende requisitos técnicos")
                 continue
             
-            # Verifica se pode alocar considerando mesmo item (intervalos flexíveis)
-            if not masseira.esta_disponivel_para_item(inicio_tentativa, fim_tentativa, id_item):
-                logger.debug(f"❌ {masseira.nome}: ocupada por item diferente")
+            # Verifica se pode alocar considerando mesma atividade (intervalos flexíveis)
+            if not masseira.esta_disponivel_para_atividade(inicio_tentativa, fim_tentativa, id_atividade):
+                logger.debug(f"❌ {masseira.nome}: ocupada por atividade diferente")
                 continue
             
             # Verifica se quantidade individual está nos limites da masseira
@@ -637,9 +644,9 @@ class GestorMisturadoras:
                 logger.debug(f"❌ {masseira.nome}: quantidade {quantidade_alocada:.2f}g fora dos limites [{masseira.capacidade_gramas_min}-{masseira.capacidade_gramas_max}]g")
                 continue
             
-            # Verifica compatibilidade de parâmetros com ocupações existentes do mesmo item
-            if not self._verificar_compatibilidade_parametros(masseira, id_item, velocidades, tipo_mistura, inicio_tentativa, fim_tentativa):
-                logger.debug(f"❌ {masseira.nome}: parâmetros incompatíveis com ocupações existentes do item {id_item}")
+            # Verifica compatibilidade de parâmetros com ocupações existentes da mesma atividade
+            if not self._verificar_compatibilidade_parametros(masseira, id_atividade, velocidades, tipo_mistura, inicio_tentativa, fim_tentativa):
+                logger.debug(f"❌ {masseira.nome}: parâmetros incompatíveis com ocupações existentes da atividade {id_atividade}")
                 continue
             
             # Tenta adicionar a ocupação (validação dinâmica de capacidade interna)
@@ -675,10 +682,11 @@ class GestorMisturadoras:
         """
         NOVA IMPLEMENTAÇÃO: Tenta alocação distribuída usando algoritmos otimizados.
         Aplica verificação prévia de viabilidade e algoritmos de distribuição inteligente.
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         # Fase 1: Verificação de viabilidade OTIMIZADA
         viavel, motivo = self._verificar_viabilidade_quantidade(
-            atividade, quantidade_alocada, id_item, inicio_tentativa, fim_tentativa
+            atividade, quantidade_alocada, id_atividade, inicio_tentativa, fim_tentativa
         )
         
         if not viavel:
@@ -689,9 +697,9 @@ class GestorMisturadoras:
         masseiras_com_capacidade = []
         
         for masseira in masseiras_ordenadas:
-            # Verifica disponibilidade para o item específico
-            if not masseira.esta_disponivel_para_item(inicio_tentativa, fim_tentativa, id_item):
-                logger.debug(f"❌ {masseira.nome}: ocupada por item diferente")
+            # Verifica disponibilidade para a atividade específica
+            if not masseira.esta_disponivel_para_atividade(inicio_tentativa, fim_tentativa, id_atividade):
+                logger.debug(f"❌ {masseira.nome}: ocupada por atividade diferente")
                 continue
             
             # Obter configurações técnicas
@@ -704,19 +712,19 @@ class GestorMisturadoras:
                 continue
             
             # Verifica compatibilidade de parâmetros
-            if not self._verificar_compatibilidade_parametros(masseira, id_item, velocidades, tipo_mistura, inicio_tentativa, fim_tentativa):
+            if not self._verificar_compatibilidade_parametros(masseira, id_atividade, velocidades, tipo_mistura, inicio_tentativa, fim_tentativa):
                 logger.debug(f"❌ {masseira.nome}: parâmetros incompatíveis")
                 continue
             
-            # Calcula capacidade disponível real para o item específico
-            capacidade_disponivel = masseira.obter_capacidade_disponivel_item(
-                id_item, inicio_tentativa, fim_tentativa
+            # Calcula capacidade disponível real para a atividade específica
+            capacidade_disponivel = masseira.obter_capacidade_disponivel_atividade(
+                id_atividade, inicio_tentativa, fim_tentativa
             )
             
             # Deve ter pelo menos capacidade mínima disponível
             if capacidade_disponivel >= masseira.capacidade_gramas_min:
                 masseiras_com_capacidade.append((masseira, capacidade_disponivel, velocidades, tipo_mistura))
-                logger.debug(f"🔍 {masseira.nome}: {capacidade_disponivel:.2f}g disponível para item {id_item}")
+                logger.debug(f"🔍 {masseira.nome}: {capacidade_disponivel:.2f}g disponível para atividade {id_atividade}")
 
         if not masseiras_com_capacidade:
             logger.debug("❌ Nenhuma masseira com capacidade mínima disponível")
@@ -737,7 +745,7 @@ class GestorMisturadoras:
         
         if sucesso:
             masseiras_alocadas = [m for m, _, _, _ in distribuicao]
-            logger.debug(f"✅ Alocação múltipla otimizada: {len(masseiras_alocadas)} masseiras para item {id_item}")
+            logger.debug(f"✅ Alocação múltipla otimizada: {len(masseiras_alocadas)} masseiras para atividade {id_atividade}")
             return masseiras_alocadas, inicio_tentativa, fim_tentativa
         
         return None
@@ -772,7 +780,7 @@ class GestorMisturadoras:
                     return False
                 
                 alocacoes_realizadas.append(masseira)
-                logger.info(f"🔹 Alocado {quantidade:.2f}g na {masseira.nome}")
+                logger.info(f"📹 Alocado {quantidade:.2f}g na {masseira.nome}")
             
             return True
             
@@ -797,6 +805,7 @@ class GestorMisturadoras:
         """
         Aloca masseiras com validação prévia DE QUANTIDADE apenas.
         Outras validações serão implementadas gradualmente.
+        MODIFICADO: Usa id_atividade para agrupamento em vez de id_item
         """
         # Validações básicas
         if quantidade_alocada <= 0:
@@ -806,7 +815,7 @@ class GestorMisturadoras:
         # Obter IDs
         id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
         
-        logger.info(f"🎯 Alocação com validação de quantidade: {quantidade_alocada:.2f}g")
+        logger.info(f"🎯 Alocação com validação de quantidade: {quantidade_alocada:.2f}g para atividade {id_atividade}")
 
         # 🚀 VALIDAÇÃO PRÉVIA DE QUANTIDADE APENAS
         try:
@@ -821,9 +830,6 @@ class GestorMisturadoras:
 
         # ✅ QUANTIDADE OK - PROSSEGUIR COM BACKWARD SCHEDULING NORMAL
         logger.info("✅ Validação de quantidade passou. Iniciando backward scheduling...")
-        
-        # RESTO DO CÓDIGO PERMANECE IGUAL
-        # (todo o backward scheduling normal continua funcionando)
         
         duracao = atividade.duracao
         masseiras_ordenadas = self._ordenar_por_fip(atividade)
@@ -964,22 +970,23 @@ class GestorMisturadoras:
         self,
         inicio: datetime,
         fim: datetime,
-        id_item: Optional[int] = None,
+        id_atividade: Optional[int] = None,
         quantidade: Optional[float] = None
     ) -> List[Masseira]:
         """
-        Verifica quais masseiras estão disponíveis no período para um item específico.
+        Verifica quais masseiras estão disponíveis no período para uma atividade específica.
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         disponiveis = []
         
         for masseira in self.masseiras:
-            if id_item is not None:
-                if masseira.esta_disponivel_para_item(inicio, fim, id_item):
+            if id_atividade is not None:
+                if masseira.esta_disponivel_para_atividade(inicio, fim, id_atividade):
                     if quantidade is None:
                         disponiveis.append(masseira)
                     else:
                         # Verifica se pode adicionar a quantidade especificada
-                        if masseira.validar_nova_ocupacao_item(id_item, quantidade, inicio, fim):
+                        if masseira.validar_nova_ocupacao_atividade(id_atividade, quantidade, inicio, fim):
                             disponiveis.append(masseira)
             else:
                 # Comportamento original para compatibilidade
@@ -989,25 +996,26 @@ class GestorMisturadoras:
         
         return disponiveis
 
-    def obter_utilizacao_por_item(self, id_item: int) -> dict:
+    def obter_utilizacao_por_atividade(self, id_atividade: int) -> dict:
         """
-        📊 Retorna informações de utilização de um item específico em todas as masseiras.
+        📊 Retorna informações de utilização de uma atividade específica em todas as masseiras.
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         utilizacao = {}
         
         for masseira in self.masseiras:
-            ocupacoes_item = [
-                oc for oc in masseira.ocupacoes if oc[3] == id_item
+            ocupacoes_atividade = [
+                oc for oc in masseira.ocupacoes if oc[2] == id_atividade
             ]
             
-            if ocupacoes_item:
-                quantidade_total = sum(oc[4] for oc in ocupacoes_item)
-                periodo_inicio = min(oc[7] for oc in ocupacoes_item)
-                periodo_fim = max(oc[8] for oc in ocupacoes_item)
+            if ocupacoes_atividade:
+                quantidade_total = sum(oc[4] for oc in ocupacoes_atividade)
+                periodo_inicio = min(oc[7] for oc in ocupacoes_atividade)
+                periodo_fim = max(oc[8] for oc in ocupacoes_atividade)
                 
                 utilizacao[masseira.nome] = {
                     'quantidade_total': quantidade_total,
-                    'num_ocupacoes': len(ocupacoes_item),
+                    'num_ocupacoes': len(ocupacoes_atividade),
                     'periodo_inicio': periodo_inicio.strftime('%H:%M'),
                     'periodo_fim': periodo_fim.strftime('%H:%M'),
                     'ocupacoes': [
@@ -1018,30 +1026,31 @@ class GestorMisturadoras:
                             'inicio': oc[7].strftime('%H:%M'),
                             'fim': oc[8].strftime('%H:%M')
                         }
-                        for oc in ocupacoes_item
+                        for oc in ocupacoes_atividade
                     ]
                 }
         
         return utilizacao
 
-    def calcular_pico_utilizacao_item(self, id_item: int) -> dict:
+    def calcular_pico_utilizacao_atividade(self, id_atividade: int) -> dict:
         """
-        📈 Calcula o pico de utilização de um item específico em cada masseira.
+        📈 Calcula o pico de utilização de uma atividade específica em cada masseira.
+        MODIFICADO: Usa id_atividade em vez de id_item
         """
         picos = {}
         
         for masseira in self.masseiras:
-            ocupacoes_item = [oc for oc in masseira.ocupacoes if oc[3] == id_item]
+            ocupacoes_atividade = [oc for oc in masseira.ocupacoes if oc[2] == id_atividade]
             
-            if not ocupacoes_item:
+            if not ocupacoes_atividade:
                 continue
                 
             # Usa método da própria masseira para calcular pico
-            periodo_inicio = min(oc[7] for oc in ocupacoes_item)
-            periodo_fim = max(oc[8] for oc in ocupacoes_item)
+            periodo_inicio = min(oc[7] for oc in ocupacoes_atividade)
+            periodo_fim = max(oc[8] for oc in ocupacoes_atividade)
             
-            pico_quantidade = masseira.obter_quantidade_maxima_item_periodo(
-                id_item, periodo_inicio, periodo_fim
+            pico_quantidade = masseira.obter_quantidade_maxima_atividade_periodo(
+                id_atividade, periodo_inicio, periodo_fim
             )
             
             if pico_quantidade > 0:
@@ -1168,7 +1177,7 @@ class GestorMisturadoras:
             },
             "especificidades_masseiras": [
                 "Verificação de parâmetros técnicos (velocidades, tipo mistura)",
-                "Sobreposição flexível para mesmo id_item",
+                "Sobreposição flexível para mesma id_atividade (MODIFICADO)",
                 "Compatibilidade de parâmetros em ocupações simultâneas",
                 "Backward scheduling otimizado com busca exaustiva"
             ]
@@ -1212,8 +1221,8 @@ class GestorMisturadoras:
                 "velocidades": list(velocidades_utilizadas),
                 "tipos_mistura": list(tipos_mistura_utilizados)
             },
-            "sobreposicao_mesmo_item_ativa": True,
+            "sobreposicao_mesmo_atividade_ativa": True,  # MODIFICADO: agora por atividade
             "sistema_otimizado": True,
-            "versao": "2.0 - Otimizada com Early Exit para Masseiras",
+            "versao": "2.1 - Otimizada com Agrupamento por Atividade",  # MODIFICADO
             "timestamp": datetime.now().isoformat()
         }

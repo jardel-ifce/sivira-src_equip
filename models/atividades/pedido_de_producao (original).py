@@ -663,13 +663,13 @@ class PedidoDeProducao:
         """
         VERSÃO CORRIGIDA: Executa atividades com agendamento temporal em cascata.
         
-        NOVA FUNCIONALIDADE: Executa SUBPRODUTOS diretamente quando solicitados pelo usuário,
-        mesmo sem PRODUTO principal.
+        CORREÇÃO PRINCIPAL: Subprodutos agora terminam exatamente quando a primeira 
+        atividade do produto começa (timing perfeito).
         
-        ESTRATÉGIA:
-        1. Se há PRODUTO: Executa produto primeiro, depois subprodutos sincronizados
-        2. Se há apenas SUBPRODUTOS: Executa subprodutos diretamente
-        3. Garante que qualquer tipo de pedido seja executado
+        NOVA ESTRATÉGIA:
+        1. Executa PRODUTO primeiro para capturar horário real de início
+        2. Usa esse horário como fim_jornada para os SUBPRODUTOS
+        3. Garante sincronização perfeita
         """
         total_atividades = len(self.atividades_modulares)
         logger.info(
@@ -681,79 +681,22 @@ class PedidoDeProducao:
             return
         
         try:
-            # NOVA ESTRATÉGIA: Verificar que tipos de atividades temos
-            atividades_produto = [
-                a for a in self.atividades_modulares 
-                if a.tipo_item == TipoItem.PRODUTO
-            ]
-            atividades_subproduto = [
-                a for a in self.atividades_modulares 
-                if a.tipo_item == TipoItem.SUBPRODUTO
-            ]
+            # NOVA ESTRATÉGIA: Executar PRODUTO primeiro, depois SUBPRODUTOS
+            inicio_real_produto = self._executar_produto_e_capturar_inicio()
             
-            logger.info(
-                f"Composição do pedido: {len(atividades_produto)} PRODUTO(s), "
-                f"{len(atividades_subproduto)} SUBPRODUTO(s)"
-            )
-            
-            # CENÁRIO 1: Há atividades de PRODUTO - Execução em cascata tradicional
-            if atividades_produto:
-                logger.info("CENÁRIO: Execução em cascata (PRODUTO + SUBPRODUTOS)")
-                inicio_real_produto = self._executar_produto_e_capturar_inicio()
-                
-                # Executar SUBPRODUTOS com timing perfeito
-                if inicio_real_produto and atividades_subproduto:
-                    self._executar_subprodutos_com_timing_perfeito(inicio_real_produto)
-                elif not inicio_real_produto:
-                    logger.warning("Produto não foi executado, não é possível sincronizar subprodutos")
-            
-            # CENÁRIO 2: Apenas SUBPRODUTOS - Execução direta
-            elif atividades_subproduto:
-                logger.info("CENÁRIO: Execução direta de SUBPRODUTOS (sem PRODUTO principal)")
-                logger.info(
-                    f"Executando {len(atividades_subproduto)} atividades de SUBPRODUTO "
-                    f"diretamente até {self.fim_jornada.strftime('%H:%M')}"
-                )
-                
-                # Agrupar subprodutos por dependência
-                grupos_subprodutos = self._agrupar_subprodutos_por_dependencia(atividades_subproduto)
-                
-                # Executar cada grupo para terminar no fim da jornada
-                for grupo_nome, atividades_grupo in grupos_subprodutos.items():
-                    logger.info(
-                        f"Executando grupo SUBPRODUTO '{grupo_nome}': {len(atividades_grupo)} atividades "
-                        f"→ terminando às {self.fim_jornada.strftime('%H:%M')}"
-                    )
-                    
-                    try:
-                        self._executar_grupo_backward_scheduling(
-                            atividades_grupo, 
-                            self.fim_jornada,  # Usar fim da jornada como deadline
-                            f'SUBPRODUTO_DIRETO_{grupo_nome}'
-                        )
-                        
-                        logger.info(f"Grupo SUBPRODUTO '{grupo_nome}' executado com sucesso!")
-                        
-                    except Exception as e:
-                        logger.error(f"Falha no grupo SUBPRODUTO '{grupo_nome}': {e}")
-                        raise RuntimeError(
-                            f"FALHA NA EXECUÇÃO DIRETA: Subproduto '{grupo_nome}' falhou: {e}"
-                        )
-            
-            # CENÁRIO 3: Nenhuma atividade reconhecida
+            # Executar SUBPRODUTOS com timing perfeito
+            if inicio_real_produto:
+                self._executar_subprodutos_com_timing_perfeito(inicio_real_produto)
             else:
-                logger.warning(
-                    f"Nenhuma atividade de PRODUTO ou SUBPRODUTO encontrada no pedido {self.id_pedido}"
-                )
-                return
+                logger.info("Nenhuma atividade de produto para sincronizar subprodutos")
             
             logger.info(
-                f"Pedido {self.id_pedido} executado com sucesso! "
+                f"Pedido {self.id_pedido} executado com sucesso em CASCATA CORRIGIDA! "
                 f"Total de atividades executadas: {len(self.atividades_executadas)}"
             )
             
         except Exception as e:
-            logger.error(f"Falha na execução do pedido {self.id_pedido}: {e}")
+            logger.error(f"Falha na execução em cascata do pedido {self.id_pedido}: {e}")
             
             # CANCELAMENTO EM CASCATA
             self._cancelar_pedido_completo(str(e))

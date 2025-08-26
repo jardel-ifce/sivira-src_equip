@@ -75,7 +75,7 @@ class FormatadorTimingLimpo:
         if equipamentos_envolvidos:
             log_formatado += "🔧 Equipamentos envolvidos:\n"
             for equip in equipamentos_envolvidos:
-                log_formatado += f"   • {equip.get('nome', 'N/A')} ({equip.get('tipo', 'N/A')}) - "
+                log_formatado += f"   • {equip.get('nome', 'N/A')} ({equip.get('tipo', 'N/A')})\n"
             log_formatado += "\n"
         
         # Sugestões

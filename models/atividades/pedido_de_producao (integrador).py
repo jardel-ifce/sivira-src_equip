@@ -65,6 +65,8 @@ class PedidoDeProducao:
     """
     Classe principal para gerenciar um pedido de produção.
     Coordena a criação e execução de atividades modulares com verificação inteligente de estoque.
+    
+    MODIFICADO: Implementa consolidação de subprodutos entre pedidos.
     CORRIGIDO: Implementa cancelamento em cascata se atividades do PRODUTO falharem.
     CORRIGIDO: Sincronização perfeita entre produto e subprodutos.
     
@@ -73,6 +75,12 @@ class PedidoDeProducao:
     - Detecta erros de tempo dentro de atividades (INTRA-ATIVIDADE via AtividadeModular)
     - Registra logs estruturados para ambos os tipos
     - Cancela pedidos com problemas temporais críticos
+    
+    SISTEMA DE CONSOLIDAÇÃO:
+    - Suporte à consolidação opcional de subprodutos compartilhados
+    - Sistema de pedidos "mestre" e "dependente" para lotes consolidados
+    - Recálculo automático de durações baseado em quantidades consolidadas
+    - Rastreamento completo de lotes consolidados
     """
     
     def __init__(
@@ -85,7 +93,8 @@ class PedidoDeProducao:
         inicio_jornada: datetime,
         fim_jornada: datetime,
         todos_funcionarios: Optional[List[Funcionario]] = None,
-        gestor_almoxarifado: Optional[GestorAlmoxarifado] = None
+        gestor_almoxarifado: Optional[GestorAlmoxarifado] = None,
+        consolidar_subprodutos: bool = False  # ← NOVO PARÂMETRO
     ):
         # =============================================================================
         #                           IDENTIFICAÇÃO
@@ -126,14 +135,21 @@ class PedidoDeProducao:
         self.gestor_almoxarifado = gestor_almoxarifado
         
         # =============================================================================
-        #                    CONTROLE DE EXECUÇÃO - NOVO
+        #                    CONTROLE DE EXECUÇÃO
         # =============================================================================
         self.atividades_executadas = []  # Atividades já executadas com sucesso
         self.pedido_cancelado = False   # Flag para indicar se pedido foi cancelado
         
-        # Log de inicialização
+        # =============================================================================
+        #                    CONSOLIDAÇÃO DE SUBPRODUTOS - NOVO
+        # =============================================================================
+        self.consolidar_subprodutos = consolidar_subprodutos
+        self.lotes_consolidados = {}  # {id_subproduto: quantidade_total ou 0 se já processado}
+        
+        # Log de inicialização modificado
+        consolidacao_status = "COM consolidação" if consolidar_subprodutos else "sem consolidação"
         logger.info(
-            f"Criando pedido {self.id_pedido} da ordem {self.id_ordem} | "
+            f"Criando pedido {self.id_pedido} da ordem {self.id_ordem} ({consolidacao_status}) | "
             f"Produto: {self.id_produto} ({self.tipo_item.name}) | "
             f"Quantidade: {self.quantidade} | "
             f"Período: {self.inicio_jornada.strftime('%d/%m %H:%M')} - {self.fim_jornada.strftime('%d/%m %H:%M')}"
@@ -369,6 +385,7 @@ class PedidoDeProducao:
     def criar_atividades_modulares_necessarias(self):
         """
         Cria todas as atividades modulares necessárias baseadas na ficha técnica.
+        MODIFICADO: Considera consolidação de subprodutos.
         CORRIGIDO: Verifica se atividades do PRODUTO foram criadas com sucesso.
         Se nenhuma atividade do PRODUTO for criada, cancela o pedido inteiro.
         """
@@ -416,7 +433,7 @@ class PedidoDeProducao:
 
     def _criar_atividades_recursivas(self, ficha_modular: FichaTecnicaModular):
         """
-        VERSÃO COM DEBUG: Cria atividades de forma recursiva para produtos e subprodutos.
+        VERSÃO MODIFICADA: Cria atividades de forma recursiva considerando consolidação.
         """
         try:
             # DEBUG - Início criação atividades recursivas
@@ -426,7 +443,8 @@ class PedidoDeProducao:
                 item_nome=getattr(ficha_modular, 'nome', f'item_{ficha_modular.id_item}'),
                 dados={
                     "tipo_item": ficha_modular.tipo_item.value,
-                    "quantidade_requerida": ficha_modular.quantidade_requerida
+                    "quantidade_requerida": ficha_modular.quantidade_requerida,
+                    "consolidacao_habilitada": self.consolidar_subprodutos  # ← NOVO LOG
                 }
             )
             
@@ -434,6 +452,64 @@ class PedidoDeProducao:
                 f"Analisando necessidade de produção para ID {ficha_modular.id_item} "
                 f"({ficha_modular.tipo_item.name}) - Quantidade: {ficha_modular.quantidade_requerida}"
             )
+            
+            # ============================================================================
+            #                    NOVA LÓGICA DE CONSOLIDAÇÃO
+            # ============================================================================
+            
+            # VERIFICAÇÃO PRIORITÁRIA: Se é subproduto e consolidação está ativa
+            if (self.consolidar_subprodutos and 
+                ficha_modular.tipo_item == TipoItem.SUBPRODUTO and
+                ficha_modular.id_item in self.lotes_consolidados):
+                
+                quantidade_lote = self.lotes_consolidados[ficha_modular.id_item]
+                
+                if quantidade_lote == 0:
+                    # Este subproduto já foi processado em outro pedido (pedido dependente)
+                    logger.info(
+                        f"SUBPRODUTO {ficha_modular.id_item} já processado em lote consolidado por outro pedido. "
+                        f"Pulando criação de atividades individuais."
+                    )
+                    
+                    debug_atividades.log(
+                        categoria="SUBPRODUTO_CONSOLIDADO_SKIPADO",
+                        item_id=ficha_modular.id_item,
+                        item_nome=getattr(ficha_modular, 'nome', f'item_{ficha_modular.id_item}'),
+                        dados={
+                            "motivo": "Já processado em lote consolidado",
+                            "quantidade_original": ficha_modular.quantidade_requerida,
+                            "pedido_dependente": True
+                        }
+                    )
+                    return
+                    
+                elif quantidade_lote > ficha_modular.quantidade_requerida:
+                    # Este pedido é o "mestre" e vai produzir para múltiplos pedidos
+                    logger.info(
+                        f"SUBPRODUTO {ficha_modular.id_item} será produzido em LOTE CONSOLIDADO. "
+                        f"Quantidade original: {ficha_modular.quantidade_requerida}, "
+                        f"Quantidade do lote: {quantidade_lote}"
+                    )
+                    
+                    debug_atividades.log(
+                        categoria="SUBPRODUTO_LOTE_MESTRE",
+                        item_id=ficha_modular.id_item,
+                        item_nome=getattr(ficha_modular, 'nome', f'item_{ficha_modular.id_item}'),
+                        dados={
+                            "quantidade_original": ficha_modular.quantidade_requerida,
+                            "quantidade_lote": quantidade_lote,
+                            "pedido_mestre": True,
+                            "economia_estimada": f"{quantidade_lote - ficha_modular.quantidade_requerida} unidades extras"
+                        }
+                    )
+                    
+                    # ← CORREÇÃO CRÍTICA: Ajustar quantidade da ficha técnica para o lote consolidado
+                    ficha_modular_consolidada = self._criar_ficha_consolidada(ficha_modular, quantidade_lote)
+                    ficha_modular = ficha_modular_consolidada
+
+            # ============================================================================
+            #                    LÓGICA ORIGINAL (continuação)
+            # ============================================================================
             
             # NOVA LÓGICA: Verificação de estoque baseada no tipo de item e política
             
@@ -482,7 +558,8 @@ class PedidoDeProducao:
                 dados={
                     "tipo_item": ficha_modular.tipo_item.value,
                     "deve_produzir": deve_produzir,
-                    "motivo": "PRODUTO_SEMPRE_PRODUZ" if ficha_modular.tipo_item == TipoItem.PRODUTO else "VERIFICACAO_ESTOQUE"
+                    "motivo": "PRODUTO_SEMPRE_PRODUZ" if ficha_modular.tipo_item == TipoItem.PRODUTO else "VERIFICACAO_ESTOQUE",
+                    "quantidade_final": ficha_modular.quantidade_requerida
                 }
             )
             
@@ -495,6 +572,10 @@ class PedidoDeProducao:
                     dados={"motivo": "Estoque suficiente disponível"}
                 )
                 return
+            
+            # ============================================================================
+            #                    CONTINUAÇÃO DA LÓGICA ORIGINAL
+            # ============================================================================
             
             # PRODUÇÃO NECESSÁRIA: Buscar e criar atividades para o item atual
             atividades = buscar_atividades_por_id_item(ficha_modular.id_item, ficha_modular.tipo_item)
@@ -538,7 +619,12 @@ class PedidoDeProducao:
                         dados={
                             "id_atividade": dados_atividade["id_atividade"],
                             "nome_atividade": dados_atividade.get("nome_atividade", "N/A"),
-                            "quantidade": ficha_modular.quantidade_requerida
+                            "quantidade": ficha_modular.quantidade_requerida,
+                            "eh_lote_consolidado": (
+                                self.consolidar_subprodutos and 
+                                ficha_modular.id_item in self.lotes_consolidados and
+                                self.lotes_consolidados[ficha_modular.id_item] > 0
+                            )
                         }
                     )
                     
@@ -547,7 +633,7 @@ class PedidoDeProducao:
                         id=len(self.atividades_modulares) + 1,
                         id_atividade=dados_atividade["id_atividade"],
                         tipo_item=ficha_modular.tipo_item,
-                        quantidade=ficha_modular.quantidade_requerida,  # Quantidade total (sem subtração)
+                        quantidade=ficha_modular.quantidade_requerida,  # ← Quantidade ajustada se consolidado
                         id_pedido=self.id_pedido,
                         id_produto=self.id_produto,
                         funcionarios_elegiveis=self.funcionarios_elegiveis,
@@ -555,6 +641,17 @@ class PedidoDeProducao:
                         dados=dados_atividade,
                         nome_item=nome_item_final
                     )
+                    
+                    # ← NOVA PROPRIEDADE: Marcar se atividade veio de lote consolidado
+                    if (self.consolidar_subprodutos and 
+                        ficha_modular.id_item in self.lotes_consolidados and
+                        self.lotes_consolidados[ficha_modular.id_item] > 0):
+                        atividade.eh_lote_consolidado = True
+                        atividade.quantidade_original_pedido = self.quantidade  # Quantidade original deste pedido
+                        atividade.ids_pedidos_beneficiados = self._obter_pedidos_beneficiados(ficha_modular.id_item)
+                    else:
+                        atividade.eh_lote_consolidado = False
+                    
                     self.atividades_modulares.append(atividade)
                     atividades_criadas += 1
                     
@@ -579,13 +676,25 @@ class PedidoDeProducao:
                 item_nome=nome_item_para_log,
                 dados={
                     "total_atividades_criadas": atividades_criadas,
-                    "quantidade_total": ficha_modular.quantidade_requerida
+                    "quantidade_total": ficha_modular.quantidade_requerida,
+                    "eh_lote_consolidado": (
+                        self.consolidar_subprodutos and 
+                        ficha_modular.id_item in self.lotes_consolidados and
+                        self.lotes_consolidados[ficha_modular.id_item] > 0
+                    )
                 }
             )
             
+            tipo_producao = "LOTE CONSOLIDADO" if (
+                self.consolidar_subprodutos and 
+                ficha_modular.id_item in self.lotes_consolidados and
+                self.lotes_consolidados[ficha_modular.id_item] > 0
+            ) else "INDIVIDUAL"
+            
             logger.info(
                 f"{atividades_criadas} atividades criadas para ID {ficha_modular.id_item} "
-                f"({ficha_modular.tipo_item.name}) - Quantidade total: {ficha_modular.quantidade_requerida}"
+                f"({ficha_modular.tipo_item.name}) - Produção: {tipo_producao} - "
+                f"Quantidade total: {ficha_modular.quantidade_requerida}"
             )
 
         except Exception as e:
@@ -600,8 +709,7 @@ class PedidoDeProducao:
             )
             logger.error(f"Erro ao processar item {ficha_modular.id_item}: {e}")
 
-        # PROCESSAR SUBPRODUTOS RECURSIVAMENTE (independente se o item atual será produzido)
-        # Os subprodutos podem ter estoque próprio e devem ser avaliados individualmente
+        # PROCESSAR SUBPRODUTOS RECURSIVAMENTE (lógica original mantida)
         try:
             estimativas = ficha_modular.calcular_quantidade_itens()
             subprodutos_processados = 0
@@ -655,6 +763,46 @@ class PedidoDeProducao:
             )
             logger.error(f"Erro ao processar subprodutos: {e}")
 
+    def _criar_ficha_consolidada(self, ficha_original: FichaTecnicaModular, quantidade_consolidada: float):
+        """
+        NOVO MÉTODO: Cria uma cópia da ficha técnica com quantidade ajustada para lote consolidado.
+        CRÍTICO: Recalcula duração das atividades baseado na nova quantidade (pode mudar de faixa).
+        """
+        try:
+            # Criar nova instância com quantidade ajustada
+            ficha_consolidada = FichaTecnicaModular(
+                dados_ficha_tecnica=ficha_original.dados_ficha_tecnica,
+                quantidade_requerida=quantidade_consolidada
+            )
+            
+            # Preservar propriedades importantes da original
+            if hasattr(ficha_original, 'nome'):
+                ficha_consolidada.nome = ficha_original.nome
+            if hasattr(ficha_original, 'descricao'):
+                ficha_consolidada.descricao = ficha_original.descricao
+                
+            logger.info(
+                f"Ficha técnica consolidada criada para item {ficha_original.id_item}: "
+                f"{ficha_original.quantidade_requerida} → {quantidade_consolidada} unidades. "
+                f"IMPORTANTE: Durações das atividades serão recalculadas automaticamente."
+            )
+            
+            return ficha_consolidada
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar ficha consolidada: {e}")
+            # Em caso de erro, retornar a ficha original
+            return ficha_original
+
+    def _obter_pedidos_beneficiados(self, id_subproduto: int) -> List[int]:
+        """
+        NOVO MÉTODO: Obtém lista de pedidos que serão beneficiados por este lote consolidado.
+        Esta informação deveria vir do ConsolidadorSimples, mas por simplicidade,
+        retornamos apenas o pedido atual.
+        """
+        # TODO: Em implementação mais robusta, isso deveria vir do contexto de consolidação
+        return [self.id_pedido]
+
     # =============================================================================
     #                        EXECUÇÃO DAS ATIVIDADES - CORRIGIDA
     # =============================================================================
@@ -663,13 +811,13 @@ class PedidoDeProducao:
         """
         VERSÃO CORRIGIDA: Executa atividades com agendamento temporal em cascata.
         
-        NOVA FUNCIONALIDADE: Executa SUBPRODUTOS diretamente quando solicitados pelo usuário,
-        mesmo sem PRODUTO principal.
+        CORREÇÃO PRINCIPAL: Subprodutos agora terminam exatamente quando a primeira 
+        atividade do produto começa (timing perfeito).
         
-        ESTRATÉGIA:
-        1. Se há PRODUTO: Executa produto primeiro, depois subprodutos sincronizados
-        2. Se há apenas SUBPRODUTOS: Executa subprodutos diretamente
-        3. Garante que qualquer tipo de pedido seja executado
+        NOVA ESTRATÉGIA:
+        1. Executa PRODUTO primeiro para capturar horário real de início
+        2. Usa esse horário como fim_jornada para os SUBPRODUTOS
+        3. Garante sincronização perfeita
         """
         total_atividades = len(self.atividades_modulares)
         logger.info(
@@ -681,79 +829,22 @@ class PedidoDeProducao:
             return
         
         try:
-            # NOVA ESTRATÉGIA: Verificar que tipos de atividades temos
-            atividades_produto = [
-                a for a in self.atividades_modulares 
-                if a.tipo_item == TipoItem.PRODUTO
-            ]
-            atividades_subproduto = [
-                a for a in self.atividades_modulares 
-                if a.tipo_item == TipoItem.SUBPRODUTO
-            ]
+            # NOVA ESTRATÉGIA: Executar PRODUTO primeiro, depois SUBPRODUTOS
+            inicio_real_produto = self._executar_produto_e_capturar_inicio()
             
-            logger.info(
-                f"Composição do pedido: {len(atividades_produto)} PRODUTO(s), "
-                f"{len(atividades_subproduto)} SUBPRODUTO(s)"
-            )
-            
-            # CENÁRIO 1: Há atividades de PRODUTO - Execução em cascata tradicional
-            if atividades_produto:
-                logger.info("CENÁRIO: Execução em cascata (PRODUTO + SUBPRODUTOS)")
-                inicio_real_produto = self._executar_produto_e_capturar_inicio()
-                
-                # Executar SUBPRODUTOS com timing perfeito
-                if inicio_real_produto and atividades_subproduto:
-                    self._executar_subprodutos_com_timing_perfeito(inicio_real_produto)
-                elif not inicio_real_produto:
-                    logger.warning("Produto não foi executado, não é possível sincronizar subprodutos")
-            
-            # CENÁRIO 2: Apenas SUBPRODUTOS - Execução direta
-            elif atividades_subproduto:
-                logger.info("CENÁRIO: Execução direta de SUBPRODUTOS (sem PRODUTO principal)")
-                logger.info(
-                    f"Executando {len(atividades_subproduto)} atividades de SUBPRODUTO "
-                    f"diretamente até {self.fim_jornada.strftime('%H:%M')}"
-                )
-                
-                # Agrupar subprodutos por dependência
-                grupos_subprodutos = self._agrupar_subprodutos_por_dependencia(atividades_subproduto)
-                
-                # Executar cada grupo para terminar no fim da jornada
-                for grupo_nome, atividades_grupo in grupos_subprodutos.items():
-                    logger.info(
-                        f"Executando grupo SUBPRODUTO '{grupo_nome}': {len(atividades_grupo)} atividades "
-                        f"→ terminando às {self.fim_jornada.strftime('%H:%M')}"
-                    )
-                    
-                    try:
-                        self._executar_grupo_backward_scheduling(
-                            atividades_grupo, 
-                            self.fim_jornada,  # Usar fim da jornada como deadline
-                            f'SUBPRODUTO_DIRETO_{grupo_nome}'
-                        )
-                        
-                        logger.info(f"Grupo SUBPRODUTO '{grupo_nome}' executado com sucesso!")
-                        
-                    except Exception as e:
-                        logger.error(f"Falha no grupo SUBPRODUTO '{grupo_nome}': {e}")
-                        raise RuntimeError(
-                            f"FALHA NA EXECUÇÃO DIRETA: Subproduto '{grupo_nome}' falhou: {e}"
-                        )
-            
-            # CENÁRIO 3: Nenhuma atividade reconhecida
+            # Executar SUBPRODUTOS com timing perfeito
+            if inicio_real_produto:
+                self._executar_subprodutos_com_timing_perfeito(inicio_real_produto)
             else:
-                logger.warning(
-                    f"Nenhuma atividade de PRODUTO ou SUBPRODUTO encontrada no pedido {self.id_pedido}"
-                )
-                return
+                logger.info("Nenhuma atividade de produto para sincronizar subprodutos")
             
             logger.info(
-                f"Pedido {self.id_pedido} executado com sucesso! "
+                f"Pedido {self.id_pedido} executado com sucesso em CASCATA CORRIGIDA! "
                 f"Total de atividades executadas: {len(self.atividades_executadas)}"
             )
             
         except Exception as e:
-            logger.error(f"Falha na execução do pedido {self.id_pedido}: {e}")
+            logger.error(f"Falha na execução em cascata do pedido {self.id_pedido}: {e}")
             
             # CANCELAMENTO EM CASCATA
             self._cancelar_pedido_completo(str(e))
@@ -1391,7 +1482,9 @@ class PedidoDeProducao:
             logger.warning(f"Ficha técnica não montada para pedido {self.id_pedido}")
 
     def obter_resumo_pedido(self) -> dict:
-        """Retorna um resumo completo do pedido"""
+        """
+        VERSÃO MODIFICADA: Adiciona informações sobre consolidação no resumo.
+        """
         atividades_alocadas = sum(1 for a in self.atividades_modulares if a.alocada)
         
         tempos = []
@@ -1404,6 +1497,12 @@ class PedidoDeProducao:
         
         inicio_real = min(tempos) if tempos else None
         fim_real = max(tempos) if tempos else None
+        
+        # ← NOVAS INFORMAÇÕES DE CONSOLIDAÇÃO
+        atividades_consolidadas = sum(
+            1 for a in self.atividades_modulares 
+            if hasattr(a, 'eh_lote_consolidado') and a.eh_lote_consolidado
+        )
         
         return {
             "id_pedido": self.id_pedido,
@@ -1422,7 +1521,13 @@ class PedidoDeProducao:
             "equipamentos_alocados": len(self.equipamentos_alocados_no_pedido),
             "tem_gestor_almoxarifado": self.gestor_almoxarifado is not None,
             "ficha_tecnica_montada": self.ficha_tecnica_modular is not None,
-            "pedido_cancelado": self.pedido_cancelado
+            "pedido_cancelado": self.pedido_cancelado,
+            # ← NOVAS INFORMAÇÕES DE CONSOLIDAÇÃO
+            "consolidacao_habilitada": self.consolidar_subprodutos,
+            "lotes_consolidados": dict(self.lotes_consolidados),
+            "atividades_consolidadas": atividades_consolidadas,
+            "eh_pedido_mestre": any(qtd > 0 for qtd in self.lotes_consolidados.values()),
+            "eh_pedido_dependente": any(qtd == 0 for qtd in self.lotes_consolidados.values())
         }
 
     def _filtrar_funcionarios_por_item(self, id_item: int) -> List[Funcionario]:
@@ -1450,11 +1555,23 @@ class PedidoDeProducao:
         return debug_atividades.salvar_logs()
 
     def __repr__(self):
+        """VERSÃO MODIFICADA: Inclui status de consolidação na representação."""
         status = f"{len([a for a in self.atividades_modulares if a.alocada])}/{len(self.atividades_modulares)} alocadas"
         cancelado = " [CANCELADO]" if self.pedido_cancelado else ""
+        
+        # ← NOVA INFORMAÇÃO DE CONSOLIDAÇÃO
+        consolidacao = ""
+        if self.consolidar_subprodutos:
+            if any(qtd > 0 for qtd in self.lotes_consolidados.values()):
+                consolidacao = " [MESTRE]"
+            elif any(qtd == 0 for qtd in self.lotes_consolidados.values()):
+                consolidacao = " [DEPENDENTE]"
+            else:
+                consolidacao = " [CONSOLIDAÇÃO]"
+        
         return (
             f"<PedidoDeProducao {self.id_pedido} | "
             f"Produto {self.id_produto} | "
             f"Qtd {self.quantidade} | "
-            f"Atividades: {status}{cancelado}>"
+            f"Atividades: {status}{consolidacao}{cancelado}>"
         )
