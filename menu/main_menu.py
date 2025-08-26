@@ -666,6 +666,13 @@ class MenuPrincipal:
                 try:
                     equipamentos_liberados = self._liberar_equipamentos_pedido(id_ordem, id_pedido)
                     
+                    # Apaga o log do pedido cancelado
+                    import os
+                    log_path = f"logs/equipamentos/ordem: {id_ordem} | pedido: {id_pedido}.log"
+                    if os.path.exists(log_path):
+                        os.remove(log_path)
+                        print(f"\n📄 Log do pedido removido: {log_path}")
+                    
                     print(f"\n✅ Ordem {id_ordem} | Pedido {id_pedido} cancelado com sucesso!")
                     
                     if equipamentos_liberados > 0:

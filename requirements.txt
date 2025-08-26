@@ -1,0 +1,36 @@
+# SIVIRA - Sistema Integrado de Vendas, Inventário e Relatórios Automatizados
+# Dependências do módulo src_equip (Equipamentos e Produção)
+
+# Otimização e Programação Linear
+ortools>=9.5.0
+
+# Processamento de dados
+numpy>=1.24.0
+pandas>=1.5.0
+
+# Visualização (para relatórios e gráficos)
+matplotlib>=3.6.0
+
+# Manipulação de datas e tempo
+python-dateutil>=2.8.0
+
+# Validação de dados
+pydantic>=1.10.0
+
+# Utilitários de sistema
+psutil>=5.9.0
+
+# Desenvolvimento e testes
+pytest>=7.2.0
+pytest-mock>=3.10.0
+
+# Documentação
+Sphinx>=5.0.0
+
+# Formatação de código
+black>=22.0.0
+isort>=5.12.0
+
+# Análise de código
+flake8>=6.0.0
+mypy>=1.0.0
