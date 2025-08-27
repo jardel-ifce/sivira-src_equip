@@ -617,7 +617,8 @@ class GestorMisturadoras:
         atividade: "AtividadeModular",
         quantidade_alocada: float,
         masseiras_ordenadas: List[Masseira],
-        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int
+        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int,
+        bypass_capacidade: bool = False
     ) -> Optional[Tuple[Masseira, datetime, datetime]]:
         """
         Tenta alocar toda a quantidade em uma única masseira.
@@ -629,20 +630,26 @@ class GestorMisturadoras:
             velocidades = self._obter_velocidades_para_masseira(atividade, masseira)
             tipo_mistura = self._obter_tipo_mistura_para_masseira(atividade, masseira)
             
-            # Verifica disponibilidade básica (parâmetros técnicos)
-            if not masseira.verificar_disponibilidade(quantidade_alocada, velocidades, tipo_mistura):
-                logger.debug(f"❌ {masseira.nome}: não atende requisitos técnicos")
-                continue
+            # Verifica disponibilidade básica (parâmetros técnicos) - BYPASS
+            if not bypass_capacidade:
+                if not masseira.verificar_disponibilidade(quantidade_alocada, velocidades, tipo_mistura):
+                    logger.debug(f"❌ {masseira.nome}: não atende requisitos técnicos")
+                    continue
+            else:
+                logger.debug(f"🔧 BYPASS: Pulando validação de disponibilidade técnica para {masseira.nome}")
             
             # Verifica se pode alocar considerando mesma atividade (intervalos flexíveis)
             if not masseira.esta_disponivel_para_atividade(inicio_tentativa, fim_tentativa, id_atividade):
                 logger.debug(f"❌ {masseira.nome}: ocupada por atividade diferente")
                 continue
             
-            # Verifica se quantidade individual está nos limites da masseira
-            if not (masseira.capacidade_gramas_min <= quantidade_alocada <= masseira.capacidade_gramas_max):
-                logger.debug(f"❌ {masseira.nome}: quantidade {quantidade_alocada:.2f}g fora dos limites [{masseira.capacidade_gramas_min}-{masseira.capacidade_gramas_max}]g")
-                continue
+            # Verifica se quantidade individual está nos limites da masseira - BYPASS
+            if not bypass_capacidade:
+                if not (masseira.capacidade_gramas_min <= quantidade_alocada <= masseira.capacidade_gramas_max):
+                    logger.debug(f"❌ {masseira.nome}: quantidade {quantidade_alocada:.2f}g fora dos limites [{masseira.capacidade_gramas_min}-{masseira.capacidade_gramas_max}]g")
+                    continue
+            else:
+                logger.debug(f"🔧 BYPASS: Pulando validação de limites de capacidade para {masseira.nome}")
             
             # Verifica compatibilidade de parâmetros com ocupações existentes da mesma atividade
             if not self._verificar_compatibilidade_parametros(masseira, id_atividade, velocidades, tipo_mistura, inicio_tentativa, fim_tentativa):
@@ -677,21 +684,25 @@ class GestorMisturadoras:
         atividade: "AtividadeModular",
         quantidade_alocada: float,
         masseiras_ordenadas: List[Masseira],
-        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int
+        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int,
+        bypass_capacidade: bool = False
     ) -> Optional[Tuple[List[Masseira], datetime, datetime]]:
         """
         NOVA IMPLEMENTAÇÃO: Tenta alocação distribuída usando algoritmos otimizados.
         Aplica verificação prévia de viabilidade e algoritmos de distribuição inteligente.
         MODIFICADO: Usa id_atividade em vez de id_item
         """
-        # Fase 1: Verificação de viabilidade OTIMIZADA
-        viavel, motivo = self._verificar_viabilidade_quantidade(
-            atividade, quantidade_alocada, id_atividade, inicio_tentativa, fim_tentativa
-        )
-        
-        if not viavel:
-            logger.debug(f"❌ Inviável no horário {inicio_tentativa.strftime('%H:%M')}: {motivo}")
-            return None
+        # Fase 1: Verificação de viabilidade OTIMIZADA - BYPASS
+        if not bypass_capacidade:
+            viavel, motivo = self._verificar_viabilidade_quantidade(
+                atividade, quantidade_alocada, id_atividade, inicio_tentativa, fim_tentativa
+            )
+            
+            if not viavel:
+                logger.debug(f"❌ Inviável no horário {inicio_tentativa.strftime('%H:%M')}: {motivo}")
+                return None
+        else:
+            logger.debug(f"🔧 BYPASS: Pulando verificação de viabilidade de quantidade")
 
         # Fase 2: Coleta masseiras com configurações técnicas válidas
         masseiras_com_capacidade = []
@@ -706,10 +717,13 @@ class GestorMisturadoras:
             velocidades = self._obter_velocidades_para_masseira(atividade, masseira)
             tipo_mistura = self._obter_tipo_mistura_para_masseira(atividade, masseira)
             
-            # Verifica compatibilidade técnica com quantidade mínima
-            if not masseira.verificar_disponibilidade(masseira.capacidade_gramas_min, velocidades, tipo_mistura):
-                logger.debug(f"❌ {masseira.nome}: não atende requisitos técnicos mínimos")
-                continue
+            # Verifica compatibilidade técnica com quantidade mínima - BYPASS
+            if not bypass_capacidade:
+                if not masseira.verificar_disponibilidade(masseira.capacidade_gramas_min, velocidades, tipo_mistura):
+                    logger.debug(f"❌ {masseira.nome}: não atende requisitos técnicos mínimos")
+                    continue
+            else:
+                logger.debug(f"🔧 BYPASS: Pulando validação técnica mínima para {masseira.nome}")
             
             # Verifica compatibilidade de parâmetros
             if not self._verificar_compatibilidade_parametros(masseira, id_atividade, velocidades, tipo_mistura, inicio_tentativa, fim_tentativa):
@@ -800,6 +814,7 @@ class GestorMisturadoras:
         fim: datetime,
         atividade: "AtividadeModular",
         quantidade_alocada: float,
+        bypass_capacidade: bool = False,
         **kwargs
     ) -> Tuple[bool, Optional[List[Masseira]], Optional[datetime], Optional[datetime]]:
         """
@@ -817,16 +832,19 @@ class GestorMisturadoras:
         
         logger.info(f"🎯 Alocação com validação de quantidade: {quantidade_alocada:.2f}g para atividade {id_atividade}")
 
-        # 🚀 VALIDAÇÃO PRÉVIA DE QUANTIDADE APENAS
-        try:
-            self._validar_quantidade_estrutural(atividade, quantidade_alocada)
-        except (QuantityBelowMinimumError, QuantityExceedsMaximumError) as e:
-            logger.error(
-                f"🚫 VALIDAÇÃO DE QUANTIDADE FALHOU para atividade {id_atividade}. "
-                f"CANCELANDO sem backward scheduling. Erro: {e.error_type}"
-            )
-            # Re-lançar exceção para ser tratada pela AtividadeModular
-            raise e
+        # 🚀 VALIDAÇÃO PRÉVIA DE QUANTIDADE (COM BYPASS)
+        if bypass_capacidade:
+            logger.info(f"🔧 BYPASS: Pulando validação de capacidade para atividade {id_atividade}")
+        else:
+            try:
+                self._validar_quantidade_estrutural(atividade, quantidade_alocada)
+            except (QuantityBelowMinimumError, QuantityExceedsMaximumError) as e:
+                logger.error(
+                    f"🚫 VALIDAÇÃO DE QUANTIDADE FALHOU para atividade {id_atividade}. "
+                    f"CANCELANDO sem backward scheduling. Erro: {e.error_type}"
+                )
+                # Re-lançar exceção para ser tratada pela AtividadeModular
+                raise e
 
         # ✅ QUANTIDADE OK - PROSSEGUIR COM BACKWARD SCHEDULING NORMAL
         logger.info("✅ Validação de quantidade passou. Iniciando backward scheduling...")
@@ -844,7 +862,8 @@ class GestorMisturadoras:
             sucesso_individual = self._tentar_alocacao_individual(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_alocada, masseiras_ordenadas,
-                id_ordem, id_pedido, id_atividade, id_item
+                id_ordem, id_pedido, id_atividade, id_item,
+                bypass_capacidade
             )
             
             if sucesso_individual:
@@ -863,7 +882,8 @@ class GestorMisturadoras:
             sucesso_distribuido = self._tentar_alocacao_distribuida_otimizada(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_alocada, masseiras_ordenadas,
-                id_ordem, id_pedido, id_atividade, id_item
+                id_ordem, id_pedido, id_atividade, id_item,
+                bypass_capacidade
             )
             
             if sucesso_distribuido:

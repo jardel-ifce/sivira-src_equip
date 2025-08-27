@@ -51,6 +51,7 @@ class AtividadeModular:
         self.quantidade = quantidade
         self.peso_unitario = kwargs.get("peso_unitario")
         self.alocada = False
+        self.bypass_capacidade = None  # Set de TipoEquipamento para ignorar validação de capacidade
         
         # Log inicial mais informativo
         logger.info(
@@ -156,6 +157,20 @@ class AtividadeModular:
         except Exception as e:
             logger.error(f"❌ Erro ao configurar funcionários para atividade {self.id_atividade}: {e}")
             raise
+    
+    def configurar_bypass_capacidade(self, tipos_bypass):
+        """
+        Configura quais tipos de equipamentos devem ignorar validação de capacidade.
+        
+        Args:
+            tipos_bypass: Set de TipoEquipamento para ignorar, ou None para validar todos
+        """
+        self.bypass_capacidade = tipos_bypass
+        if tipos_bypass:
+            logger.info(f"🔧 BYPASS: Atividade {self.id_atividade} ({self.nome_atividade}) configurada para ignorar validação de capacidade")
+            logger.info(f"📋 Tipos com bypass: {[tipo.name for tipo in tipos_bypass]}")
+        else:
+            logger.info(f"✅ VALIDAÇÃO: Atividade {self.id_atividade} ({self.nome_atividade}) configurada para validar capacidade normalmente")
 
     def _configurar_equipamentos(self):
         """Configura todos os parâmetros relacionados aos equipamentos"""
@@ -906,40 +921,79 @@ class AtividadeModular:
 
     # Métodos específicos de alocação por tipo de equipamento
     def _alocar_camara(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.REFRIGERACAO_CONGELAMENTO)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_bancada(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.BANCADAS)
+        return gestor.alocar(inicio, fim, self, bypass_capacidade=bypass)
     
     def _alocar_fogao(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.FOGOES)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_batedeira(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.BATEDEIRAS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_balanca(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.BALANCAS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_forno(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.FORNOS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_misturadora(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.MISTURADORAS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_misturadora_com_coccao(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.MISTURADORAS_COM_COCCAO)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_armario_fermentacao(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.ARMARIOS_PARA_FERMENTACAO)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_modeladora(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.MODELADORAS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_divisora_boleadora(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.DIVISORAS_BOLEADORAS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_embaladora(self, gestor, inicio, fim, **kwargs): 
-        return gestor.alocar(inicio, fim, self, self.quantidade)
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.EMBALADORAS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+    
+    def _deve_ignorar_tipo(self, tipo_equipamento):
+        """
+        Verifica se deve ignorar validação de capacidade para um tipo específico de equipamento.
+        
+        Args:
+            tipo_equipamento: TipoEquipamento a ser verificado
+            
+        Returns:
+            bool: True se deve ignorar, False caso contrário
+        """
+        if self.bypass_capacidade and tipo_equipamento in self.bypass_capacidade:
+            logger.info(f"🔧 BYPASS ativo para {tipo_equipamento.name} na atividade {self.id_atividade}")
+            return True
+        return False
 
     # =============================================================================
     #                           UTILITÁRIOS

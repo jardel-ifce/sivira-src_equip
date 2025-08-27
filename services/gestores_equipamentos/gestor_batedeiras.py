@@ -323,6 +323,7 @@ class GestorBatedeiras:
         fim: datetime,
         atividade: "AtividadeModular",
         quantidade_produto: int,
+        bypass_capacidade: bool = False,
         **kwargs
     ) -> Tuple[bool, Optional[Batedeiras], Optional[datetime], Optional[datetime]]:
         """

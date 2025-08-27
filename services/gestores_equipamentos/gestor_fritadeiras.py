@@ -450,7 +450,8 @@ class GestorFritadeiras:
         self,
         inicio: datetime,
         fim: datetime,
-        atividade: "AtividadeModular"
+        atividade: "AtividadeModular",
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, Optional[List[Fritadeira]], Optional[datetime], Optional[datetime]]:
         """
         🚀 VERSÃO OTIMIZADA: Alocação otimizada com verificação prévia de viabilidade e distribuição inteligente.

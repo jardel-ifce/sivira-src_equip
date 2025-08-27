@@ -130,6 +130,7 @@ class PedidoDeProducao:
         # =============================================================================
         self.atividades_executadas = []  # Atividades já executadas com sucesso
         self.pedido_cancelado = False   # Flag para indicar se pedido foi cancelado
+        self.bypass_capacidade = None  # Set de TipoEquipamento para ignorar validação de capacidade
         
         # Log de inicialização
         logger.info(
@@ -138,6 +139,20 @@ class PedidoDeProducao:
             f"Quantidade: {self.quantidade} | "
             f"Período: {self.inicio_jornada.strftime('%d/%m %H:%M')} - {self.fim_jornada.strftime('%d/%m %H:%M')}"
         )
+    
+    def configurar_bypass_capacidade(self, tipos_bypass):
+        """
+        Configura quais tipos de equipamentos devem ignorar validação de capacidade.
+        
+        Args:
+            tipos_bypass: Set de TipoEquipamento para ignorar, ou None para validar todos
+        """
+        self.bypass_capacidade = tipos_bypass
+        if tipos_bypass:
+            logger.info(f"🔧 BYPASS: Pedido {self.id_pedido} configurado para ignorar validação de capacidade")
+            logger.info(f"📋 Tipos com bypass: {[tipo.name for tipo in tipos_bypass]}")
+        else:
+            logger.info(f"✅ VALIDAÇÃO: Pedido {self.id_pedido} configurado para validar capacidade normalmente")
 
     # =============================================================================
     #                        MONTAGEM DA ESTRUTURA
@@ -555,6 +570,11 @@ class PedidoDeProducao:
                         dados=dados_atividade,
                         nome_item=nome_item_final
                     )
+                    
+                    # Configura bypass de capacidade na atividade se habilitado no pedido
+                    if self.bypass_capacidade:
+                        atividade.configurar_bypass_capacidade(self.bypass_capacidade)
+                        logger.info(f"🔧 BYPASS propagado para atividade {atividade.id_atividade} ({atividade.nome_item})")
                     self.atividades_modulares.append(atividade)
                     atividades_criadas += 1
                     

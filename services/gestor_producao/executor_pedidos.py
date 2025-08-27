@@ -31,6 +31,7 @@ class ExecutorPedidos:
         """
         self.configuracoes = configuracoes or {}
         self.estatisticas_execucao = {}
+        self.bypass_capacidade = None  # Configuração de bypass de validação de capacidade
         print("⚡ ExecutorPedidos criado")
     
     def executar_sequencial(self, pedidos_convertidos: List) -> bool:
@@ -67,6 +68,29 @@ class ExecutorPedidos:
                 print(f"\n📋 Executando pedido {idx}/{len(pedidos_convertidos)}: {pedido.id_pedido}")
                 print(f"   📦 Item: {pedido.id_produto} (Quantidade: {pedido.quantidade})")
                 print(f"   ⏰ Prazo: {pedido.fim_jornada.strftime('%d/%m %H:%M')}")
+                
+                # DEBUG: Estado do bypass
+                print(f"   🔍 DEBUG BYPASS: self.bypass_capacidade = {self.bypass_capacidade}")
+                print(f"   🔍 DEBUG BYPASS: pedido.id_ordem = {pedido.id_ordem}, pedido.id_pedido = {pedido.id_pedido}")
+                
+                # Configura bypass de capacidade no pedido se especificado
+                if self.bypass_capacidade and pedido.id_ordem in self.bypass_capacidade:
+                    if pedido.id_pedido in self.bypass_capacidade[pedido.id_ordem]:
+                        tipos_bypass = self.bypass_capacidade[pedido.id_ordem][pedido.id_pedido]
+                        print(f"   🔧 BYPASS: Configurando bypass para Ordem {pedido.id_ordem} | Pedido {pedido.id_pedido}")
+                        print(f"   📋 Tipos de equipamentos com bypass: {len(tipos_bypass)} tipo(s)")
+                        for tipo in tipos_bypass:
+                            print(f"      • {tipo.name}")
+                        pedido.configurar_bypass_capacidade(tipos_bypass)
+                    else:
+                        print(f"   ❌ DEBUG: Pedido {pedido.id_pedido} não encontrado na ordem {pedido.id_ordem}")
+                        pedido.configurar_bypass_capacidade(None)
+                else:
+                    if not self.bypass_capacidade:
+                        print(f"   ❌ DEBUG: self.bypass_capacidade é None/vazio")
+                    else:
+                        print(f"   ❌ DEBUG: Ordem {pedido.id_ordem} não encontrada no bypass_capacidade")
+                    pedido.configurar_bypass_capacidade(None)
                 
                 try:
                     # ✅ CORREÇÃO: PASSO 1 - Gerar comanda ANTES da execução
@@ -210,6 +234,29 @@ class ExecutorPedidos:
             for idx, pedido in enumerate(pedidos_convertidos, 1):
                 print(f"\n📋 Executando pedido otimizado {idx}/{len(pedidos_convertidos)}: {pedido.id_pedido}")
                 
+                # DEBUG: Estado do bypass
+                print(f"   🔍 DEBUG BYPASS: self.bypass_capacidade = {self.bypass_capacidade}")
+                print(f"   🔍 DEBUG BYPASS: pedido.id_ordem = {pedido.id_ordem}, pedido.id_pedido = {pedido.id_pedido}")
+                
+                # Configura bypass de capacidade no pedido se especificado
+                if self.bypass_capacidade and pedido.id_ordem in self.bypass_capacidade:
+                    if pedido.id_pedido in self.bypass_capacidade[pedido.id_ordem]:
+                        tipos_bypass = self.bypass_capacidade[pedido.id_ordem][pedido.id_pedido]
+                        print(f"   🔧 BYPASS: Configurando bypass para Ordem {pedido.id_ordem} | Pedido {pedido.id_pedido}")
+                        print(f"   📋 Tipos de equipamentos com bypass: {len(tipos_bypass)} tipo(s)")
+                        for tipo in tipos_bypass:
+                            print(f"      • {tipo.name}")
+                        pedido.configurar_bypass_capacidade(tipos_bypass)
+                    else:
+                        print(f"   ❌ DEBUG: Pedido {pedido.id_pedido} não encontrado na ordem {pedido.id_ordem}")
+                        pedido.configurar_bypass_capacidade(None)
+                else:
+                    if not self.bypass_capacidade:
+                        print(f"   ❌ DEBUG: self.bypass_capacidade é None/vazio")
+                    else:
+                        print(f"   ❌ DEBUG: Ordem {pedido.id_ordem} não encontrada no bypass_capacidade")
+                    pedido.configurar_bypass_capacidade(None)
+                
                 try:
                     # ✅ CORREÇÃO: PASSO 1 - Gerar comanda ANTES da execução
                     if gerar_comanda_reserva:
@@ -351,6 +398,24 @@ class ExecutorPedidos:
             Dict: Estatísticas
         """
         return self.estatisticas_execucao.copy()
+    
+    def configurar_bypass_capacidade(self, configuracao_bypass: Dict) -> None:
+        """
+        Configura bypass de validação de capacidade.
+        
+        Args:
+            configuracao_bypass: Dict no formato {ordem_id: {pedido_id: {TipoEquipamento}}}
+        """
+        print(f"🔍 DEBUG configurar_bypass_capacidade: configuracao_bypass = {configuracao_bypass}")
+        self.bypass_capacidade = configuracao_bypass
+        if configuracao_bypass:
+            print(f"🔧 Bypass de capacidade configurado para {len(configuracao_bypass)} ordem(ns)")
+            for ordem_id, pedidos_dict in configuracao_bypass.items():
+                print(f"   📦 Ordem {ordem_id}: {len(pedidos_dict)} pedido(s)")
+                for pedido_id, tipos in pedidos_dict.items():
+                    print(f"      • Pedido {pedido_id}: {len(tipos) if tipos else 0} tipo(s) de equipamento com bypass")
+        else:
+            print("✅ Nenhum bypass de capacidade configurado")
     
     def limpar_estatisticas(self) -> None:
         """Limpa estatísticas acumuladas"""

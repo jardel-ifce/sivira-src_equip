@@ -294,7 +294,8 @@ class GestorBalancas:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        quantidade_gramas: float | None = None
+        quantidade_gramas: float | None = None,
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, Optional[BalancaDigital], Optional[datetime], Optional[datetime]]:
         """
         Alocação otimizada simplificada - sem verificações temporais.

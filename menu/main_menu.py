@@ -818,9 +818,13 @@ class MenuPrincipal:
         confirmacao = input(f"\n🎯 Confirma execução da Ordem {ordem_atual}? (s/N): ").strip().lower()
         
         if confirmacao in ['s', 'sim', 'y', 'yes']:
+            # Pergunta sobre validação de capacidade
+            ignorar_capacidade = self._perguntar_validacao_capacidade(pedidos_ordem)
+            print(f"🔍 DEBUG main_menu: ignorar_capacidade retornado = {ignorar_capacidade}")
+            
             try:
                 # Executa apenas pedidos da ordem atual
-                sucesso = self.gestor_producao.executar_sequencial(pedidos_ordem)
+                sucesso = self.gestor_producao.executar_sequencial(pedidos_ordem, ignorar_capacidade=ignorar_capacidade)
                 
                 # 🆕 SEMPRE incrementa ordem após tentativa de execução (sucesso ou falha)
                 nova_ordem = self.gerenciador.incrementar_ordem()
@@ -902,9 +906,12 @@ class MenuPrincipal:
         confirmacao = input(f"\n🎯 Confirma execução otimizada da Ordem {ordem_atual}? (s/N): ").strip().lower()
         
         if confirmacao in ['s', 'sim', 'y', 'yes']:
+            # Pergunta sobre validação de capacidade
+            ignorar_capacidade = self._perguntar_validacao_capacidade(pedidos_ordem)
+            
             try:
                 # Executa apenas pedidos da ordem atual
-                sucesso = self.gestor_producao.executar_otimizado(pedidos_ordem)
+                sucesso = self.gestor_producao.executar_otimizado(pedidos_ordem, ignorar_capacidade=ignorar_capacidade)
                 
                 # 🆕 SEMPRE incrementa ordem após tentativa de execução (sucesso ou falha)
                 nova_ordem = self.gerenciador.incrementar_ordem()
@@ -946,6 +953,413 @@ class MenuPrincipal:
             print("\nℹ️ Execução cancelada.")
         
         input("\nPressione Enter para continuar...")
+    
+    def _perguntar_validacao_capacidade(self, pedidos_ordem):
+        """
+        Pergunta ao usuário se deseja ignorar validação de capacidade.
+        Retorna dicionário com configurações de bypass ou None para validação normal.
+        """
+        print("\n" + "─" * 50)
+        print("🔧 CONFIGURAÇÃO DE VALIDAÇÃO DE CAPACIDADE")
+        print("─" * 50)
+        print("Deseja validar capacidade dos equipamentos durante execução?")
+        print()
+        print("📋 Opções:")
+        print("1️⃣  SIM - Validar capacidade normalmente (padrão)")
+        print("2️⃣  NÃO - Escolher pedidos específicos para ignorar validação")
+        print("3️⃣  NUNCA - Ignorar validação para TODOS os pedidos")
+        print()
+        
+        opcao = input("🎯 Escolha (1/2/3): ").strip()
+        
+        if opcao == "1" or opcao == "":
+            print("✅ Validação de capacidade: ATIVADA para todos os pedidos")
+            return None  # Validação normal
+        
+        elif opcao == "3":
+            print("⚠️ Configurando bypass para TODOS os pedidos")
+            # Configura bypass para todos os pedidos
+            bypass_config = {}
+            for pedido in pedidos_ordem:
+                equipamentos_bypass = self._selecionar_equipamentos_bypass(pedido)
+                if equipamentos_bypass:
+                    if pedido.id_ordem not in bypass_config:
+                        bypass_config[pedido.id_ordem] = {}
+                    bypass_config[pedido.id_ordem][pedido.id_pedido] = equipamentos_bypass
+            return bypass_config
+        
+        elif opcao == "2":
+            return self._selecionar_pedidos_ignorar_capacidade(pedidos_ordem)
+        
+        else:
+            print("⚡ Opção inválida. Usando validação padrão.")
+            return None
+    
+    def _selecionar_pedidos_ignorar_capacidade(self, pedidos_ordem):
+        """
+        Permite ao usuário selecionar pedidos específicos e tipos de equipamentos para ignorar validação de capacidade.
+        """
+        print("\n📋 PEDIDOS DISPONÍVEIS:")
+        print("─" * 30)
+        for pedido in pedidos_ordem:
+            print(f"   {pedido.id_ordem} {pedido.id_pedido}: {pedido.nome_item} ({pedido.quantidade} uni)")
+        print()
+        
+        print("💡 INSTRUÇÕES:")
+        print("   • Digite pares 'ordem pedido' separados por espaço")
+        print("   • Exemplo: '1 1' para Ordem 1 Pedido 1")
+        print("   • Exemplo: '1 1 1 2 2 1' para múltiplos pedidos")
+        print("   • Digite '*' para configurar bypass para TODOS os pedidos")
+        print("   • Digite apenas Enter para configurar TODOS os pedidos individualmente")
+        print()
+        
+        entrada = input("🎯 Pedidos para configurar bypass: ").strip()
+        
+        if not entrada:
+            print("⚠️ Nenhum pedido especificado - configurando bypass para TODOS os pedidos")
+            # Se não especificar pedidos, configura bypass para todos
+            bypass_config = {}
+            for pedido in pedidos_ordem:
+                equipamentos_bypass = self._selecionar_equipamentos_bypass(pedido)
+                if equipamentos_bypass:
+                    if pedido.id_ordem not in bypass_config:
+                        bypass_config[pedido.id_ordem] = {}
+                    bypass_config[pedido.id_ordem][pedido.id_pedido] = equipamentos_bypass
+            return bypass_config
+        
+        if entrada == "*":
+            print("⚠️ Configurando bypass para TODOS os pedidos")
+            # Configura bypass para todos
+            bypass_config = {}
+            for pedido in pedidos_ordem:
+                equipamentos_bypass = self._selecionar_equipamentos_bypass(pedido)
+                if equipamentos_bypass:
+                    if pedido.id_ordem not in bypass_config:
+                        bypass_config[pedido.id_ordem] = {}
+                    bypass_config[pedido.id_ordem][pedido.id_pedido] = equipamentos_bypass
+            return bypass_config
+        
+        try:
+            # Processa entrada manual
+            partes = entrada.split()
+            if len(partes) % 2 != 0:
+                print("⚡ Formato inválido! Use pares 'ordem pedido'")
+                return None
+            
+            bypass_config = {}
+            pedidos_selecionados = []
+            
+            for i in range(0, len(partes), 2):
+                ordem = int(partes[i])
+                pedido_id = int(partes[i + 1])
+                pedidos_selecionados.append((ordem, pedido_id))
+            
+            # Valida se pedidos existem
+            pedidos_validos = [(p.id_ordem, p.id_pedido) for p in pedidos_ordem]
+            pedidos_invalidos = [p for p in pedidos_selecionados if p not in pedidos_validos]
+            
+            if pedidos_invalidos:
+                print(f"⚡ Pedidos inválidos encontrados: {pedidos_invalidos}")
+                print("⚠️ Usando validação padrão para todos")
+                return None
+            
+            # Para cada pedido selecionado, permite escolher equipamentos
+            for ordem, pedido_id in pedidos_selecionados:
+                pedido = next(p for p in pedidos_ordem if p.id_ordem == ordem and p.id_pedido == pedido_id)
+                equipamentos_bypass = self._selecionar_equipamentos_bypass(pedido)
+                
+                if equipamentos_bypass:
+                    if ordem not in bypass_config:
+                        bypass_config[ordem] = {}
+                    bypass_config[ordem][pedido_id] = equipamentos_bypass
+            
+            print(f"🔍 DEBUG _selecionar_pedidos_ignorar_capacidade: bypass_config final = {bypass_config}")
+            return bypass_config
+            
+        except ValueError:
+            print("⚡ Formato inválido! Use apenas números.")
+            return None
+        except Exception as e:
+            print(f"⚡ Erro ao processar seleção: {e}")
+            return None
+    
+    def _selecionar_equipamentos_bypass(self, pedido):
+        """
+        Permite ao usuário selecionar tipos específicos de equipamentos para ignorar validação.
+        """
+        print(f"\n🔧 CONFIGURAÇÃO DE BYPASS - Ordem {pedido.id_ordem} | Pedido {pedido.id_pedido}")
+        print(f"📦 Item: {pedido.nome_item} ({pedido.quantidade} uni)")
+        print("─" * 50)
+        
+        # Descobrir tipos de equipamentos usados nas atividades deste pedido
+        tipos_equipamentos = self._descobrir_tipos_equipamentos_pedido(pedido)
+        
+        if not tipos_equipamentos:
+            print("⚠️ Nenhum tipo de equipamento identificado para este pedido")
+            return None
+        
+        print("📋 TIPOS DE EQUIPAMENTOS USADOS NESTE PEDIDO:")
+        mapeamento_tipos = {}
+        
+        for idx, tipo_equip in enumerate(tipos_equipamentos, 1):
+            nome_amigavel = self._obter_nome_amigavel_equipamento(tipo_equip)
+            print(f"   {idx} - {nome_amigavel}")
+            mapeamento_tipos[idx] = tipo_equip
+        
+        print()
+        print("💡 INSTRUÇÕES:")
+        print("   • Digite os números dos tipos de equipamentos para ignorar validação")
+        print("   • Exemplo: '1 3' para ignorar validação nos tipos 1 e 3")
+        print("   • Digite '*' para ignorar validação em TODOS os tipos")
+        print("   • Digite apenas Enter para não ignorar nenhum tipo")
+        print()
+        
+        entrada = input("🎯 Tipos de equipamentos para ignorar: ").strip()
+        
+        if not entrada:
+            print("✅ Validação mantida para todos os tipos de equipamentos")
+            return None
+        
+        if entrada == "*":
+            print("⚠️ Bypass configurado para TODOS os tipos de equipamentos")
+            return set(tipos_equipamentos)
+        
+        try:
+            indices = [int(x) for x in entrada.split()]
+            tipos_selecionados = set()
+            
+            for indice in indices:
+                if indice in mapeamento_tipos:
+                    tipos_selecionados.add(mapeamento_tipos[indice])
+                else:
+                    print(f"⚠️ Índice inválido: {indice}")
+            
+            if tipos_selecionados:
+                print("✅ Bypass configurado para os seguintes tipos:")
+                for tipo in tipos_selecionados:
+                    nome_amigavel = self._obter_nome_amigavel_equipamento(tipo)
+                    print(f"   • {nome_amigavel}")
+                return tipos_selecionados
+            else:
+                print("⚠️ Nenhum tipo válido selecionado")
+                return None
+                
+        except ValueError:
+            print("⚡ Formato inválido! Use apenas números.")
+            return None
+        except Exception as e:
+            print(f"⚡ Erro ao processar seleção: {e}")
+            return None
+    
+    def _descobrir_tipos_equipamentos_pedido(self, pedido):
+        """
+        Descobre quais tipos de equipamentos são usados nas atividades de um pedido,
+        incluindo subprodutos que precisam ser produzidos (lógica igual ao PedidoDeProducao).
+        """
+        try:
+            from parser.carregador_json_atividades import buscar_atividades_por_id_item
+            from parser.carregador_json_fichas_tecnicas import buscar_ficha_tecnica_por_id
+            from models.ficha_tecnica.ficha_tecnica_modular import FichaTecnicaModular
+            from enums.equipamentos.tipo_equipamento import TipoEquipamento
+            from enums.producao.tipo_item import TipoItem
+            
+            # Converter string para enum se necessário
+            tipo_item_enum = TipoItem.PRODUTO if pedido.tipo_item == "PRODUTO" else TipoItem.SUBPRODUTO
+            
+            tipos_equipamentos = set()
+            
+            # Buscar ficha técnica do item principal
+            try:
+                _, dados_ficha = buscar_ficha_tecnica_por_id(pedido.id_item, tipo_item=tipo_item_enum)
+                ficha_tecnica_modular = FichaTecnicaModular(
+                    dados_ficha_tecnica=dados_ficha,
+                    quantidade_requerida=pedido.quantidade
+                )
+            except Exception as e:
+                print(f"⚠️ Erro ao carregar ficha técnica do item {pedido.id_item}: {e}")
+                return []
+            
+            # Descobrir equipamentos recursivamente
+            self._descobrir_equipamentos_recursivo(ficha_tecnica_modular, tipos_equipamentos)
+            
+            tipos_list = sorted(list(tipos_equipamentos), key=lambda x: x.name)
+            return tipos_list
+            
+        except Exception as e:
+            print(f"⚠️ Erro ao descobrir equipamentos: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
+    def _descobrir_equipamentos_recursivo(self, ficha_modular, tipos_equipamentos):
+        """
+        Descobre tipos de equipamentos recursivamente seguindo a mesma lógica do PedidoDeProducao.
+        """
+        try:
+            from parser.carregador_json_atividades import buscar_atividades_por_id_item
+            from parser.carregador_json_fichas_tecnicas import buscar_ficha_tecnica_por_id
+            from models.ficha_tecnica.ficha_tecnica_modular import FichaTecnicaModular
+            from enums.producao.tipo_item import TipoItem
+            
+            # Lógica igual ao PedidoDeProducao: 
+            # PRODUTOS sempre são produzidos, SUBPRODUTOS só se não tiverem estoque
+            if ficha_modular.tipo_item == TipoItem.PRODUTO:
+                deve_produzir = True
+            elif ficha_modular.tipo_item == TipoItem.SUBPRODUTO:
+                # Verificar estoque do subproduto
+                deve_produzir = not self._verificar_estoque_suficiente_para_bypass(
+                    ficha_modular.id_item, 
+                    ficha_modular.quantidade_requerida
+                )
+            else:
+                deve_produzir = True
+            
+            # Se deve produzir, buscar atividades e extrair equipamentos
+            if deve_produzir:
+                atividades = buscar_atividades_por_id_item(ficha_modular.id_item, ficha_modular.tipo_item)
+                
+                if atividades:
+                    for atividade in atividades:
+                        # atividade é uma tupla (dados_item, dados_atividade)
+                        if isinstance(atividade, tuple) and len(atividade) > 1:
+                            _, dados_atividade = atividade
+                            equipamentos_elegiveis = dados_atividade.get("equipamentos_elegiveis", [])
+                        elif isinstance(atividade, dict):
+                            equipamentos_elegiveis = atividade.get("equipamentos_elegiveis", [])
+                        else:
+                            equipamentos_elegiveis = []
+                        
+                        for nome_equip in equipamentos_elegiveis:
+                            tipo = self._mapear_nome_para_tipo_equipamento(nome_equip)
+                            if tipo:
+                                tipos_equipamentos.add(tipo)
+            
+            # Processar subprodutos recursivamente (igual ao PedidoDeProducao)
+            try:
+                estimativas = ficha_modular.calcular_quantidade_itens()
+                
+                for item_dict, quantidade in estimativas:
+                    tipo = item_dict.get("tipo_item")
+                    id_ficha = item_dict.get("id_ficha_tecnica")
+
+                    if tipo == "SUBPRODUTO" and id_ficha:
+                        try:
+                            _, dados_ficha_sub = buscar_ficha_tecnica_por_id(id_ficha, TipoItem.SUBPRODUTO)
+                            ficha_sub = FichaTecnicaModular(dados_ficha_sub, quantidade)
+                            # Chamada recursiva
+                            self._descobrir_equipamentos_recursivo(ficha_sub, tipos_equipamentos)
+                        except Exception as e:
+                            print(f"⚠️ Erro ao processar subproduto {id_ficha}: {e}")
+                            continue
+                            
+            except Exception as e:
+                print(f"⚠️ Erro ao processar subprodutos do item {ficha_modular.id_item}: {e}")
+                
+        except Exception as e:
+            print(f"⚠️ Erro na descoberta recursiva do item {ficha_modular.id_item}: {e}")
+    
+    def _verificar_estoque_suficiente_para_bypass(self, id_item, quantidade):
+        """
+        Verifica se há estoque suficiente para um item.
+        Usa o gestor_almoxarifado se disponível, senão assume que precisa produzir.
+        """
+        try:
+            # Tentar acessar o gestor de almoxarifado através do configurador
+            if hasattr(self, 'configurador_ambiente') and self.configurador_ambiente:
+                gestor_almoxarifado = self.configurador_ambiente.gestor_almoxarifado
+            else:
+                # Inicializar o ambiente se necessário
+                self._inicializar_ambiente_bypass()
+                gestor_almoxarifado = getattr(self.configurador_ambiente, 'gestor_almoxarifado', None)
+            
+            if gestor_almoxarifado:
+                from datetime import datetime
+                # Usar o método correto do gestor
+                resultado = gestor_almoxarifado.verificar_disponibilidade_multiplos_itens(
+                    [(id_item, quantidade)], datetime.now().date()
+                )
+                return resultado.get(id_item, False)
+            else:
+                # Se não tem gestor, assume que precisa produzir
+                return False
+                
+        except Exception as e:
+            print(f"⚠️ Erro ao verificar estoque para item {id_item}: {e}")
+            # Em caso de erro, assume que precisa produzir
+            return False
+    
+    def _inicializar_ambiente_bypass(self):
+        """Inicializa o ambiente apenas se necessário para verificação de estoque"""
+        try:
+            if not hasattr(self, 'configurador_ambiente') or not self.configurador_ambiente:
+                from services.gestor_producao.configurador_ambiente import ConfiguradorAmbiente
+                self.configurador_ambiente = ConfiguradorAmbiente()
+                self.configurador_ambiente.inicializar_ambiente()
+        except Exception as e:
+            print(f"⚠️ Erro ao inicializar ambiente para bypass: {e}")
+    
+    def _mapear_nome_para_tipo_equipamento(self, nome_equipamento):
+        """
+        Mapeia nome do equipamento para TipoEquipamento enum.
+        """
+        try:
+            from enums.equipamentos.tipo_equipamento import TipoEquipamento
+            
+            mapeamento = {
+                'masseira': TipoEquipamento.MISTURADORAS,
+                'forno': TipoEquipamento.FORNOS,
+                'bancada': TipoEquipamento.BANCADAS,
+                'balanca_digital': TipoEquipamento.BALANCAS,
+                'divisora_de_massas': TipoEquipamento.DIVISORAS_BOLEADORAS,
+                'armario_fermentador': TipoEquipamento.ARMARIOS_PARA_FERMENTACAO,
+                'embaladora': TipoEquipamento.EMBALADORAS,
+                'batedeira_planetaria': TipoEquipamento.BATEDEIRAS,
+                'batedeira_industrial': TipoEquipamento.BATEDEIRAS,
+                'fogao': TipoEquipamento.FOGOES,
+                'fritadeira': TipoEquipamento.FRITADEIRAS,
+                'modeladora_de_paes': TipoEquipamento.MODELADORAS,
+                'modeladora_de_salgados': TipoEquipamento.MODELADORAS,
+                'camara_refrigerada': TipoEquipamento.REFRIGERACAO_CONGELAMENTO,
+                'freezer': TipoEquipamento.REFRIGERACAO_CONGELAMENTO,
+                'hot_mix': TipoEquipamento.MISTURADORAS_COM_COCCAO,
+            }
+            
+            # Remove sufixo numérico para extrair tipo base (ex: "balanca_digital_1" -> "balanca_digital")
+            nome_base = nome_equipamento.lower()
+            if '_' in nome_base and nome_base.split('_')[-1].isdigit():
+                nome_base = '_'.join(nome_base.split('_')[:-1])
+            
+            return mapeamento.get(nome_base)
+            
+        except Exception as e:
+            print(f"⚠️ Erro no mapeamento de {nome_equipamento}: {e}")
+            return None
+    
+    def _obter_nome_amigavel_equipamento(self, tipo_equipamento):
+        """
+        Converte TipoEquipamento enum para nome amigável.
+        """
+        try:
+            nomes_amigaveis = {
+                'MISTURADORAS': 'Misturadoras/Masseiras',
+                'FORNOS': 'Fornos',
+                'BANCADAS': 'Bancadas',
+                'BALANCAS': 'Balanças Digitais',
+                'DIVISORAS_BOLEADORAS': 'Divisoras/Boleadoras',
+                'ARMARIOS_PARA_FERMENTACAO': 'Armários de Fermentação',
+                'EMBALADORAS': 'Embaladoras',
+                'BATEDEIRAS': 'Batedeiras',
+                'FOGOES': 'Fogões',
+                'FRITADEIRAS': 'Fritadeiras',
+                'MODELADORAS': 'Modeladoras',
+                'REFRIGERACAO_CONGELAMENTO': 'Refrigeração/Congelamento',
+                'MISTURADORAS_COM_COCCAO': 'Misturadoras com Cocção',
+            }
+            
+            return nomes_amigaveis.get(tipo_equipamento.name, tipo_equipamento.name)
+            
+        except Exception as e:
+            return str(tipo_equipamento)
     
     # =========================================================================
     #                              SISTEMA

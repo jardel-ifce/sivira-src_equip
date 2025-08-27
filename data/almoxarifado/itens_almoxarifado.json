@@ -756,7 +756,7 @@
     "unidade_medida": "GRAMAS",
     "estoque_min": 1000,
     "estoque_max": 3000,
-    "estoque_atual": 0,
+    "estoque_atual": 30000,
     "consumo_diario_estimado": 0,
     "reabastecimento_previsto_em": "2025-06-29",
     "reservas_futuras": [],

@@ -300,7 +300,8 @@ class GestorFornos:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        quantidade: float
+        quantidade: float,
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, Optional[List['Forno']], Optional[datetime], Optional[datetime]]:
         """
         🔥 ÚNICO método público - Interface para AtividadeModular.

@@ -491,6 +491,7 @@ class GestorDivisorasBoleadoras:
         fim: datetime,
         atividade: "AtividadeModular",
         quantidade_produto: int,
+        bypass_capacidade: bool = False,
         **kwargs
     ) -> Tuple[bool, Optional[List[DivisoraDeMassas]], Optional[datetime], Optional[datetime]]:
         """

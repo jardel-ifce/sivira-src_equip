@@ -686,6 +686,7 @@ class GestorMisturadorasComCoccao:
         fim: datetime,
         atividade: "AtividadeModular",
         quantidade_gramas: int,
+        bypass_capacidade: bool = False,
         **kwargs
     ) -> Tuple[bool, Optional[List[HotMix]], Optional[datetime], Optional[datetime]]:
         """

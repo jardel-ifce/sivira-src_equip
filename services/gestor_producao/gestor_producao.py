@@ -62,12 +62,14 @@ class GestorProducao:
         print("🏭 GestorProducao inicializado")
         print(f"   📊 Configurações: {self.configuracoes}")
     
-    def executar_sequencial(self, pedidos: List[DadosPedidoMenu]) -> bool:
+    def executar_sequencial(self, pedidos: List[DadosPedidoMenu], ignorar_capacidade: Optional[Dict] = None) -> bool:
         """
         Executa pedidos em modo sequencial.
         
         Args:
             pedidos: Lista de pedidos do menu
+            ignorar_capacidade: Dict com configuração de bypass de validação de capacidade
+                                Formato: {ordem_id: {pedido_id1, pedido_id2, ...}}
             
         Returns:
             bool: True se sucesso, False se erro
@@ -93,7 +95,7 @@ class GestorProducao:
             
             # Executa
             inicio = datetime.now()
-            sucesso = self._executar_pedidos_sequencial(pedidos_convertidos)
+            sucesso = self._executar_pedidos_sequencial(pedidos_convertidos, ignorar_capacidade)
             fim = datetime.now()
             
             # Atualiza estatísticas
@@ -107,12 +109,14 @@ class GestorProducao:
             traceback.print_exc()
             return False
     
-    def executar_otimizado(self, pedidos: List[DadosPedidoMenu]) -> bool:
+    def executar_otimizado(self, pedidos: List[DadosPedidoMenu], ignorar_capacidade: Optional[Dict] = None) -> bool:
         """
         Executa pedidos com otimização PL.
         
         Args:
             pedidos: Lista de pedidos do menu
+            ignorar_capacidade: Dict com configuração de bypass de validação de capacidade
+                                Formato: {ordem_id: {pedido_id1, pedido_id2, ...}}
             
         Returns:
             bool: True se sucesso, False se erro
@@ -143,7 +147,7 @@ class GestorProducao:
             
             # Executa com otimização
             inicio = datetime.now()
-            sucesso = self._executar_pedidos_otimizado(pedidos_convertidos)
+            sucesso = self._executar_pedidos_otimizado(pedidos_convertidos, ignorar_capacidade)
             fim = datetime.now()
             
             # Atualiza estatísticas
@@ -286,7 +290,7 @@ class GestorProducao:
             traceback.print_exc()
             return None
     
-    def _executar_pedidos_sequencial(self, pedidos_convertidos: List) -> bool:
+    def _executar_pedidos_sequencial(self, pedidos_convertidos: List, ignorar_capacidade: Optional[Dict] = None) -> bool:
         """Executa pedidos em modo sequencial"""
         try:
             print(f"🔄 Executando {len(pedidos_convertidos)} pedido(s) sequencialmente...")
@@ -295,6 +299,11 @@ class GestorProducao:
             if not self.executor_pedidos:
                 print("❌ Executor não foi inicializado!")
                 return False
+            
+            # Configura bypass de capacidade se especificado
+            if ignorar_capacidade:
+                print("🔧 Configurando bypass de validação de capacidade...")
+                self.executor_pedidos.configurar_bypass_capacidade(ignorar_capacidade)
             
             # Usa o executor real
             sucesso = self.executor_pedidos.executar_sequencial(pedidos_convertidos)
@@ -315,7 +324,7 @@ class GestorProducao:
             traceback.print_exc()
             return False
     
-    def _executar_pedidos_otimizado(self, pedidos_convertidos: List) -> bool:
+    def _executar_pedidos_otimizado(self, pedidos_convertidos: List, ignorar_capacidade: Optional[Dict] = None) -> bool:
         """Executa pedidos com otimização PL"""
         try:
             print(f"🚀 Executando {len(pedidos_convertidos)} pedido(s) com otimização...")
@@ -324,6 +333,11 @@ class GestorProducao:
             if not self.executor_pedidos:
                 print("❌ Executor não foi inicializado!")
                 return False
+            
+            # Configura bypass de capacidade se especificado
+            if ignorar_capacidade:
+                print("🔧 Configurando bypass de validação de capacidade...")
+                self.executor_pedidos.configurar_bypass_capacidade(ignorar_capacidade)
             
             # Usa o executor real
             sucesso = self.executor_pedidos.executar_otimizado(pedidos_convertidos)

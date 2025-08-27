@@ -514,6 +514,7 @@ class GestorFogoes:
         fim: datetime,
         atividade: "AtividadeModular",
         quantidade_produto: int,
+        bypass_capacidade: bool = False,
         **kwargs
     ) -> Tuple[bool, Optional[Fogao], Optional[datetime], Optional[datetime]]:
         """

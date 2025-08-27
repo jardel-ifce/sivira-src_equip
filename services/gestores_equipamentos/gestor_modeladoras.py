@@ -84,7 +84,8 @@ class GestorModeladoras:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        quantidade_unidades: int
+        quantidade_unidades: int,
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, Optional[ItensModelados], Optional[datetime], Optional[datetime]]:
         """
         Aloca uma atividade nas modeladoras (sempre disponíveis).

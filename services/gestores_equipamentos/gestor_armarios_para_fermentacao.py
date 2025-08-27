@@ -231,7 +231,8 @@ class GestorArmariosParaFermentacao:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        quantidade: int
+        quantidade: int,
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, Optional[List[Armarios]], Optional[datetime], Optional[datetime]]:
 
         duracao = atividade.duracao
