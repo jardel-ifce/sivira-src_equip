@@ -1,0 +1,41 @@
+{
+    "id_ficha_tecnica": 1073,
+    "id_item": 1073,
+    "nome": "folhado_de_camarao",
+    "descricao": "Folhado de camarão",
+    "tipo_item": "PRODUTO",
+    "unidade_medida": "UNIDADES",
+    "peso_unitario": 100,
+    "quantidade_base": 100,
+    "perda_percentual": 0.0,
+    "politica_producao": "SOB_DEMANDA",
+    "itens": [
+      {
+        "id_item": 2004,
+        "descricao": "Massa para Folhados",
+        "nome": "massa_para_folhados",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "SOB_DEMANDA",
+        "proporcao": 100,
+        "id_ficha_tecnica": 2004
+      },
+      {
+        "id_item": 2011,
+        "descricao": "Creme de Camarão",
+        "nome": "creme_de_camarao",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "SOB_DEMANDA",
+        "proporcao": 90,
+        "id_ficha_tecnica": 2011
+      },
+      {
+        "id_item": 33,
+        "descricao": "Ovo de Galinha",
+        "nome": "ovo_de_galinha",
+        "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 10
+      }
+
+    ]
+  }

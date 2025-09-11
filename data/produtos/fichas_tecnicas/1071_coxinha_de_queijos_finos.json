@@ -1,0 +1,49 @@
+{
+    "id_ficha_tecnica": 1071,
+    "id_item": 1071,
+    "nome": "coxinha_de_queijos_finos",
+    "descricao": "Coxinha de Queijos finos",
+    "tipo_item": "PRODUTO",
+    "unidade_medida": "UNIDADES",
+    "peso_unitario": 120,
+    "quantidade_base": 100,
+    "perda_percentual": 0.0,
+    "politica_producao": "SOB_DEMANDA",
+    "itens": [
+      {
+        "id_item": 2003,
+        "descricao": "Massa para Frituras",
+        "nome": "massa_para_fritura",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "SOB_DEMANDA",
+        "proporcao": 100,
+        "id_ficha_tecnica": 2003
+      },
+      {
+        "id_item": 2010,
+        "descricao": "Creme de Queijo",
+        "nome": "creme_de_queijo",
+        "tipo_item": "SUBPRODUTO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 83.33,
+        "id_ficha_tecnica": 2010
+      },
+      {
+        "id_item": 15,
+        "descricao": "Farinha de Rosca",
+        "nome": "farinha_de_rosca",
+        "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 8.33
+      },
+      {
+        "id_item": 33,
+        "descricao": "Ovo de Galinha",
+        "nome": "ovo_de_galinha",
+        "tipo_item": "INSUMO",
+        "politica_producao": "ESTOCADO",
+        "proporcao": 8.33
+      }
+
+    ]
+  }

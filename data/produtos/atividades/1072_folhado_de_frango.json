@@ -1,0 +1,185 @@
+{
+    "id_item": 1072,
+    "nome": "folhado_frango",
+    "atividades": [
+      {
+        "id_atividade": 10721,
+        "nome": "modelagem_e_recheio_de_folhado_de_frango",
+        "tipo_atividade": "MODELAGEM_E_RECHEIO_DE_FOLHADO_DE_FRANGO",
+        "tipo_equipamento": {
+          "BANCADAS": 1,
+          "BALANCAS": 1
+        },
+        "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6", "balanca_digital_2"],
+        "tempo_maximo_de_espera": "00:00:00",
+        "fips_equipamentos": {
+          "bancada_4": 3,
+          "bancada_5": 1,
+          "bancada_6": 2,
+          "balanca_digital_2": 1
+        },
+        "configuracoes_equipamentos": {
+          "bancada_4": {
+            "fracoes_necessarias": 2,
+            "numero_operadores": 2
+          },
+          "bancada_5": {
+            "fracoes_necessarias": 4,
+            "numero_operadores": 2
+          },
+          "bancada_6": {
+            "fracoes_necessarias": 4,
+            "numero_operadores": 2
+          },
+          "balanca_digital_2": {
+            "peso_gramas": 100
+          }
+        },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "fips_profissionais_permitidos": {
+          "CONFEITEIRO": 2,
+          "AUXILIAR_DE_CONFEITEIRO": 1
+        },
+        "quantidade_funcionarios": 2,
+        "faixas": [
+          { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:10:00" },
+          { "quantidade_min": 21, "quantidade_max": 40, "duracao": "00:20:00" },
+          { "quantidade_min": 41, "quantidade_max": 60, "duracao": "00:30:00" }
+        ]
+      },
+      {
+        "id_atividade": 10722,
+        "nome": "preparacao_para_refrigeracao_de_folhado_de_frango",
+        "tipo_atividade": "PREPARACAO_PARA_REFRIGERACAO_DE_FOLHADO_DE_FRANGO",
+        "tipo_equipamento": {
+          "ARMARIOS_PARA_FERMENTACAO": 1
+        },
+        "equipamentos_elegiveis": ["armario_esqueleto_1", "armario_esqueleto_2"],
+        "tempo_maximo_de_espera": "00:00:00",
+        "fips_equipamentos": {
+          "armario_esqueleto_1": 1,
+          "armario_esqueleto_2": 2
+        },
+        "configuracoes_equipamentos": {
+          "armario_esqueleto_1": {
+            "unidades_por_nivel": 40
+          },
+          "armario_esqueleto_2": {
+            "unidades_por_nivel": 40
+          }
+        },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "fips_profissionais_permitidos": {
+          "CONFEITEIRO": 2,
+          "AUXILIAR_DE_CONFEITEIRO": 1
+        },
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
+          { "quantidade_min": 21, "quantidade_max": 40, "duracao": "00:06:00" },
+          { "quantidade_min": 41, "quantidade_max": 60, "duracao": "00:09:00" }
+        ]
+      },
+      {
+        "id_atividade": 10723,
+        "nome": "refrigeracao_de_folhado_de_frango",
+        "tipo_atividade": "REFRIGERACAO_DE_FOLHADO_DE_FRANGO",
+        "tipo_equipamento": {
+          "REFRIGERACAO_CONGELAMENTO": 1
+        },
+        "equipamentos_elegiveis": ["camara_refrigerada_1"],
+        "tempo_maximo_de_espera": "03:00:00",
+        "fips_equipamentos": {
+          "camara_refrigerada_1": 1
+        },
+        "configuracoes_equipamentos": {
+          "camara_refrigerada_1": {
+            "tipo_de_armazenamento": "NIVEIS_TELA",
+            "faixa_temperatura": 4
+          }
+        },
+        "tipos_profissionais_permitidos": [],
+        "fips_profissionais_permitidos": {},
+        "quantidade_funcionarios": 0,
+        "faixas": [
+          { "quantidade_min": 1, "quantidade_max": 20, "duracao": "01:00:00" },
+          { "quantidade_min": 21, "quantidade_max": 40, "duracao": "01:00:00" },
+          { "quantidade_min": 41, "quantidade_max": 60, "duracao": "01:00:00" }
+        ]
+      },
+      {
+        "id_atividade": 10724,
+        "nome": "preparo_de_folhado_de_frango_para_coccao",
+        "tipo_atividade": "PREPARO_DE_FOLHADO_DE_FRANGO_PARA_COCCAO",
+        "tipo_equipamento": {
+          "ARMARIOS_PARA_FERMENTACAO": 1
+        },
+        "equipamentos_elegiveis": ["armario_esqueleto_1", "armario_esqueleto_2"],
+        "tempo_maximo_de_espera": "00:00:00",
+        "fips_equipamentos": {
+          "armario_esqueleto_1": 1,
+          "armario_esqueleto_2": 2
+        },
+        "configuracoes_equipamentos": {
+          "armario_esqueleto_1": {
+            "unidades_por_nivel": 40
+           
+          },
+          "armario_esqueleto_2": {
+            "unidades_por_nivel": 40
+          }
+        },
+        "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+        "fips_profissionais_permitidos": {
+          "CONFEITEIRO": 2,
+          "AUXILIAR_DE_CONFEITEIRO": 1
+        },
+        "quantidade_funcionarios": 1,
+        "faixas": [
+          { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:04:00" },
+          { "quantidade_min": 21, "quantidade_max": 40, "duracao": "00:08:00" },
+          { "quantidade_min": 41, "quantidade_max": 60, "duracao": "00:12:00" }
+        ]
+      },
+      {
+        "id_atividade": 10725,
+        "nome": "coccao_de_folhado_de_frango",
+        "tipo_atividade": "COCCAO_DE_FOLHADO_DE_FRANGO",
+        "tipo_equipamento": {
+          "FORNOS": 1
+        },
+        "equipamentos_elegiveis": ["forno_3", "forno_4"],
+        "tempo_maximo_de_espera": "00:30:00",
+        "fips_equipamentos": {
+          "forno_3": 1,
+          "forno_4": 2
+        },
+        "configuracoes_equipamentos": {
+          "forno_3": {
+            "unidades_por_nivel": 12,
+            "faixa_temperatura": 180,
+            "setup_min": 5,
+            "capacidade_niveis": 2,
+            "tipo_coccao": "lastro",
+            "vaporizacao_seg": 0
+          },
+          "forno_4": {
+            "unidades_por_nivel": 12,
+            "faixa_temperatura": 180,
+            "setup_min": 5,
+            "capacidade_niveis": 2,
+            "tipo_coccao": "lastro",
+            "vaporizacao_seg": 0
+          }
+        },
+        "tipos_profissionais_permitidos": [],
+        "fips_profissionais_permitidos": {},
+        "quantidade_funcionarios": 0,
+        "faixas": [
+          { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:20:00" },
+          { "quantidade_min": 21, "quantidade_max": 40, "duracao": "00:20:00" },
+          { "quantidade_min": 41, "quantidade_max": 60, "duracao": "00:20:00" }
+        ]
+      }
+    ]
+  }
