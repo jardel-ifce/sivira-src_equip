@@ -7,6 +7,7 @@ from enums.equipamentos.tipo_velocidade import TipoVelocidade
 from typing import List, Tuple
 from datetime import datetime
 from utils.logs.logger_factory import setup_logger
+from utils.logs.registrador_restricoes import registrador_restricoes
 
 # 🔥 Logger exclusivo para HotMix
 logger = setup_logger("HotMix")
@@ -273,68 +274,6 @@ class HotMix(Equipamento):
         
         return quantidade_maxima_simultanea
 
-    def ocupar_janelas_simultaneas(
-        self,
-        id_ordem: int,
-        id_pedido: int,
-        id_atividade: int,
-        id_item: int,
-        quantidade: int,
-        velocidade: TipoVelocidade,
-        chama: TipoChama,
-        pressao_chamas: List[TipoPressaoChama],
-        inicio: datetime,
-        fim: datetime,
-        bypass_capacidade: bool = False
-    ) -> bool:
-        """
-        🎯 JANELAS SIMULTÂNEAS: Ocupa o equipamento com validação de janelas simultâneas.
-        """
-        # Validação 1: Capacidade individual (considerando bypass)
-        if not self.validar_capacidade(quantidade, bypass=bypass_capacidade):
-            return False
-
-        # Validação 2: Disponibilidade com janelas simultâneas
-        if not self.esta_disponivel_para_item_janelas_simultaneas(inicio, fim, id_item):
-            logger.warning(
-                f"❌ {self.nome} | Indisponível para item {id_item} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} (janelas simultâneas)."
-            )
-            return False
-
-        # Validação 3: Capacidade com janelas simultâneas
-        if not self.validar_nova_ocupacao_item_simultaneo(id_item, quantidade, inicio, fim):
-            quantidade_atual = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
-            logger.error(
-                f"❌ {self.nome} | Item {id_item}: Nova quantidade {quantidade}g + "
-                f"máximo simultâneo atual {quantidade_atual}g excederia capacidade máxima ({self.capacidade_gramas_max}g) (janelas simultâneas)"
-            )
-            return False
-
-        # Adicionar ocupação
-        self.ocupacoes.append((
-            id_ordem,
-            id_pedido,
-            id_atividade,
-            id_item,
-            quantidade,
-            velocidade,
-            chama,
-            pressao_chamas,
-            inicio,
-            fim
-        ))
-
-        # Log informativo com cálculo de janelas simultâneas
-        quantidade_maxima_simultanea_apos = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
-        logger.info(
-            f"🍳 {self.nome} | Item {id_item}: Nova ocupação {quantidade}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Pico simultâneo do item: {quantidade_maxima_simultanea_apos}g) "
-            f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
-            f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
-            f"Pressões: {[p.name for p in pressao_chamas]} | [JANELAS SIMULTÂNEAS]"
-        )
-        return True
 
     def debug_capacidade_item(self, id_item: int, inicio: datetime, fim: datetime) -> dict:
         """
@@ -371,18 +310,68 @@ class HotMix(Equipamento):
     # ==========================================================
     # ✅ Validações (MANTIDAS)
     # ==========================================================
-    def validar_capacidade(self, quantidade: int, bypass: bool = False) -> bool:
-        """Valida se a quantidade está dentro dos limites de capacidade."""
+    def validar_capacidade(
+        self,
+        quantidade: int,
+        bypass: bool = False,
+        contexto_restricao: dict = None
+    ) -> bool:
+        """
+        🆕 NOVA LÓGICA: Valida capacidade e registra restrições quando abaixo do mínimo.
+
+        Args:
+            quantidade: Quantidade a ser validada
+            bypass: Se True, ignora todas as validações
+            contexto_restricao: Dados para registrar restrição (ordem, pedido, atividade, etc.)
+        """
+        # 🚨 DEBUG: Log todas as chamadas para investigar
+        logger.info(f"🔍 DEBUG: validar_capacidade chamado - quantidade={quantidade}g, bypass={bypass}, contexto={bool(contexto_restricao)}")
         if bypass:
             logger.info(f"🔧 BYPASS: Ignorando validação de capacidade para {quantidade}g no {self.nome}")
             return True
-            
-        if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
+
+        # Verificar se excede capacidade máxima (limite rígido)
+        if quantidade > self.capacidade_gramas_max:
             logger.warning(
-                f"❌ Quantidade {quantidade}g fora dos limites do {self.nome} "
-                f"({self.capacidade_gramas_min}-{self.capacidade_gramas_max}g)."
+                f"❌ Quantidade {quantidade}g excede capacidade máxima do {self.nome} "
+                f"({self.capacidade_gramas_max}g) - REJEITADO"
             )
             return False
+
+        # 🆕 NOVA LÓGICA: Aceitar abaixo da capacidade mínima e registrar restrição
+        if quantidade < self.capacidade_gramas_min:
+            if contexto_restricao:
+                # Registrar restrição
+                registrador_restricoes.registrar_restricao(
+                    id_ordem=contexto_restricao.get('id_ordem', 0),
+                    id_pedido=contexto_restricao.get('id_pedido', 0),
+                    id_atividade=contexto_restricao.get('id_atividade', 0),
+                    id_item=contexto_restricao.get('id_item', 0),
+                    equipamento_nome=self.nome,
+                    capacidade_atual=quantidade,
+                    capacidade_minima=self.capacidade_gramas_min,
+                    inicio=contexto_restricao.get('inicio'),
+                    fim=contexto_restricao.get('fim'),
+                    detalhes_extras={
+                        "tipo_restricao": "CAPACIDADE_MINIMA",
+                        "velocidade": contexto_restricao.get('velocidade'),
+                        "chama": contexto_restricao.get('chama'),
+                        "pressao": contexto_restricao.get('pressao')
+                    }
+                )
+                logger.warning(
+                    f"⚠️ RESTRIÇÃO ACEITA: {self.nome} - Capacidade {quantidade}g < mín {self.capacidade_gramas_min}g "
+                    f"(Atividade {contexto_restricao.get('id_atividade', 'N/A')}) - Alocação permitida com flag de restrição"
+                )
+            else:
+                logger.warning(
+                    f"⚠️ Quantidade {quantidade}g abaixo do mínimo ({self.capacidade_gramas_min}g) "
+                    f"mas sem contexto para registrar restrição"
+                )
+            # Aceitar mesmo assim
+            return True
+
+        # Quantidade dentro da faixa normal
         return True
 
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
@@ -433,27 +422,36 @@ class HotMix(Equipamento):
         bypass_capacidade: bool = False
     ) -> bool:
         """
-        Ocupa o equipamento com validação de capacidade considerando intervalos flexíveis.
-        Permite sobreposição do mesmo id_item, impede itens diferentes.
-        ⚠️ MÉTODO ORIGINAL - Para compatibilidade. Use ocupar_janelas_simultaneas() para novo comportamento.
+        🎯 JANELAS SIMULTÂNEAS: Ocupa o equipamento com validação de janelas simultâneas.
         """
         # Validação 1: Capacidade individual (considerando bypass)
-        if not self.validar_capacidade(quantidade, bypass=bypass_capacidade):
+        contexto = {
+            'id_ordem': id_ordem,
+            'id_pedido': id_pedido,
+            'id_atividade': id_atividade,
+            'id_item': id_item,
+            'inicio': inicio,
+            'fim': fim,
+            'velocidade': velocidade.name if hasattr(velocidade, 'name') else str(velocidade),
+            'chama': chama.name if hasattr(chama, 'name') else str(chama),
+            'pressao': [p.name if hasattr(p, 'name') else str(p) for p in pressao_chamas]
+        }
+        if not self.validar_capacidade(quantidade, bypass=bypass_capacidade, contexto_restricao=contexto):
             return False
 
-        # Validação 2: Disponibilidade (só impede se for item diferente com sobreposição)
-        if not self.esta_disponivel_para_item(inicio, fim, id_item):
+        # Validação 2: Disponibilidade com janelas simultâneas
+        if not self.esta_disponivel_para_item_janelas_simultaneas(inicio, fim, id_item):
             logger.warning(
-                f"❌ {self.nome} | Ocupado por item diferente entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"❌ {self.nome} | Indisponível para item {id_item} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} (janelas simultâneas)."
             )
             return False
 
-        # Validação 3: Se nova ocupação respeita capacidade em todos os momentos
-        if not self.validar_nova_ocupacao_item(id_item, quantidade, inicio, fim):
-            quantidade_atual = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        # Validação 3: Capacidade com janelas simultâneas
+        if not self.validar_nova_ocupacao_item_simultaneo(id_item, quantidade, inicio, fim):
+            quantidade_atual = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
             logger.error(
                 f"❌ {self.nome} | Item {id_item}: Nova quantidade {quantidade}g + "
-                f"máximo atual {quantidade_atual}g excederia capacidade máxima ({self.capacidade_gramas_max}g)"
+                f"máximo simultâneo atual {quantidade_atual}g excederia capacidade máxima ({self.capacidade_gramas_max}g) (janelas simultâneas)"
             )
             return False
 
@@ -471,15 +469,15 @@ class HotMix(Equipamento):
             fim
         ))
 
-        # CORRIGIDO: Log informativo com cálculo correto
-        quantidade_maxima_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        # Log informativo com cálculo de janelas simultâneas
+        quantidade_maxima_simultanea_apos = self.obter_quantidade_maxima_item_periodo_simultaneo(id_item, inicio, fim)
         logger.info(
             f"🍳 {self.nome} | Item {id_item}: Nova ocupação {quantidade}g "
             f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
-            f"(Pico máximo do item após ocupação: {quantidade_maxima_apos}g) "
+            f"(Pico simultâneo do item: {quantidade_maxima_simultanea_apos}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
             f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
-            f"Pressões: {[p.name for p in pressao_chamas]}"
+            f"Pressões: {[p.name for p in pressao_chamas]} | [JANELAS SIMULTÂNEAS]"
         )
         return True
 

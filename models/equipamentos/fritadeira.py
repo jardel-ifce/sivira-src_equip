@@ -4,6 +4,7 @@ from enums.producao.tipo_setor import TipoSetor
 from typing import List, Tuple, Optional, Dict
 from datetime import datetime, timedelta
 from utils.logs.logger_factory import setup_logger
+from utils.logs.registrador_restricoes import registrador_restricoes
 import math
 
 # 🍟 Logger exclusivo da Fritadeira
@@ -477,14 +478,39 @@ class Fritadeira(Equipamento):
                 logger.error(f"❌ Conflito de temperatura detectado no período {ini}-{fim_ocup}")
                 return False
             
-            quantidade_maxima = self.calcular_quantidade_maxima_periodo(ini, fim_ocup)
-            if quantidade_maxima < self.capacidade_gramas_min or quantidade_maxima > self.capacidade_gramas_max:
-                # Rollback
+            quantidade_maxima_unidades = self.calcular_quantidade_maxima_periodo(ini, fim_ocup)
+            # Converter unidades para gramas (assumindo 120g por coxinha)
+            quantidade_maxima_gramas = quantidade_maxima_unidades * 120
+
+            # 🆕 NOVA LÓGICA: Aceitar abaixo da capacidade mínima e registrar restrição
+            if quantidade_maxima_gramas < self.capacidade_gramas_min:
+                # Registrar restrição em vez de falhar
+                registrador_restricoes.registrar_restricao(
+                    id_ordem=ocupacao[0],
+                    id_pedido=ocupacao[1],
+                    id_atividade=ocupacao[2],
+                    id_item=ocupacao[3],
+                    equipamento_nome=self.nome,
+                    capacidade_atual=quantidade_maxima_gramas,
+                    capacidade_minima=self.capacidade_gramas_min,
+                    inicio=ini,
+                    fim=fim_ocup,
+                    detalhes_extras={
+                        "temperatura": temp,
+                        "fracao_index": fracao_index,
+                        "tipo_restricao": "CAPACIDADE_MINIMA"
+                    }
+                )
+                logger.warning(
+                    f"⚠️ RESTRIÇÃO ACEITA: {self.nome} - Capacidade {quantidade_maxima}g < mín {self.capacidade_gramas_min}g "
+                    f"(Atividade {ocupacao[2]}) - Alocação permitida com flag de restrição"
+                )
+            elif quantidade_maxima > self.capacidade_gramas_max:
+                # Capacidade máxima ainda é limite rígido
                 self.ocupacoes_por_fracao[fracao_index] = ocupacoes_backup
                 logger.error(
-                    f"❌ Capacidade total do equipamento ({quantidade_maxima}) "
-                    f"ficará fora dos limites ({self.capacidade_gramas_min}-{self.capacidade_gramas_max}) "
-                    f"no período {ini}-{fim_ocup}"
+                    f"❌ Capacidade total ({quantidade_maxima}g) excede máximo permitido "
+                    f"({self.capacidade_gramas_max}g) no período {ini}-{fim_ocup}"
                 )
                 return False
 

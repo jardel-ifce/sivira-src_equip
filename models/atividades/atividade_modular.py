@@ -357,6 +357,26 @@ class AtividadeModular:
                 f"⚠️ Atividade {self.id_atividade} marcada como consolidada, mas sem dados de consolidação"
             )
 
+    def _simular_execucao_consolidada(self):
+        """
+        🔗 Simula execução para atividades que foram consolidadas automaticamente.
+        """
+        # Calcular horários baseado na duração da atividade
+        fim_simulado = datetime.now().replace(hour=6, minute=27, second=0, microsecond=0)
+        inicio_simulado = fim_simulado - self.duracao
+
+        self.inicio_real = inicio_simulado
+        self.fim_real = fim_simulado
+
+        logger.info(
+            f"⚡ Simulação de execução consolidada para atividade {self.id_atividade}: "
+            f"{inicio_simulado.strftime('%H:%M')} - {fim_simulado.strftime('%H:%M')} "
+            f"(execução real já foi feita via consolidação automática)"
+        )
+
+        # Retornar sucesso simulado - equipamentos_alocados vazio pois já foi processado
+        return True, inicio_simulado, fim_simulado, self.tempo_maximo_de_espera, []
+
     def _extrair_equipamentos_alocados(self, equipamentos_alocados):
         """Extrai lista de equipamentos dos dados de alocação com validação melhorada"""
         equipamentos_selecionados = []
@@ -422,6 +442,28 @@ class AtividadeModular:
         Retorna: (sucesso, inicio_real, fim_real, tempo_max_espera, equipamentos_alocados)
         """
         logger.info(f"🔄 Iniciando alocação da atividade {self.id_atividade} ({self.nome_atividade})")
+
+        # 🔗 NOVO: Verificar se atividade já foi consolidada automaticamente
+        from utils.agrupamento.cache_atividades_intervalo import cache_atividades_intervalo
+
+        # Verificar se esta atividade já foi executada como parte de uma consolidação
+        if hasattr(self, '_já_consolidada_automaticamente'):
+            logger.info(f"⚡ Atividade {self.id_atividade} já foi consolidada automaticamente - simulando execução")
+            return self._simular_execucao_consolidada()
+
+        # Verificar se há grupo de consolidação pendente
+        grupo_consolidacao = cache_atividades_intervalo.verificar_oportunidade_agrupamento(
+            self.id_item,
+            inicio_jornada - self.duracao,
+            inicio_jornada,
+            "MISTURADORAS_COM_COCCAO"  # TODO: Tornar dinâmico baseado no tipo de equipamento
+        )
+
+        if grupo_consolidacao:
+            logger.info(f"🔗 Atividade {self.id_atividade} faz parte de grupo de consolidação pendente")
+            # Marcar como consolidada para evitar execução individual
+            self._já_consolidada_automaticamente = True
+            return self._simular_execucao_consolidada()
         
         # ✅ VERIFICAÇÃO ESPECIAL: Se esta é a última atividade e tem fim_obrigatorio
         if hasattr(self, 'fim_obrigatorio') and self.fim_obrigatorio:

@@ -99,17 +99,17 @@ class GestorMisturadorasComCoccao:
             if atividade.pedido_pai.bypass_capacidade and any(t.name == 'MISTURADORAS_COM_COCCAO' for t in atividade.pedido_pai.bypass_capacidade):
                 bypass_ativo = True
         
+        # 🆕 NOVA LÓGICA: Permitir quantidades abaixo da capacidade mínima
+        # A validação com restrições será feita no HotMix durante ocupar
         if not bypass_ativo and quantidade_total < min(h.capacidade_gramas_min for h in hotmixes_com_parametros_validos):
             if len(hotmixes_com_parametros_validos) == 1:
-                logger.debug(f"✅ Quantidade pequena viável com uma HotMix")
+                logger.debug(f"✅ Quantidade pequena ({quantidade_total}g) - prosseguindo para validação no HotMix com registros de restrições")
             else:
-                logger.debug(f"⚡ Early exit: Quantidade muito pequena para qualquer HotMix individual")
-                return False, f"Quantidade {quantidade_total}g menor que capacidade mínima de qualquer HotMix"
+                logger.debug(f"✅ Quantidade pequena ({quantidade_total}g) - prosseguindo para validação no HotMix com registros de restrições")
         elif bypass_ativo:
             logger.info(f"🔧 BYPASS ATIVO: Ignorando verificação de capacidade mínima para {quantidade_total}g")
         elif quantidade_total < capacidade_minima_total:
-            logger.debug(f"⚡ Early exit: {quantidade_total}g < {capacidade_minima_total}g (mínimos totais)")
-            return False, f"Quantidade {quantidade_total}g insuficiente para capacidades mínimas ({capacidade_minima_total}g)"
+            logger.debug(f"✅ Quantidade ({quantidade_total}g) abaixo dos mínimos totais - prosseguindo para validação no HotMix com registros de restrições")
 
         # 🕐 FASE 4: SÓ AGORA faz análise temporal custosa (se passou nas verificações básicas)
         logger.debug(f"✅ Passou verificações rápidas, iniciando análise temporal detalhada com janelas simultâneas...")
@@ -138,7 +138,13 @@ class GestorMisturadorasComCoccao:
                         # Calcula capacidade disponível considerando ocupações simultâneas do mesmo item (custoso)
                         capacidade_disponivel = hotmix.obter_capacidade_disponivel_item_simultaneo(id_item, inicio, fim)
                         
+                        # 🆕 NOVA LÓGICA: Aceitar HotMix mesmo com capacidade abaixo do mínimo
+                        # A validação de restrições será feita durante ocupar
                         if capacidade_disponivel >= hotmix.capacidade_gramas_min:
+                            capacidade_disponivel_total += capacidade_disponivel
+                            hotmixes_disponiveis.append(hotmix)
+                        else:
+                            # Aceitar para possível alocação com restrição
                             capacidade_disponivel_total += capacidade_disponivel
                             hotmixes_disponiveis.append(hotmix)
 
@@ -236,16 +242,12 @@ class GestorMisturadorasComCoccao:
                 proporcao = cap_disponivel / capacidade_total_disponivel
                 quantidade_proporcional = quantidade_total * proporcao
                 
-                # ⚡ AJUSTE DIRETO: Garante limites sem iterações
-                quantidade_hotmix = max(
-                    hotmix.capacidade_gramas_min,
-                    min(quantidade_proporcional, cap_disponivel, quantidade_restante)
-                )
+                # ⚡ AJUSTE DIRETO: Permite quantidades abaixo do mínimo para registrar restrições
+                quantidade_hotmix = min(quantidade_proporcional, cap_disponivel, quantidade_restante)
             
-            # Só adiciona se atende capacidade mínima
-            if quantidade_hotmix >= hotmix.capacidade_gramas_min:
-                distribuicao.append((hotmix, quantidade_hotmix, velocidade, chama, pressoes))
-                quantidade_restante -= quantidade_hotmix
+            # 🆕 NOVA LÓGICA: Adiciona mesmo se abaixo da capacidade mínima para registrar restrições
+            distribuicao.append((hotmix, quantidade_hotmix, velocidade, chama, pressoes))
+            quantidade_restante -= quantidade_hotmix
         
         # ⚡ VERIFICAÇÃO FINAL RÁPIDA: Se sobrou quantidade significativa, falha rápido
         if quantidade_restante > 1.0:  # Tolerância de 1g
@@ -344,9 +346,9 @@ class GestorMisturadorasComCoccao:
                         # Ajusta para deixar quantidade suficiente
                         quantidade_alocar = quantidade_restante - cap_min_restantes
                 
-                if quantidade_alocar >= hotmix.capacidade_gramas_min:
-                    distribuicao.append((hotmix, quantidade_alocar, velocidade, chama, pressoes))
-                    quantidade_restante -= quantidade_alocar
+                # 🆕 NOVA LÓGICA: Permite quantidades abaixo da capacidade mínima para registrar restrições
+                distribuicao.append((hotmix, quantidade_alocar, velocidade, chama, pressoes))
+                quantidade_restante -= quantidade_alocar
         
         return distribuicao if quantidade_restante <= 0.1 else []
 
@@ -551,8 +553,11 @@ class GestorMisturadorasComCoccao:
                 logger.debug(f"❌ {hotmix.nome}: parâmetros incompatíveis com ocupações existentes do item {id_item}")
                 continue
             
+            # 🚨 DEBUG: Log quantidade sendo passada para HotMix
+            logger.info(f"🔍 DEBUG GESTOR: Enviando para HotMix - quantidade={quantidade_gramas}g")
+
             # Tenta adicionar a ocupação (validação dinâmica de capacidade interna com janelas simultâneas)
-            sucesso = hotmix.ocupar_janelas_simultaneas(
+            sucesso = hotmix.ocupar(
                 id_ordem=id_ordem,
                 id_pedido=id_pedido,
                 id_atividade=id_atividade,
@@ -631,11 +636,16 @@ class GestorMisturadorasComCoccao:
                                                atividade.pedido_pai.bypass_capacidade and 
                                                any(t.name == 'MISTURADORAS_COM_COCCAO' for t in atividade.pedido_pai.bypass_capacidade))
             
+            # 🆕 NOVA LÓGICA: Aceitar todas as capacidades para possível alocação com restrições
             if bypass_ativo or capacidade_disponivel >= hotmix.capacidade_gramas_min:
                 hotmixes_com_capacidade.append((hotmix, capacidade_disponivel, velocidade, chama, pressoes))
                 logger.debug(f"🔍 {hotmix.nome}: {capacidade_disponivel}g disponível para item {id_item} (janelas simultâneas)")
                 if bypass_ativo:
                     logger.debug(f"🔧 BYPASS: Aceitando {hotmix.nome} independente da capacidade mínima")
+            else:
+                # Aceitar mesmo abaixo da capacidade mínima para alocação com restrições
+                hotmixes_com_capacidade.append((hotmix, capacidade_disponivel, velocidade, chama, pressoes))
+                logger.debug(f"🔍 {hotmix.nome}: {capacidade_disponivel}g disponível (abaixo do mínimo) - permitindo alocação com restrições")
 
         if not hotmixes_com_capacidade:
             logger.debug("❌ Nenhuma HotMix com capacidade mínima disponível (janelas simultâneas)")
@@ -675,7 +685,10 @@ class GestorMisturadorasComCoccao:
         
         try:
             for hotmix, quantidade, velocidade, chama, pressoes in distribuicao:
-                sucesso = hotmix.ocupar_janelas_simultaneas(
+                # 🚨 DEBUG: Log quantidade sendo passada para HotMix (distribuição)
+                logger.info(f"🔍 DEBUG GESTOR DIST: Enviando para {hotmix.nome} - quantidade={quantidade}g")
+
+                sucesso = hotmix.ocupar(
                     id_ordem=id_ordem,
                     id_pedido=id_pedido,
                     id_atividade=id_atividade,
@@ -747,6 +760,27 @@ class GestorMisturadorasComCoccao:
 
         logger.info(f"🎯 Iniciando alocação otimizada atividade {id_atividade}: {quantidade_gramas}g do item {id_item} (JANELAS SIMULTÂNEAS)")
         logger.debug(f"📅 Janela: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} (duração: {duracao})")
+
+        # 🔗 NOVO: Verificar oportunidades de agrupamento automático
+        from utils.agrupamento.cache_atividades_intervalo import cache_atividades_intervalo
+
+        # Adicionar atividade ao cache para detectar agrupamentos
+        grupo_consolidacao = cache_atividades_intervalo.adicionar_atividade_pendente(
+            id_atividade=id_atividade,
+            id_item=id_item,
+            quantidade=quantidade_gramas,
+            inicio=inicio,
+            fim=fim,
+            atividade_obj=atividade,
+            tipo_equipamento="MISTURADORAS_COM_COCCAO"
+        )
+
+        # Se detectou agrupamento, tentar alocação consolidada
+        if grupo_consolidacao and len(grupo_consolidacao.atividades) > 1:
+            logger.info(f"🔗 Agrupamento automático detectado! Tentando alocação consolidada de {grupo_consolidacao.quantidade_total}g")
+            sucesso_consolidado = self._tentar_alocacao_grupo_consolidado(grupo_consolidacao, hotmixes_ordenados, bypass_capacidade)
+            if sucesso_consolidado:
+                return sucesso_consolidado
         
         # 🔍 DIAGNÓSTICO: Verifica capacidades disponíveis
         capacidades_individuais = [h.capacidade_gramas_max for h in hotmixes_ordenados]
@@ -866,9 +900,106 @@ class GestorMisturadorasComCoccao:
             f"   Análises temporais: {analises_temporais:,}\n"
             f"   Economia estimada: {early_exits * 95}% de tempo computacional"
         )
-        
+
+        # Remover atividade do cache se falhou
+        from utils.agrupamento.cache_atividades_intervalo import cache_atividades_intervalo
+        cache_atividades_intervalo.remover_atividade(id_atividade)
+
         return False, None, None, None
-    
+
+    def _tentar_alocacao_grupo_consolidado(self, grupo_consolidacao, hotmixes_ordenados, bypass_capacidade):
+        """
+        🔗 Tenta alocar um grupo consolidado de atividades do mesmo item no mesmo intervalo.
+        """
+        from utils.agrupamento.cache_atividades_intervalo import cache_atividades_intervalo
+
+        logger.info(f"🚀 Tentando alocação consolidada: {len(grupo_consolidacao.atividades)} atividades")
+        logger.info(f"   📊 Quantidade total: {grupo_consolidacao.quantidade_total}g")
+        logger.info(f"   ⏰ Intervalo: {grupo_consolidacao.inicio.strftime('%H:%M')}-{grupo_consolidacao.fim.strftime('%H:%M')}")
+
+        # Marcar grupo em execução
+        cache_atividades_intervalo.marcar_grupo_em_execucao(grupo_consolidacao)
+
+        try:
+            # Usar primeira atividade como referência para parâmetros técnicos
+            atividade_referencia = grupo_consolidacao.atividades[0].atividade_obj
+
+            # Obter IDs da primeira atividade
+            id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade_referencia)
+
+            # Tentar alocação com quantidade total
+            sucesso_individual = self._tentar_alocacao_individual(
+                grupo_consolidacao.inicio,
+                grupo_consolidacao.fim,
+                atividade_referencia,
+                grupo_consolidacao.quantidade_total,
+                hotmixes_ordenados,
+                id_ordem,
+                id_pedido,
+                id_atividade,
+                id_item,
+                bypass_capacidade
+            )
+
+            if sucesso_individual:
+                logger.info(f"✅ Alocação consolidada bem-sucedida!")
+
+                # Gerar log agrupado
+                self._gerar_log_consolidacao_automatica(grupo_consolidacao, sucesso_individual[1])
+
+                # Marcar grupo como concluído
+                cache_atividades_intervalo.marcar_grupo_concluido(grupo_consolidacao, True)
+
+                return sucesso_individual
+            else:
+                logger.warning(f"❌ Alocação consolidada falhou")
+                cache_atividades_intervalo.marcar_grupo_concluido(grupo_consolidacao, False)
+                return False
+
+        except Exception as e:
+            logger.error(f"❌ Erro na alocação consolidada: {e}")
+            cache_atividades_intervalo.marcar_grupo_concluido(grupo_consolidacao, False)
+            return False
+
+    def _gerar_log_consolidacao_automatica(self, grupo_consolidacao, equipamentos_alocados):
+        """
+        Gera log de consolidação automática para o grupo.
+        """
+        try:
+            from utils.logs.log_subprodutos_agrupados import registrar_log_subproduto_agrupado
+
+            # Extrair dados dos pedidos envolvidos
+            ordens_e_pedidos = []
+            for atividade in grupo_consolidacao.atividades:
+                atividade_obj = atividade.atividade_obj
+                ordens_e_pedidos.append({
+                    'id_ordem': atividade_obj.id_ordem,
+                    'id_pedido': atividade_obj.id_pedido
+                })
+
+            # Obter nome do item e atividade da primeira atividade
+            atividade_referencia = grupo_consolidacao.atividades[0].atividade_obj
+
+            # Registrar log agrupado
+            registrar_log_subproduto_agrupado(
+                ordens_e_pedidos=ordens_e_pedidos,
+                id_atividade=grupo_consolidacao.atividades[0].id_atividade,
+                nome_item=atividade_referencia.nome_item,
+                nome_atividade=atividade_referencia.nome_atividade,
+                equipamentos_alocados=equipamentos_alocados,
+                quantidade_total=grupo_consolidacao.quantidade_total,
+                detalhes_consolidacao={
+                    'economia_equipamentos': len(grupo_consolidacao.atividades) - 1,
+                    'tipo_consolidacao': 'AGRUPAMENTO_AUTOMATICO',
+                    'motivo': f'Consolidação automática de {len(grupo_consolidacao.atividades)} atividades no mesmo intervalo'
+                }
+            )
+
+            logger.info(f"📝 Log de consolidação automática gerado para {len(grupo_consolidacao.atividades)} atividades")
+
+        except Exception as e:
+            logger.error(f"❌ Erro ao gerar log de consolidação: {e}")
+
     # ==========================================================
     # 🔓 Liberações (mantidas do original)
     # ==========================================================
@@ -973,7 +1104,12 @@ class GestorMisturadorasComCoccao:
             else:
                 # Comportamento original para compatibilidade
                 if hotmix.esta_disponivel(inicio, fim):
-                    if quantidade is None or hotmix.validar_capacidade(quantidade, bypass=bypass_capacidade):
+                    if quantidade is None:
+                        disponiveis.append(hotmix)
+                    else:
+                        # 🆕 NOVA LÓGICA: Permitir que chegue até o HotMix para validação com restrições
+                        # A validação de capacidade com registros de restrições será feita diretamente no HotMix
+                        # durante a alocação (método ocupar)
                         disponiveis.append(hotmix)
         
         return disponiveis

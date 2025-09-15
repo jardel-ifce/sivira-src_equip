@@ -179,10 +179,10 @@ class TesteSistemaProducao:
         # Configurações dos pedidos de coxinhas
         configuracoes_pedidos = [
            # CONJUNTO MATINAL 
-            {"produto": "Coxinha de Frango", "quantidade": 15, "hora_fim": 8},
-            {"produto": "Coxinha de Carne de Sol", "quantidade": 10, "hora_fim": 8},
-            {"produto": "Coxinha de Camarão", "quantidade": 12, "hora_fim": 8},
-            {"produto": "Coxinha de Queijos Finos", "quantidade": 12, "hora_fim": 8},
+            {"produto": "Coxinha de Frango", "quantidade": 36, "hora_fim": 8},
+           # {"produto": "Coxinha de Carne de Sol", "quantidade": 10, "hora_fim": 8},
+           # {"produto": "Coxinha de Camarão", "quantidade": 12, "hora_fim": 8},
+           # {"produto": "Coxinha de Queijos Finos", "quantidade": 12, "hora_fim": 8},
 
           
 

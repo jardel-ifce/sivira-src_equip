@@ -17,9 +17,10 @@ PASTAS = [
 # 🆕 Pastas para limpeza na inicialização
 PASTAS_INICIALIZACAO = [
     "logs/funcionarios",
-    "logs/equipamentos", 
+    "logs/equipamentos",
     "logs/erros",
-    "logs/execucoes"
+    "logs/execucoes",
+    "logs/restricoes"  # Incluir restrições na limpeza
 ]
 
 def limpar_arquivo_pedidos_salvos():
@@ -144,28 +145,65 @@ def limpar_logs_inicializacao():
             relatorio['erros'].append(f"Erro ao processar pasta {pasta}: {e}")
             relatorio['sucesso'] = False
     
-    # 🆕 Limpar logs gerais na pasta raiz de logs
+    # 🆕 LIMPEZA COMPLETA: Limpar todos os logs em logs/ e subpastas (EXCETO restricoes)
     try:
         pasta_logs = "logs"
         if os.path.exists(pasta_logs):
-            # Busca por arquivos execucao_pedidos_*.log
-            pattern = os.path.join(pasta_logs, "execucao_pedidos_*.log")
-            arquivos_gerais = glob.glob(pattern)
-            
-            for arquivo in arquivos_gerais:
-                try:
-                    os.remove(arquivo)
-                    relatorio['logs_gerais_removidos'] += 1
-                except Exception as e:
-                    relatorio['erros'].append(f"Erro ao remover {arquivo}: {e}")
-            
+
+            # 1. Limpar logs na raiz de logs/
+            patterns_raiz = [
+                os.path.join(pasta_logs, "execucao_pedidos_*.log"),
+                os.path.join(pasta_logs, "execucao_coxinhas_*.log"),
+                os.path.join(pasta_logs, "*.log")  # Todos os .log na raiz
+            ]
+
+            for pattern in patterns_raiz:
+                arquivos_encontrados = glob.glob(pattern)
+                for arquivo in arquivos_encontrados:
+                    try:
+                        os.remove(arquivo)
+                        relatorio['logs_gerais_removidos'] += 1
+                    except Exception as e:
+                        relatorio['erros'].append(f"Erro ao remover {arquivo}: {e}")
+
+            # 2. Limpar TODAS as subpastas em logs/ (exceto restricoes)
+            for item in os.listdir(pasta_logs):
+                subpasta = os.path.join(pasta_logs, item)
+
+                # Pular se não for diretório
+                if not os.path.isdir(subpasta):
+                    continue
+
+                # Todas as pastas serão limpas - nenhuma preservação especial
+
+                # Limpar subpasta se não estiver na lista padrão
+                if subpasta not in [os.path.join(pasta_logs, p.split('/')[-1]) for p in PASTAS_INICIALIZACAO]:
+                    try:
+                        arquivos_subpasta = glob.glob(os.path.join(subpasta, "*"))
+                        removidos_subpasta = 0
+
+                        for arquivo in arquivos_subpasta:
+                            if os.path.isfile(arquivo):
+                                try:
+                                    os.remove(arquivo)
+                                    removidos_subpasta += 1
+                                except Exception as e:
+                                    relatorio['erros'].append(f"Erro ao remover {arquivo}: {e}")
+
+                        if removidos_subpasta > 0:
+                            print(f"   ✅ logs/{item}/: {removidos_subpasta} arquivos removidos")
+                            relatorio['logs_gerais_removidos'] += removidos_subpasta
+
+                    except Exception as e:
+                        relatorio['erros'].append(f"Erro ao limpar subpasta {subpasta}: {e}")
+
             if relatorio['logs_gerais_removidos'] > 0:
-                print(f"   ✅ logs/: {relatorio['logs_gerais_removidos']} logs gerais removidos")
-            
+                print(f"   ✅ logs/ (completa): {relatorio['logs_gerais_removidos']} arquivos removidos")
+
             relatorio['total_arquivos_removidos'] += relatorio['logs_gerais_removidos']
-            
+
     except Exception as e:
-        relatorio['erros'].append(f"Erro ao limpar logs gerais: {e}")
+        relatorio['erros'].append(f"Erro ao limpar logs completos: {e}")
     
     # 🆕 Limpar arquivo de pedidos salvos
     try:
@@ -208,7 +246,7 @@ def limpar_logs_inicializacao():
     
     resultado.append("─" * 50)
     resultado.append(f"✅ Total: {relatorio['total_arquivos_removidos']} arquivo(s) de log removido(s)")
-    resultado.append("📁 Pastas equipamentos/, erros/, funcionarios/, execucoes/ preservadas")
+    resultado.append("📁 Todas as pastas de logs foram limpas")
     
     if relatorio['erros']:
         resultado.append(f"⚠️ {len(relatorio['erros'])} erro(s) durante limpeza")
