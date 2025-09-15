@@ -4,76 +4,91 @@
   "data_reserva": "2025-06-23",
   "itens": [
     {
-      "id_item": 1002,
-      "nome": "Pão Hambúrguer",
+      "id_item": 1069,
+      "nome": "Coxinha de Carne de Sol",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 120,
+      "quantidade_necessaria": 10,
       "itens_necessarios": [
         {
-          "id_item": 2002,
-          "nome": "Massa Suave",
+          "id_item": 2003,
+          "nome": "Massa para Frituras",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 7800.0,
+          "quantidade_necessaria": 600.03,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 4634.58,
+              "quantidade_necessaria": 292.7,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 4,
-              "nome": "Gelo para alimentos",
-              "quantidade_necessaria": 2549.02,
+              "id_item": 10,
+              "nome": "Água mineral",
+              "quantidade_necessaria": 278.06,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 5,
-              "nome": "Sal refinado",
-              "quantidade_necessaria": 46.35,
+              "id_item": 11,
+              "nome": "Tempero pronto sabor frango",
+              "quantidade_necessaria": 14.63,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 6,
-              "nome": "Fermento biológico seco",
-              "quantidade_necessaria": 92.69,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 13,
-              "nome": "Açúcar cristal",
-              "quantidade_necessaria": 231.73,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 14,
-              "nome": "Margarina com sal",
-              "quantidade_necessaria": 231.73,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 7,
-              "nome": "Aditivo em pasta",
-              "quantidade_necessaria": 13.9,
+              "id_item": 12,
+              "nome": "Leite em pó integral",
+              "quantidade_necessaria": 14.63,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             }
-          ]
+          ],
+          "consolidado": true,
+          "quantidade_total_consolidada": 1500.08,
+          "observacao": "⚡ Consolidado com outros pedidos"
+        },
+        {
+          "id_item": 2006,
+          "nome": "Carne de Sol Refogada",
+          "politica_producao": "ESTOCADO",
+          "quantidade_necessaria": 500.01
+        },
+        {
+          "id_item": 15,
+          "nome": "Farinha de Rosca",
+          "quantidade_necessaria": 49.98,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 33,
+          "nome": "Ovo de Galinha",
+          "quantidade_necessaria": 49.98,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
         }
       ]
+    }
+  ],
+  "consolidacoes": [
+    {
+      "subproduto_consolidado": "Massa para Frituras",
+      "id_subproduto": 2003,
+      "quantidade_original": 600.03,
+      "quantidade_total_consolidada": 1500.08,
+      "pedidos_envolvidos": [
+        1,
+        2
+      ],
+      "economia_equipamentos": 1,
+      "observacao": "Subproduto consolidado - produção única para múltiplos pedidos"
     }
   ]
 }

@@ -4,60 +4,91 @@
   "data_reserva": "2025-06-23",
   "itens": [
     {
-      "id_item": 1001,
-      "nome": "Pão Francês",
+      "id_item": 1055,
+      "nome": "Coxinha de Frango",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 450,
+      "quantidade_necessaria": 15,
       "itens_necessarios": [
         {
-          "id_item": 2001,
-          "nome": "Massa Crocante",
+          "id_item": 2003,
+          "nome": "Massa para Frituras",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 29250.0,
+          "quantidade_necessaria": 900.05,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 17911.82,
+              "quantidade_necessaria": 439.05,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 4,
-              "nome": "Gelo para alimentos",
-              "quantidade_necessaria": 10747.09,
+              "id_item": 10,
+              "nome": "Água mineral",
+              "quantidade_necessaria": 417.1,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 5,
-              "nome": "Sal refinado",
-              "quantidade_necessaria": 358.24,
+              "id_item": 11,
+              "nome": "Tempero pronto sabor frango",
+              "quantidade_necessaria": 21.95,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 6,
-              "nome": "Fermento biológico seco",
-              "quantidade_necessaria": 179.12,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 7,
-              "nome": "Aditivo em pasta",
-              "quantidade_necessaria": 53.74,
+              "id_item": 12,
+              "nome": "Leite em pó integral",
+              "quantidade_necessaria": 21.95,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             }
-          ]
+          ],
+          "consolidado": true,
+          "quantidade_total_consolidada": 1500.08,
+          "observacao": "⚡ Consolidado com outros pedidos"
+        },
+        {
+          "id_item": 2009,
+          "nome": "Frango Refogado",
+          "politica_producao": "ESTOCADO",
+          "quantidade_necessaria": 750.01
+        },
+        {
+          "id_item": 15,
+          "nome": "Farinha de Rosca",
+          "quantidade_necessaria": 74.97,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        },
+        {
+          "id_item": 33,
+          "nome": "Ovo de Galinha",
+          "quantidade_necessaria": 74.97,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
         }
       ]
+    }
+  ],
+  "consolidacoes": [
+    {
+      "subproduto_consolidado": "Massa para Frituras",
+      "id_subproduto": 2003,
+      "quantidade_original": 900.05,
+      "quantidade_total_consolidada": 1500.08,
+      "pedidos_envolvidos": [
+        1,
+        2
+      ],
+      "economia_equipamentos": 1,
+      "observacao": "Subproduto consolidado - produção única para múltiplos pedidos"
     }
   ]
 }

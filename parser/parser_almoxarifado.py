@@ -148,7 +148,7 @@ class ParserAlmoxarifado:
             logger.info("🔄 Almoxarifado não existe. Criando...")
             self.criar_almoxarifado()
         
-        self.gestor = GestorAlmoxarifado(self.almoxarifado)
+        self.gestor = GestorAlmoxarifado(self.almoxarifado, self)
         
         logger.info("✅ Gestor do almoxarifado criado com sucesso")
         
@@ -377,12 +377,20 @@ class ParserAlmoxarifado:
                 "estoque_max": item.estoque_max,
                 "estoque_atual": item.estoque_atual,
                 "consumo_diario_estimado": item.consumo_diario_estimado,
-                "reabastecimento_previsto_em": item.reabastecimento_previsto_em,
-                "reservas_futuras": item.reservas_futuras
+                "reabastecimento_previsto_em": item.reabastecimento_previsto_em.strftime('%Y-%m-%d') if item.reabastecimento_previsto_em else None,
+                "reservas_futuras": [
+                    {
+                        "data": r["data"].strftime('%Y-%m-%d'),
+                        "quantidade_reservada": r["quantidade"],
+                        "id_ordem": r.get("id_ordem", 0),
+                        "id_pedido": r.get("id_pedido", 0),
+                        "id_atividade": r.get("id_atividade")
+                    } for r in item.reservas_futuras
+                ]
             }
             
-            if item.ficha_tecnica:
-                item_dict["ficha_tecnica"] = {"id_ficha_tecnica": item.ficha_tecnica}
+            if item.ficha_tecnica_id:
+                item_dict["ficha_tecnica"] = {"id_ficha_tecnica": item.ficha_tecnica_id}
             
             dados_saida.append(item_dict)
         

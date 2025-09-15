@@ -64,7 +64,7 @@ class ConfiguradorAmbiente:
             except Exception as e:
                 print(f"     ⚠️ Aviso na limpeza de logs: {e}")
             
-            # ✅ CARREGAMENTO DO ALMOXARIFADO
+            # ✅ CARREGAMENTO DO ALMOXARIFADO COM PARSER
             print("   📦 Carregando itens do almoxarifado...")
             caminho_itens = "data/almoxarifado/itens_almoxarifado.json"
             
@@ -72,8 +72,11 @@ class ConfiguradorAmbiente:
                 print(f"     ❌ Arquivo não encontrado: {caminho_itens}")
                 return False
             
-            itens = carregar_itens_almoxarifado(caminho_itens)
-            print(f"     ✅ {len(itens)} itens carregados")
+            # Criar parser para persistência automática
+            from parser.parser_almoxarifado import ParserAlmoxarifado
+            parser_almoxarifado = ParserAlmoxarifado(caminho_itens)
+            itens = parser_almoxarifado.carregar_itens_do_json()
+            print(f"     ✅ {len(itens)} itens carregados com parser para persistência")
             
             # ✅ INICIALIZAÇÃO DO ALMOXARIFADO
             print("   🏪 Inicializando almoxarifado...")
@@ -84,10 +87,10 @@ class ConfiguradorAmbiente:
             
             print(f"     ✅ Almoxarifado criado com {len(itens)} itens")
             
-            # ✅ CRIAÇÃO DO GESTOR
-            print("   👨‍💼 Criando gestor do almoxarifado...")
-            self.gestor_almoxarifado = GestorAlmoxarifado(self.almoxarifado)
-            print("     ✅ Gestor criado")
+            # ✅ CRIAÇÃO DO GESTOR COM PARSER PARA PERSISTÊNCIA
+            print("   👨‍💼 Criando gestor do almoxarifado com persistência automática...")
+            self.gestor_almoxarifado = GestorAlmoxarifado(self.almoxarifado, parser_almoxarifado)
+            print("     ✅ Gestor criado com persistência automática")
             
             # ✅ FINALIZAÇÃO
             self.inicializado = True

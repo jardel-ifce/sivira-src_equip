@@ -90,14 +90,23 @@ class GestorMisturadorasComCoccao:
             )
             return False, f"Quantidade {quantidade_total}g excede capacidade máxima com parâmetros válidos ({capacidade_maxima_parametros}g)"
 
-        # 🚀 FASE 3: Verificação rápida de capacidades mínimas
+        # 🚀 FASE 3: Verificação rápida de capacidades mínimas (com bypass)
         capacidade_minima_total = sum(h.capacidade_gramas_min for h in hotmixes_com_parametros_validos)
-        if quantidade_total < min(h.capacidade_gramas_min for h in hotmixes_com_parametros_validos):
+        
+        # Verificar se deve aplicar bypass - buscar na atividade  
+        bypass_ativo = False
+        if hasattr(atividade, 'pedido_pai') and hasattr(atividade.pedido_pai, 'bypass_capacidade'):
+            if atividade.pedido_pai.bypass_capacidade and any(t.name == 'MISTURADORAS_COM_COCCAO' for t in atividade.pedido_pai.bypass_capacidade):
+                bypass_ativo = True
+        
+        if not bypass_ativo and quantidade_total < min(h.capacidade_gramas_min for h in hotmixes_com_parametros_validos):
             if len(hotmixes_com_parametros_validos) == 1:
                 logger.debug(f"✅ Quantidade pequena viável com uma HotMix")
             else:
                 logger.debug(f"⚡ Early exit: Quantidade muito pequena para qualquer HotMix individual")
                 return False, f"Quantidade {quantidade_total}g menor que capacidade mínima de qualquer HotMix"
+        elif bypass_ativo:
+            logger.info(f"🔧 BYPASS ATIVO: Ignorando verificação de capacidade mínima para {quantidade_total}g")
         elif quantidade_total < capacidade_minima_total:
             logger.debug(f"⚡ Early exit: {quantidade_total}g < {capacidade_minima_total}g (mínimos totais)")
             return False, f"Quantidade {quantidade_total}g insuficiente para capacidades mínimas ({capacidade_minima_total}g)"
@@ -502,7 +511,8 @@ class GestorMisturadorasComCoccao:
         atividade: "AtividadeModular",
         quantidade_gramas: int,
         hotmixes_ordenados: List[HotMix],
-        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int
+        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int,
+        bypass_capacidade: bool = False
     ) -> Optional[Tuple[HotMix, datetime, datetime]]:
         """
         Tenta alocar toda a quantidade em uma única HotMix.
@@ -523,10 +533,18 @@ class GestorMisturadorasComCoccao:
                 logger.debug(f"❌ {hotmix.nome}: ocupada por item diferente ou janela temporal conflitante")
                 continue
             
-            # Verifica se quantidade individual está nos limites da HotMix
-            if not hotmix.validar_capacidade(quantidade_gramas):
-                logger.debug(f"❌ {hotmix.nome}: quantidade {quantidade_gramas}g fora dos limites")
-                continue
+            # Verifica se quantidade individual está nos limites da HotMix (considerando bypass)
+            bypass_ativo = bypass_capacidade or (hasattr(atividade, 'pedido_pai') and 
+                                               hasattr(atividade.pedido_pai, 'bypass_capacidade') and
+                                               atividade.pedido_pai.bypass_capacidade and 
+                                               any(t.name == 'MISTURADORAS_COM_COCCAO' for t in atividade.pedido_pai.bypass_capacidade))
+            
+            if not bypass_ativo:
+                if not (hotmix.capacidade_gramas_min <= quantidade_gramas <= hotmix.capacidade_gramas_max):
+                    logger.debug(f"❌ {hotmix.nome}: quantidade {quantidade_gramas}g fora dos limites [{hotmix.capacidade_gramas_min}-{hotmix.capacidade_gramas_max}]g")
+                    continue
+            else:
+                logger.debug(f"🔧 BYPASS: Pulando validação de limites de capacidade para {hotmix.nome}")
             
             # Verifica compatibilidade de parâmetros com ocupações existentes do mesmo item
             if not self._verificar_compatibilidade_parametros(hotmix, id_item, velocidade, chama, pressoes, inicio_tentativa, fim_tentativa):
@@ -544,7 +562,8 @@ class GestorMisturadorasComCoccao:
                 chama=chama,
                 pressao_chamas=pressoes,
                 inicio=inicio_tentativa,
-                fim=fim_tentativa
+                fim=fim_tentativa,
+                bypass_capacidade=bypass_ativo
             )
             
             if sucesso:
@@ -562,7 +581,8 @@ class GestorMisturadorasComCoccao:
         atividade: "AtividadeModular",
         quantidade_gramas: int,
         hotmixes_ordenados: List[HotMix],
-        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int
+        id_ordem: int, id_pedido: int, id_atividade: int, id_item: int,
+        bypass_capacidade: bool = False
     ) -> Optional[Tuple[List[HotMix], datetime, datetime]]:
         """
         NOVA IMPLEMENTAÇÃO: Tenta alocação distribuída usando algoritmos otimizados.
@@ -605,10 +625,17 @@ class GestorMisturadorasComCoccao:
                 id_item, inicio_tentativa, fim_tentativa
             )
             
-            # Deve ter pelo menos capacidade mínima disponível
-            if capacidade_disponivel >= hotmix.capacidade_gramas_min:
+            # Deve ter pelo menos capacidade mínima disponível (considerando bypass)
+            bypass_ativo = bypass_capacidade or (hasattr(atividade, 'pedido_pai') and 
+                                               hasattr(atividade.pedido_pai, 'bypass_capacidade') and
+                                               atividade.pedido_pai.bypass_capacidade and 
+                                               any(t.name == 'MISTURADORAS_COM_COCCAO' for t in atividade.pedido_pai.bypass_capacidade))
+            
+            if bypass_ativo or capacidade_disponivel >= hotmix.capacidade_gramas_min:
                 hotmixes_com_capacidade.append((hotmix, capacidade_disponivel, velocidade, chama, pressoes))
                 logger.debug(f"🔍 {hotmix.nome}: {capacidade_disponivel}g disponível para item {id_item} (janelas simultâneas)")
+                if bypass_ativo:
+                    logger.debug(f"🔧 BYPASS: Aceitando {hotmix.nome} independente da capacidade mínima")
 
         if not hotmixes_com_capacidade:
             logger.debug("❌ Nenhuma HotMix com capacidade mínima disponível (janelas simultâneas)")
@@ -624,7 +651,8 @@ class GestorMisturadorasComCoccao:
         # Fase 4: Executa alocação múltipla com janelas simultâneas
         sucesso = self._executar_alocacao_multipla_hotmix(
             distribuicao, inicio_tentativa, fim_tentativa, 
-            id_ordem, id_pedido, id_atividade, id_item
+            id_ordem, id_pedido, id_atividade, id_item,
+            bypass_capacidade
         )
         
         if sucesso:
@@ -636,7 +664,8 @@ class GestorMisturadorasComCoccao:
 
     def _executar_alocacao_multipla_hotmix(self, distribuicao: List[Tuple[HotMix, float, TipoVelocidade, TipoChama, List[TipoPressaoChama]]], 
                                          inicio: datetime, fim: datetime,
-                                         id_ordem: int, id_pedido: int, id_atividade: int, id_item: int) -> bool:
+                                         id_ordem: int, id_pedido: int, id_atividade: int, id_item: int,
+                                         bypass_capacidade: bool = False) -> bool:
         """
         Executa alocação em múltiplas HotMixes conforme distribuição calculada.
         🎯 JANELAS SIMULTÂNEAS: Usa método específico para janelas simultâneas.
@@ -656,7 +685,8 @@ class GestorMisturadorasComCoccao:
                     chama=chama,
                     pressao_chamas=pressoes,
                     inicio=inicio,
-                    fim=fim
+                    fim=fim,
+                    bypass_capacidade=bypass_capacidade
                 )
                 
                 if not sucesso:
@@ -754,7 +784,8 @@ class GestorMisturadorasComCoccao:
             sucesso_individual = self._tentar_alocacao_individual(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_gramas, hotmixes_ordenados,
-                id_ordem, id_pedido, id_atividade, id_item
+                id_ordem, id_pedido, id_atividade, id_item,
+                bypass_capacidade
             )
             
             if sucesso_individual:
@@ -779,7 +810,8 @@ class GestorMisturadorasComCoccao:
             sucesso_distribuido = self._tentar_alocacao_distribuida_otimizada(
                 horario_inicio_tentativa, horario_final_tentativa,
                 atividade, quantidade_gramas, hotmixes_ordenados,
-                id_ordem, id_pedido, id_atividade, id_item
+                id_ordem, id_pedido, id_atividade, id_item,
+                bypass_capacidade
             )
             
             if sucesso_distribuido:
@@ -920,7 +952,8 @@ class GestorMisturadorasComCoccao:
         inicio: datetime,
         fim: datetime,
         id_item: Optional[int] = None,
-        quantidade: Optional[int] = None
+        quantidade: Optional[int] = None,
+        bypass_capacidade: bool = False
     ) -> List[HotMix]:
         """
         Verifica quais HotMixes estão disponíveis no período para um item específico.
@@ -940,7 +973,7 @@ class GestorMisturadorasComCoccao:
             else:
                 # Comportamento original para compatibilidade
                 if hotmix.esta_disponivel(inicio, fim):
-                    if quantidade is None or hotmix.validar_capacidade(quantidade):
+                    if quantidade is None or hotmix.validar_capacidade(quantidade, bypass=bypass_capacidade):
                         disponiveis.append(hotmix)
         
         return disponiveis

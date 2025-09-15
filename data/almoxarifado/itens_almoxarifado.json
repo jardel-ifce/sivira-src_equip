@@ -1100,13 +1100,13 @@
     "reabastecimento_previsto_em": "2025-06-29",
     "reservas_futuras": [],
     "ficha_tecnica": {
-      "id_ficha_tecnica": 2003
+      "id_ficha_tecnica": 2005
     }
   },
   {
     "id_item": 2003,
-    "nome": "massa_para_fritura",
-    "descricao": "Massa para fritura",
+    "nome": "massa_para_frituras",
+    "descricao": "Massa para frituras",
     "tipo_item": "SUBPRODUTO",
     "politica_producao": "SOB_DEMANDA",
     "peso": 0,
@@ -1118,7 +1118,7 @@
     "reabastecimento_previsto_em": "2025-06-29",
     "reservas_futuras": [],
     "ficha_tecnica": {
-      "id_ficha_tecnica": 2006
+      "id_ficha_tecnica": 2003
     }
   },
   {
@@ -1500,24 +1500,6 @@
     }
   },
   {
-    "id_item": 1060,
-    "nome": "folhado_de_queijo",
-    "descricao": "Folhado de queijo",
-    "tipo_item": "PRODUTO",
-    "politica_producao": "SOB_DEMANDA",
-    "peso": 1,
-    "unidade_medida": "UNIDADE",
-    "estoque_min": 36,
-    "estoque_max": 72,
-    "estoque_atual": 0,
-    "consumo_diario_estimado": 0,
-    "reabastecimento_previsto_em": "2025-06-29",
-    "reservas_futuras": [],
-    "ficha_tecnica": {
-      "id_ficha_tecnica": 1060
-    }
-  },
-  {
     "id_item": 1061,
     "nome": "pao_de_batata_com_carne_de_sol_e_catupiry",
     "descricao": "Pão de batata com carne de sol e catupiry",
@@ -1677,6 +1659,96 @@
     "reservas_futuras": [],
     "ficha_tecnica": {
       "id_ficha_tecnica": 1069
+    }
+  },
+  {
+    "id_item": 1070,
+    "nome": "coxinha_de_camarao",
+    "descricao": "Coxinha de camarão",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 30,
+    "estoque_max": 90,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1070
+    }
+  },
+  {
+    "id_item": 1071,
+    "nome": "coxinha_de_queijos_finos",
+    "descricao": "Coxinha de queijos finos",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 30,
+    "estoque_max": 90,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1071
+    }
+  },
+  {
+    "id_item": 1072,
+    "nome": "folhado_de_frango",
+    "descricao": "Folhado de frango",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 36,
+    "estoque_max": 72,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1072
+    }
+  },
+  {
+    "id_item": 1073,
+    "nome": "folhado_de_camarao",
+    "descricao": "Folhado de camarão",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 36,
+    "estoque_max": 72,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1073
+    }
+  },
+  {
+    "id_item": 1074,
+    "nome": "folhado_de_queijos_finos",
+    "descricao": "Folhado de queijos finos",
+    "tipo_item": "PRODUTO",
+    "politica_producao": "SOB_DEMANDA",
+    "peso": 1,
+    "unidade_medida": "UNIDADE",
+    "estoque_min": 36,
+    "estoque_max": 72,
+    "estoque_atual": 0,
+    "consumo_diario_estimado": 0,
+    "reabastecimento_previsto_em": "2025-06-29",
+    "reservas_futuras": [],
+    "ficha_tecnica": {
+      "id_ficha_tecnica": 1074
     }
   }
 ]

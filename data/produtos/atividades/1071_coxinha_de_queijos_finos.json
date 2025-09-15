@@ -215,7 +215,7 @@
         },
         "configuracoes_equipamentos": {
           "fritadeira_1": {
-            "unidades_por_cesta": 9,
+            "unidades_por_fracao": 9,
             "setup_min": 2,
             "faixa_temperatura": 180
           }

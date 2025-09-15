@@ -51,7 +51,8 @@ def rollback_equipamentos(
 
     for equipamento in equipamentos_extraidos:
         try:
-            print(f"🔄 Liberando {equipamento.nome} ")
+            equipamento_nome = getattr(equipamento, 'nome', str(equipamento))
+            print(f"🔄 Liberando {equipamento_nome} ")
 
             if id_atividade is not None and id_pedido is not None:
                 if hasattr(equipamento, "liberar_por_atividade"):
@@ -63,8 +64,9 @@ def rollback_equipamentos(
                 if hasattr(equipamento, "liberar_por_ordem"):
                     equipamento.liberar_por_ordem(id_ordem=id_ordem)
         except Exception as e:
+            equipamento_nome = getattr(equipamento, 'nome', str(equipamento))
             logger.warning(
-                f"⚠️ Erro ao liberar {equipamento} "
+                f"⚠️ Erro ao liberar {equipamento_nome} "
                 f"{'da atividade ' + str(id_atividade) if id_atividade is not None else ''} "
                 f"{'do pedido ' + str(id_pedido) if id_pedido is not None else ''} "
                 f"da ordem {id_ordem}: {e}"
@@ -94,6 +96,16 @@ def _extrair_objetos_equipamento(equipamentos_alocados):
             resultado.append(item)
 
     return resultado
+
+
+def _extrair_objetos_equipamento(equipamentos_alocados):
+    """
+    Garante que a função funcione tanto para listas de tuplas (ex: [(id, equipamento)])
+    quanto para listas diretas de equipamentos.
+    """
+    if equipamentos_alocados and isinstance(equipamentos_alocados[0], tuple):
+        return [e[1] for e in equipamentos_alocados]
+    return equipamentos_alocados
 
 
 
@@ -127,13 +139,5 @@ def rollback_funcionarios(
                 f"{'do pedido ' + str(id_pedido) if id_pedido is not None else ''} "
                 f"da ordem {id_ordem}: {e}"
             )
-def _extrair_objetos_equipamento(equipamentos_alocados):
-    """
-    Garante que a função funcione tanto para listas de tuplas (ex: [(id, equipamento)])
-    quanto para listas diretas de equipamentos.
-    """
-    if equipamentos_alocados and isinstance(equipamentos_alocados[0], tuple):
-        return [e[1] for e in equipamentos_alocados]
-    return equipamentos_alocados
 
 

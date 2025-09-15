@@ -50,7 +50,8 @@ class GestorFogoes:
         atividade: "AtividadeModular", 
         quantidade_total: float,
         inicio: datetime, 
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, str]:
         """
         🚀 OTIMIZAÇÃO PRINCIPAL: Verifica capacidade teórica antes de análise temporal
@@ -92,9 +93,11 @@ class GestorFogoes:
             logger.debug(f"⚡ Early exit: Nenhum fogão com configuração válida")
             return False, "Nenhum fogão com configuração válida encontrado"
         
-        if quantidade_total < capacidade_min_global:
+        if not bypass_capacidade and quantidade_total < capacidade_min_global:
             logger.debug(f"⚡ Early exit: {quantidade_total}g < mínimo global {capacidade_min_global}g")
             return False, f"Quantidade {quantidade_total}g abaixo do mínimo por boca ({capacidade_min_global}g)"
+        elif bypass_capacidade:
+            logger.info(f"🔧 BYPASS: Ignorando verificação de capacidade mínima para {quantidade_total}g")
         
         # 🕐 FASE 3: SÓ AGORA faz análise temporal custosa (se passou nas verificações básicas)
         logger.debug(f"✅ Passou verificações rápidas, iniciando análise temporal detalhada...")
@@ -179,7 +182,8 @@ class GestorFogoes:
         atividade: "AtividadeModular", 
         quantidade_total: float,
         inicio: datetime, 
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> Tuple[bool, str]:
         """
         🚀 VERSÃO OTIMIZADA: Verificação de viabilidade usando princípios do Multiple Knapsack Problem
@@ -188,7 +192,7 @@ class GestorFogoes:
         logger.debug(f"🎒 MKP: Verificando viabilidade para {quantidade_total}g")
         
         # 🚀 USA A NOVA VERIFICAÇÃO OTIMIZADA
-        return self._verificar_viabilidade_rapida_primeiro(atividade, quantidade_total, inicio, fim)
+        return self._verificar_viabilidade_rapida_primeiro(atividade, quantidade_total, inicio, fim, bypass_capacidade)
 
     # ==========================================================
     # 🧪 MÓDULO DE TESTE COMPLETO - Simulação Antes da Execução
@@ -255,13 +259,15 @@ class GestorFogoes:
             quantidade_fogao = quantidade_total * proporcao
             
             # Testa se quantidade atende mínimo
-            if quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
+            if not bypass_capacidade and quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
                 logger.debug(f"   ❌ {fogao.nome}: {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g")
                 return None
+            elif bypass_capacidade and quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
+                logger.debug(f"   🔧 BYPASS: {fogao.nome}: {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g (ignorado)")
             
             # Testa distribuição nas bocas
             plano_fogao = self._testar_distribuicao_bocas_fogao(
-                fogao, quantidade_fogao, atividade, inicio, fim
+                fogao, quantidade_fogao, atividade, inicio, fim, bypass_capacidade
             )
             
             if not plano_fogao:
@@ -304,13 +310,15 @@ class GestorFogoes:
                 quantidade_fogao = min(cap_disponivel, quantidade_maxima)
             
             # Testa se quantidade é viável
-            if quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
+            if not bypass_capacidade and quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
                 logger.debug(f"   ❌ FFD: {fogao.nome} ficaria com {quantidade_fogao:.1f}g < mínimo")
                 return None
+            elif bypass_capacidade and quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
+                logger.debug(f"   🔧 BYPASS FFD: {fogao.nome} {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g (ignorado)")
             
             # Testa distribuição nas bocas
             plano_fogao = self._testar_distribuicao_bocas_fogao(
-                fogao, quantidade_fogao, atividade, inicio, fim
+                fogao, quantidade_fogao, atividade, inicio, fim, bypass_capacidade
             )
             
             if not plano_fogao:
@@ -333,7 +341,8 @@ class GestorFogoes:
         fogoes_disponiveis: List[Tuple[Fogao, float]],
         atividade: "AtividadeModular",
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> Optional[List[Dict]]:
         """Testa distribuição balanceada com ajuste iterativo"""
         # Inicia com distribuição uniforme simples
@@ -355,9 +364,11 @@ class GestorFogoes:
                 )
             
             # Testa se quantidade é viável
-            if quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
+            if not bypass_capacidade and quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
                 logger.debug(f"   ❌ Balanceada: {fogao.nome} ficaria com {quantidade_fogao:.1f}g < mínimo")
                 return None
+            elif bypass_capacidade and quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
+                logger.debug(f"   🔧 BYPASS Balanceada: {fogao.nome} {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g (ignorado)")
             
             if quantidade_fogao > cap_disponivel:
                 logger.debug(f"   ❌ Balanceada: {fogao.nome} ficaria com {quantidade_fogao:.1f}g > capacidade {cap_disponivel}g")
@@ -365,7 +376,7 @@ class GestorFogoes:
             
             # Testa distribuição nas bocas
             plano_fogao = self._testar_distribuicao_bocas_fogao(
-                fogao, quantidade_fogao, atividade, inicio, fim
+                fogao, quantidade_fogao, atividade, inicio, fim, bypass_capacidade
             )
             
             if not plano_fogao:
@@ -389,7 +400,8 @@ class GestorFogoes:
         quantidade_fogao: float,
         atividade: "AtividadeModular",
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> Optional[List[Dict]]:
         """
         Testa distribuição da quantidade nas bocas de um fogão específico
@@ -406,15 +418,17 @@ class GestorFogoes:
         bocas_necessarias = min(bocas_necessarias, len(bocas_disponiveis))
         
         # Testa se é possível distribuir
-        if quantidade_fogao < bocas_necessarias * fogao.capacidade_por_boca_gramas_min:
+        if not bypass_capacidade and quantidade_fogao < bocas_necessarias * fogao.capacidade_por_boca_gramas_min:
             return None
+        elif bypass_capacidade and quantidade_fogao < bocas_necessarias * fogao.capacidade_por_boca_gramas_min:
+            logger.debug(f"   🔧 BYPASS Bocas: {fogao.nome} {quantidade_fogao:.1f}g < mínimo {bocas_necessarias * fogao.capacidade_por_boca_gramas_min:.1f}g (ignorado)")
         if quantidade_fogao > bocas_necessarias * fogao.capacidade_por_boca_gramas_max:
             return None
         
         # Calcula distribuição entre bocas
         distribuicao_bocas = self._distribuir_quantidade_entre_bocas(
             quantidade_fogao, bocas_necessarias,
-            fogao.capacidade_por_boca_gramas_min, fogao.capacidade_por_boca_gramas_max
+            fogao.capacidade_por_boca_gramas_min, fogao.capacidade_por_boca_gramas_max, bypass_capacidade
         )
         
         if not distribuicao_bocas:
@@ -443,7 +457,8 @@ class GestorFogoes:
     def _executar_plano_alocacao(
         self,
         plano_alocacao: List[Dict],
-        atividade: "AtividadeModular"
+        atividade: "AtividadeModular",
+        bypass_capacidade: bool = False
     ) -> bool:
         """
         Executa o plano de alocação testado e aprovado
@@ -475,7 +490,8 @@ class GestorFogoes:
                     tipo_chama=tipo_chama,
                     pressoes_chama=pressoes,
                     inicio=inicio,
-                    fim=fim
+                    fim=fim,
+                    bypass_capacidade=bypass_capacidade
                 )
                 
                 if not sucesso:
@@ -564,7 +580,7 @@ class GestorFogoes:
             
             # Fase 1: Verificação MKP OTIMIZADA
             viavel, motivo = self._verificar_viabilidade_mkp(
-                atividade, quantidade_total, horario_inicio_tentativa, horario_final_tentativa
+                atividade, quantidade_total, horario_inicio_tentativa, horario_final_tentativa, bypass_capacidade
             )
             
             if not viavel:
@@ -594,7 +610,7 @@ class GestorFogoes:
                 if cap_disponivel >= quantidade_total:
                     sucesso = self._tentar_alocacao_individual(
                         fogao, atividade, quantidade_total,
-                        horario_inicio_tentativa, horario_final_tentativa
+                        horario_inicio_tentativa, horario_final_tentativa, bypass_capacidade
                     )
                     if sucesso:
                         # 🚀 LOG DE PERFORMANCE
@@ -609,7 +625,7 @@ class GestorFogoes:
             # Fase 4: Usa módulo de teste completo para distribuição múltipla
             sucesso_multipla = self._tentar_alocacao_multipla_com_teste(
                 quantidade_total, fogoes_disponiveis, atividade, 
-                horario_inicio_tentativa, horario_final_tentativa
+                horario_inicio_tentativa, horario_final_tentativa, bypass_capacidade
             )
             
             if sucesso_multipla:
@@ -645,7 +661,8 @@ class GestorFogoes:
         fogoes_disponiveis: List[Tuple[Fogao, float]],
         atividade: "AtividadeModular",
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> Optional[List[Fogao]]:
         """
         🧪 Usa módulo de teste completo para alocação múltipla
@@ -654,7 +671,7 @@ class GestorFogoes:
         
         # Usa módulo de teste completo
         plano_alocacao = self._testar_distribuicao_completa(
-            quantidade_total, fogoes_disponiveis, atividade, inicio, fim
+            quantidade_total, fogoes_disponiveis, atividade, inicio, fim, bypass_capacidade
         )
         
         if not plano_alocacao:
@@ -662,7 +679,7 @@ class GestorFogoes:
             return None
         
         # Se teste passou, executa o plano
-        sucesso = self._executar_plano_alocacao(plano_alocacao, atividade)
+        sucesso = self._executar_plano_alocacao(plano_alocacao, atividade, bypass_capacidade)
         
         if sucesso:
             fogoes_utilizados = list(set(a['fogao'] for a in plano_alocacao))
@@ -787,7 +804,8 @@ class GestorFogoes:
         atividade: "AtividadeModular",
         quantidade: float,
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> bool:
         """Tenta alocação em um único fogão"""
         tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
@@ -802,7 +820,7 @@ class GestorFogoes:
         # Distribui quantidade entre bocas
         distribuicao = self._distribuir_quantidade_entre_bocas(
             quantidade, bocas_necessarias,
-            fogao.capacidade_por_boca_gramas_min, fogao.capacidade_por_boca_gramas_max
+            fogao.capacidade_por_boca_gramas_min, fogao.capacidade_por_boca_gramas_max, bypass_capacidade
         )
         
         if not distribuicao:
@@ -824,7 +842,8 @@ class GestorFogoes:
                 tipo_chama=tipo_chama,
                 pressoes_chama=pressoes,
                 inicio=inicio,
-                fim=fim
+                fim=fim,
+                bypass_capacidade=bypass_capacidade
             )
             
             if not sucesso:
@@ -842,14 +861,17 @@ class GestorFogoes:
         quantidade_total: float, 
         num_bocas: int,
         capacidade_min: float, 
-        capacidade_max: float
+        capacidade_max: float,
+        bypass_capacidade: bool = False
     ) -> List[float]:
         """Distribui quantidade entre bocas respeitando limites"""
         if num_bocas <= 0:
             return []
         
-        if quantidade_total < num_bocas * capacidade_min:
+        if not bypass_capacidade and quantidade_total < num_bocas * capacidade_min:
             return []
+        elif bypass_capacidade and quantidade_total < num_bocas * capacidade_min:
+            logger.debug(f"   🔧 BYPASS Distribuição: {quantidade_total:.1f}g < mínimo total {num_bocas * capacidade_min:.1f}g (ignorado)")
         if quantidade_total > num_bocas * capacidade_max:
             return []
         
@@ -868,8 +890,12 @@ class GestorFogoes:
                 )
                 quantidade_boca = min(quantidade_restante, max_nesta_boca)
             
-            if quantidade_boca < capacidade_min or quantidade_boca > capacidade_max:
+            if quantidade_boca > capacidade_max:
                 return []
+            elif not bypass_capacidade and quantidade_boca < capacidade_min:
+                return []
+            elif bypass_capacidade and quantidade_boca < capacidade_min:
+                logger.debug(f"   🔧 BYPASS Boca: {quantidade_boca:.1f}g < mínimo {capacidade_min}g (ignorado)")
             
             distribuicao.append(quantidade_boca)
             quantidade_restante -= quantidade_boca

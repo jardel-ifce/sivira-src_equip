@@ -11,22 +11,22 @@
     "politica_producao": "SOB_DEMANDA",
     "itens": [
       {
-        "id_item": 2004,
+        "id_item": 2003,
         "descricao": "Massa para Frituras",
-        "nome": "massa_para_fritura",
+        "nome": "massa_para_frituras",
         "tipo_item": "SUBPRODUTO",
         "politica_producao": "SOB_DEMANDA",
         "proporcao": 100,
-        "id_ficha_tecnica": 2004
+        "id_ficha_tecnica": 2003
       },
       {
-        "id_item": 2008,
+        "id_item": 2006,
         "descricao": "Carne de Sol Refogada",
         "nome": "carne_de_sol_refogada",
         "tipo_item": "SUBPRODUTO",
         "politica_producao": "ESTOCADO",
         "proporcao": 83.33,
-        "id_ficha_tecnica": 2008
+        "id_ficha_tecnica": 2006
       },
       {
         "id_item": 15,

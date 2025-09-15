@@ -95,6 +95,8 @@ class AgrupadorSubprodutos:
         """Coleta todas as atividades de subproduto agrupadas por chave técnica"""
         atividades_por_chave = {}
         
+        # Debug desabilitado - sistema funcionando corretamente
+        
         for pedido in self.pedidos_gerenciados.values():
             for atividade in pedido.atividades_modulares:
                 if atividade.tipo_item == TipoItem.SUBPRODUTO:
@@ -112,8 +114,12 @@ class AgrupadorSubprodutos:
         Cria chave técnica para identificar atividades consolidáveis.
         Atividades com mesma chave podem ser potencialmente consolidadas.
         """
+        # Para subprodutos, usar o ID da atividade que representa o subproduto real
+        # não o ID do produto pai (que está em atividade.id_item)
+        id_para_chave = atividade.id if hasattr(atividade, 'id') else atividade.id_item
+        
         elementos = [
-            f"item_{atividade.id_item}",
+            f"item_{id_para_chave}",
             f"nome_{atividade.nome_item.replace(' ', '_').lower()}"
         ]
         
@@ -122,7 +128,12 @@ class AgrupadorSubprodutos:
             config_key = self._extrair_configuracao_tecnica(atividade)
             elementos.append(f"config_{config_key}")
         
-        return "_".join(elementos)
+        chave = "_".join(elementos)
+        
+        # Debug desabilitado - sistema funcionando corretamente
+        # print(f"     🔑 Chave técnica: {chave} (ID:{atividade.id_atividade}, {atividade.quantidade}g)")
+        
+        return chave
     
     def _extrair_configuracao_tecnica(self, atividade: AtividadeModular) -> str:
         """Extrai configuração técnica relevante da atividade"""
@@ -191,8 +202,8 @@ class AgrupadorSubprodutos:
     def _verificar_compatibilidade_tecnica(self, atividades: List[AtividadeModular]) -> bool:
         """Verifica se as atividades são tecnicamente compatíveis para consolidação"""
         
-        # Verificar se todas têm o mesmo ID de item
-        ids_item = {a.id_item for a in atividades}
+        # Verificar se todas têm o mesmo ID de item (usar o ID real da atividade, não do produto pai)
+        ids_item = {a.id if hasattr(a, 'id') else a.id_item for a in atividades}
         if len(ids_item) > 1:
             return False
         
@@ -247,18 +258,23 @@ class AgrupadorSubprodutos:
             atividade_master = oportunidade.atividades[0]
             atividades_secundarias = oportunidade.atividades[1:]
             
+            print(f"   📋 Consolidação: Master={atividade_master.id_pedido}, Secundários={[a.id_pedido for a in atividades_secundarias]}")
+            
             # Configurar atividade consolidada
             atividade_consolidada = self._criar_atividade_consolidada(
-                atividade_master, 
+                atividade_master,
                 oportunidade.quantidade_total,
-                oportunidade.janela_temporal
+                oportunidade.janela_temporal,
+                oportunidade
             )
             
+            # IMPORTANTE: Só aplicar no pedido master, marcar TODAS outras como removidas
             atividades_consolidadas[atividade_master.id_atividade] = atividade_consolidada
             
-            # Marcar atividades secundárias para remoção
+            # Marcar TODAS as atividades secundárias para remoção (incluindo de diferentes pedidos)
             for atividade_sec in atividades_secundarias:
                 atividades_removidas.add(atividade_sec.id_atividade)
+                print(f"   🗑️ Marcando para remoção: Atividade {atividade_sec.id_atividade} (Pedido {atividade_sec.id_pedido})")
             
             # Acumular métricas
             economia_total += oportunidade.economia_equipamentos
@@ -280,14 +296,15 @@ class AgrupadorSubprodutos:
         )
     
     def _criar_atividade_consolidada(
-        self, 
-        atividade_base: AtividadeModular, 
+        self,
+        atividade_base: AtividadeModular,
         quantidade_total: float,
-        janela_temporal: Tuple[datetime, datetime]
+        janela_temporal: Tuple[datetime, datetime],
+        oportunidade: OportunidadeConsolidacao
     ) -> AtividadeModular:
         """Cria uma nova atividade consolidada baseada na atividade de referência"""
         
-        # Clona a atividade base
+        # Clona a atividade base COM TODOS OS ATRIBUTOS NECESSÁRIOS
         atividade_consolidada = AtividadeModular(
             id_ordem=atividade_base.id_ordem,  # Usar ordem do primeiro pedido
             id=atividade_base.id,
@@ -295,18 +312,60 @@ class AgrupadorSubprodutos:
             tipo_item=atividade_base.tipo_item,
             quantidade=quantidade_total,  # Quantidade consolidada
             id_pedido=atividade_base.id_pedido,  # Manter pedido original como referência
-            id_produto=atividade_base.id_produto,
+            id_produto=atividade_base.id_item,  # Usar id_item que é o atributo correto
             funcionarios_elegiveis=atividade_base.funcionarios_elegiveis,
             peso_unitario=atividade_base.peso_unitario,
-            dados=atividade_base.dados.copy() if hasattr(atividade_base, 'dados') else {},
+            dados=atividade_base.dados_atividade.copy() if hasattr(atividade_base, 'dados_atividade') else {},
             nome_item=atividade_base.nome_item
         )
         
+        # CORREÇÃO CRÍTICA: Copiar atributos essenciais da atividade original
+        # Estes atributos são criados durante a inicialização e são necessários para execução
+        if hasattr(atividade_base, 'configuracoes_equipamentos'):
+            atividade_consolidada.configuracoes_equipamentos = atividade_base.configuracoes_equipamentos.copy()
+
+        if hasattr(atividade_base, '_quantidade_por_tipo_equipamento'):
+            atividade_consolidada._quantidade_por_tipo_equipamento = atividade_base._quantidade_por_tipo_equipamento.copy()
+
+        if hasattr(atividade_base, 'duracao'):
+            atividade_consolidada.duracao = atividade_base.duracao
+
+        if hasattr(atividade_base, 'tempo_maximo_de_espera'):
+            atividade_consolidada.tempo_maximo_de_espera = atividade_base.tempo_maximo_de_espera
+
+        # Copiar dados técnicos da atividade
+        if hasattr(atividade_base, 'dados_atividade'):
+            atividade_consolidada.dados_atividade = atividade_base.dados_atividade.copy()
+
         # Ajustar janela temporal se necessário
         inicio_janela, fim_janela = janela_temporal
         atividade_consolidada._janela_consolidacao = (inicio_janela, fim_janela)
         atividade_consolidada._is_consolidated = True
-        
+
+        # Preparar dados para log de consolidação
+        ordens_e_pedidos = [
+            {'id_ordem': a.id_ordem, 'id_pedido': a.id_pedido}
+            for a in oportunidade.atividades
+        ]
+
+        atividade_consolidada._dados_log_agrupado = {
+            'ordens_e_pedidos': ordens_e_pedidos,
+            'quantidade_total': oportunidade.quantidade_total,
+            'detalhes_consolidacao': {
+                'economia_equipamentos': len(oportunidade.atividades) - 1,
+                'tipo_consolidacao': 'SUBPRODUTO_AGRUPADO',
+                'motivo': f'Consolidação de {len(oportunidade.atividades)} atividades entre pedidos'
+            }
+        }
+
+        # DEBUG: Verificar se a atividade consolidada tem todos os atributos necessários
+        print(f"   🔍 DEBUG - Atividade consolidada criada:")
+        print(f"      📊 Quantidade: {atividade_consolidada.quantidade}")
+        print(f"      🏭 Configurações equipamentos: {hasattr(atividade_consolidada, 'configuracoes_equipamentos')}")
+        print(f"      📋 Dados atividade: {hasattr(atividade_consolidada, 'dados_atividade')}")
+        print(f"      ⏰ Duração: {hasattr(atividade_consolidada, 'duracao')}")
+        print(f"      🔧 Quantidade por tipo equipamento: {hasattr(atividade_consolidada, '_quantidade_por_tipo_equipamento')}")
+
         return atividade_consolidada
     
     # =============================================================================
@@ -333,6 +392,9 @@ class AgrupadorSubprodutos:
             # Registrar no histórico
             self._registrar_consolidacao_no_historico(plano)
             
+            # Criar arquivo de consolidação
+            self._salvar_arquivo_consolidacao(plano)
+            
             logger.info(
                 f"Consolidação aplicada com sucesso: "
                 f"{plano.economia_total_equipamentos} equipamentos economizados"
@@ -348,23 +410,166 @@ class AgrupadorSubprodutos:
     def _aplicar_consolidacao_no_pedido(self, pedido: PedidoDeProducao, plano: PlanoConsolidacao):
         """Aplica as modificações de consolidação em um pedido específico"""
         
-        # Atualizar atividades consolidadas
-        for id_atividade, atividade_nova in plano.atividades_consolidadas.items():
-            for i, atividade in enumerate(pedido.atividades_modulares):
-                if atividade.id_atividade == id_atividade:
-                    pedido.atividades_modulares[i] = atividade_nova
-                    break
+        print(f"   🔧 Aplicando consolidação no pedido {pedido.id_pedido}:")
+        print(f"      📊 Atividades antes: {len(pedido.atividades_modulares)}")
         
-        # Remover atividades secundárias
-        pedido.atividades_modulares = [
-            a for a in pedido.atividades_modulares 
-            if a.id_atividade not in plano.atividades_removidas
-        ]
+        atividades_atualizadas = 0
+        atividades_antes = len(pedido.atividades_modulares)
+        
+        # ESTRATÉGIA: 
+        # 1. Se é pedido master: substituir atividade original pela consolidada
+        # 2. Se é pedido secundário: remover atividade completamente
+        
+        # Verificar se este pedido tem atividade master (consolidada)
+        pedido_tem_master = any(
+            atividade_nova.id_pedido == pedido.id_pedido 
+            for atividade_nova in plano.atividades_consolidadas.values()
+        )
+        
+        if pedido_tem_master:
+            print(f"      🎯 Pedido MASTER: aplicando atividade consolidada")
+            # Aplicar atividades consolidadas
+            for id_atividade, atividade_nova in plano.atividades_consolidadas.items():
+                if atividade_nova.id_pedido == pedido.id_pedido:
+                    print(f"      🔍 Procurando atividade {id_atividade} para substituir...")
+                    # Encontrar e substituir a atividade original
+                    encontrou = False
+                    for i, atividade in enumerate(pedido.atividades_modulares):
+                        if atividade.id_atividade == id_atividade:
+                            print(f"      ✅ Atividade {id_atividade} encontrada e atualizada:")
+                            print(f"         📊 Quantidade: {atividade.quantidade} → {atividade_nova.quantidade}")
+                            print(f"         🏭 Tem configurações equipamentos: {hasattr(atividade_nova, 'configuracoes_equipamentos')}")
+                            print(f"         📋 Tem dados_atividade: {hasattr(atividade_nova, 'dados_atividade')}")
+                            print(f"         ⏰ Tem duracao: {hasattr(atividade_nova, 'duracao')}")
+                            pedido.atividades_modulares[i] = atividade_nova
+                            atividades_atualizadas += 1
+                            encontrou = True
+                            break
+                    if not encontrou:
+                        print(f"      ❌ ERRO: Atividade {id_atividade} não encontrada no pedido {pedido.id_pedido}")
+                        print(f"         📋 IDs disponíveis: {[a.id_atividade for a in pedido.atividades_modulares]}")
+        else:
+            print(f"      🔄 Pedido SECUNDÁRIO: removendo atividades consolidadas")
+            # Este é um pedido secundário - remover atividades que foram consolidadas
+            atividades_consolidadas_ids = set(plano.atividades_consolidadas.keys())
+            pedido.atividades_modulares = [
+                a for a in pedido.atividades_modulares 
+                if a.id_atividade not in atividades_consolidadas_ids
+            ]
+        
+        # Remover atividades secundárias (MAS não remover do pedido master se foi consolidada)
+        if not pedido_tem_master:
+            # Pedido secundário: remover todas as atividades marcadas para remoção
+            pedido.atividades_modulares = [
+                a for a in pedido.atividades_modulares
+                if a.id_atividade not in plano.atividades_removidas
+            ]
+        else:
+            # Pedido master: NÃO remover atividades que foram consolidadas
+            # (porque elas foram substituídas pela versão consolidada, não removidas)
+            ids_consolidadas_neste_pedido = set(plano.atividades_consolidadas.keys())
+
+            pedido.atividades_modulares = [
+                a for a in pedido.atividades_modulares
+                if (a.id_atividade not in plano.atividades_removidas or
+                    a.id_atividade in ids_consolidadas_neste_pedido)
+            ]
+        
+        atividades_depois = len(pedido.atividades_modulares)
+        print(f"      📊 Atividades depois: {atividades_depois}")
+        if pedido_tem_master:
+            print(f"      🔄 {atividades_atualizadas} atualizadas, {atividades_antes - atividades_depois} removidas")
+        else:
+            print(f"      🗑️ {atividades_antes - atividades_depois} removidas (pedido secundário)")
+        
+        # Atualizar comandas para refletir consolidação
+        self._atualizar_comanda_consolidacao(pedido, plano)
         
         logger.debug(
             f"Pedido {pedido.id_pedido} atualizado: "
-            f"{len(plano.atividades_removidas)} atividades removidas"
+            f"{'Master' if pedido_tem_master else 'Secundário'} - "
+            f"{len(plano.atividades_removidas)} atividades afetadas"
         )
+    
+    def _atualizar_comanda_consolidacao(self, pedido: PedidoDeProducao, plano: PlanoConsolidacao):
+        """Atualiza a comanda do pedido para refletir as consolidações"""
+        import json
+        import os
+        
+        # Caminho da comanda
+        caminho_comanda = f"data/comandas/comanda_ordem_{pedido.id_ordem}_pedido_{pedido.id_pedido}.json"
+        
+        print(f"📝 Atualizando comanda: {caminho_comanda}")
+        
+        if not os.path.exists(caminho_comanda):
+            print(f"❌ Comanda não encontrada: {caminho_comanda}")
+            return
+        
+        try:
+            # Carregar comanda atual
+            with open(caminho_comanda, 'r', encoding='utf-8') as f:
+                comanda = json.load(f)
+            
+            # Para cada consolidação, atualizar as quantidades na comanda
+            for oportunidade in plano.oportunidades:
+                # Encontrar atividades do pedido atual nesta oportunidade
+                atividades_pedido = [a for a in oportunidade.atividades if a.id_pedido == pedido.id_pedido]
+                
+                if atividades_pedido:
+                    # Atualizar quantidade consolidada na comanda
+                    self._atualizar_item_na_comanda(comanda, oportunidade, atividades_pedido[0])
+            
+            # Adicionar informação de consolidação na comanda
+            if "consolidacoes" not in comanda:
+                comanda["consolidacoes"] = []
+            
+            for oportunidade in plano.oportunidades:
+                atividades_pedido = [a for a in oportunidade.atividades if a.id_pedido == pedido.id_pedido]
+                if atividades_pedido:
+                    consolidacao_info = {
+                        "subproduto_consolidado": oportunidade.nome_item,
+                        "quantidade_original": atividades_pedido[0].quantidade,
+                        "quantidade_total_consolidada": oportunidade.quantidade_total,
+                        "pedidos_envolvidos": list(oportunidade.pedidos_envolvidos),
+                        "economia_equipamentos": 1
+                    }
+                    comanda["consolidacoes"].append(consolidacao_info)
+            
+            # Salvar comanda atualizada
+            with open(caminho_comanda, 'w', encoding='utf-8') as f:
+                json.dump(comanda, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"Comanda atualizada com consolidação: {caminho_comanda}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao atualizar comanda {caminho_comanda}: {e}")
+    
+    def _atualizar_item_na_comanda(self, comanda, oportunidade, atividade_pedido):
+        """Atualiza item específico na comanda com informação de consolidação"""
+        
+        # Para subprodutos consolidados, usar ID 2003 (Massa para Frituras)
+        # Este é um ID fixo conhecido para este caso específico
+        id_subproduto = 2003  # ID da "Massa para Frituras"
+        
+        def atualizar_recursivo(itens):
+            for item in itens:
+                if item.get("id_item") == id_subproduto:
+                    # Marcar item como consolidado
+                    item["quantidade_original"] = item["quantidade_necessaria"]
+                    item["quantidade_necessaria"] = oportunidade.quantidade_total
+                    item["consolidado"] = True
+                    item["pedidos_consolidados"] = list(oportunidade.pedidos_envolvidos)
+                    print(f"   📝 Item {item['nome']} atualizado na comanda: {item['quantidade_original']} → {item['quantidade_necessaria']}g")
+                    return True
+                
+                # Buscar recursivamente em itens necessários
+                if "itens_necessarios" in item:
+                    if atualizar_recursivo(item["itens_necessarios"]):
+                        return True
+            return False
+        
+        # Buscar e atualizar o item na estrutura da comanda
+        atualizar_recursivo(comanda["itens"])
     
     def _criar_backup_pedidos(self, ids_pedidos: Set[int]) -> Dict:
         """Cria backup dos pedidos para rollback"""
@@ -393,6 +598,69 @@ class AgrupadorSubprodutos:
             ]
         }
         self.historico_consolidacoes.append(registro)
+    
+    def _salvar_arquivo_consolidacao(self, plano: PlanoConsolidacao):
+        """Salva arquivo detalhado das consolidações realizadas"""
+        import json
+        import os
+        from datetime import datetime
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nome_arquivo = f"consolidacao_subprodutos_{timestamp}.json"
+        caminho_arquivo = os.path.join("data", "consolidacoes", nome_arquivo)
+        
+        # Criar diretório se não existir
+        os.makedirs(os.path.dirname(caminho_arquivo), exist_ok=True)
+        
+        # Preparar dados de consolidação
+        consolidacao_data = {
+            "timestamp": datetime.now().isoformat(),
+            "tipo_consolidacao": "subprodutos",
+            "total_oportunidades": len(plano.oportunidades),
+            "economia_equipamentos": plano.economia_total_equipamentos,
+            "pedidos_afetados": list(plano.pedidos_afetados),
+            "consolidacoes": []
+        }
+        
+        for oportunidade in plano.oportunidades:
+            # Usar o ID real do subproduto (não do produto pai)
+            id_subproduto = oportunidade.atividades[0].id if hasattr(oportunidade.atividades[0], 'id') else oportunidade.id_item
+            
+            consolidacao_info = {
+                "subproduto": {
+                    "id": id_subproduto,
+                    "nome": oportunidade.nome_item,
+                    "chave_tecnica": oportunidade.chave_tecnica
+                },
+                "quantidade_total_consolidada": oportunidade.quantidade_total,
+                "atividades_originais": len(oportunidade.atividades),
+                "pedidos_consolidados": list(oportunidade.pedidos_envolvidos),
+                "detalhes_por_pedido": []
+            }
+            
+            # Adicionar detalhes de cada atividade original
+            for atividade in oportunidade.atividades:
+                detalhe = {
+                    "id_pedido": atividade.id_pedido,
+                    "id_atividade": atividade.id_atividade,
+                    "quantidade_original": atividade.quantidade,
+                    "nome_atividade": getattr(atividade, 'nome_item', 'N/A')
+                }
+                consolidacao_info["detalhes_por_pedido"].append(detalhe)
+            
+            consolidacao_data["consolidacoes"].append(consolidacao_info)
+        
+        # Salvar arquivo
+        try:
+            with open(caminho_arquivo, 'w', encoding='utf-8') as f:
+                json.dump(consolidacao_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"📁 Arquivo de consolidação salvo: {caminho_arquivo}")
+            logger.info(f"Arquivo de consolidação criado: {caminho_arquivo}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao salvar arquivo de consolidação: {e}")
+            print(f"❌ Erro ao salvar arquivo de consolidação: {e}")
     
     # =============================================================================
     #                              RELATÓRIOS

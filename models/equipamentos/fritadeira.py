@@ -4,21 +4,24 @@ from enums.producao.tipo_setor import TipoSetor
 from typing import List, Tuple, Optional, Dict
 from datetime import datetime, timedelta
 from utils.logs.logger_factory import setup_logger
+import math
 
 # 🍟 Logger exclusivo da Fritadeira
 logger = setup_logger('Fritadeira')
 
+# 🔢 Constantes para validação de unidades
+LIMITE_DETECCAO_UNIDADES = 100  # Se quantidade < 100, assume que são unidades
+
 
 class Fritadeira(Equipamento):
     """
-    🍟 Representa uma Fritadeira com controle individual por frações.
-    ✔️ Valida capacidade mínima e máxima por EQUIPAMENTO TOTAL (corrigido).
+    🍟 Representa uma Fritadeira com controle individual por cestas (frações).
+    ✔️ Cada fração representa uma cesta física da fritadeira.
+    ✔️ Capacidade definida em UNIDADES por cesta (não mais gramas).
+    ✔️ Suporta múltiplas bateladas quando quantidade excede capacidade.
     ✔️ Controla temperatura e tempo de setup.
-    ✔️ Permite múltiplas ocupações simultâneas por fração individual.
-    ✔️ Cada fração é tratada de forma independente.
-    ✔️ Limites de capacidade aplicados ao equipamento como um todo.
-    ✅ ATUALIZADO: Acesso por índices nas tuplas para melhor performance
-    ✅ MELHORADO: Validação de temperatura simultânea
+    ✔️ Permite múltiplas ocupações simultâneas por cesta.
+    ✅ NOVA LÓGICA: Trabalha com unidades por cesta e cálculo de bateladas
     """
 
     def __init__(
@@ -43,19 +46,25 @@ class Fritadeira(Equipamento):
             status_ativo=True
         )
 
-        self.numero_fracoes = numero_fracoes
-        self.capacidade_gramas_min = capacidade_gramas_min
-        self.capacidade_gramas_max = capacidade_gramas_max
+        self.numero_fracoes = numero_fracoes  # Número de cestas
+        self.capacidade_gramas_min = capacidade_gramas_min  # Mantido por compatibilidade (será depreciado)
+        self.capacidade_gramas_max = capacidade_gramas_max  # Mantido por compatibilidade (será depreciado)
         self.faixa_temperatura_min = faixa_temperatura_min
         self.faixa_temperatura_max = faixa_temperatura_max
         self.setup_minutos = setup_minutos
 
-        # 🍟 Ocupações por fração individual: cada fração é uma lista separada
-        # Estrutura: (id_ordem, id_pedido, id_atividade, id_item, quantidade, temperatura, setup_minutos, inicio, fim)
-        # Índices:   [0]       [1]        [2]           [3]      [4]         [5]           [6]             [7]     [8]
+        # 🍟 Ocupações por fração: cada fração é uma lista de tuplas independentes
+        # Estrutura: (id_ordem, id_pedido, id_atividade, id_item, unidades, temperatura, setup_minutos, inicio, fim)
+        # Índices:   [0]       [1]        [2]           [3]      [4]       [5]           [6]             [7]     [8]
         self.ocupacoes_por_fracao: List[List[Tuple[int, int, int, int, int, int, int, datetime, datetime]]] = [
             [] for _ in range(numero_fracoes)
         ]
+
+    # ==========================================================
+    # 🆕 Métodos para validação de capacidade por fração
+    # ==========================================================
+    
+
 
     # ==========================================================
     # 🔍 Consulta de Ocupação - ATUALIZADO com acesso por índices
@@ -164,26 +173,77 @@ class Fritadeira(Equipamento):
             return False
         return True
 
-    def validar_quantidade_total_equipamento(self, nova_quantidade: int, inicio: datetime, fim: datetime) -> bool:
-        """Valida se a nova quantidade não excede a capacidade total do equipamento."""
-        quantidade_maxima_atual = self.calcular_quantidade_maxima_periodo(inicio, fim)
-        quantidade_final_maxima = quantidade_maxima_atual + nova_quantidade
+    def calcular_capacidade_restante_periodo(self, inicio: datetime, fim: datetime, unidades_por_fracao: int) -> int:
+        """
+        Calcula quantas unidades ainda cabem no equipamento durante o período.
         
-        if quantidade_final_maxima < self.capacidade_gramas_min:
-            logger.warning(
-                f"❌ Quantidade total {quantidade_final_maxima} ficará abaixo do mínimo "
-                f"({self.capacidade_gramas_min}) do equipamento {self.nome}"
+        Args:
+            inicio: Início do período
+            fim: Fim do período  
+            unidades_por_fracao: Capacidade máxima por fração
+            
+        Returns:
+            Quantidade de unidades que ainda pode ser alocada
+        """
+        capacidade_restante_total = 0
+        
+        for fracao_index in range(self.numero_fracoes):
+            # Calcula quantas unidades já estão ocupadas nesta fração durante o período
+            unidades_ocupadas = 0
+            for ocupacao in self.ocupacoes_por_fracao[fracao_index]:
+                # Verifica sobreposição temporal (estrutura nova: inicio=[7], fim=[8])
+                if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
+                    unidades_ocupadas += ocupacao[4]  # unidades=[4]
+            
+            # Capacidade restante desta fração
+            capacidade_restante_fracao = max(0, unidades_por_fracao - unidades_ocupadas)
+            capacidade_restante_total += capacidade_restante_fracao
+        
+        return capacidade_restante_total
+
+    def validar_capacidade_periodo(self, nova_quantidade: int, inicio: datetime, fim: datetime, unidades_por_fracao: int) -> bool:
+        """
+        Valida se há capacidade suficiente para nova alocação no período.
+        
+        Args:
+            nova_quantidade: Quantidade de unidades a ser alocada
+            inicio: Início do período
+            fim: Fim do período
+            unidades_por_fracao: Capacidade máxima por fração (do JSON)
+            
+        Returns:
+            True se há capacidade suficiente, False caso contrário
+        """
+        if nova_quantidade < 1:
+            logger.warning(f"❌ Quantidade {nova_quantidade} deve ser pelo menos 1 unidade")
+            return False
+        
+        capacidade_restante = self.calcular_capacidade_restante_periodo(inicio, fim, unidades_por_fracao)
+        
+        if nova_quantidade > capacidade_restante:
+            logger.debug(
+                f"❌ Quantidade {nova_quantidade} unidades > capacidade restante ({capacidade_restante}) "
+                f"no período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
             )
             return False
         
-        if quantidade_final_maxima > self.capacidade_gramas_max:
-            logger.warning(
-                f"❌ Quantidade total {quantidade_final_maxima} excederá o máximo "
-                f"({self.capacidade_gramas_max}) do equipamento {self.nome}"
-            )
-            return False
-        
+        logger.debug(f"✅ Capacidade OK: {nova_quantidade} unidades <= {capacidade_restante} disponíveis")
         return True
+
+    def calcular_unidades_fracao_periodo(self, fracao_index: int, inicio: datetime, fim: datetime) -> int:
+        """
+        Calcula quantas unidades estão ocupadas em uma fração específica durante o período.
+        """
+        if fracao_index < 0 or fracao_index >= self.numero_fracoes:
+            return 0
+            
+        unidades_ocupadas = 0
+        for ocupacao in self.ocupacoes_por_fracao[fracao_index]:
+            # Verifica sobreposição temporal (estrutura nova: inicio=[7], fim=[8])
+            if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
+                unidades_ocupadas += ocupacao[4]  # unidades=[4]
+        
+        return unidades_ocupadas
 
     def validar_temperatura(self, temperatura: int) -> bool:
         """Valida se a temperatura está dentro dos limites da fritadeira."""
@@ -234,30 +294,34 @@ class Fritadeira(Equipamento):
         quantidade: int, 
         temperatura: int,
         inicio: datetime, 
-        fim: datetime
+        fim: datetime,
+        unidades_por_fracao: int
     ) -> bool:
         """
-        ✅ VERSÃO MELHORADA: Inclui validação de temperatura simultânea.
         Verifica se é possível ocupar uma fração específica com os parâmetros dados.
         """
         # Validação 1: Quantidade individual básica
         if not self.validar_quantidade_individual(quantidade):
             return False
         
-        # Validação 2: Capacidade total do equipamento
-        if not self.validar_quantidade_total_equipamento(quantidade, inicio, fim):
+        # Validação 2: Capacidade do período
+        if not self.validar_capacidade_periodo(quantidade, inicio, fim, unidades_por_fracao):
             return False
         
         # Validação 3: Temperatura individual da fritadeira
         if not self.validar_temperatura(temperatura):
             return False
         
-        # 🆕 Validação 4: Temperatura em ocupações simultâneas
+        # Validação 4: Temperatura em ocupações simultâneas
         if not self.validar_temperatura_simultanea(temperatura, inicio, fim):
             return False
         
-        # Validação 5: Disponibilidade da fração
-        if not self.fracao_disponivel(fracao_index, inicio, fim):
+        # Validação 5: Capacidade específica da fração
+        unidades_ocupadas_fracao = self.calcular_unidades_fracao_periodo(fracao_index, inicio, fim)
+        if unidades_ocupadas_fracao + quantidade > unidades_por_fracao:
+            logger.debug(
+                f"❌ Fração {fracao_index}: {unidades_ocupadas_fracao} + {quantidade} > {unidades_por_fracao} unidades"
+            )
             return False
         
         return True
@@ -267,32 +331,32 @@ class Fritadeira(Equipamento):
         quantidade: int, 
         temperatura: int,
         inicio: datetime, 
-        fim: datetime
+        fim: datetime,
+        unidades_por_fracao: int
     ) -> bool:
         """
-        ✅ VERSÃO MELHORADA: Inclui validação de temperatura simultânea.
-        Verifica se é possível ocupar o equipamento (qualquer fração) com os parâmetros dados.
+        Verifica se é possível ocupar o equipamento com os parâmetros dados.
         """
         # Validação 1: Quantidade individual básica
         if not self.validar_quantidade_individual(quantidade):
             return False
         
-        # Validação 2: Capacidade total do equipamento
-        if not self.validar_quantidade_total_equipamento(quantidade, inicio, fim):
+        # Validação 2: Capacidade do período
+        if not self.validar_capacidade_periodo(quantidade, inicio, fim, unidades_por_fracao):
             return False
         
         # Validação 3: Temperatura individual da fritadeira
         if not self.validar_temperatura(temperatura):
             return False
         
-        # 🆕 Validação 4: Temperatura em ocupações simultâneas
+        # Validação 4: Temperatura em ocupações simultâneas
         if not self.validar_temperatura_simultanea(temperatura, inicio, fim):
             return False
         
-        # Validação 5: Existe pelo menos uma fração disponível
-        fracoes_livres = self.fracoes_disponiveis_periodo(inicio, fim)
-        if not fracoes_livres:
-            logger.warning(f"❌ Nenhuma fração disponível na {self.nome} no período especificado")
+        # Validação 5: Existe capacidade suficiente
+        capacidade_restante = self.calcular_capacidade_restante_periodo(inicio, fim, unidades_por_fracao)
+        if capacidade_restante < quantidade:
+            logger.warning(f"❌ Capacidade insuficiente na {self.nome}: {quantidade} > {capacidade_restante}")
             return False
         
         return True
@@ -311,14 +375,15 @@ class Fritadeira(Equipamento):
         temperatura: int,
         setup_minutos: int,
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        unidades_por_fracao: int
     ) -> bool:
         """Adiciona uma ocupação específica a uma fração específica."""
         if fracao_index < 0 or fracao_index >= self.numero_fracoes:
             logger.warning(f"❌ Índice de fração inválido: {fracao_index}")
             return False
 
-        if not self.verificar_disponibilidade_fracao(fracao_index, quantidade, temperatura, inicio, fim):
+        if not self.verificar_disponibilidade_fracao(fracao_index, quantidade, temperatura, inicio, fim, unidades_por_fracao):
             return False
 
         self.ocupacoes_por_fracao[fracao_index].append(
@@ -330,9 +395,9 @@ class Fritadeira(Equipamento):
         logger.info(
             f"🍟 Ocupação adicionada na {self.nome} - Fração {fracao_index + 1} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"Quantidade: {quantidade} | Temp: {temperatura}°C | Setup: {setup_minutos}min | "
+            f"Unidades: {quantidade} | Temp: {temperatura}°C | Setup: {setup_minutos}min | "
             f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
-            f"Capacidade total após: {quantidade_total_apos}/{self.capacidade_gramas_max}"
+            f"Total após: {quantidade_total_apos} unidades"
         )
         return True
 
@@ -430,43 +495,97 @@ class Fritadeira(Equipamento):
         )
         return True
 
-    def encontrar_fracao_para_ocupacao(self, quantidade: int, temperatura: int, inicio: datetime, fim: datetime) -> Optional[int]:
-        """Encontra a primeira fração disponível para ocupação, considerando capacidade total."""
-        if not self.verificar_disponibilidade_equipamento(quantidade, temperatura, inicio, fim):
-            return None
+    def encontrar_fracoes_para_quantidade(self, quantidade_total: int, temperatura: int, inicio: datetime, fim: datetime, unidades_por_fracao: int) -> List[Tuple[int, int]]:
+        """Encontra frações disponíveis e suas capacidades para alocar a quantidade."""
+        if not self.verificar_disponibilidade_equipamento(quantidade_total, temperatura, inicio, fim, unidades_por_fracao):
+            return []
         
-        fracoes_livres = self.fracoes_disponiveis_periodo(inicio, fim)
-        return fracoes_livres[0] if fracoes_livres else None
+        fracoes_com_capacidade = []
+        for fracao_index in range(self.numero_fracoes):
+            capacidade_disponivel = unidades_por_fracao - self.calcular_unidades_fracao_periodo(fracao_index, inicio, fim)
+            if capacidade_disponivel > 0:
+                fracoes_com_capacidade.append((fracao_index, capacidade_disponivel))
+        
+        return fracoes_com_capacidade
 
-    def ocupar(
+    def ocupar_distribuido(
         self,
         id_ordem: int,
         id_pedido: int,
         id_atividade: int,
         id_item: int,
-        quantidade: int,
+        quantidade_total: int,
         temperatura: int,
         setup_minutos: int,
         inicio: datetime,
         fim: datetime,
-        fracao_index: Optional[int] = None
+        unidades_por_fracao: int
     ) -> bool:
         """
-        Ocupa uma fração específica ou encontra automaticamente uma fração disponível.
+        Ocupa frações distribuíndo a quantidade total entre elas.
         
         Args:
-            fracao_index: Se fornecido, tenta ocupar fração específica. Se None, encontra automaticamente.
+            quantidade_total: Total de unidades a ser distribuída
+            unidades_por_fracao: Capacidade máxima por fração (do JSON)
         """
-        if fracao_index is None:
-            fracao_index = self.encontrar_fracao_para_ocupacao(quantidade, temperatura, inicio, fim)
-            if fracao_index is None:
-                logger.warning(f"❌ Nenhuma fração disponível na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}")
+        # Verifica se é possível alocar
+        if not self.verificar_disponibilidade_equipamento(quantidade_total, temperatura, inicio, fim, unidades_por_fracao):
+            return False
+        
+        # Calcula quantas frações são necessárias
+        fracoes_necessarias = math.ceil(quantidade_total / unidades_por_fracao)
+        
+        # Encontra frações com capacidade disponível
+        fracoes_disponiveis = []
+        for fracao_index in range(self.numero_fracoes):
+            capacidade_disponivel = unidades_por_fracao - self.calcular_unidades_fracao_periodo(fracao_index, inicio, fim)
+            if capacidade_disponivel > 0:
+                fracoes_disponiveis.append((fracao_index, capacidade_disponivel))
+        
+        if len(fracoes_disponiveis) < fracoes_necessarias:
+            logger.warning(
+                f"❌ Frações insuficientes: necessárias {fracoes_necessarias}, disponíveis {len(fracoes_disponiveis)}"
+            )
+            return False
+        
+        # Distribui quantidade entre frações
+        alocacoes_realizadas = []
+        quantidade_restante = quantidade_total
+        
+        for fracao_index, capacidade_disponivel in fracoes_disponiveis:
+            if quantidade_restante <= 0:
+                break
+                
+            # Determina quantidade para esta fração
+            quantidade_fracao = min(quantidade_restante, capacidade_disponivel)
+            
+            sucesso = self.adicionar_ocupacao_fracao(
+                fracao_index, id_ordem, id_pedido, id_atividade, id_item,
+                quantidade_fracao, temperatura, setup_minutos, inicio, fim, unidades_por_fracao
+            )
+            
+            if sucesso:
+                alocacoes_realizadas.append(fracao_index)
+                quantidade_restante -= quantidade_fracao
+                logger.debug(f"✅ Fração {fracao_index}: {quantidade_fracao} unidades")
+            else:
+                # Rollback das alocações realizadas
+                for fracao_rollback in alocacoes_realizadas:
+                    self.liberar_fracao_especifica(fracao_rollback, id_ordem, id_pedido, id_atividade)
                 return False
-
-        return self.adicionar_ocupacao_fracao(
-            fracao_index, id_ordem, id_pedido, id_atividade, id_item,
-            quantidade, temperatura, setup_minutos, inicio, fim
+        
+        if quantidade_restante > 0:
+            logger.error(f"❌ Restaram {quantidade_restante} unidades não alocadas")
+            # Rollback
+            for fracao_rollback in alocacoes_realizadas:
+                self.liberar_fracao_especifica(fracao_rollback, id_ordem, id_pedido, id_atividade)
+            return False
+        
+        logger.info(
+            f"✅ Distribuição concluída: {quantidade_total} unidades em {len(alocacoes_realizadas)} frações"
         )
+        return True
+    
 
     # ==========================================================
     # 🔓 Liberação - ATUALIZADO com acesso por índices

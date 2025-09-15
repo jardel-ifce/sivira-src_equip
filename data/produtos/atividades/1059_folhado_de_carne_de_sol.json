@@ -95,7 +95,8 @@
         "configuracoes_equipamentos": {
           "camara_refrigerada_1": {
             "tipo_de_armazenamento": "NIVEIS_TELA",
-            "faixa_temperatura": 4
+            "faixa_temperatura": 4,
+            "unidades_por_nivel": 40
           }
         },
         "tipos_profissionais_permitidos": [],
@@ -148,7 +149,7 @@
           "FORNOS": 1
         },
         "equipamentos_elegiveis": ["forno_3", "forno_4"],
-        "tempo_maximo_de_espera": "00:30:00",
+        "tempo_maximo_de_espera": "00:00:00",
         "fips_equipamentos": {
           "forno_3": 1,
           "forno_4": 2

@@ -41,8 +41,8 @@ class GestorFritadeiras:
     # ==========================================================
     # 🚀 OTIMIZAÇÃO: Verificação de Viabilidade em Cascata
     # ==========================================================
-    def _verificar_viabilidade_rapida_primeiro(self, atividade: "AtividadeModular", quantidade_total: float,
-                                             temperatura: int, fracoes_necessarias: int,
+    def _verificar_viabilidade_rapida_primeiro(self, atividade: "AtividadeModular", quantidade_total: int,
+                                             temperatura: int, unidades_por_fracao: int,
                                              inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         🚀 OTIMIZAÇÃO PRINCIPAL: Verifica capacidade teórica antes de análise temporal
@@ -56,16 +56,16 @@ class GestorFritadeiras:
         Ganho estimado: 70-90% redução no tempo para casos inviáveis
         """
         
-        # 🚀 FASE 1: Verificação ultrarrápida de capacidade teórica total
-        capacidade_maxima_teorica = sum(f.capacidade_gramas_max for f in self.fritadeiras)
+        # 🚀 FASE 1: Verificação ultrarrápida de capacidade teórica total (em unidades)
+        capacidade_maxima_teorica = sum(f.numero_fracoes * unidades_por_fracao for f in self.fritadeiras)
         
         # Early exit se teoricamente impossível
         if quantidade_total > capacidade_maxima_teorica:
             logger.debug(
-                f"⚡ Early exit: {quantidade_total}g > {capacidade_maxima_teorica}g (capacidade teórica) "
+                f"⚡ Early exit: {quantidade_total} unidades > {capacidade_maxima_teorica} unidades (capacidade teórica) "
                 f"- Rejeitado em ~0.1ms"
             )
-            return False, f"Quantidade {quantidade_total}g excede capacidade máxima teórica do sistema ({capacidade_maxima_teorica}g)"
+            return False, f"Quantidade {quantidade_total} unidades excede capacidade máxima teórica do sistema ({capacidade_maxima_teorica} unidades)"
 
         # 🚀 FASE 2: Verificação rápida de compatibilidade de temperatura
         fritadeiras_temperatura_compativel = [
@@ -76,43 +76,39 @@ class GestorFritadeiras:
             logger.debug(f"⚡ Early exit: Nenhuma fritadeira compatível com temperatura {temperatura}°C")
             return False, f"Nenhuma fritadeira compatível com temperatura {temperatura}°C"
         
-        capacidade_maxima_temperatura = sum(f.capacidade_gramas_max for f in fritadeiras_temperatura_compativel)
+        capacidade_maxima_temperatura = sum(f.numero_fracoes * unidades_por_fracao for f in fritadeiras_temperatura_compativel)
         if quantidade_total > capacidade_maxima_temperatura:
             logger.debug(
-                f"⚡ Early exit: {quantidade_total}g > {capacidade_maxima_temperatura}g (capacidade com temperatura {temperatura}°C)"
+                f"⚡ Early exit: {quantidade_total} unidades > {capacidade_maxima_temperatura} unidades (capacidade com temperatura {temperatura}°C)"
             )
-            return False, f"Quantidade {quantidade_total}g excede capacidade máxima com temperatura {temperatura}°C ({capacidade_maxima_temperatura}g)"
+            return False, f"Quantidade {quantidade_total} unidades excede capacidade máxima com temperatura {temperatura}°C ({capacidade_maxima_temperatura} unidades)"
 
-        # 🚀 FASE 3: Verificação rápida de frações totais
-        fracoes_totais_disponiveis = sum(f.numero_fracoes for f in fritadeiras_temperatura_compativel)
-        if fracoes_necessarias > fracoes_totais_disponiveis:
-            logger.debug(f"⚡ Early exit: {fracoes_necessarias} frações necessárias > {fracoes_totais_disponiveis} frações totais")
-            return False, f"Necessárias {fracoes_necessarias} frações, disponíveis apenas {fracoes_totais_disponiveis} no sistema"
+        # 🚀 FASE 3: Verificação rápida se há fritadeiras compatíveis
+        if not fritadeiras_temperatura_compativel:
+            logger.debug(f"⚡ Early exit: Nenhuma fritadeira compatível com temperatura {temperatura}°C")
+            return False, f"Nenhuma fritadeira compatível com temperatura {temperatura}°C"
 
-        # 🚀 FASE 4: Verificação rápida de capacidades mínimas
-        capacidade_minima_total = sum(f.capacidade_gramas_min for f in fritadeiras_temperatura_compativel)
-        if quantidade_total < min(f.capacidade_gramas_min for f in fritadeiras_temperatura_compativel):
-            if len(fritadeiras_temperatura_compativel) == 1:
-                logger.debug(f"✅ Quantidade pequena viável com uma fritadeira")
-            else:
-                logger.debug(f"⚡ Early exit: Quantidade muito pequena para qualquer fritadeira individual")
-                return False, f"Quantidade {quantidade_total}g menor que capacidade mínima de qualquer fritadeira"
-        elif quantidade_total < capacidade_minima_total:
-            logger.debug(f"⚡ Early exit: {quantidade_total}g < {capacidade_minima_total}g (mínimos totais)")
-            return False, f"Quantidade {quantidade_total}g insuficiente para capacidades mínimas ({capacidade_minima_total}g)"
+        # 🚀 FASE 4: Verificação básica de viabilidade com unidades por cesta
+        if quantidade_total < 1:
+            logger.debug(f"⚡ Early exit: Quantidade {quantidade_total} deve ser pelo menos 1")
+            return False, f"Quantidade {quantidade_total} deve ser pelo menos 1"
+        
+        if unidades_por_fracao < 1:
+            logger.debug(f"⚡ Early exit: Unidades por fração {unidades_por_fracao} deve ser pelo menos 1")
+            return False, f"Unidades por fração {unidades_por_fracao} deve ser pelo menos 1"
 
         # 🕐 FASE 5: SÓ AGORA faz análise temporal custosa (se passou nas verificações básicas)
         logger.debug(f"✅ Passou verificações rápidas, iniciando análise temporal detalhada...")
-        return self._verificar_viabilidade_temporal_detalhada(atividade, quantidade_total, temperatura, fracoes_necessarias, inicio, fim)
+        return self._verificar_viabilidade_temporal_detalhada(atividade, quantidade_total, temperatura, unidades_por_fracao, inicio, fim)
 
-    def _verificar_viabilidade_temporal_detalhada(self, atividade: "AtividadeModular", quantidade_total: float,
-                                                temperatura: int, fracoes_necessarias: int,
+    def _verificar_viabilidade_temporal_detalhada(self, atividade: "AtividadeModular", quantidade_total: int,
+                                                temperatura: int, unidades_por_fracao: int,
                                                 inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         🕐 Análise temporal detalhada - só executa se passou nas verificações básicas
         Esta é a parte custosa que agora só roda quando realmente necessário
         """
-        capacidade_disponivel_total = 0.0
+        capacidade_disponivel_total = 0
         fracoes_disponiveis_total = 0
         fritadeiras_disponiveis = []
         
@@ -125,23 +121,17 @@ class GestorFritadeiras:
                 fracoes_livres = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
                 
                 if fracoes_livres:
-                    # Calcula capacidade disponível (parte custosa)
-                    quantidade_atual = self._calcular_quantidade_maxima_fritadeira_periodo(fritadeira, inicio, fim)
-                    capacidade_disponivel = fritadeira.capacidade_gramas_max - quantidade_atual
-                    
-                    if capacidade_disponivel >= fritadeira.capacidade_gramas_min:
-                        capacidade_disponivel_total += capacidade_disponivel
-                        fracoes_disponiveis_total += len(fracoes_livres)
-                        fritadeiras_disponiveis.append(fritadeira)
+                    # Calcula capacidade disponível em unidades
+                    capacidade_disponivel = len(fracoes_livres) * unidades_por_fracao
+                    capacidade_disponivel_total += capacidade_disponivel
+                    fracoes_disponiveis_total += len(fracoes_livres)
+                    fritadeiras_disponiveis.append(fritadeira)
 
         if not fritadeiras_disponiveis:
             return False, "Nenhuma fritadeira disponível no período especificado"
 
-        if fracoes_disponiveis_total < fracoes_necessarias:
-            return False, f"Apenas {fracoes_disponiveis_total} frações disponíveis no período, necessárias {fracoes_necessarias}"
-
         if quantidade_total > capacidade_disponivel_total:
-            return False, f"Quantidade {quantidade_total}g excede capacidade disponível ({capacidade_disponivel_total}g) no período"
+            return False, f"Quantidade {quantidade_total} unidades excede capacidade disponível ({capacidade_disponivel_total} unidades) no período"
 
         return True, "Viável após análise temporal completa"
 
@@ -149,41 +139,41 @@ class GestorFritadeiras:
     # 📊 Análise de Viabilidade e Capacidades (OTIMIZADA)
     # ==========================================================
     def _calcular_capacidade_total_sistema(self, atividade: "AtividadeModular", temperatura: int,
-                                          inicio: datetime, fim: datetime) -> Tuple[float, float]:
+                                          unidades_por_fracao: int, inicio: datetime, fim: datetime) -> Tuple[int, int]:
         """
         🚀 OTIMIZADO: Calcula capacidade total do sistema para temperatura específica.
         Agora usa verificação em cascata para melhor performance.
         Retorna: (capacidade_total_disponivel, capacidade_maxima_teorica)
         """
         # Primeiro calcular capacidade teórica (rápido)
-        capacidade_maxima_teorica = sum(f.capacidade_gramas_max for f in self.fritadeiras)
+        capacidade_maxima_teorica = sum(f.numero_fracoes * unidades_por_fracao for f in self.fritadeiras)
         
         # Depois calcular disponibilidade real (custoso)
-        capacidade_disponivel_total = 0.0
+        capacidade_disponivel_total = 0
         
         for fritadeira in self.fritadeiras:
             # Verifica compatibilidade de temperatura
             if (fritadeira.validar_temperatura(temperatura) and 
                 fritadeira.validar_temperatura_simultanea(temperatura, inicio, fim)):
                 
-                # Calcula capacidade disponível (análise temporal)
-                quantidade_atual = self._calcular_quantidade_maxima_fritadeira_periodo(fritadeira, inicio, fim)
-                capacidade_livre = fritadeira.capacidade_gramas_max - quantidade_atual
-                capacidade_disponivel_total += max(0, capacidade_livre)
+                # Calcula capacidade disponível em unidades
+                fracoes_livres = fritadeira.fracoes_disponiveis_periodo(inicio, fim)
+                capacidade_livre = len(fracoes_livres) * unidades_por_fracao
+                capacidade_disponivel_total += capacidade_livre
         
         return capacidade_disponivel_total, capacidade_maxima_teorica
 
-    def _verificar_viabilidade_quantidade(self, atividade: "AtividadeModular", quantidade_total: float,
-                                        temperatura: int, fracoes_necessarias: int, 
+    def _verificar_viabilidade_quantidade(self, atividade: "AtividadeModular", quantidade_total: int,
+                                        temperatura: int, unidades_por_fracao: int, 
                                         inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         📚 Multiple Knapsack Problem (MKP): Verifica viabilidade teórica da demanda.
-        Considera capacidade total, temperatura e número de frações necessárias.
+        Considera capacidade total, temperatura e unidades por cesta.
         
         🚀 VERSÃO OTIMIZADA: Usa verificação em cascata para evitar análises custosas desnecessárias.
         """
         # 🚀 USA A NOVA VERIFICAÇÃO OTIMIZADA
-        return self._verificar_viabilidade_rapida_primeiro(atividade, quantidade_total, temperatura, fracoes_necessarias, inicio, fim)
+        return self._verificar_viabilidade_rapida_primeiro(atividade, quantidade_total, temperatura, unidades_por_fracao, inicio, fim)
 
     # ==========================================================
     # 🧮 Algoritmos de Distribuição Otimizada
@@ -367,39 +357,44 @@ class GestorFritadeiras:
         nome_bruto = nome.lower().replace(" ", "_")
         return unicodedata.normalize("NFKD", nome_bruto).encode("ASCII", "ignore").decode("utf-8")
 
-    def _obter_quantidade_gramas(self, atividade: "AtividadeModular", fritadeira: Fritadeira) -> Optional[int]:
-        """Obtém a quantidade em gramas necessária para a atividade."""
+    def _obter_ids_atividade(self, atividade: "AtividadeModular") -> Tuple[int, int, int, int]:
+        """Extrai IDs da atividade (padrão do GestorFogoes)"""
+        id_ordem = getattr(atividade, 'id_ordem', 0)
+        id_pedido = getattr(atividade, 'id_pedido', 0) 
+        id_atividade = getattr(atividade, 'id_atividade', 0)
+        id_item = getattr(atividade, 'id_item', getattr(atividade, 'id_produto', 0))
+        return id_ordem, id_pedido, id_atividade, id_item
+
+
+    def _obter_unidades_por_fracao(self, atividade: "AtividadeModular", fritadeira: Fritadeira) -> Optional[int]:
+        """Obtém quantas unidades cabem por fração da fritadeira."""
         try:
             chave = self._normalizar_nome(fritadeira.nome)
             config = atividade.configuracoes_equipamentos.get(chave, {})
-            return int(config.get("quantidade_gramas", atividade.quantidade_produto or 0))
+            return int(config.get("unidades_por_fracao", 1))
         except Exception as e:
-            logger.warning(f"⚠️ Erro ao obter quantidade em gramas para {fritadeira.nome}: {e}")
+            logger.warning(f"⚠️ Erro ao obter unidades por fração para {fritadeira.nome}: {e}")
             return None
 
     def _obter_temperatura(self, atividade: "AtividadeModular", fritadeira: Fritadeira) -> Optional[int]:
         try:
             chave = self._normalizar_nome(fritadeira.nome)
             config = atividade.configuracoes_equipamentos.get(chave, {})
-            return int(config.get("temperatura", 0))
+            return int(config.get("faixa_temperatura", 0))
         except Exception as e:
             logger.warning(f"⚠️ Erro ao obter temperatura para {fritadeira.nome}: {e}")
             return None
 
-    def _obter_fracoes_necessarias(self, atividade: "AtividadeModular", fritadeira: Fritadeira) -> Optional[int]:
-        """Obtém o número de frações necessárias para a atividade."""
+    def _obter_setup_minutos(self, atividade: "AtividadeModular", fritadeira: Fritadeira) -> Optional[int]:
+        """Obtém o tempo de setup em minutos para a atividade."""
         try:
             chave = self._normalizar_nome(fritadeira.nome)
             config = atividade.configuracoes_equipamentos.get(chave, {})
-            return int(config.get("fracoes_necessarias", 1))
+            return int(config.get("setup_min", fritadeira.setup_minutos))
         except Exception as e:
-            logger.warning(f"⚠️ Erro ao obter frações necessárias para {fritadeira.nome}: {e}")
-            return None
+            logger.warning(f"⚠️ Erro ao obter setup para {fritadeira.nome}: {e}")
+            return fritadeira.setup_minutos
 
-    def _calcular_quantidade_maxima_fritadeira_periodo(self, fritadeira: Fritadeira, 
-                                                     inicio: datetime, fim: datetime) -> int:
-        """Calcula a quantidade máxima ocupada simultaneamente na fritadeira durante o período."""
-        return fritadeira.calcular_quantidade_maxima_periodo(inicio, fim)
 
     def _calcular_distribuicao_otima(self, quantidade_total: float, temperatura: int,
                                    fritadeiras_disponiveis: List[Tuple[Fritadeira, float, List[int]]]) -> List[Tuple[Fritadeira, float, List[int]]]:
@@ -451,147 +446,90 @@ class GestorFritadeiras:
         inicio: datetime,
         fim: datetime,
         atividade: "AtividadeModular",
-        bypass_capacidade: bool = False
+        quantidade_produto: int,
+        bypass_capacidade: bool = False,
+        **kwargs
     ) -> Tuple[bool, Optional[List[Fritadeira]], Optional[datetime], Optional[datetime]]:
         """
-        🚀 VERSÃO OTIMIZADA: Alocação otimizada com verificação prévia de viabilidade e distribuição inteligente.
-        
-        Melhorias implementadas:
-        - Verificação rápida de capacidade antes da análise temporal
-        - Early exit para casos impossíveis (ganho de 90-95% em performance)
-        - Logs de diagnóstico melhorados para depuração
+        Alocação simplificada usando nova lógica da Fritadeira (consonante com GestorFogoes).
         
         Returns:
-            Para alocação simples: (True, [fritadeira], inicio, fim)
-            Para alocação múltipla: (True, [lista_fritadeiras], inicio, fim)
+            (sucesso, [fritadeira_utilizada], inicio_real, fim_real)
         """
+        # Usar padrão do GestorFogoes
         duracao = atividade.duracao
+        id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
+        quantidade_total = int(quantidade_produto)
+        
+        logger.info(f"🎯 Iniciando alocação: {quantidade_total} unidades")
+        logger.info(f"📅 Janela: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}")
+
+        # Backward scheduling (padrão do GestorFogoes)
         horario_final_tentativa = fim
         
-        # Obter parâmetros básicos
-        temperatura = self._obter_temperatura(atividade, self.fritadeiras[0])
-        quantidade_gramas = self._obter_quantidade_gramas(atividade, self.fritadeiras[0])
-        fracoes_necessarias = self._obter_fracoes_necessarias(atividade, self.fritadeiras[0])
-        
-        if not temperatura or not quantidade_gramas or not fracoes_necessarias:
-            logger.error(f"❌ Parâmetros inválidos para atividade {atividade.id_atividade}")
-            return False, None, None, None
-
-        logger.info(f"🎯 Iniciando alocação otimizada: {quantidade_gramas}g, {fracoes_necessarias} frações, {temperatura}°C")
-
-        # 🚀 CONTADOR DE PERFORMANCE para diagnóstico
-        tentativas_total = 0
-        early_exits = 0
-        analises_temporais = 0
-
         while horario_final_tentativa - duracao >= inicio:
             horario_inicial_tentativa = horario_final_tentativa - duracao
-            tentativas_total += 1
-
-            # Fase 1: Verificação de viabilidade OTIMIZADA
-            viavel, motivo = self._verificar_viabilidade_quantidade(
-                atividade, quantidade_gramas, temperatura, fracoes_necessarias,
-                horario_inicial_tentativa, horario_final_tentativa
-            )
+            horario_final_real = horario_inicial_tentativa + duracao
             
-            if not viavel:
-                # Contar tipos de rejeição para estatísticas
-                if ("capacidade máxima teórica" in motivo or 
-                    "capacidade máxima com temperatura" in motivo or
-                    "frações totais" in motivo or
-                    "capacidades mínimas" in motivo or
-                    "fritadeira compatível" in motivo):
-                    early_exits += 1
-                else:
-                    analises_temporais += 1
-                
-                logger.debug(f"❌ Inviável no horário {horario_inicial_tentativa.strftime('%H:%M')}: {motivo}")
-                horario_final_tentativa -= timedelta(minutes=1)
-                continue
-
-            analises_temporais += 1  # Se chegou aqui, fez análise temporal
-
-            # Fase 2: Identificar fritadeiras disponíveis com suas capacidades
-            fritadeiras_disponiveis = []
+            # Tentar alocação em cada fritadeira (ordenadas por FIP)
             fritadeiras_ordenadas = self._ordenar_por_fip(atividade)
             
             for fritadeira in fritadeiras_ordenadas:
-                # Verifica compatibilidade de temperatura
-                if (fritadeira.validar_temperatura(temperatura) and 
-                    fritadeira.validar_temperatura_simultanea(temperatura, horario_inicial_tentativa, horario_final_tentativa)):
-                    
-                    # Verifica frações disponíveis
-                    fracoes_livres = fritadeira.fracoes_disponiveis_periodo(horario_inicial_tentativa, horario_final_tentativa)
-                    
-                    if fracoes_livres:
-                        # Calcula capacidade disponível
-                        quantidade_atual = self._calcular_quantidade_maxima_fritadeira_periodo(
-                            fritadeira, horario_inicial_tentativa, horario_final_tentativa
-                        )
-                        capacidade_disponivel = fritadeira.capacidade_gramas_max - quantidade_atual
-                        
-                        if capacidade_disponivel >= fritadeira.capacidade_gramas_min:
-                            fritadeiras_disponiveis.append((fritadeira, capacidade_disponivel, fracoes_livres))
-
-            if not fritadeiras_disponiveis:
-                horario_final_tentativa -= timedelta(minutes=1)
-                continue
-
-            # Fase 3: Tentativa de alocação em fritadeira única (otimização)
-            for fritadeira, cap_disponivel, fracoes_livres in fritadeiras_disponiveis:
-                if (cap_disponivel >= quantidade_gramas and 
-                    len(fracoes_livres) >= fracoes_necessarias):
-                    # Pode alocar em uma única fritadeira
-                    sucesso = self._tentar_alocacao_simples(
-                        fritadeira, atividade, quantidade_gramas, temperatura, fracoes_necessarias,
-                        horario_inicial_tentativa, horario_final_tentativa
-                    )
-                    if sucesso:
-                        # 🚀 LOG DE PERFORMANCE
-                        logger.info(
-                            f"✅ Alocação simples: {quantidade_gramas}g na {fritadeira.nome} "
-                            f"(Tentativas: {tentativas_total}, Early exits: {early_exits}, "
-                            f"Análises temporais: {analises_temporais})"
-                        )
-                        atividade.equipamento_alocado = fritadeira
-                        atividade.equipamentos_selecionados = [fritadeira]
-                        atividade.alocada = True
-                        return True, [fritadeira], horario_inicial_tentativa, horario_final_tentativa
-
-            # Fase 4: Distribuição em múltiplas fritadeiras
-            distribuicao = self._calcular_distribuicao_otima(quantidade_gramas, temperatura, fritadeiras_disponiveis)
-            
-            if distribuicao:
-                sucesso = self._executar_alocacao_multipla(
-                    distribuicao, atividade, temperatura, 
-                    horario_inicial_tentativa, horario_final_tentativa
+                # Obter parâmetros desta fritadeira
+                temperatura = self._obter_temperatura(atividade, fritadeira)
+                unidades_por_fracao = self._obter_unidades_por_fracao(atividade, fritadeira)
+                setup_minutos = self._obter_setup_minutos(atividade, fritadeira)
+                
+                if not temperatura or not unidades_por_fracao:
+                    logger.debug(f"❌ Parâmetros inválidos para {fritadeira.nome}")
+                    continue
+                
+                # Verificar se fritadeira suporta a temperatura
+                if not fritadeira.validar_temperatura(temperatura):
+                    logger.debug(f"❌ Temperatura {temperatura}°C incompatível com {fritadeira.nome}")
+                    continue
+                
+                # Verificar disponibilidade no período
+                if not fritadeira.verificar_disponibilidade_equipamento(
+                    quantidade_total, temperatura, 
+                    horario_inicial_tentativa, horario_final_real, 
+                    unidades_por_fracao
+                ):
+                    logger.debug(f"❌ {fritadeira.nome} indisponível no período")
+                    continue
+                
+                # Tentar ocupar usando a nova lógica
+                sucesso = fritadeira.ocupar_distribuido(
+                    id_ordem=id_ordem,
+                    id_pedido=id_pedido,
+                    id_atividade=id_atividade,
+                    id_item=id_item,
+                    quantidade_total=quantidade_total,
+                    temperatura=temperatura,
+                    setup_minutos=setup_minutos,
+                    inicio=horario_inicial_tentativa,
+                    fim=horario_final_real,
+                    unidades_por_fracao=unidades_por_fracao
                 )
+                
                 if sucesso:
-                    fritadeiras_alocadas = [f for f, _, _ in distribuicao]
-                    # 🚀 LOG DE PERFORMANCE
-                    logger.info(
-                        f"✅ Alocação múltipla bem-sucedida em {len(fritadeiras_alocadas)} fritadeiras: "
-                        f"{', '.join(f.nome for f in fritadeiras_alocadas)} "
-                        f"(Tentativas: {tentativas_total}, Early exits: {early_exits}, "
-                        f"Análises temporais: {analises_temporais})"
-                    )
-                    atividade.equipamento_alocado = fritadeiras_alocadas[0]  # Principal
-                    atividade.equipamentos_selecionados = fritadeiras_alocadas
+                    # Atualizar atividade
+                    atividade.equipamento_alocado = fritadeira
+                    atividade.equipamentos_selecionados = [fritadeira]
                     atividade.alocada = True
-                    return True, fritadeiras_alocadas, horario_inicial_tentativa, horario_final_tentativa
-
+                    
+                    logger.info(
+                        f"✅ Alocação bem-sucedida: {quantidade_total} unidades na {fritadeira.nome} | "
+                        f"{horario_inicial_tentativa.strftime('%H:%M')} → {horario_final_real.strftime('%H:%M')}"
+                    )
+                    return True, [fritadeira], horario_inicial_tentativa, horario_final_real
+            
+            # Tenta horário anterior
             horario_final_tentativa -= timedelta(minutes=1)
 
-        # 🚀 DIAGNÓSTICO DETALHADO DE PERFORMANCE
-        eficiencia_otimizacao = (early_exits / tentativas_total * 100) if tentativas_total > 0 else 0
-        
         logger.warning(
-            f"❌ Falha na alocação de {quantidade_gramas}g, {fracoes_necessarias} frações, {temperatura}°C\n"
-            f"📊 ESTATÍSTICAS DE PERFORMANCE:\n"
-            f"   Total de tentativas: {tentativas_total:,}\n"
-            f"   Early exits (otimização): {early_exits:,} ({eficiencia_otimizacao:.1f}%)\n"
-            f"   Análises temporais: {analises_temporais:,}\n"
-            f"   Economia estimada: {early_exits * 95}% de tempo computacional"
+            f"❌ Falha na alocação: {quantidade_total} unidades. "
+            f"Nenhuma fritadeira conseguiu processar no período disponível"
         )
         
         return False, None, None, None

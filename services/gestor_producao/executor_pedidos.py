@@ -108,7 +108,7 @@ class ExecutorPedidos:
                                 id_pedido=pedido.id_pedido,
                                 ficha=pedido.ficha_tecnica_modular,
                                 gestor=pedido.gestor_almoxarifado,
-                                data_execucao=pedido.inicio_jornada
+                                data_execucao=pedido.fim_jornada
                             )
                             print(f"   ✅ Comanda gerada: data/comandas/comanda_ordem_{pedido.id_ordem}_pedido_{pedido.id_pedido}.json")
                             comandas_geradas += 1
@@ -268,7 +268,7 @@ class ExecutorPedidos:
                                 id_pedido=pedido.id_pedido,
                                 ficha=pedido.ficha_tecnica_modular,
                                 gestor=pedido.gestor_almoxarifado,
-                                data_execucao=pedido.inicio_jornada
+                                data_execucao=pedido.fim_jornada
                             )
                             print(f"   ✅ Comanda gerada: data/comandas/comanda_ordem_{pedido.id_ordem}_pedido_{pedido.id_pedido}.json")
                             comandas_geradas += 1

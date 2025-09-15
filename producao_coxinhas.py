@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-"""
-🍟 Script de Produção: Sistema de Produção de Coxinhas de Frango
-===============================================================
-
-Baseado no producao_paes.py, adaptado para produção de coxinhas com sistema de bateladas.
-Modo de execução: SEQUENCIAL (sem otimização PL).
-"""
-
 import sys
 import os
 from datetime import datetime, timedelta
@@ -20,7 +11,9 @@ from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva
 from utils.comandas.limpador_comandas import apagar_todas_as_comandas
 from utils.ordenador.ordenador_pedidos import ordenar_pedidos_por_restricoes
 from enums.producao.tipo_item import TipoItem
-from enums.equipamentos.tipo_equipamento import TipoEquipamento
+
+# IMPORTAÇÃO DO OTIMIZADOR PL
+from otimizador.otimizador_integrado import OtimizadorIntegrado, SistemaProducaoOtimizado
 
 
 class TeeOutput:
@@ -42,32 +35,43 @@ class TeeOutput:
         self.file.flush()
 
 
-class SistemaProducaoCoxinhas:
+class TesteSistemaProducao:
     """
-    Classe principal para teste do sistema de produção de coxinhas.
+    Classe principal para teste do sistema de produção.
     Coordena todo o fluxo de execução desde o carregamento do almoxarifado 
-    até a execução completa dos pedidos de coxinhas.
+    até a execução completa dos pedidos.
     
-    🍟 ESPECIALIZADO: Produção de coxinhas com sistema de bateladas
+    ✅ CORRIGIDO: Janela temporal adequada para otimizador PL.
     """
     
-    def __init__(self):
-        """Inicializa o sistema de produção de coxinhas."""
+    def __init__(self, usar_otimizacao=True, resolucao_minutos=30, timeout_pl=300):
+        """
+        Inicializa o sistema de produção.
+        
+        Args:
+            usar_otimizacao: Se True, usa otimização PL. Se False, execução sequencial
+            resolucao_minutos: Resolução temporal para otimização (30min recomendado)
+            timeout_pl: Timeout em segundos para resolução PL (5min padrão)
+        """
         self.almoxarifado = None
         self.gestor_almoxarifado = None
         self.pedidos = []
         self.log_filename = None
         
-        # Mapeamento específico para coxinhas e folhados
+        # NOVA: Configuração do otimizador
+        self.usar_otimizacao = usar_otimizacao
+        self.otimizador = None
+        if usar_otimizacao:
+            self.otimizador = OtimizadorIntegrado(
+                resolucao_minutos=resolucao_minutos,
+                timeout_segundos=timeout_pl
+            )
+        
         self.mapeamento_produtos = {
             "Coxinha de Frango": 1055,
-            "Coxinha de Carne de sol": 1069,
-  
-            "Coxinha de Queijos finos": 1071,
-            "Folhado de Frango": 1072,
-            "Folhado de Carne de sol": 1059,
-            "Folhado de Camarão": 1073,
-            "Folhado de Queijos finos": 1074
+            "Coxinha de Carne de Sol": 1069,
+            "Coxinha de Camarão": 1070,
+            "Coxinha de Queijos Finos": 1071
         }
         
         # Estatísticas da execução
@@ -77,15 +81,23 @@ class SistemaProducaoCoxinhas:
         """Configura o sistema de logging com timestamp único"""
         os.makedirs('logs', exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.log_filename = f'logs/execucao_coxinhas_{timestamp}.log'
+        modo = "otimizado" if self.usar_otimizacao else "sequencial"
+        self.log_filename = f'logs/execucao_coxinhas_{modo}_{timestamp}.log'
         return self.log_filename
 
     def escrever_cabecalho_log(self):
         """Escreve cabeçalho informativo no log"""
         print("=" * 80)
-        print(f"🍟 LOG DE EXECUÇÃO - SISTEMA DE PRODUÇÃO DE CONFEITARIA")
-        print(f"Modo de execução: SEQUENCIAL")
+        print(f"LOG DE EXECUÇÃO - SISTEMA DE PRODUÇÃO COXINHAS")
+        modo = "OTIMIZADA (Programação Linear)" if self.usar_otimizacao else "SEQUENCIAL"
+        print(f"Modo de execução: {modo}")
         print(f"Data/Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+        
+        if self.usar_otimizacao and self.otimizador:
+            print(f"Configuração PL:")
+            print(f"  - Resolução temporal: {self.otimizador.resolucao_minutos} minutos")
+            print(f"  - Timeout: {self.otimizador.timeout_segundos} segundos")
+        
         print("=" * 80)
         print()
 
@@ -112,7 +124,12 @@ class SistemaProducaoCoxinhas:
         print(f"\n📊 ESTATÍSTICAS FINAIS:")
         print(f"   Total de pedidos: {stats.get('total_pedidos', 'N/A')}")
         print(f"   Pedidos executados: {stats.get('pedidos_executados', 'N/A')}")
-        print(f"   Total de itens produzidos: {stats.get('total_itens', 'N/A')}")
+        
+        if self.usar_otimizacao and 'otimizacao' in stats:
+            opt_stats = stats['otimizacao']
+            print(f"   Taxa de atendimento PL: {opt_stats.get('taxa_atendimento', 0):.1%}")
+            print(f"   Tempo otimização: {opt_stats.get('tempo_total_otimizacao', 0):.2f}s")
+            print(f"   Status solver: {opt_stats.get('status_solver', 'N/A')}")
 
     # =============================================================================
     #                      CONFIGURAÇÃO DO AMBIENTE
@@ -133,7 +150,6 @@ class SistemaProducaoCoxinhas:
         limpar_todos_os_logs()
         limpar_logs_erros()
         limpar_logs_inicializacao()
-        
         # Inicializar almoxarifado
         self.almoxarifado = Almoxarifado()
         for item in itens:
@@ -151,24 +167,25 @@ class SistemaProducaoCoxinhas:
 
     def criar_pedidos_de_producao(self):
         """
-        Cria pedidos de produção de coxinhas com diferentes quantidades para testar o sistema de bateladas.
+        ✅ CORRIGIDO: Cria pedidos com janela temporal adequada para otimizador PL.
+        Mantém 3 dias para dar flexibilidade ao algoritmo de alocação.
         """
         print("🔄 Criando pedidos de produção de coxinhas...")
         self.pedidos = []
         
         # Data base para os cálculos
-        data_base = datetime(2025, 9, 9)  # Data atual
+        data_base = datetime(2025, 6, 26)
         
-        # Configurações dos pedidos para confeitaria
+        # Configurações dos pedidos de coxinhas
         configuracoes_pedidos = [
-            # PEDIDOS MATUTINOS - 08:00
-            {"produto": "Coxinha de Carne de sol", "quantidade": 8, "hora_fim": 8},
-            {"produto": "Coxinha de Camarão", "quantidade": 8, "hora_fim": 8},
-            {"produto": "Coxinha de Queijos finos", "quantidade": 10, "hora_fim": 8},
-            {"produto": "Folhado de Frango", "quantidade": 10, "hora_fim": 8},
-            {"produto": "Folhado de Carne de sol", "quantidade": 10, "hora_fim": 8},
-            {"produto": "Folhado de Camarão", "quantidade": 10, "hora_fim": 8},
-            {"produto": "Folhado de Queijos finos", "quantidade": 5, "hora_fim": 8},
+           # CONJUNTO MATINAL 
+            {"produto": "Coxinha de Frango", "quantidade": 15, "hora_fim": 8},
+            {"produto": "Coxinha de Carne de Sol", "quantidade": 10, "hora_fim": 8},
+            {"produto": "Coxinha de Camarão", "quantidade": 12, "hora_fim": 8},
+            {"produto": "Coxinha de Queijos Finos", "quantidade": 12, "hora_fim": 8},
+
+          
+
         ]
         
         id_pedido_counter = 1
@@ -180,7 +197,8 @@ class SistemaProducaoCoxinhas:
                 # Calcular datas de início e fim da jornada
                 fim_jornada = data_base.replace(hour=config['hora_fim'], minute=0, second=0, microsecond=0)
                 
-                # Janela de 3 dias para flexibilidade de alocação
+                # ✅ CORREÇÃO CRÍTICA: SEMPRE usar 3 dias, independente do modo
+                # Isso dá flexibilidade tanto para otimizador quanto para execução real
                 inicio_jornada = fim_jornada - timedelta(days=3)
                 
                 print(f"   📅 Configuração temporal:")
@@ -206,11 +224,6 @@ class SistemaProducaoCoxinhas:
                 )
                 
                 pedido.montar_estrutura()
-                
-                # Configurar bypass para HotMix e Fogões (capacidade mínima)
-                bypass_tipos = {TipoEquipamento.MISTURADORAS_COM_COCCAO, TipoEquipamento.FOGOES}
-                pedido.configurar_bypass_capacidade(bypass_tipos)
-                
                 self.pedidos.append(pedido)
                 print(f"   ✅ Pedido {id_pedido_counter} criado: {config['produto']} ({config['quantidade']} uni)")
                 
@@ -220,15 +233,25 @@ class SistemaProducaoCoxinhas:
                 print(f"   ⚠️ Falha ao montar estrutura do pedido {id_pedido_counter}: {e}")
                 id_pedido_counter += 1
         
-        print(f"\n✅ Total de {len(self.pedidos)} pedidos criados para confeitaria!")
-        print(f"🔧 Pedidos configurados com janela de 3 dias para execução sequencial")
+        print(f"\n✅ Total de {len(self.pedidos)} pedidos criados para coxinhas!")
+        if self.usar_otimizacao:
+            print(f"🔧 Pedidos configurados com janela de 3 dias para otimização PL")
+        else:
+            print(f"🔧 Pedidos configurados com janela de 3 dias para execução sequencial")
         print()
 
     def ordenar_pedidos_por_prioridade(self):
-        """Ordena pedidos baseado em restrições e prioridades."""
-        print("🔄 Ordenando pedidos por restrições (modo sequencial)...")
-        self.pedidos = ordenar_pedidos_por_restricoes(self.pedidos)
-        print(f"✅ {len(self.pedidos)} pedidos ordenados!")
+        """
+        Ordena pedidos baseado em restrições e prioridades.
+        MANTIDO para compatibilidade, mas pode ser substituído pela otimização PL.
+        """
+        if not self.usar_otimizacao:
+            print("🔄 Ordenando pedidos por restrições (modo sequencial)...")
+            self.pedidos = ordenar_pedidos_por_restricoes(self.pedidos)
+            print(f"✅ {len(self.pedidos)} pedidos ordenados!")
+        else:
+            print("🔄 Mantendo ordem original (otimização PL definirá execução)...")
+            print(f"✅ {len(self.pedidos)} pedidos mantidos em ordem de criação")
         print()
 
     # =============================================================================
@@ -236,11 +259,13 @@ class SistemaProducaoCoxinhas:
     # =============================================================================
 
     def executar_pedidos_ordenados(self):
-        """Executa todos os pedidos em ordem sequencial."""
-        print("🔄 Executando pedidos de confeitaria em ordem sequencial...")
+        """
+        MÉTODO ORIGINAL: Executa todos os pedidos em ordem sequencial.
+        Mantido para compatibilidade com modo não-otimizado.
+        """
+        print("🔄 Executando pedidos de coxinhas em ordem sequencial...")
         
         pedidos_executados = 0
-        total_itens = 0
         
         for idx, pedido in enumerate(self.pedidos, 1):
             nome_produto = self._obter_nome_produto_por_id(pedido.id_produto)
@@ -253,7 +278,6 @@ class SistemaProducaoCoxinhas:
                 self._executar_pedido_individual(pedido)
                 print(f"   ✅ Pedido {pedido.id_pedido} ({nome_produto}) executado com sucesso!")
                 pedidos_executados += 1
-                total_itens += pedido.quantidade
                 
             except RuntimeError as e:
                 print(f"   ⚠️ Falha ao processar o pedido {pedido.id_pedido} ({nome_produto}): {e}")
@@ -263,13 +287,47 @@ class SistemaProducaoCoxinhas:
         self.estatisticas_execucao.update({
             'total_pedidos': len(self.pedidos),
             'pedidos_executados': pedidos_executados,
-            'total_itens': total_itens,
             'modo_execucao': 'sequencial'
         })
+
+    def executar_pedidos_otimizados(self):
+        """
+        NOVO MÉTODO: Executa pedidos usando otimização PL.
+        """
+        if not self.usar_otimizacao or not self.otimizador:
+            print("❌ Otimizador não configurado. Use executar_pedidos_ordenados().")
+            return False
+        
+        print("🚀 Iniciando execução otimizada com Programação Linear...")
+        
+        try:
+            # Delega execução para o otimizador integrado
+            sucesso = self.otimizador.executar_pedidos_otimizados(self.pedidos, self)
+            
+            # Coleta estatísticas do otimizador
+            if sucesso:
+                stats_otimizador = self.otimizador.obter_estatisticas()
+                self.estatisticas_execucao.update({
+                    'total_pedidos': len(self.pedidos),
+                    'pedidos_executados': stats_otimizador.get('pedidos_atendidos', 0),
+                    'modo_execucao': 'otimizado_pl',
+                    'otimizacao': stats_otimizador
+                })
+                
+                print(f"\n🎉 Execução otimizada concluída com sucesso!")
+                return True
+            else:
+                print(f"❌ Falha na execução otimizada")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Erro durante execução otimizada: {e}")
+            return False
 
     def _executar_pedido_individual(self, pedido):
         """
         Executa um pedido individual seguindo o fluxo padrão.
+        Método auxiliar usado tanto no modo sequencial quanto otimizado.
         """
         # Gerar comanda de reserva
         gerar_comanda_reserva(
@@ -286,7 +344,7 @@ class SistemaProducaoCoxinhas:
         # Criar atividades modulares
         pedido.criar_atividades_modulares_necessarias()
         
-        # Executar atividades em ordem (incluindo a fritadeira com sistema de bateladas)
+        # Executar atividades em ordem
         pedido.executar_atividades_em_ordem()
 
     def _obter_nome_produto_por_id(self, id_produto):
@@ -299,9 +357,13 @@ class SistemaProducaoCoxinhas:
     # =============================================================================
 
     def executar_teste_completo(self):
-        """Executa o teste completo do sistema de produção de coxinhas."""
+        """
+        Executa o teste completo do sistema de produção de coxinhas.
+        ATUALIZADO para escolher entre execução sequencial ou otimizada.
+        """
         try:
-            print(f"🍟 INICIANDO SISTEMA DE PRODUÇÃO DE CONFEITARIA - MODO SEQUENCIAL")
+            modo = "OTIMIZADA" if self.usar_otimizacao else "SEQUENCIAL"
+            print(f"🥟 INICIANDO SISTEMA DE PRODUÇÃO DE COXINHAS - MODO {modo}")
             print()
             
             # Fase 1: Configuração do ambiente
@@ -310,13 +372,17 @@ class SistemaProducaoCoxinhas:
             # Fase 2: Criação dos pedidos
             self.criar_pedidos_de_producao()
             
-            # Fase 3: Ordenação por prioridade
+            # Fase 3: Ordenação por prioridade (se necessário)
             self.ordenar_pedidos_por_prioridade()
             
-            # Fase 4: Execução sequencial
-            self.executar_pedidos_ordenados()
+            # Fase 4: Execução (escolhe método baseado na configuração)
+            if self.usar_otimizacao:
+                sucesso = self.executar_pedidos_otimizados()
+            else:
+                self.executar_pedidos_ordenados()
+                sucesso = True  # Assume sucesso se não houve exceções
             
-            return True
+            return sucesso
             
         except Exception as e:
             print("=" * 80)
@@ -334,14 +400,81 @@ class SistemaProducaoCoxinhas:
         """Retorna estatísticas da execução"""
         return self.estatisticas_execucao.copy()
 
+    def obter_cronograma_otimizado(self):
+        """Retorna cronograma otimizado (se disponível)"""
+        if self.usar_otimizacao and self.otimizador:
+            return self.otimizador.obter_cronograma_otimizado()
+        return {}
+
+    def configurar_modo_sequencial(self):
+        """Alterna para modo sequencial"""
+        self.usar_otimizacao = False
+        self.otimizador = None
+        print("🔄 Modo alterado para: SEQUENCIAL")
+
+    def configurar_modo_otimizado(self, resolucao_minutos=30, timeout_pl=300):
+        """Alterna para modo otimizado"""
+        self.usar_otimizacao = True
+        self.otimizador = OtimizadorIntegrado(
+            resolucao_minutos=resolucao_minutos,
+            timeout_segundos=timeout_pl
+        )
+        print(f"🔄 Modo alterado para: OTIMIZADO (resolução: {resolucao_minutos}min, timeout: {timeout_pl}s)")
+
+
+# =============================================================================
+#                    WRAPPER PARA COMPATIBILIDADE
+# =============================================================================
+
+class SistemaProducaoOtimizado:
+    """
+    Wrapper para manter compatibilidade com otimizador_integrado.py
+    Redireciona para TesteSistemaProducao configurado em modo otimizado.
+    """
+    
+    def __init__(self, sistema_producao_original=None):
+        """
+        Args:
+            sistema_producao_original: Instância de TesteSistemaProducao (opcional)
+        """
+        if sistema_producao_original:
+            self.sistema_original = sistema_producao_original
+            # Força modo otimizado se não estiver configurado
+            if not sistema_producao_original.usar_otimizacao:
+                sistema_producao_original.configurar_modo_otimizado()
+        else:
+            # Cria novo sistema em modo otimizado
+            self.sistema_original = TesteSistemaProducao(usar_otimizacao=True)
+    
+    def executar_com_otimizacao(self) -> bool:
+        """Executa o sistema completo com otimização"""
+        return self.sistema_original.executar_teste_completo()
+    
+    def obter_relatorio_completo(self) -> dict:
+        """Retorna relatório completo da execução otimizada"""
+        return {
+            'estatisticas_otimizacao': self.sistema_original.obter_estatisticas(),
+            'cronograma_otimizado': self.sistema_original.obter_cronograma_otimizado(),
+            'total_pedidos': len(self.sistema_original.pedidos) if self.sistema_original.pedidos else 0
+        }
+
 
 def main():
     """
     Função principal que coordena todo o teste de produção de coxinhas.
+    ✅ CORRIGIDO com janela temporal adequada para otimizador PL.
     """
+    # Configuração do modo de execução
+    USAR_OTIMIZACAO = True  # Altere para False para modo sequencial
+    RESOLUCAO_MINUTOS = 30  # Resolução temporal (30min = bom compromisso)
+    TIMEOUT_PL = 300        # 5 minutos para resolução PL
     
     # Inicializar sistema de teste
-    sistema = SistemaProducaoCoxinhas()
+    sistema = TesteSistemaProducao(
+        usar_otimizacao=USAR_OTIMIZACAO,
+        resolucao_minutos=RESOLUCAO_MINUTOS,
+        timeout_pl=TIMEOUT_PL
+    )
     
     log_filename = sistema.configurar_log()
     
@@ -357,11 +490,15 @@ def main():
             # Executar teste completo
             sucesso = sistema.executar_teste_completo()
             
-            # Mostrar estatísticas finais
-            if sucesso:
+            # Mostrar estatísticas finais se disponíveis
+            if sucesso and USAR_OTIMIZACAO:
                 print(f"\n📋 RELATÓRIO FINAL:")
                 stats = sistema.obter_estatisticas()
+                cronograma = sistema.obter_cronograma_otimizado()
+                
                 print(f"   Estatísticas: {stats}")
+                if cronograma:
+                    print(f"   Cronograma otimizado disponível com {len(cronograma)} pedidos")
             
             # Escrever rodapé
             sistema.escrever_rodape_log(sucesso)
@@ -373,50 +510,41 @@ def main():
         finally:
             # Restaurar stdout original
             sys.stdout = tee.stdout
-            print(f"\n📄 Log de execução salvo em: {log_filename}")
+            modo = "otimizada" if USAR_OTIMIZACAO else "sequencial"
+            print(f"\n📄 Log de execução {modo} salvo em: {log_filename}")
 
 
-def exemplo_diferentes_quantidades():
+def exemplo_uso_comparativo():
     """
-    Exemplo que demonstra o sistema de bateladas com diferentes quantidades.
+    Exemplo de como comparar execução sequencial vs otimizada.
     """
     print("=" * 60)
-    print("🍟 EXEMPLO: DEMONSTRAÇÃO DO SISTEMA DE BATELADAS")
+    print("EXEMPLO: COMPARAÇÃO SEQUENCIAL vs OTIMIZADA")
     print("=" * 60)
     
-    # Simular diferentes quantidades
-    quantidades_teste = [9, 18, 30, 40, 45, 60]
+    # Teste sequencial
+    print("\n🔄 Executando modo SEQUENCIAL...")
+    sistema_seq = TesteSistemaProducao(usar_otimizacao=False)
+    sistema_seq.configurar_log()
+    sucesso_seq = sistema_seq.executar_teste_completo()
+    stats_seq = sistema_seq.obter_estatisticas()
     
-    print("Simulação de bateladas para diferentes quantidades:")
-    print("(9 unidades por cesta, 4 cestas disponíveis)")
-    print()
+    # Teste otimizado
+    print("\n🔄 Executando modo OTIMIZADO...")
+    sistema_opt = TesteSistemaProducao(usar_otimizacao=True, resolucao_minutos=30)
+    sistema_opt.configurar_log()
+    sucesso_opt = sistema_opt.executar_teste_completo()
+    stats_opt = sistema_opt.obter_estatisticas()
     
-    for quantidade in quantidades_teste:
-        bateladas = quantidade // 36  # Quantas bateladas de 36 (4 cestas × 9)
-        restante = quantidade % 36
-        
-        if restante > 0:
-            bateladas += 1
-            
-        print(f"   {quantidade:2d} coxinhas → {bateladas} bateladas")
-        
-        # Detalhar bateladas
-        unidades_processadas = 0
-        for i in range(1, bateladas + 1):
-            if i < bateladas:
-                unidades_batelada = 36
-            else:
-                unidades_batelada = quantidade - unidades_processadas
-            
-            cestas_usadas = min(4, (unidades_batelada + 8) // 9)  # Arredonda para cima
-            print(f"      Batelada {i}: {unidades_batelada} unidades em {cestas_usadas} cestas")
-            unidades_processadas += unidades_batelada
-        
-        print()
+    # Comparação
+    print("\n📊 COMPARAÇÃO DE RESULTADOS:")
+    print(f"Sequencial: {stats_seq}")
+    print(f"Otimizado:  {stats_opt}")
 
 
 if __name__ == "__main__":
+    
     main()
     
-    # Para demonstrar sistema de bateladas, descomente:
-    # exemplo_diferentes_quantidades()
+    # Para testar comparação, descomente:
+    # exemplo_uso_comparativo()

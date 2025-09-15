@@ -311,21 +311,51 @@ class AtividadeModular:
                 f"(duração: {self.fim_real - self.inicio_real})"
             )
 
-            # Registrar log estruturado
-            registrar_log_equipamentos(
-                id_ordem=self.id_ordem,
-                id_pedido=self.id_pedido,
-                id_atividade=self.id_atividade,
-                nome_item=self.nome_item,
-                nome_atividade=self.nome_atividade,
-                equipamentos_alocados=equipamentos_alocados
-            )
+            # Registrar log estruturado - verificar se é atividade consolidada
+            if getattr(self, '_is_consolidated', False):
+                # Esta é uma atividade consolidada - gerar log especial
+                self._registrar_log_consolidacao(equipamentos_alocados, self.inicio_real, self.fim_real)
+            else:
+                # Log normal de equipamentos
+                registrar_log_equipamentos(
+                    id_ordem=self.id_ordem,
+                    id_pedido=self.id_pedido,
+                    id_atividade=self.id_atividade,
+                    nome_item=self.nome_item,
+                    nome_atividade=self.nome_atividade,
+                    equipamentos_alocados=equipamentos_alocados
+                )
 
             return self.inicio_real, self.fim_real
-            
+
         except Exception as e:
             logger.error(f"❌ Erro ao registrar sucesso dos equipamentos: {e}")
             raise
+
+    def _registrar_log_consolidacao(self, equipamentos_alocados, inicio, fim):
+        """Registra log especial para atividades consolidadas"""
+        from utils.logs.log_subprodutos_agrupados import registrar_log_subproduto_agrupado
+
+        dados_log = getattr(self, '_dados_log_agrupado', None)
+        if dados_log:
+            registrar_log_subproduto_agrupado(
+                ordens_e_pedidos=dados_log['ordens_e_pedidos'],
+                id_atividade=self.id_atividade,
+                nome_item=self.nome_item,
+                nome_atividade=self.nome_atividade,
+                equipamentos_alocados=equipamentos_alocados,
+                quantidade_total=dados_log['quantidade_total'],
+                detalhes_consolidacao=dados_log['detalhes_consolidacao']
+            )
+
+            logger.info(
+                f"🔗 Log de subproduto agrupado registrado para atividade {self.id_atividade} "
+                f"({len(dados_log['ordens_e_pedidos'])} pedidos consolidados)"
+            )
+        else:
+            logger.warning(
+                f"⚠️ Atividade {self.id_atividade} marcada como consolidada, mas sem dados de consolidação"
+            )
 
     def _extrair_equipamentos_alocados(self, equipamentos_alocados):
         """Extrai lista de equipamentos dos dados de alocação com validação melhorada"""
@@ -748,8 +778,10 @@ class AtividadeModular:
                                 f"tempo máximo de espera ({self.tempo_maximo_de_espera}) na atividade {self.id_atividade}"
                             )
                             
-                            # ✅ REGISTRAR NO SISTEMA DE LOGS DE TEMPO INTRA-ATIVIDADE
+                            # ✅ REGISTRAR NO SISTEMA DE LOGS TEMPORAL UNIFICADO
                             try:
+                                from utils.logs.temporal_allocation_logger import log_intra_activity_timing_error
+                                
                                 log_intra_activity_timing_error(
                                     id_ordem=self.id_ordem,
                                     id_pedido=self.id_pedido,
@@ -763,12 +795,12 @@ class AtividadeModular:
                                 )
                                 
                                 logger.info(
-                                    f"📝 Erro de tempo intra-atividade registrado no sistema de logs: "
+                                    f"📝 Erro de tempo intra-atividade registrado no sistema temporal unificado: "
                                     f"TEMPO_MAXIMO_ESPERA_INTRA_ATIVIDADE"
                                 )
                                 
                             except Exception as log_err:
-                                logger.warning(f"⚠️ Falha ao registrar log intra-atividade: {log_err}")
+                                logger.warning(f"⚠️ Falha ao registrar log temporal intra-atividade: {log_err}")
                             
                             # ✅ LANÇAR EXCEÇÃO PARA CANCELAR A ATIVIDADE
                             raise IntraActivityTimingError(
@@ -905,6 +937,7 @@ class AtividadeModular:
             TipoEquipamento.BATEDEIRAS: self._alocar_batedeira,
             TipoEquipamento.BALANCAS: self._alocar_balanca,
             TipoEquipamento.FORNOS: self._alocar_forno,
+            TipoEquipamento.FRITADEIRAS: self._alocar_fritadeira,
             TipoEquipamento.MISTURADORAS: self._alocar_misturadora,
             TipoEquipamento.MISTURADORAS_COM_COCCAO: self._alocar_misturadora_com_coccao,
             TipoEquipamento.ARMARIOS_PARA_FERMENTACAO: self._alocar_armario_fermentacao,
@@ -948,6 +981,11 @@ class AtividadeModular:
     def _alocar_forno(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.FORNOS)
+        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+    
+    def _alocar_fritadeira(self, gestor, inicio, fim, **kwargs): 
+        from enums.equipamentos.tipo_equipamento import TipoEquipamento
+        bypass = self._deve_ignorar_tipo(TipoEquipamento.FRITADEIRAS)
         return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
     
     def _alocar_misturadora(self, gestor, inicio, fim, **kwargs): 

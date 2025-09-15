@@ -77,7 +77,7 @@ class FabricaEquipamentos:
             setor=TipoSetor.COZINHA,
             numero_operadores=6,  # CORRIGIDO: 1 → 6
             chamas_suportadas=[TipoChama.BAIXA, TipoChama.MEDIA, TipoChama.ALTA],
-            capacidade_por_boca_gramas_min=2000,
+            capacidade_por_boca_gramas_min=500,  # CORRIGIDO: 2000 → 500 (permite batches pequenos)
             capacidade_por_boca_gramas_max=30000,
             numero_bocas=6,
             pressao_chamas_suportadas=[TipoPressaoChama.ALTA_PRESSAO, TipoPressaoChama.CHAMA_DUPLA]
@@ -91,7 +91,7 @@ class FabricaEquipamentos:
             setor=TipoSetor.CONFEITARIA,
             numero_operadores=4,  # CORRIGIDO: 1 → 4
             chamas_suportadas=[TipoChama.BAIXA, TipoChama.MEDIA, TipoChama.ALTA],
-            capacidade_por_boca_gramas_min=2000,
+            capacidade_por_boca_gramas_min=500,  # CORRIGIDO: 2000 → 500 (permite batches pequenos)
             capacidade_por_boca_gramas_max=30000,
             numero_bocas=4,  # CORRIGIDO: 6 → 4
             pressao_chamas_suportadas=[TipoPressaoChama.BAIXA_PRESSAO, TipoPressaoChama.CHAMA_UNICA]
@@ -239,7 +239,7 @@ class FabricaEquipamentos:
             numero_operadores=1,
             velocidade_min=1,
             velocidade_max=5,
-            capacidade_gramas_min=2000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=20000
         )
 
@@ -253,7 +253,7 @@ class FabricaEquipamentos:
             nome="Masseira 1",
             setor=TipoSetor.PANIFICACAO,
             numero_operadores=1,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=50000,  # CORRIGIDO: 5000 → 50000
             tipos_de_mistura_suportados=[TipoMistura.SEMI_RAPIDA],
             velocidades_suportadas=[
@@ -268,7 +268,7 @@ class FabricaEquipamentos:
             id=21,
             nome="Masseira 2",
             setor=TipoSetor.PANIFICACAO,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=30000,
             numero_operadores=1,
             tipos_de_mistura_suportados=[TipoMistura.RAPIDA],
@@ -283,7 +283,7 @@ class FabricaEquipamentos:
             id=22,
             nome="Masseira 3",
             setor=TipoSetor.CONFEITARIA,
-            capacidade_gramas_min=3000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=20000,
             numero_operadores=1,
             tipos_de_mistura_suportados=[TipoMistura.LENTA],  # CORRIGIDO: formato lista
@@ -303,7 +303,7 @@ class FabricaEquipamentos:
             nome="HotMix 1",
             setor=TipoSetor.CONFEITARIA,
             numero_operadores=1,
-            capacidade_gramas_min=2000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=30000,
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA,
@@ -329,7 +329,7 @@ class FabricaEquipamentos:
             nome="HotMix 2",
             setor=TipoSetor.CONFEITARIA,
             numero_operadores=1,
-            capacidade_gramas_min=2000,
+            capacidade_gramas_min=1,
             capacidade_gramas_max=30000,
             velocidades_suportadas=[
                 TipoVelocidade.BAIXA,

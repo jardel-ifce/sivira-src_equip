@@ -14,4 +14,4 @@ def consultar_duracao_por_faixas(dados_atividade: dict, quantidade: int) -> time
             h, m, s = map(int, faixa["duracao"].split(":"))
             return timedelta(hours=h, minutes=m, seconds=s)
 
-    raise ValueError(f"❌ Nenhuma faixa compatível com a quantidade {quantidade}g.")
+    raise ValueError(f"❌ Nenhuma faixa compatível com a quantidade {quantidade} (gramas ou unidades).")

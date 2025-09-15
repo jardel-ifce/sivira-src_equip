@@ -1,16 +1,20 @@
 from datetime import datetime, date, timedelta
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, TYPE_CHECKING
 from models.almoxarifado.almoxarifado import Almoxarifado
 from models.almoxarifado.item_almoxarifado import ItemAlmoxarifado
 from enums.producao.politica_producao import PoliticaProducao
 from utils.logs.logger_factory import setup_logger
 
+if TYPE_CHECKING:
+    from parser.parser_almoxarifado import ParserAlmoxarifado
+
 logger = setup_logger('GestorAlmoxarifado')
 
 
 class GestorAlmoxarifado:
-    def __init__(self, almoxarifado: Almoxarifado):
+    def __init__(self, almoxarifado: Almoxarifado, parser_almoxarifado: Optional['ParserAlmoxarifado'] = None):
         self.almoxarifado = almoxarifado
+        self.parser_almoxarifado = parser_almoxarifado
 
     # =============================================================================
     #                     VERIFICAÇÕES DE DISPONIBILIDADE
@@ -119,6 +123,10 @@ class GestorAlmoxarifado:
             if item:
                 item.consumir(data, quantidade, id_ordem, id_pedido)
                 logger.info(f"📉 Consumido: {quantidade} de {item.nome} em {data.strftime('%Y-%m-%d')}")
+        
+        # Salvar estoque automaticamente após consumos
+        if consumos:
+            self._salvar_estoque_automaticamente()
 
     def separar_itens_para_producao(
         self,
@@ -153,6 +161,10 @@ class GestorAlmoxarifado:
             logger.error(f"❌ Erro na separação: {e}")
             raise e
 
+        # Salvar estoque automaticamente após separação
+        if itens_separados:
+            self._salvar_estoque_automaticamente()
+
         # Registrar separação bem-sucedida
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
         logger.info(
@@ -183,6 +195,10 @@ class GestorAlmoxarifado:
     def listar_itens_por_tipo(self, tipo_item: str) -> List[ItemAlmoxarifado]:
         """Lista itens filtrados por tipo"""
         return self.almoxarifado.buscar_itens_por_tipo(tipo_item)
+
+    def listar_todos_os_itens(self) -> List[ItemAlmoxarifado]:
+        """Lista todos os itens do almoxarifado"""
+        return self.almoxarifado.listar_itens()
 
     def verificar_estoque_minimo(self) -> List[Dict]:
         """
@@ -366,6 +382,337 @@ class GestorAlmoxarifado:
         data_limite = date.today() - timedelta(days=dias_atras)
         self.almoxarifado.limpar_reservas_expiradas(data_limite)
         logger.info(f"🧹 Removidas reservas anteriores a {data_limite}")
+
+    # =============================================================================
+    #                      PROCESSAMENTO DE COMANDAS
+    # =============================================================================
+
+    def processar_comandas_e_reservar_itens(self, pasta_comandas: str = "data/comandas/") -> Dict:
+        """
+        Processa todas as comandas da pasta especificada e RESERVA os itens do almoxarifado.
+        
+        Args:
+            pasta_comandas: Caminho para pasta com arquivos JSON de comandas
+            
+        Returns:
+            Dict com relatório do processamento:
+            - sucesso: True se processou com sucesso
+            - comandas_processadas: número de comandas processadas
+            - itens_reservados: lista de itens reservados
+            - itens_com_estoque_insuficiente: lista de itens sem estoque para reserva
+            - total_reservas: número total de operações de reserva
+            - pasta_comandas: pasta processada
+            - erro: mensagem de erro se houver falha
+        """
+        from parser.gerenciador_json_comandas import ler_comandas_em_pasta
+        from datetime import datetime
+        
+        logger.info(f"🧾 Iniciando processamento de comandas da pasta: {pasta_comandas}")
+        
+        # Resultado do processamento
+        resultado = {
+            "sucesso": False,
+            "comandas_processadas": 0,
+            "itens_reservados": [],
+            "itens_com_estoque_insuficiente": [],
+            "total_reservas": 0,
+            "pasta_comandas": pasta_comandas,
+            "erros": []
+        }
+        
+        try:
+            # Ler todas as comandas da pasta
+            reservas = ler_comandas_em_pasta(pasta_comandas)
+            
+            if not reservas:
+                logger.info("📭 Nenhuma comanda encontrada para processar")
+                return resultado
+            
+            logger.info(f"📋 Encontradas {len(reservas)} operações de reserva para processar")
+            
+            # Extrair data da reserva da primeira comanda
+            data_reserva = None
+            comandas_ids = set()
+            
+            for reserva in reservas:
+                comandas_ids.add(f"Ordem {reserva['id_ordem']} - Pedido {reserva['id_pedido']}")
+                if not data_reserva:
+                    # Extrair data da primeira reserva
+                    data_str = reserva.get('data_reserva', datetime.now().strftime('%Y-%m-%d'))
+                    data_reserva = datetime.strptime(data_str, '%Y-%m-%d')
+            
+            if not data_reserva:
+                data_reserva = datetime.now()
+            
+            resultado["comandas_processadas"] = len(comandas_ids)
+            
+            logger.info(f"📊 Resumo: {len(reservas)} reservas para data {data_reserva.strftime('%Y-%m-%d')}")
+            logger.info(f"🏷️ Comandas envolvidas: {', '.join(sorted(comandas_ids))}")
+            
+            # Processar cada reserva individualmente
+            for reserva in reservas:
+                try:
+                    id_item = reserva['id_item']
+                    quantidade = reserva['quantidade_necessaria']
+                    id_ordem = reserva['id_ordem']
+                    id_pedido = reserva['id_pedido']
+                    id_atividade = reserva.get('id_atividade')
+                    
+                    item = self.almoxarifado.buscar_item_por_id(id_item)
+                    
+                    if not item:
+                        erro_msg = f"Item {id_item} não encontrado no almoxarifado"
+                        logger.error(f"❌ {erro_msg}")
+                        resultado["erros"].append(erro_msg)
+                        continue
+                    
+                    logger.info(f"📦 Reservando: {item.descricao} (ID: {id_item})")
+                    logger.info(f"   📊 Quantidade: {quantidade:.2f} {item.unidade_medida.value}")
+                    logger.info(f"   📅 Data: {data_reserva.strftime('%Y-%m-%d')}")
+                    
+                    # Verificar se tem estoque para reservar
+                    if not item.tem_estoque_para(data_reserva, quantidade):
+                        estoque_projetado = item.estoque_projetado_em(data_reserva)
+                        logger.warning(f"   ⚠️ Estoque insuficiente para reserva!")
+                        logger.warning(f"   📊 Estoque projetado: {estoque_projetado:.2f} {item.unidade_medida.value}")
+                        
+                        resultado["itens_com_estoque_insuficiente"].append({
+                            "id_item": id_item,
+                            "nome": item.descricao,
+                            "estoque_projetado": round(estoque_projetado, 2),
+                            "quantidade_solicitada": round(quantidade, 2),
+                            "unidade": item.unidade_medida.value,
+                            "data_reserva": data_reserva.strftime('%Y-%m-%d')
+                        })
+                        continue
+                    
+                    # Fazer a reserva
+                    item.reservar(
+                        data=data_reserva,
+                        quantidade=quantidade,
+                        id_ordem=id_ordem,
+                        id_pedido=id_pedido,
+                        id_atividade=id_atividade
+                    )
+                    
+                    resultado["itens_reservados"].append({
+                        "id_item": id_item,
+                        "nome": item.descricao,
+                        "quantidade_reservada": round(quantidade, 2),
+                        "estoque_atual": round(item.estoque_atual, 2),
+                        "estoque_projetado": round(item.estoque_projetado_em(data_reserva), 2),
+                        "unidade": item.unidade_medida.value,
+                        "data_reserva": data_reserva.strftime('%Y-%m-%d'),
+                        "id_ordem": id_ordem,
+                        "id_pedido": id_pedido
+                    })
+                    
+                    logger.info(f"   ✅ Reservado: {quantidade:.2f} {item.unidade_medida.value}")
+                    resultado["total_reservas"] += 1
+                    
+                except Exception as e:
+                    erro_msg = f"Erro ao reservar item {id_item}: {str(e)}"
+                    logger.error(f"❌ {erro_msg}")
+                    resultado["erros"].append(erro_msg)
+                    continue
+            
+            # Relatório final
+            logger.info("=" * 60)
+            logger.info("📊 RELATÓRIO FINAL DE RESERVAS")
+            logger.info("=" * 60)
+            logger.info(f"✅ Comandas processadas: {resultado['comandas_processadas']}")
+            logger.info(f"📋 Itens reservados com sucesso: {len(resultado['itens_reservados'])}")
+            logger.info(f"⚠️ Itens com estoque insuficiente: {len(resultado['itens_com_estoque_insuficiente'])}")
+            logger.info(f"🔢 Total de reservas: {resultado['total_reservas']}")
+            logger.info(f"❌ Erros encontrados: {len(resultado['erros'])}")
+            
+            # Marcar como sucesso se não houve erros críticos
+            resultado["sucesso"] = len(resultado["erros"]) == 0
+            
+            if resultado["erros"]:
+                logger.warning("⚠️ Erros durante processamento:")
+                for erro in resultado["erros"]:
+                    logger.warning(f"   - {erro}")
+            
+        except Exception as e:
+            erro_msg = f"Erro crítico no processamento de comandas: {str(e)}"
+            logger.error(f"💥 {erro_msg}")
+            resultado["erros"].append(erro_msg)
+            resultado["erro"] = erro_msg
+        
+        return resultado
+
+    def despachar_reservas_e_consumir_itens(self, data_despacho=None, id_ordem=None, id_pedido=None) -> Dict:
+        """
+        Despacha reservas existentes e consome os itens do almoxarifado.
+        
+        Args:
+            data_despacho: Data do despacho (datetime). Se None, usa data atual
+            id_ordem: ID da ordem específica a despachar. Se None, despacha todas
+            id_pedido: ID do pedido específico a despachar. Se None, despacha todos da ordem
+            
+        Returns:
+            Dict com relatório do despacho:
+            - sucesso: True se despachado com sucesso
+            - reservas_despachadas: número de reservas despachadas
+            - itens_despachados: lista de itens despachados
+            - reservas_nao_encontradas: reservas que não puderam ser despachadas
+            - total_consumo: número total de operações de consumo
+            - erro: mensagem de erro se houver falha
+        """
+        from datetime import datetime, date
+        
+        if data_despacho is None:
+            data_despacho = datetime.now()
+        elif isinstance(data_despacho, date):
+            data_despacho = datetime.combine(data_despacho, datetime.min.time())
+        
+        logger.info(f"🚚 Iniciando despacho de reservas para data: {data_despacho.strftime('%Y-%m-%d')}")
+        
+        resultado = {
+            "sucesso": False,
+            "reservas_despachadas": 0,
+            "itens_despachados": [],
+            "reservas_nao_encontradas": [],
+            "total_consumo": 0,
+            "data_despacho": data_despacho.strftime('%Y-%m-%d'),
+            "filtros": {
+                "id_ordem": id_ordem,
+                "id_pedido": id_pedido
+            },
+            "erros": []
+        }
+        
+        try:
+            reservas_encontradas = []
+            
+            # Buscar todas as reservas dos itens para a data especificada
+            for item in self.almoxarifado.itens:
+                reservas_do_item = item.listar_reservas_por_periodo(
+                    data_despacho.date(), 
+                    data_despacho.date()
+                )
+                
+                # Filtrar por ordem/pedido se especificado
+                for reserva in reservas_do_item:
+                    incluir_reserva = True
+                    
+                    if id_ordem is not None and reserva.get("id_ordem") != id_ordem:
+                        incluir_reserva = False
+                    
+                    if id_pedido is not None and reserva.get("id_pedido") != id_pedido:
+                        incluir_reserva = False
+                    
+                    if incluir_reserva:
+                        reservas_encontradas.append({
+                            "item": item,
+                            "reserva": reserva
+                        })
+            
+            if not reservas_encontradas:
+                logger.info("📭 Nenhuma reserva encontrada para despacho com os filtros especificados")
+                filtros_str = []
+                if id_ordem: filtros_str.append(f"Ordem {id_ordem}")
+                if id_pedido: filtros_str.append(f"Pedido {id_pedido}")
+                logger.info(f"🔍 Filtros aplicados: {', '.join(filtros_str) if filtros_str else 'Nenhum'}")
+                resultado["sucesso"] = True  # Sucesso mesmo sem reservas
+                return resultado
+            
+            logger.info(f"📋 Encontradas {len(reservas_encontradas)} reservas para despachar")
+            
+            # Processar cada reserva
+            for entrada in reservas_encontradas:
+                item = entrada["item"]
+                reserva = entrada["reserva"]
+                
+                try:
+                    quantidade = reserva["quantidade"]
+                    id_ordem_reserva = reserva.get("id_ordem", 0)
+                    id_pedido_reserva = reserva.get("id_pedido", 0)
+                    id_atividade = reserva.get("id_atividade")
+                    
+                    logger.info(f"🚚 Despachando: {item.descricao} (ID: {item.id_item})")
+                    logger.info(f"   📊 Quantidade: {quantidade:.2f} {item.unidade_medida.value}")
+                    logger.info(f"   📋 Ordem {id_ordem_reserva} - Pedido {id_pedido_reserva}")
+                    
+                    # Consumir o item (isso automaticamente cancela a reserva)
+                    item.consumir(
+                        data=data_despacho,
+                        quantidade=quantidade,
+                        id_ordem=id_ordem_reserva,
+                        id_pedido=id_pedido_reserva,
+                        id_atividade=id_atividade
+                    )
+                    
+                    resultado["itens_despachados"].append({
+                        "id_item": item.id_item,
+                        "nome": item.descricao,
+                        "quantidade_despachada": round(quantidade, 2),
+                        "estoque_anterior": round(item.estoque_atual + quantidade, 2),
+                        "estoque_final": round(item.estoque_atual, 2),
+                        "unidade": item.unidade_medida.value,
+                        "id_ordem": id_ordem_reserva,
+                        "id_pedido": id_pedido_reserva,
+                        "data_despacho": data_despacho.strftime('%Y-%m-%d')
+                    })
+                    
+                    logger.info(f"   ✅ Despachado e consumido: {quantidade:.2f} {item.unidade_medida.value}")
+                    resultado["total_consumo"] += 1
+                    resultado["reservas_despachadas"] += 1
+                    
+                except Exception as e:
+                    erro_msg = f"Erro ao despachar reserva do item {item.id_item}: {str(e)}"
+                    logger.error(f"❌ {erro_msg}")
+                    resultado["erros"].append(erro_msg)
+                    
+                    resultado["reservas_nao_encontradas"].append({
+                        "id_item": item.id_item,
+                        "nome": item.descricao,
+                        "erro": str(e)
+                    })
+                    continue
+            
+            # Relatório final
+            logger.info("=" * 60)
+            logger.info("📊 RELATÓRIO FINAL DE DESPACHO")
+            logger.info("=" * 60)
+            logger.info(f"✅ Reservas despachadas: {resultado['reservas_despachadas']}")
+            logger.info(f"🚚 Itens despachados: {len(resultado['itens_despachados'])}")
+            logger.info(f"⚠️ Reservas com erro: {len(resultado['reservas_nao_encontradas'])}")
+            logger.info(f"🔢 Total de consumos: {resultado['total_consumo']}")
+            logger.info(f"❌ Erros encontrados: {len(resultado['erros'])}")
+            
+            # Marcar como sucesso se não houve erros críticos
+            resultado["sucesso"] = len(resultado["erros"]) == 0
+            
+            # Salvar estoque automaticamente se houve consumos
+            if resultado['reservas_despachadas'] > 0:
+                self._salvar_estoque_automaticamente()
+            
+            if resultado["erros"]:
+                logger.warning("⚠️ Erros durante despacho:")
+                for erro in resultado["erros"]:
+                    logger.warning(f"   - {erro}")
+        
+        except Exception as e:
+            erro_msg = f"Erro crítico no despacho de reservas: {str(e)}"
+            logger.error(f"💥 {erro_msg}")
+            resultado["erros"].append(erro_msg)
+            resultado["erro"] = erro_msg
+        
+        return resultado
+
+    def _salvar_estoque_automaticamente(self):
+        """Salva automaticamente o estoque atualizado no arquivo JSON se parser estiver disponível"""
+        if self.parser_almoxarifado:
+            try:
+                logger.info("💾 Salvando estoque atualizado automaticamente...")
+                self.parser_almoxarifado.salvar_itens_modificados()
+                logger.info("✅ Estoque salvo com sucesso no arquivo JSON")
+            except Exception as e:
+                logger.error(f"❌ Erro ao salvar estoque automaticamente: {e}")
+        else:
+            logger.debug("⚠️ Parser não disponível - estoque não salvo automaticamente")
 
     def __repr__(self):
         return f"<GestorAlmoxarifado com {len(self.almoxarifado)} itens>"

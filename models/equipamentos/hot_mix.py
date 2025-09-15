@@ -284,13 +284,14 @@ class HotMix(Equipamento):
         chama: TipoChama,
         pressao_chamas: List[TipoPressaoChama],
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> bool:
         """
         🎯 JANELAS SIMULTÂNEAS: Ocupa o equipamento com validação de janelas simultâneas.
         """
-        # Validação 1: Capacidade individual
-        if not self.validar_capacidade(quantidade):
+        # Validação 1: Capacidade individual (considerando bypass)
+        if not self.validar_capacidade(quantidade, bypass=bypass_capacidade):
             return False
 
         # Validação 2: Disponibilidade com janelas simultâneas
@@ -370,8 +371,12 @@ class HotMix(Equipamento):
     # ==========================================================
     # ✅ Validações (MANTIDAS)
     # ==========================================================
-    def validar_capacidade(self, quantidade: int) -> bool:
+    def validar_capacidade(self, quantidade: int, bypass: bool = False) -> bool:
         """Valida se a quantidade está dentro dos limites de capacidade."""
+        if bypass:
+            logger.info(f"🔧 BYPASS: Ignorando validação de capacidade para {quantidade}g no {self.nome}")
+            return True
+            
         if not (self.capacidade_gramas_min <= quantidade <= self.capacidade_gramas_max):
             logger.warning(
                 f"❌ Quantidade {quantidade}g fora dos limites do {self.nome} "
@@ -424,15 +429,16 @@ class HotMix(Equipamento):
         chama: TipoChama,
         pressao_chamas: List[TipoPressaoChama],
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> bool:
         """
         Ocupa o equipamento com validação de capacidade considerando intervalos flexíveis.
         Permite sobreposição do mesmo id_item, impede itens diferentes.
         ⚠️ MÉTODO ORIGINAL - Para compatibilidade. Use ocupar_janelas_simultaneas() para novo comportamento.
         """
-        # Validação 1: Capacidade individual
-        if not self.validar_capacidade(quantidade):
+        # Validação 1: Capacidade individual (considerando bypass)
+        if not self.validar_capacidade(quantidade, bypass=bypass_capacidade):
             return False
 
         # Validação 2: Disponibilidade (só impede se for item diferente com sobreposição)

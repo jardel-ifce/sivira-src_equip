@@ -13,7 +13,7 @@
       {
         "id_item": 2003,
         "descricao": "Massa para Frituras",
-        "nome": "massa_para_fritura",
+        "nome": "massa_para_frituras",
         "tipo_item": "SUBPRODUTO",
         "politica_producao": "SOB_DEMANDA",
         "proporcao": 100,

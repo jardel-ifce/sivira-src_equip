@@ -27,9 +27,9 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:10:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:15:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:20:00" }
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:08:00" },
+        { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:16:00" },
+        { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:24:00" }
       ]
     },
     {
@@ -61,9 +61,9 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:35:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:40:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:45:00" }
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:10:00" },
+        { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:20:00" },
+        { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:30:00" }
       ]
     },
     {
@@ -92,9 +92,9 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:08:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:12:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:15:00" }
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:10:00" },
+        { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:20:00" },
+        { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:30:00" }
       ]
     },
     {
@@ -112,7 +112,8 @@
       "configuracoes_equipamentos": {
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,
-          "tipo_de_armazenamento": "CAIXAS"
+          "tipo_de_armazenamento": "CAIXAS",
+          "gramas_por_caixa": 2000
         }
       },
       "tipos_profissionais_permitidos": ["ALMOXARIFE"],
@@ -121,9 +122,9 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:05:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:08:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:10:00" }
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:03:00" },
+        { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:05:00" },
+        { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:07:00" }
       ]
     }
   ]

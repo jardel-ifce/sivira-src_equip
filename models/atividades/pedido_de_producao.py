@@ -919,6 +919,71 @@ class PedidoDeProducao:
                 
                 # VALIDAÇÃO CRÍTICA: Se falhou, cancela GRUPO
                 if not sucesso:
+                    # Registrar erro de alocação por prazo usando o logger unificado
+                    try:
+                        from utils.logs.temporal_allocation_logger import log_deadline_allocation_error
+                        
+                        # Coletar informações para o log
+                        tipo_equipamento = "DESCONHECIDO"
+                        if hasattr(atividade, 'configuracoes_equipamentos'):
+                            tipos = list(atividade.configuracoes_equipamentos.keys())
+                            if tipos:
+                                tipo_equipamento = tipos[0]
+                        
+                        # Determinar equipamentos tentados
+                        equipamentos_tentados = []
+                        if hasattr(atividade, 'equipamentos_elegiveis'):
+                            equipamentos_tentados = [eq.nome for eq in atividade.equipamentos_elegiveis[:3]]
+                        
+                        # Contexto adicional com análise de disponibilidade
+                        contexto = {}
+                        if hasattr(atividade, 'quantidade'):
+                            contexto['quantidade_necessaria'] = atividade.quantidade
+                        
+                        # Obter tempo máximo de espera da atividade
+                        tempo_max_espera = None
+                        if hasattr(atividade, 'tempo_maximo_de_espera') and atividade.tempo_maximo_de_espera:
+                            tempo_max_espera = atividade.tempo_maximo_de_espera
+                        
+                        # Tentar obter próximo horário livre do equipamento (se possível)
+                        proximo_horario_livre = None
+                        try:
+                            if hasattr(atividade, 'equipamentos_elegiveis') and atividade.equipamentos_elegiveis:
+                                # Pegar o primeiro equipamento disponível como exemplo
+                                equipamento = atividade.equipamentos_elegiveis[0]
+                                if hasattr(equipamento, 'proximo_horario_disponivel'):
+                                    proximo_horario_livre = equipamento.proximo_horario_disponivel(self.inicio_jornada, fim_jornada_grupo)
+                                elif hasattr(equipamento, 'agenda') and equipamento.agenda:
+                                    # Tentar calcular baseado na agenda
+                                    # Aqui seria onde implementaríamos a lógica para encontrar o próximo slot livre
+                                    # Por enquanto, usar um horário fictício baseado no fim da jornada
+                                    proximo_horario_livre = fim_jornada_grupo + timedelta(hours=1)
+                        except Exception:
+                            # Se não conseguir obter, continuar sem essa informação
+                            pass
+                        
+                        # Registrar o erro com análise completa
+                        log_deadline_allocation_error(
+                            id_ordem=atividade.id_ordem,
+                            id_pedido=atividade.id_pedido,
+                            id_atividade=atividade.id_atividade,
+                            nome_atividade=atividade.nome_atividade,
+                            tipo_equipamento=tipo_equipamento,
+                            quantidade_necessaria=getattr(atividade, 'quantidade', 0),
+                            prazo_final=fim_jornada_grupo,
+                            duracao_atividade=atividade.duracao,
+                            janela_disponivel=(self.inicio_jornada, fim_jornada_grupo),
+                            motivo_falha="Não foi possível alocar a atividade dentro da janela temporal disponível",
+                            tempo_maximo_espera=tempo_max_espera,
+                            proximo_horario_livre=proximo_horario_livre,
+                            equipamentos_tentados=equipamentos_tentados,
+                            contexto_adicional=contexto
+                        )
+                        logger.info(f"📝 Log de erro temporal (deadline) registrado para atividade {atividade.id_atividade}")
+                        
+                    except Exception as log_err:
+                        logger.warning(f"⚠️ Falha ao registrar log de erro temporal: {log_err}")
+                    
                     erro_msg = (
                         f"FALHA NO GRUPO '{nome_grupo}': Atividade {atividade.id_atividade} "
                         f"({atividade.nome_atividade}) não pôde ser alocada."
@@ -1040,29 +1105,28 @@ class PedidoDeProducao:
                             f"{atividade.id_atividade} → {atividade_sucessora.id_atividade}"
                         )
                         
-                        # GERAR LOG LIMPO IMEDIATAMENTE
+                        # GERAR LOG USANDO LOGGER TEMPORAL UNIFICADO
                         try:
-                            from utils.logs.formatador_timing_limpo import reformatar_erro_timing_para_novo_formato
+                            from utils.logs.temporal_allocation_logger import log_inter_activity_timing_error
                             
-                            log_limpo = reformatar_erro_timing_para_novo_formato(
+                            log_inter_activity_timing_error(
                                 id_ordem=atividade.id_ordem,
                                 id_pedido=atividade.id_pedido,
-                                erro_original=erro_msg_str,
-                                atividade_atual_obj=atividade,
-                                atividade_sucessora_obj=atividade_sucessora
+                                current_activity_id=atividade.id_atividade,
+                                current_activity_name=atividade.nome_atividade,
+                                successor_activity_id=atividade_sucessora.id_atividade,
+                                successor_activity_name=atividade_sucessora.nome_atividade,
+                                current_end_time=fim_atual,
+                                successor_start_time=inicio_prox_atividade,
+                                maximum_wait_time=atividade_sucessora.tempo_maximo_de_espera,
+                                current_activity_obj=atividade,
+                                successor_activity_obj=atividade_sucessora
                             )
                             
-                            import os
-                            os.makedirs("logs/erros", exist_ok=True)
-                            nome_arquivo = f"logs/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
-                            
-                            with open(nome_arquivo, "w", encoding="utf-8") as f:
-                                f.write(log_limpo)
-                            
-                            logger.info(f"Log de timing limpo gerado: {nome_arquivo}")
+                            logger.info(f"Log de erro temporal (inter-atividade) gerado para atividades {atividade.id_atividade} → {atividade_sucessora.id_atividade}")
                             
                         except Exception as format_err:
-                            logger.warning(f"Falha ao gerar log limpo: {format_err}")
+                            logger.warning(f"Falha ao gerar log de erro temporal: {format_err}")
                     
                     # Re-lançar exceção para tratamento no nível superior
                     raise timing_err

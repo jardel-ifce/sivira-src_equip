@@ -216,24 +216,31 @@ def limpar_logs_inicializacao():
     return "\n".join(resultado)
 
 def limpar_logs_equipamentos():
-    """🔧 Limpa apenas logs de equipamentos"""
+    """🔧 Limpa apenas logs de equipamentos (incluindo subprodutos agrupados)"""
     pasta = "logs/equipamentos"
     try:
         if not os.path.exists(pasta):
             print(f"📁 Pasta não encontrada: {pasta}")
             return False
-        
+
         arquivos = glob.glob(os.path.join(pasta, "*.log"))
         removidos = 0
-        
+        agrupados_removidos = 0
+
         for arquivo in arquivos:
             try:
+                nome_arquivo = os.path.basename(arquivo)
+                if nome_arquivo.startswith("agrupado_"):
+                    agrupados_removidos += 1
                 os.remove(arquivo)
                 removidos += 1
             except Exception as e:
                 print(f"⚠️ Erro ao remover {arquivo}: {e}")
-        
-        print(f"🔧 {removidos} arquivo(s) de equipamentos removido(s)")
+
+        if agrupados_removidos > 0:
+            print(f"🔧 {removidos} arquivo(s) de equipamentos removido(s) (incluindo {agrupados_removidos} logs agrupados)")
+        else:
+            print(f"🔧 {removidos} arquivo(s) de equipamentos removido(s)")
         return True
     except Exception as e:
         print(f"❌ Erro ao limpar logs de equipamentos: {e}")

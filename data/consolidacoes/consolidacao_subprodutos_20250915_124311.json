@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-09-15T12:43:11.499080",
+  "tipo_consolidacao": "subprodutos",
+  "total_oportunidades": 1,
+  "economia_equipamentos": 1,
+  "pedidos_afetados": [
+    1,
+    2
+  ],
+  "consolidacoes": [
+    {
+      "subproduto": {
+        "id": 7,
+        "nome": "massa_para_frituras",
+        "chave_tecnica": "item_7_nome_massa_para_frituras_config_default"
+      },
+      "quantidade_total_consolidada": 1500.08,
+      "atividades_originais": 2,
+      "pedidos_consolidados": [
+        1,
+        2
+      ],
+      "detalhes_por_pedido": [
+        {
+          "id_pedido": 1,
+          "id_atividade": 20031,
+          "quantidade_original": 900.05,
+          "nome_atividade": "massa_para_frituras"
+        },
+        {
+          "id_pedido": 2,
+          "id_atividade": 20031,
+          "quantidade_original": 600.03,
+          "nome_atividade": "massa_para_frituras"
+        }
+      ]
+    }
+  ]
+}

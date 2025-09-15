@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import re
-from analisador_pedidos import AnalisadorPedidos
+from analisador.analisador_pedidos import AnalisadorPedidos
 
 class CalculadorReagendamento:
     def __init__(self, analisador_pedidos):

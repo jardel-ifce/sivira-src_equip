@@ -30,6 +30,8 @@ from menu.gerenciador_pedidos import GerenciadorPedidos
 from menu.utils_menu import MenuUtils
 from services.gestor_producao import GestorProducao
 from utils.logs.gerenciador_logs import limpar_logs_inicializacao
+from analisador.analisador_pedidos import AnalisadorPedidos
+from analisador.calculador_reagendamento import CalculadorReagendamento
 
 
 class MenuPrincipal:
@@ -162,6 +164,12 @@ class MenuPrincipal:
         print("📅 AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
         print("D️⃣  Ver Agenda de Equipamentos")
         print()
+        print("📦 ALMOXARIFADO:")
+        print("G️⃣  Gestão de Almoxarifado")
+        print()
+        print("🔍 AVALIADOR DE PEDIDOS:")
+        print("H️⃣  Analisar Pedidos (Atividades e Reagendamento)")
+        print()
         print("⚙️ SISTEMA:")
         print("9️⃣  Testar Sistema")
         print("0️⃣  Configurações")
@@ -205,6 +213,12 @@ class MenuPrincipal:
         
         elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
             self.mostrar_submenu_agenda()
+        
+        elif opcao.lower() == "g":  # 🆕 NOVA OPÇÃO - ALMOXARIFADO
+            self.mostrar_submenu_almoxarifado()
+        
+        elif opcao.lower() == "h":  # 🆕 NOVA OPÇÃO - AVALIADOR DE PEDIDOS
+            self.mostrar_submenu_avaliador_pedidos()
         
         elif opcao == "9":
             self.testar_sistema()
@@ -1660,6 +1674,637 @@ class MenuPrincipal:
         
         input("\nPressione Enter para continuar...")
     
+    # =========================================================================
+    #                       🆕 SUBMENU GESTÃO DE ALMOXARIFADO
+    # =========================================================================
+    
+    def mostrar_submenu_almoxarifado(self):
+        """Submenu para gestão de almoxarifado"""
+        try:
+            rodando_almoxarifado = True
+            
+            while rodando_almoxarifado:
+                try:
+                    self.utils.limpar_tela()
+                    print("📦 GESTÃO DE ALMOXARIFADO")
+                    print("=" * 50)
+                    
+                    # Inicializa sistema se necessário para status
+                    if not self.gestor_producao.sistema_inicializado:
+                        print("🔧 Sistema não inicializado")
+                        print("   (Será inicializado automaticamente ao usar as opções)")
+                    else:
+                        almox = self.gestor_producao.configurador_ambiente.gestor_almoxarifado
+                        total_itens = len(almox.almoxarifado.itens)
+                        print(f"📊 Status: {total_itens} itens carregados no almoxarifado")
+                    
+                    print("\n📋 OPÇÕES DISPONÍVEIS:")
+                    print("1️⃣  Processar Comandas (Reservar Itens)")
+                    print("2️⃣  Despachar Reservas (Consumir Almoxarifado)")
+                    print("3️⃣  Verificar Estoque (Itens Abaixo do Mínimo)")
+                    print("4️⃣  Listar Todos os Itens")
+                    print("\nV️⃣  Voltar ao Menu Principal")
+                    print("=" * 50)
+                    
+                    opcao_almox = input("\n🎯 Escolha uma opção: ").strip().upper()
+                    
+                    if opcao_almox == '1':
+                        self.processar_comandas()
+                    elif opcao_almox == '2':
+                        self.despachar_reservas()
+                    elif opcao_almox == '3':
+                        self.verificar_estoque_minimo()
+                    elif opcao_almox == '4':
+                        self.listar_todos_os_itens_almoxarifado()
+                    elif opcao_almox == 'V':
+                        rodando_almoxarifado = False
+                    else:
+                        print(f"\n⚠️ Opção '{opcao_almox}' inválida!")
+                        input("Pressione Enter para continuar...")
+                        
+                except KeyboardInterrupt:
+                    print("\n\n📦 Voltando ao menu principal...")
+                    rodando_almoxarifado = False
+                except Exception as e:
+                    print(f"\n⚠️ Erro no submenu de almoxarifado: {e}")
+                    input("Pressione Enter para continuar...")
+            
+        except Exception as e:
+            print(f"\n⚠️ Erro inesperado no submenu de almoxarifado: {e}")
+            input("Pressione Enter para continuar...")
+    
+    def verificar_estoque_minimo(self):
+        """Verifica itens com estoque abaixo do mínimo"""
+        self.utils.limpar_tela()
+        print("📊 VERIFICAÇÃO DE ESTOQUE MÍNIMO")
+        print("=" * 50)
+        
+        try:
+            # Inicializa o sistema se necessário
+            if not self.gestor_producao.sistema_inicializado:
+                print("🔧 Inicializando sistema...")
+                if not self.gestor_producao._inicializar_sistema():
+                    print("❌ Erro ao inicializar sistema")
+                    input("\nPressione Enter para continuar...")
+                    return
+            
+            print("🔍 Fazendo varredura no estoque...")
+            
+            # Usa o método do gestor almoxarifado para verificar estoque mínimo
+            itens_alerta = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.verificar_estoque_minimo()
+            
+            print(f"📋 Varredura concluída!")
+            
+            if not itens_alerta:
+                print("\n✅ Todos os itens estão com estoque adequado!")
+                print("🎉 Nenhum item abaixo do mínimo encontrado")
+            else:
+                print(f"\n⚠️ {len(itens_alerta)} item(ns) abaixo do estoque mínimo:")
+                print("\n" + "=" * 80)
+                print(f"{'ITEM':<35} {'ATUAL':<12} {'MÍNIMO':<12} {'FALTA':<12} {'DIAS':<8}")
+                print("=" * 80)
+                
+                for item in itens_alerta:
+                    nome = item['descricao'][:34]  # Limita o nome para caber na tabela
+                    atual = f"{item['estoque_atual']:.1f}"
+                    minimo = f"{item['estoque_min']:.1f}"
+                    falta = f"{item['falta']:.1f}"
+                    unidade = item['unidade']
+                    
+                    # Calcula dias restantes
+                    dias = item.get('dias_restantes')
+                    if dias is not None:
+                        if dias <= 0:
+                            dias_str = "0"
+                        elif dias < 1:
+                            dias_str = "<1"
+                        else:
+                            dias_str = f"{dias:.1f}"
+                    else:
+                        dias_str = "N/A"
+                    
+                    print(f"{nome:<35} {atual:<12} {minimo:<12} {falta:<12} {dias_str:<8}")
+                    print(f"{'ID: ' + str(item['id_item']):<35} {unidade:<12} {unidade:<12} {unidade:<12} {'dias':<8}")
+                    print("-" * 80)
+                
+                # Resumo com dicas
+                print(f"\n📊 RESUMO:")
+                print(f"   ⚠️ Itens críticos: {len([i for i in itens_alerta if i.get('dias_restantes') is None or (i.get('dias_restantes') is not None and i.get('dias_restantes', 0) <= 1)])}")
+                print(f"   📋 Total de itens em alerta: {len(itens_alerta)}")
+                
+                # Itens mais críticos (sem dias ou com menos de 1 dia)
+                criticos = [i for i in itens_alerta if i.get('dias_restantes') is None or (i.get('dias_restantes') is not None and i.get('dias_restantes', 0) <= 1)]
+                if criticos:
+                    print(f"\n🚨 ATENÇÃO: {len(criticos)} item(ns) em situação crítica:")
+                    for item in criticos[:5]:  # Mostra até 5 mais críticos
+                        print(f"   • {item['descricao']}: {item['estoque_atual']:.1f} {item['unidade']}")
+                    if len(criticos) > 5:
+                        print(f"   ... e mais {len(criticos) - 5} itens")
+                
+                print("\n💡 DICAS:")
+                print("   • Programe reabastecimento para itens críticos")
+                print("   • Verifique fornecedores para itens em falta")
+                print("   • Considere ajustar quantidades mínimas se necessário")
+            
+        except Exception as e:
+            print(f"⚠️ Erro ao verificar estoque: {e}")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def listar_todos_os_itens_almoxarifado(self):
+        """Lista todos os itens do almoxarifado com informações detalhadas"""
+        self.utils.limpar_tela()
+        print("📋 LISTAGEM COMPLETA DO ALMOXARIFADO")
+        print("=" * 80)
+        
+        try:
+            # Inicializa o sistema se necessário
+            if not self.gestor_producao.sistema_inicializado:
+                print("🔧 Inicializando sistema...")
+                if not self.gestor_producao._inicializar_sistema():
+                    print("❌ Erro ao inicializar sistema")
+                    input("\nPressione Enter para continuar...")
+                    return
+            
+            print("📦 Carregando todos os itens do almoxarifado...")
+            
+            # Obter todos os itens através do gestor
+            itens = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.listar_todos_os_itens()
+            
+            if not itens:
+                print("📭 Nenhum item encontrado no almoxarifado")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            print(f"📊 Total: {len(itens)} itens encontrados")
+            print("\n" + "=" * 80)
+            print(f"{'ID':<6} {'NOME':<35} {'TIPO':<12} {'ESTOQUE':<12} {'POLÍTICA':<12}")
+            print("=" * 80)
+            
+            # Agrupar por tipo para melhor organização
+            tipos = {}
+            for item in itens:
+                tipo = item.tipo_item.value
+                if tipo not in tipos:
+                    tipos[tipo] = []
+                tipos[tipo].append(item)
+            
+            # Ordenar tipos e exibir
+            for tipo in sorted(tipos.keys()):
+                print(f"\n🏷️  {tipo}:")
+                print("-" * 80)
+                
+                itens_do_tipo = sorted(tipos[tipo], key=lambda x: x.id_item)
+                
+                for item in itens_do_tipo:
+                    # Formatação do estoque
+                    estoque_str = f"{item.estoque_atual:.1f} {item.unidade_medida.value}"
+                    if len(estoque_str) > 12:
+                        estoque_str = estoque_str[:12]
+                    
+                    # Formatação da política
+                    politica_str = item.politica_producao.value
+                    if len(politica_str) > 12:
+                        politica_str = politica_str[:12]
+                    
+                    # Status do estoque
+                    if item.esta_abaixo_do_minimo():
+                        status = "⚠️"
+                    elif item.estoque_atual == 0:
+                        status = "❌"
+                    else:
+                        status = "✅"
+                    
+                    nome_item = item.descricao[:34] if len(item.descricao) > 34 else item.descricao
+                    
+                    print(f"{item.id_item:<6} {nome_item:<35} {tipo[:11]:<12} {estoque_str:<12} {politica_str:<12} {status}")
+            
+            print("\n" + "=" * 80)
+            print("💡 LEGENDA:")
+            print("   ✅ Estoque normal")
+            print("   ⚠️  Abaixo do mínimo")
+            print("   ❌ Sem estoque")
+            print("   📊 Políticas: SOB_DEMANDA (produzido quando necessário), ESTOCADO (mantém estoque)")
+            
+        except Exception as e:
+            print(f"⚠️ Erro ao listar itens: {e}")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def processar_comandas(self):
+        """Processa comandas e reserva itens do almoxarifado"""
+        self.utils.limpar_tela()
+        print("📦 PROCESSAR COMANDAS - RESERVAR ITENS")
+        print("=" * 50)
+        
+        try:
+            # Inicializa o sistema se necessário
+            if not self.gestor_producao.sistema_inicializado:
+                print("🔧 Inicializando sistema...")
+                if not self.gestor_producao._inicializar_sistema():
+                    print("❌ Erro ao inicializar sistema")
+                    input("\nPressione Enter para continuar...")
+                    return
+            
+            from parser.gerenciador_json_comandas import ler_comandas_em_pasta
+            
+            # Lê comandas da pasta padrão
+            pasta_comandas = "data/comandas"
+            print(f"📂 Lendo comandas da pasta: {pasta_comandas}")
+            
+            # Verifica se a pasta existe
+            if not os.path.exists(pasta_comandas):
+                print(f"⚠️ Pasta de comandas não encontrada: {pasta_comandas}")
+                print("💡 Execute primeiro um pedido para gerar comandas")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            # Lista arquivos de comanda
+            import glob
+            arquivos_comanda = glob.glob(f"{pasta_comandas}/*.json")
+            
+            if not arquivos_comanda:
+                print(f"📭 Nenhuma comanda encontrada em: {pasta_comandas}")
+                print("💡 Execute primeiro um pedido para gerar comandas")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            print(f"📋 {len(arquivos_comanda)} arquivo(s) de comanda encontrado(s):")
+            for arquivo in sorted(arquivos_comanda):
+                nome_arquivo = os.path.basename(arquivo)
+                print(f"   • {nome_arquivo}")
+            
+            print("\n⚠️ ATENÇÃO: Esta operação irá consumir itens do almoxarifado!")
+            print("📊 Mostrando preview dos itens que serão consumidos...")
+            
+            # Carrega comandas para preview
+            reservas = ler_comandas_em_pasta(pasta_comandas)
+            
+            if not reservas:
+                print("📭 Nenhuma reserva extraída das comandas")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            print(f"\n📋 {len(reservas)} reserva(s) de itens serão processadas:")
+            print("-" * 50)
+            
+            # Agrupa por id_item para mostrar total
+            from collections import defaultdict
+            itens_total = defaultdict(float)
+            nomes_itens = {}
+            
+            for reserva in reservas:
+                id_item = reserva['id_item']
+                quantidade = reserva['quantidade_necessaria']
+                itens_total[id_item] += quantidade
+                
+                # Busca nome do item no almoxarifado
+                item_almox = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.obter_item_por_id(id_item)
+                if item_almox:
+                    nomes_itens[id_item] = item_almox.descricao
+                else:
+                    nomes_itens[id_item] = f"Item {id_item} (não encontrado no almoxarifado)"
+            
+            # Mostra resumo dos itens
+            from datetime import date
+            hoje = date.today()
+            
+            for id_item, quantidade_total in sorted(itens_total.items()):
+                nome = nomes_itens[id_item]
+                item_almox = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.obter_item_por_id(id_item)
+                estoque_atual = item_almox.estoque_atual if item_almox else 0
+                saldo_final = max(0, estoque_atual - quantidade_total)  # Não permite negativo
+                
+                status = "✅" if estoque_atual >= quantidade_total else "⚠️"
+                print(f"   {status} {nome}")
+                print(f"      Consumir: {quantidade_total:.2f}")
+                print(f"      Estoque atual: {estoque_atual:.2f}")
+                print(f"      Saldo final: {saldo_final:.2f}")
+                
+                if estoque_atual < quantidade_total:
+                    print(f"      ⚠️ Estoque insuficiente! Será ajustado para 0")
+                print()
+            
+            # Confirmação
+            confirmacao = input("🔄 Confirma o processamento das comandas? (s/N): ").strip().lower()
+            
+            if confirmacao in ['s', 'sim', 'y', 'yes']:
+                print("\n🔄 Processando comandas...")
+                
+                # Processa comandas usando o método de reservas do almoxarifado
+                resultado = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.processar_comandas_e_reservar_itens(pasta_comandas)
+                
+                if resultado['sucesso']:
+                    print("✅ Comandas processadas com sucesso! (Sistema de Reservas)")
+                    print(f"📋 {resultado['total_reservas']} reservas criadas")
+                    print(f"📦 {len(resultado['itens_reservados'])} tipos de itens reservados")
+                    
+                    if resultado['itens_com_estoque_insuficiente']:
+                        print(f"⚠️ {len(resultado['itens_com_estoque_insuficiente'])} item(ns) com estoque insuficiente para reserva")
+                    
+                    print(f"📂 Comandas processadas da pasta: {resultado['pasta_comandas']}")
+                    print("\n💡 Use a opção 'F' para despachar as reservas e consumir estoque")
+                    
+                    # Mostra saldos finais
+                    print("\n📊 SALDOS FINAIS:")
+                    print("-" * 30)
+                    for id_item in sorted(itens_total.keys()):
+                        item_almox = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.obter_item_por_id(id_item)
+                        if item_almox:
+                            nome = item_almox.descricao
+                            saldo = item_almox.estoque_atual
+                            print(f"   • {nome}: {saldo:.2f}")
+                else:
+                    print(f"⚠️ Erro ao processar comandas: {resultado.get('erro', 'Erro desconhecido')}")
+            else:
+                print("\n❌ Processamento cancelado")
+                
+        except ImportError as e:
+            print(f"⚠️ Erro ao importar módulos: {e}")
+        except Exception as e:
+            print(f"⚠️ Erro ao processar comandas: {e}")
+        
+        input("\nPressione Enter para continuar...")
+    
+    def despachar_reservas(self):
+        """Despacha comandas disponíveis e consome itens do almoxarifado"""
+        try:
+            # Inicializa o sistema se necessário
+            if not self.gestor_producao.sistema_inicializado:
+                print("🔧 Inicializando sistema...")
+                if not self.gestor_producao._inicializar_sistema():
+                    print("❌ Erro ao inicializar sistema")
+                    input("\nPressione Enter para continuar...")
+                    return
+            
+            from datetime import datetime
+            import os
+            import glob
+            import json
+            
+            continuar_despachando = True
+            
+            while continuar_despachando:
+                self.utils.limpar_tela()
+                print("🚚 DESPACHAR COMANDAS - CONSUMIR ALMOXARIFADO")
+                print("=" * 50)
+                
+                # Lista arquivos de comanda disponíveis
+                pasta_comandas = "data/comandas"
+                arquivos_comanda = sorted(glob.glob(f"{pasta_comandas}/*.json"))
+                
+                if not arquivos_comanda:
+                    print("📭 Nenhuma comanda disponível para despacho")
+                    print("\n💡 Execute primeiro um pedido para gerar comandas")
+                    input("\nPressione Enter para voltar...")
+                    return
+                
+                # Carrega todas as comandas
+                todas_comandas = []
+                for arquivo in arquivos_comanda:
+                    try:
+                        with open(arquivo, 'r', encoding='utf-8') as f:
+                            comanda = json.load(f)
+                        
+                        id_ordem = comanda.get('id_ordem', 0)
+                        id_pedido = comanda.get('id_pedido', 0)
+                        data_reserva = comanda.get('data_reserva', 'Sem data')
+                        num_itens = len(comanda.get('itens', []))
+                        
+                        # Pega nome do primeiro item principal
+                        nome_principal = "Sem nome"
+                        if comanda.get('itens'):
+                            nome_principal = comanda['itens'][0].get('nome', 'Sem nome')
+                        
+                        todas_comandas.append({
+                            'arquivo': arquivo,
+                            'id_ordem': id_ordem,
+                            'id_pedido': id_pedido,
+                            'data_reserva': data_reserva,
+                            'nome_principal': nome_principal,
+                            'num_itens': num_itens
+                        })
+                    except Exception as e:
+                        print(f"   ⚠️ Erro ao ler {os.path.basename(arquivo)}: {e}")
+                
+                # Pergunta se quer filtrar por data
+                print(f"📋 Total de {len(todas_comandas)} comanda(s) disponível(is)")
+                print("\n🗓️ Deseja filtrar por data?")
+                print("   Digite 'T' para ver TODAS as comandas")
+                print("   Digite uma data (YYYY-MM-DD) para filtrar")
+                print("   Digite 'V' para voltar ao menu principal")
+                print("-" * 50)
+                
+                filtro = input("\n🎯 Sua escolha: ").strip().upper()
+                
+                if filtro == 'V':
+                    continuar_despachando = False
+                    continue
+                
+                # Define comandas a exibir
+                comandas_filtradas = todas_comandas
+                data_filtro = None
+                
+                if filtro != 'T' and filtro != '':
+                    # Tenta interpretar como data
+                    try:
+                        # Remove 'T' se digitado junto e converte para lowercase para testar data
+                        teste_data = filtro.lower()
+                        if len(teste_data) == 10 and teste_data[4] == '-' and teste_data[7] == '-':
+                            data_filtro = teste_data
+                            comandas_filtradas = [c for c in todas_comandas if c['data_reserva'] == data_filtro]
+                            
+                            if not comandas_filtradas:
+                                print(f"\n📭 Nenhuma comanda encontrada para a data {data_filtro}")
+                                input("Pressione Enter para continuar...")
+                                continue
+                    except:
+                        print("\n⚠️ Formato de data inválido! Use YYYY-MM-DD")
+                        input("Pressione Enter para continuar...")
+                        continue
+                
+                # Exibe comandas (filtradas ou todas)
+                self.utils.limpar_tela()
+                print("🚚 DESPACHAR COMANDAS - CONSUMIR ALMOXARIFADO")
+                print("=" * 50)
+                
+                if data_filtro:
+                    print(f"📅 Mostrando comandas da data: {data_filtro}")
+                else:
+                    print(f"📋 Mostrando TODAS as comandas")
+                
+                print(f"\n{len(comandas_filtradas)} comanda(s):\n")
+                
+                # Exibe as comandas
+                for comanda in comandas_filtradas:
+                    print(f"   📦 Ordem {comanda['id_ordem']} | Pedido {comanda['id_pedido']}")
+                    print(f"      📅 Data reserva: {comanda['data_reserva']}")
+                    print(f"      🍞 Produto: {comanda['nome_principal']}")
+                    print(f"      📊 {comanda['num_itens']} item(ns) principal(is)")
+                    print()
+                
+                print("-" * 50)
+                print("Digite 'ordem pedido' para despachar específico (ex: '1 1')")
+                if data_filtro:
+                    print("Digite '*' para despachar TODAS desta data")
+                print("Digite 'V' para voltar")
+                print("-" * 50)
+                
+                escolha = input("\n🎯 Sua escolha: ").strip().upper()
+                
+                if escolha == 'V':
+                    continuar_despachando = False
+                    continue
+                
+                # Verifica se é despacho de todas (*) quando há filtro de data
+                if escolha == '*' and data_filtro:
+                    print(f"\n📦 Despachando TODAS as comandas da data {data_filtro}")
+                    print(f"📊 Total: {len(comandas_filtradas)} comanda(s)")
+                    
+                    confirmacao = input("\n🚚 Confirma o despacho de TODAS? (s/N): ").strip().lower()
+                    
+                    if confirmacao in ['s', 'sim', 'y', 'yes']:
+                        print("\n🔄 Processando despachos em lote...")
+                        
+                        sucessos = 0
+                        erros = 0
+                        
+                        for comanda in comandas_filtradas:
+                            try:
+                                print(f"\n📦 Despachando Ordem {comanda['id_ordem']} | Pedido {comanda['id_pedido']}...")
+                                
+                                # Extrai a data da comanda
+                                data_str = comanda['data_reserva']
+                                try:
+                                    data_despacho = datetime.strptime(data_str, '%Y-%m-%d')
+                                except:
+                                    data_despacho = datetime.now()
+                                
+                                # Despacha
+                                resultado = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.despachar_reservas_e_consumir_itens(
+                                    data_despacho=data_despacho,
+                                    id_ordem=comanda['id_ordem'],
+                                    id_pedido=comanda['id_pedido']
+                                )
+                                
+                                if resultado['sucesso']:
+                                    sucessos += 1
+                                    print(f"   ✅ Sucesso - {resultado['reservas_despachadas']} reservas")
+                                    
+                                    # Remove arquivo
+                                    try:
+                                        os.remove(comanda['arquivo'])
+                                        print(f"   🗑️ Comanda removida")
+                                    except:
+                                        pass
+                                else:
+                                    erros += 1
+                                    print(f"   ❌ Erro no despacho")
+                                    
+                            except Exception as e:
+                                erros += 1
+                                print(f"   ❌ Erro: {e}")
+                        
+                        print("\n" + "=" * 50)
+                        print(f"📊 RESUMO DO DESPACHO EM LOTE:")
+                        print(f"   ✅ Sucessos: {sucessos}")
+                        print(f"   ❌ Erros: {erros}")
+                        print(f"   📦 Total processado: {sucessos + erros}")
+                        
+                        input("\n📋 Pressione Enter para continuar...")
+                    else:
+                        print("\n❌ Despacho em lote cancelado")
+                        input("Pressione Enter para continuar...")
+                    continue
+                
+                # Processa escolha de ordem/pedido individual
+                try:
+                    partes = escolha.split()
+                    if len(partes) != 2:
+                        print("\n❌ Formato inválido! Use: ordem pedido (ex: '1 1')")
+                        input("Pressione Enter para continuar...")
+                        continue
+                    
+                    id_ordem = int(partes[0])
+                    id_pedido = int(partes[1])
+                    
+                    # Busca a comanda correspondente nas comandas filtradas
+                    comanda_selecionada = None
+                    for info in comandas_filtradas:
+                        if info['id_ordem'] == id_ordem and info['id_pedido'] == id_pedido:
+                            comanda_selecionada = info
+                            break
+                    
+                    if not comanda_selecionada:
+                        print(f"\n❌ Comanda da Ordem {id_ordem} | Pedido {id_pedido} não encontrada!")
+                        if data_filtro:
+                            print(f"   (Verifique se está na data {data_filtro})")
+                        input("Pressione Enter para continuar...")
+                        continue
+                    
+                    # Confirmação
+                    print(f"\n📦 Comanda selecionada: Ordem {id_ordem} | Pedido {id_pedido}")
+                    print(f"📅 Data reserva: {comanda_selecionada['data_reserva']}")
+                    print(f"🍞 Produto: {comanda_selecionada['nome_principal']}")
+                    
+                    confirmacao = input("\n🚚 Confirma o despacho? (s/N): ").strip().lower()
+                    
+                    if confirmacao in ['s', 'sim', 'y', 'yes']:
+                        print("\n🔄 Processando despacho...")
+                        
+                        # Extrai a data da comanda para despachar
+                        data_str = comanda_selecionada['data_reserva']
+                        try:
+                            data_despacho = datetime.strptime(data_str, '%Y-%m-%d')
+                        except:
+                            data_despacho = datetime.now()
+                        
+                        # Despacha usando o método do almoxarifado
+                        resultado = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.despachar_reservas_e_consumir_itens(
+                            data_despacho=data_despacho,
+                            id_ordem=id_ordem,
+                            id_pedido=id_pedido
+                        )
+                        
+                        if resultado['sucesso']:
+                            print("✅ Comanda despachada com sucesso!")
+                            print(f"🚚 {resultado['reservas_despachadas']} reservas processadas")
+                            print(f"📦 {len(resultado['itens_despachados'])} tipos de itens consumidos")
+                            
+                            # Remove o arquivo de comanda
+                            try:
+                                os.remove(comanda_selecionada['arquivo'])
+                                print(f"🗑️ Comanda removida: {os.path.basename(comanda_selecionada['arquivo'])}")
+                            except Exception as e:
+                                print(f"⚠️ Erro ao remover arquivo de comanda: {e}")
+                            
+                            # Mostra resumo do que foi consumido
+                            if resultado['itens_despachados']:
+                                print("\n📊 ITENS CONSUMIDOS:")
+                                print("-" * 30)
+                                for item in resultado['itens_despachados'][:5]:  # Mostra só os 5 primeiros
+                                    print(f"   • {item['nome']}: {item['quantidade_despachada']:.2f} {item['unidade']}")
+                                if len(resultado['itens_despachados']) > 5:
+                                    print(f"   ... e mais {len(resultado['itens_despachados']) - 5} itens")
+                        else:
+                            print(f"⚠️ Erro ao despachar: {resultado.get('erro', 'Erro desconhecido')}")
+                        
+                        input("\n📋 Pressione Enter para continuar...")
+                    else:
+                        print("\n❌ Despacho cancelado")
+                        input("Pressione Enter para continuar...")
+                        
+                except ValueError:
+                    print("\n❌ IDs devem ser números!")
+                    input("Pressione Enter para continuar...")
+                except Exception as e:
+                    print(f"\n⚠️ Erro ao processar despacho: {e}")
+                    input("Pressione Enter para continuar...")
+                    
+        except Exception as e:
+            print(f"⚠️ Erro no sistema de despacho: {e}")
+            input("\nPressione Enter para continuar...")
+    
     def mostrar_ajuda(self):
         """Mostra ajuda do sistema"""
         self.utils.limpar_tela()
@@ -1733,6 +2378,203 @@ class MenuPrincipal:
         print("Ate a proxima!")
         self.rodando = False
 
+
+    def mostrar_submenu_avaliador_pedidos(self):
+        """Submenu para avaliação de pedidos"""
+        try:
+            rodando_avaliador = True
+            
+            while rodando_avaliador:
+                try:
+                    self.utils.limpar_tela()
+                    print("🔍 AVALIADOR DE PEDIDOS")
+                    print("=" * 50)
+                    print("\n📄 ANÁLISE DE ATIVIDADES E REAGENDAMENTO")
+                    print()
+                    print("📄 OPÇÕES DISPONÍVEIS:")
+                    print("1️⃣  Analisar Atividades Compartilhadas")
+                    print("2️⃣  Estimar Fim de Jornada")
+                    print("\nV️⃣  Voltar ao Menu Principal")
+                    print("=" * 50)
+                    
+                    opcao_avaliador = input("\n🎯 Escolha uma opção: ").strip().upper()
+                    
+                    if opcao_avaliador == '1':
+                        self.analisar_atividades_compartilhadas()
+                    elif opcao_avaliador == '2':
+                        self.estimar_fim_jornada()
+                    elif opcao_avaliador == 'V':
+                        rodando_avaliador = False
+                    else:
+                        print(f"\n⚠️ Opção '{opcao_avaliador}' inválida!")
+                        input("Pressione Enter para continuar...")
+                        
+                except KeyboardInterrupt:
+                    print("\n\n🔍 Voltando ao menu principal...")
+                    rodando_avaliador = False
+                except Exception as e:
+                    print(f"\n⚠️ Erro no submenu avaliador: {e}")
+                    input("Pressione Enter para continuar...")
+            
+        except Exception as e:
+            print(f"\n⚠️ Erro inesperado no submenu avaliador: {e}")
+            input("Pressione Enter para continuar...")
+    
+    def analisar_atividades_compartilhadas(self):
+        """Analisa atividades compartilhadas entre pedidos"""
+        self.utils.limpar_tela()
+        print("🔍 ANÁLISE DE ATIVIDADES COMPARTILHADAS")
+        print("=" * 50)
+        
+        try:
+            # Define o diretório de logs
+            diretorio_logs = "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/logs/equipamentos"
+            
+            if not os.path.exists(diretorio_logs):
+                print(f"⚠️ Diretório de logs não encontrado: {diretorio_logs}")
+                print("💡 Execute primeiro alguns pedidos para gerar logs")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            print(f"📂 Analisando logs em: {diretorio_logs}")
+            print("\n🔄 Carregando dados...")
+            
+            # Cria o analisador e carrega os logs
+            analisador = AnalisadorPedidos(diretorio_logs)
+            analisador.carregar_logs()
+            
+            # Detecta e exibe duplicatas
+            print("\n🔍 Buscando atividades compartilhadas...")
+            duplicatas = analisador.exibir_relatorio_duplicatas()
+            
+            if not duplicatas:
+                print("\n✅ Nenhuma atividade compartilhada encontrada!")
+                print("🎆 Todos os pedidos estão usando equipamentos exclusivos")
+            else:
+                print(f"\n📈 Resumo:")
+                print(f"   • Total de IDs compartilhados: {len(duplicatas)}")
+                total_ocorrencias = sum(len(ocorrencias) for ocorrencias in duplicatas.values())
+                print(f"   • Total de ocorrências: {total_ocorrencias}")
+                
+                # Identifica pedidos afetados
+                pedidos_afetados = set()
+                for id_atividade, ocorrencias in duplicatas.items():
+                    for ordem, pedido, _ in ocorrencias:
+                        pedidos_afetados.add((ordem, pedido))
+                
+                print(f"   • Pedidos afetados: {len(pedidos_afetados)}")
+                
+                print("\n💡 RECOMENDAÇÕES:")
+                print("   • Use a opção 'Estimar Fim de Jornada' para reagendar pedidos")
+                print("   • Considere executar pedidos em ordem diferente")
+                print("   • Verifique se há equipamentos alternativos disponíveis")
+            
+        except Exception as e:
+            print(f"\n⚠️ Erro ao analisar atividades: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        input("\nPressione Enter para continuar...")
+    
+    def estimar_fim_jornada(self):
+        """Estima fim de jornada com base em reagendamento"""
+        self.utils.limpar_tela()
+        print("⏰ ESTIMATIVA DE FIM DE JORNADA")
+        print("=" * 50)
+        
+        try:
+            # Define o diretório de logs
+            diretorio_logs = "/Users/jardelrodrigues/Desktop/SIVIRA/src_equip/logs/equipamentos"
+            
+            if not os.path.exists(diretorio_logs):
+                print(f"⚠️ Diretório de logs não encontrado: {diretorio_logs}")
+                print("💡 Execute primeiro alguns pedidos para gerar logs")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            print(f"📂 Analisando logs em: {diretorio_logs}")
+            print("\n🔄 Carregando dados...")
+            
+            # Cria o analisador e carrega os logs
+            analisador = AnalisadorPedidos(diretorio_logs)
+            analisador.carregar_logs()
+            duplicatas = analisador.detectar_atividades_duplicadas()
+            
+            if not duplicatas:
+                print("\nℹ️ Nenhuma atividade compartilhada encontrada")
+                print("🎆 Não há necessidade de reagendamento")
+                input("\nPressione Enter para continuar...")
+                return
+            
+            print("\n🔍 Atividades compartilhadas detectadas!")
+            print("🔄 Calculando reagendamentos...")
+            
+            # Cria o calculador e executa reagendamento
+            calculador = CalculadorReagendamento(analisador)
+            ordem_base, pedido_base, resultados = calculador.calcular_reagendamentos(duplicatas)
+            
+            if not resultados:
+                print("\n⚠️ Não foi possível calcular reagendamentos")
+            else:
+                print(f"\n🎚️ Pedido Base: Ordem {ordem_base} | Pedido {pedido_base}")
+                print("   (Este pedido mantém seus horários originais)")
+                
+                print("\n📈 REAGENDAMENTOS CALCULADOS:")
+                print("=" * 50)
+                
+                for resultado in resultados:
+                    print(f"\n📦 Ordem {resultado['ordem']} | Pedido {resultado['pedido']}:")
+                    print(f"   • Início Original: {resultado['inicio_original']}")
+                    print(f"   • Fim Original: {resultado['fim_original']}")
+                    print(f"   • Início Reagendado: {resultado['inicio_reagendado']}")
+                    print(f"   • Fim Reagendado: {resultado['fim_reagendado']}")
+                    print(f"   • Deslocamento: {resultado['deslocamento']}")
+                
+                # Calcula fim de jornada
+                from datetime import datetime
+                fim_max = None
+                for resultado in resultados:
+                    fim_str = resultado['fim_reagendado']
+                    # Parse do formato "HH:MM [DD/MM]"
+                    import re
+                    match = re.match(r'(\d{2}):(\d{2}) \[(\d{2})/(\d{2})\]', fim_str)
+                    if match:
+                        hora, minuto, dia, mes = match.groups()
+                        fim_dt = datetime(2024, int(mes), int(dia), int(hora), int(minuto))
+                        if fim_max is None or fim_dt > fim_max:
+                            fim_max = fim_dt
+                
+                # Adiciona o fim do pedido base
+                if ordem_base and pedido_base:
+                    pedido_base_data = analisador.pedidos.get((ordem_base, pedido_base), [])
+                    if pedido_base_data:
+                        ultima_atividade = pedido_base_data[-1]
+                        fim_str = ultima_atividade['fim']
+                        match = re.match(r'(\d{2}):(\d{2}) \[(\d{2})/(\d{2})\]', fim_str)
+                        if match:
+                            hora, minuto, dia, mes = match.groups()
+                            fim_dt = datetime(2024, int(mes), int(dia), int(hora), int(minuto))
+                            if fim_max is None or fim_dt > fim_max:
+                                fim_max = fim_dt
+                
+                if fim_max:
+                    print("\n⏰ ESTIMATIVA DE FIM DE JORNADA:")
+                    print("=" * 50)
+                    print(f"   🏁 Fim estimado: {fim_max.strftime('%H:%M')} [{fim_max.strftime('%d/%m')}]")
+                    print(f"   📅 Data: {fim_max.strftime('%d/%m/%Y')}")
+                    print(f"   ⏱️ Hora: {fim_max.strftime('%H:%M')}")
+                    
+                print("\n💡 OBSERVAÇÕES:")
+                print("   • Reagendamento baseado em backward scheduling")
+                print("   • Pedidos são deslocados para evitar conflitos")
+                print("   • Tempo de produção de cada atividade é mantido")
+            
+        except Exception as e:
+            print(f"\n⚠️ Erro ao estimar fim de jornada: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        input("\nPressione Enter para continuar...")
 
 # =====================================================================
 #                           PONTO DE ENTRADA

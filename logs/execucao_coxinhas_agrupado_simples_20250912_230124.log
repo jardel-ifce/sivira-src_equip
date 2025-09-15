@@ -1,0 +1,276 @@
+================================================================================
+LOG DE EXECUÇÃO - SISTEMA DE PRODUÇÃO COXINHAS COM AGRUPAMENTO
+Tipo de agrupamento: SIMPLES
+Data/Hora: 12/09/2025 23:01:24
+================================================================================
+
+🥟 INICIANDO SISTEMA DE PRODUÇÃO DE COXINHAS - MODO AGRUPADO (SIMPLES)
+
+🔄 Carregando itens do almoxarifado...
+📂 Nenhuma comanda encontrada para remoção.
+✅ Limpeza de logs concluída!
+❌ 0 arquivo(s) de erros removido(s)
+🧹 Limpando logs anteriores...
+   📂 logs/funcionarios: já está vazia
+   📂 logs/equipamentos: já está vazia
+   📂 logs/erros: já está vazia
+   📂 logs/execucoes: já está vazia
+📄 Arquivo de pedidos salvos não existe: data/pedidos/pedidos_salvos.json
+📭 Nenhum arquivo de log encontrado para remover
+✅ Almoxarifado carregado com sucesso!
+
+🔄 Criando pedidos de produção de coxinhas COM AGRUPAMENTO...
+   Processando pedido 1: Coxinha de Frango - 15 unidades...
+   📅 Configuração temporal (com offset para agrupamento):
+      Deadline: 26/06 08:00
+      Início: 23/06 08:00
+      Offset: 0min (para sobreposição)
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1055
+🧭 DEBUG: Explorando ID 1055
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1055_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1055_coxinha_de_frango.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1055_coxinha_de_frango.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1055
+📊 DEBUG: Número de atividades: 6
+✅ DEBUG: Item 1055 carregado: coxinha_frango
+🔍 DEBUG: Processando 6 atividades
+   Atividade 1: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 2: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 3: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 6: 1 tipos profissionais - ['CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_CONFEITEIRO
+   📋 CONFEITEIRO
+📦 Item: Massa para Frituras | ID: 2003 | Política: SOB_DEMANDA
+📦 Item: Frango Refogado | ID: 2009 | Política: ESTOCADO
+📦 Item: Farinha de Rosca | ID: 15 | Política: ESTOCADO
+📦 Item: Ovo de Galinha | ID: 33 | Política: ESTOCADO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2003
+🧭 DEBUG: Explorando ID 2003
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2003_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2003_massa_para_frituras.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2003_massa_para_frituras.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2003
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2003 carregado: massa_para_frituras
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_CONFEITEIRO
+   📋 CONFEITEIRO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2009
+🧭 DEBUG: Explorando ID 2009
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2009_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2009_frango_refogado.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2009_frango_refogado.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2009
+📊 DEBUG: Número de atividades: 4
+✅ DEBUG: Item 2009 carregado: frango_refogado
+🔍 DEBUG: Processando 4 atividades
+   Atividade 1: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 2: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 3: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 4: 1 tipos profissionais - ['ALMOXARIFE']
+   ✅ Adicionado: ALMOXARIFE
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 ALMOXARIFE
+   📋 COZINHEIRO
+   ✅ Pedido 1 criado: Coxinha de Frango (15 uni) - AGRUPAMENTO HABILITADO
+   Processando pedido 2: Coxinha de Carne de Sol - 10 unidades...
+   📅 Configuração temporal (com offset para agrupamento):
+      Deadline: 26/06 08:00
+      Início: 23/06 08:00
+      Offset: 0min (para sobreposição)
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 1069
+🧭 DEBUG: Explorando ID 1069
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1069_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1069_coxinha_de_carne_de_sol.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/produtos/atividades/1069_coxinha_de_carne_de_sol.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 1069
+📊 DEBUG: Número de atividades: 6
+✅ DEBUG: Item 1069 carregado: coxinha_carne_de_sol
+🔍 DEBUG: Processando 6 atividades
+   Atividade 1: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 2: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 3: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 4: 0 tipos profissionais - []
+   Atividade 5: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+   Atividade 6: 1 tipos profissionais - ['CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_CONFEITEIRO
+   📋 CONFEITEIRO
+📦 Item: Massa para Frituras | ID: 2003 | Política: SOB_DEMANDA
+📦 Item: Carne de Sol Refogada | ID: 2006 | Política: ESTOCADO
+📦 Item: Farinha de Rosca | ID: 15 | Política: ESTOCADO
+📦 Item: Ovo de Galinha | ID: 33 | Política: ESTOCADO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2003
+🧭 DEBUG: Explorando ID 2003
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2003_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2003_massa_para_frituras.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2003_massa_para_frituras.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2003
+📊 DEBUG: Número de atividades: 1
+✅ DEBUG: Item 2003 carregado: massa_para_frituras
+🔍 DEBUG: Processando 1 atividades
+   Atividade 1: 2 tipos profissionais - ['CONFEITEIRO', 'AUXILIAR_DE_CONFEITEIRO']
+   ✅ Adicionado: CONFEITEIRO
+   ✅ Adicionado: AUXILIAR_DE_CONFEITEIRO
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 AUXILIAR_DE_CONFEITEIRO
+   📋 CONFEITEIRO
+🚀 DEBUG: Iniciando busca de tipos profissionais para ID 2006
+🧭 DEBUG: Explorando ID 2006
+🔍 DEBUG: Procurando arquivos com padrão: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2006_*.json
+✅ DEBUG: Arquivo encontrado: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2006_carne_de_sol_refogada.json
+🔍 DEBUG: Tentando carregar arquivo: /Users/jardelrodrigues/Desktop/SIVIRA/src_equip/data/subprodutos/atividades/2006_carne_de_sol_refogada.json
+✅ DEBUG: Arquivo carregado com sucesso. ID do item: 2006
+📊 DEBUG: Número de atividades: 4
+✅ DEBUG: Item 2006 carregado: carne_de_sol_refogada
+🔍 DEBUG: Processando 4 atividades
+   Atividade 1: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 2: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 3: 1 tipos profissionais - ['COZINHEIRO']
+   ✅ Adicionado: COZINHEIRO
+   Atividade 4: 1 tipos profissionais - ['ALMOXARIFE']
+   ✅ Adicionado: ALMOXARIFE
+✅ DEBUG: Exploração concluída. Total de tipos encontrados: 2
+   📋 ALMOXARIFE
+   📋 COZINHEIRO
+   ✅ Pedido 2 criado: Coxinha de Carne de Sol (10 uni) - AGRUPAMENTO HABILITADO
+
+✅ Total de 2 pedidos criados para coxinhas COM AGRUPAMENTO!
+🔧 Pedidos configurados com janelas temporais sobrepostas para otimizar consolidação
+
+🔄 Executando agrupamento de subprodutos (método: simples)...
+   📋 Criando atividades modulares para análise...
+DEBUG [CRIAR_ATIVIDADES_INICIO] Item 1055 (coxinha_de_frango): {'tipo_item': 'PRODUTO', 'quantidade_requerida': 15}
+DEBUG [DECISAO_PRODUCAO] Item 1055 (coxinha_de_frango): {'tipo_item': 'PRODUTO', 'deve_produzir': True, 'motivo': 'PRODUTO_SEMPRE_PRODUZ'}
+DEBUG [ATIVIDADE_CRIADA] Item 1055 (coxinha_de_frango): {'id_atividade': 10551, 'nome_atividade': 'N/A', 'quantidade': 15}
+DEBUG [ATIVIDADE_CRIADA] Item 1055 (coxinha_de_frango): {'id_atividade': 10552, 'nome_atividade': 'N/A', 'quantidade': 15}
+DEBUG [ATIVIDADE_CRIADA] Item 1055 (coxinha_de_frango): {'id_atividade': 10553, 'nome_atividade': 'N/A', 'quantidade': 15}
+DEBUG [ATIVIDADE_CRIADA] Item 1055 (coxinha_de_frango): {'id_atividade': 10554, 'nome_atividade': 'N/A', 'quantidade': 15}
+DEBUG [ATIVIDADE_CRIADA] Item 1055 (coxinha_de_frango): {'id_atividade': 10555, 'nome_atividade': 'N/A', 'quantidade': 15}
+DEBUG [ATIVIDADE_CRIADA] Item 1055 (coxinha_de_frango): {'id_atividade': 10556, 'nome_atividade': 'N/A', 'quantidade': 15}
+DEBUG [ATIVIDADES_CRIADAS_SUCESSO] Item 1055 (coxinha_de_frango): {'total_atividades_criadas': 6, 'quantidade_total': 15}
+📦 Item: Massa para Frituras | ID: 2003 | Política: SOB_DEMANDA
+📦 Item: Frango Refogado | ID: 2009 | Política: ESTOCADO
+📦 Item: Farinha de Rosca | ID: 15 | Política: ESTOCADO
+📦 Item: Ovo de Galinha | ID: 33 | Política: ESTOCADO
+DEBUG [PROCESSANDO_SUBPRODUTO] Item 2003 (subproduto_2003): {'quantidade': 900.05, 'item_pai': 1055}
+DEBUG [CRIAR_ATIVIDADES_INICIO] Item 2003 (massa_para_frituras): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 900.05}
+DEBUG [VERIFICACAO_ESTOQUE_INICIO] Item 2003 (item_2003): {'quantidade_necessaria': 900.05, 'gestor_disponivel': False}
+DEBUG [ERRO_GESTOR_INDISPONIVEL] Item 2003 (item_2003): {'erro': 'Gestor almoxarifado não disponível'}
+DEBUG [DECISAO_PRODUCAO] Item 2003 (massa_para_frituras): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+DEBUG [ATIVIDADE_CRIADA] Item 2003 (massa_para_frituras): {'id_atividade': 20031, 'nome_atividade': 'N/A', 'quantidade': 900.05}
+DEBUG [ATIVIDADES_CRIADAS_SUCESSO] Item 2003 (massa_para_frituras): {'total_atividades_criadas': 1, 'quantidade_total': 900.05}
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Água mineral | ID: 10 | Política: ESTOCADO
+📦 Item: Tempero pronto sabor frango | ID: 11 | Política: ESTOCADO
+📦 Item: Leite em pó integral | ID: 12 | Política: ESTOCADO
+DEBUG [PROCESSANDO_SUBPRODUTO] Item 2009 (subproduto_2009): {'quantidade': 750.01, 'item_pai': 1055}
+DEBUG [CRIAR_ATIVIDADES_INICIO] Item 2009 (frango_refogado): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 750.01}
+DEBUG [VERIFICACAO_ESTOQUE_INICIO] Item 2009 (item_2009): {'quantidade_necessaria': 750.01, 'gestor_disponivel': False}
+DEBUG [ERRO_GESTOR_INDISPONIVEL] Item 2009 (item_2009): {'erro': 'Gestor almoxarifado não disponível'}
+DEBUG [DECISAO_PRODUCAO] Item 2009 (frango_refogado): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+DEBUG [ATIVIDADE_CRIADA] Item 2009 (frango_refogado): {'id_atividade': 20091, 'nome_atividade': 'N/A', 'quantidade': 750.01}
+DEBUG [ATIVIDADE_CRIADA] Item 2009 (frango_refogado): {'id_atividade': 20092, 'nome_atividade': 'N/A', 'quantidade': 750.01}
+DEBUG [ATIVIDADE_CRIADA] Item 2009 (frango_refogado): {'id_atividade': 20093, 'nome_atividade': 'N/A', 'quantidade': 750.01}
+DEBUG [ATIVIDADE_CRIADA] Item 2009 (frango_refogado): {'id_atividade': 20094, 'nome_atividade': 'N/A', 'quantidade': 750.01}
+DEBUG [ATIVIDADES_CRIADAS_SUCESSO] Item 2009 (frango_refogado): {'total_atividades_criadas': 4, 'quantidade_total': 750.01}
+📦 Item: Frango cozido pronto | ID: 32 | Política: ESTOCADO
+📦 Item: Margarina com sal | ID: 14 | Política: ESTOCADO
+📦 Item: Cheiro verde | ID: 30 | Política: ESTOCADO
+📦 Item: Pimenta de cheiro | ID: 31 | Política: ESTOCADO
+📦 Item: Pimenta do reino | ID: 33 | Política: ESTOCADO
+DEBUG [CRIAR_ATIVIDADES_INICIO] Item 1069 (coxinha_de_carne_de_sol): {'tipo_item': 'PRODUTO', 'quantidade_requerida': 10}
+DEBUG [DECISAO_PRODUCAO] Item 1069 (coxinha_de_carne_de_sol): {'tipo_item': 'PRODUTO', 'deve_produzir': True, 'motivo': 'PRODUTO_SEMPRE_PRODUZ'}
+DEBUG [ATIVIDADE_CRIADA] Item 1069 (coxinha_de_carne_de_sol): {'id_atividade': 10691, 'nome_atividade': 'N/A', 'quantidade': 10}
+DEBUG [ATIVIDADE_CRIADA] Item 1069 (coxinha_de_carne_de_sol): {'id_atividade': 10692, 'nome_atividade': 'N/A', 'quantidade': 10}
+DEBUG [ATIVIDADE_CRIADA] Item 1069 (coxinha_de_carne_de_sol): {'id_atividade': 10693, 'nome_atividade': 'N/A', 'quantidade': 10}
+DEBUG [ATIVIDADE_CRIADA] Item 1069 (coxinha_de_carne_de_sol): {'id_atividade': 10694, 'nome_atividade': 'N/A', 'quantidade': 10}
+DEBUG [ATIVIDADE_CRIADA] Item 1069 (coxinha_de_carne_de_sol): {'id_atividade': 10695, 'nome_atividade': 'N/A', 'quantidade': 10}
+DEBUG [ATIVIDADE_CRIADA] Item 1069 (coxinha_de_carne_de_sol): {'id_atividade': 10696, 'nome_atividade': 'N/A', 'quantidade': 10}
+DEBUG [ATIVIDADES_CRIADAS_SUCESSO] Item 1069 (coxinha_de_carne_de_sol): {'total_atividades_criadas': 6, 'quantidade_total': 10}
+📦 Item: Massa para Frituras | ID: 2003 | Política: SOB_DEMANDA
+📦 Item: Carne de Sol Refogada | ID: 2006 | Política: ESTOCADO
+📦 Item: Farinha de Rosca | ID: 15 | Política: ESTOCADO
+📦 Item: Ovo de Galinha | ID: 33 | Política: ESTOCADO
+DEBUG [PROCESSANDO_SUBPRODUTO] Item 2003 (subproduto_2003): {'quantidade': 600.03, 'item_pai': 1069}
+DEBUG [CRIAR_ATIVIDADES_INICIO] Item 2003 (massa_para_frituras): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 600.03}
+DEBUG [VERIFICACAO_ESTOQUE_INICIO] Item 2003 (item_2003): {'quantidade_necessaria': 600.03, 'gestor_disponivel': False}
+DEBUG [ERRO_GESTOR_INDISPONIVEL] Item 2003 (item_2003): {'erro': 'Gestor almoxarifado não disponível'}
+DEBUG [DECISAO_PRODUCAO] Item 2003 (massa_para_frituras): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+DEBUG [ATIVIDADE_CRIADA] Item 2003 (massa_para_frituras): {'id_atividade': 20031, 'nome_atividade': 'N/A', 'quantidade': 600.03}
+DEBUG [ATIVIDADES_CRIADAS_SUCESSO] Item 2003 (massa_para_frituras): {'total_atividades_criadas': 1, 'quantidade_total': 600.03}
+📦 Item: Farinha de trigo para pães | ID: 3 | Política: ESTOCADO
+📦 Item: Água mineral | ID: 10 | Política: ESTOCADO
+📦 Item: Tempero pronto sabor frango | ID: 11 | Política: ESTOCADO
+📦 Item: Leite em pó integral | ID: 12 | Política: ESTOCADO
+DEBUG [PROCESSANDO_SUBPRODUTO] Item 2006 (subproduto_2006): {'quantidade': 500.01, 'item_pai': 1069}
+DEBUG [CRIAR_ATIVIDADES_INICIO] Item 2006 (massa_para_bolo_de_chocolate): {'tipo_item': 'SUBPRODUTO', 'quantidade_requerida': 500.01}
+DEBUG [VERIFICACAO_ESTOQUE_INICIO] Item 2006 (item_2006): {'quantidade_necessaria': 500.01, 'gestor_disponivel': False}
+DEBUG [ERRO_GESTOR_INDISPONIVEL] Item 2006 (item_2006): {'erro': 'Gestor almoxarifado não disponível'}
+DEBUG [DECISAO_PRODUCAO] Item 2006 (massa_para_bolo_de_chocolate): {'tipo_item': 'SUBPRODUTO', 'deve_produzir': True, 'motivo': 'VERIFICACAO_ESTOQUE'}
+DEBUG [ATIVIDADE_CRIADA] Item 2006 (massa_para_bolo_de_chocolate): {'id_atividade': 20061, 'nome_atividade': 'N/A', 'quantidade': 500.01}
+DEBUG [ERRO_CRIAR_ATIVIDADE] Item 2006 (massa_para_bolo_de_chocolate): {'erro': '❌ Nenhuma faixa compatível com a quantidade 500.01 (gramas ou unidades).', 'id_atividade': 20061}
+DEBUG [ATIVIDADE_CRIADA] Item 2006 (massa_para_bolo_de_chocolate): {'id_atividade': 20062, 'nome_atividade': 'N/A', 'quantidade': 500.01}
+DEBUG [ERRO_CRIAR_ATIVIDADE] Item 2006 (massa_para_bolo_de_chocolate): {'erro': '❌ Nenhuma faixa compatível com a quantidade 500.01 (gramas ou unidades).', 'id_atividade': 20062}
+DEBUG [ATIVIDADE_CRIADA] Item 2006 (massa_para_bolo_de_chocolate): {'id_atividade': 20063, 'nome_atividade': 'N/A', 'quantidade': 500.01}
+DEBUG [ERRO_CRIAR_ATIVIDADE] Item 2006 (massa_para_bolo_de_chocolate): {'erro': '❌ Nenhuma faixa compatível com a quantidade 500.01 (gramas ou unidades).', 'id_atividade': 20063}
+DEBUG [ATIVIDADE_CRIADA] Item 2006 (massa_para_bolo_de_chocolate): {'id_atividade': 20064, 'nome_atividade': 'N/A', 'quantidade': 500.01}
+DEBUG [ERRO_CRIAR_ATIVIDADE] Item 2006 (massa_para_bolo_de_chocolate): {'erro': '❌ Nenhuma faixa compatível com a quantidade 500.01 (gramas ou unidades).', 'id_atividade': 20064}
+DEBUG [ATIVIDADES_CRIADAS_SUCESSO] Item 2006 (massa_para_bolo_de_chocolate): {'total_atividades_criadas': 0, 'quantidade_total': 500.01}
+📦 Item: Farinha de trigo doméstica | ID: 17 | Política: ESTOCADO
+📦 Item: Leite líquido integral | ID: 18 | Política: ESTOCADO
+📦 Item: Ovo de galinha | ID: 19 | Política: ESTOCADO
+📦 Item: Margarina sem sal | ID: 20 | Política: ESTOCADO
+📦 Item: Cacau em pó 50% | ID: 21 | Política: ESTOCADO
+📦 Item: Açúcar refinado | ID: 23 | Política: ESTOCADO
+📦 Item: Fermento químico | ID: 24 | Política: ESTOCADO
+📦 Item: Essência de baunilha | ID: 25 | Política: ESTOCADO
+   🔧 Usando ConsolidadorSimples...
+📦 Item: Massa para Frituras | ID: 2003 | Política: SOB_DEMANDA
+📦 Item: Frango Refogado | ID: 2009 | Política: ESTOCADO
+📦 Item: Farinha de Rosca | ID: 15 | Política: ESTOCADO
+📦 Item: Ovo de Galinha | ID: 33 | Política: ESTOCADO
+📦 Item: Massa para Frituras | ID: 2003 | Política: SOB_DEMANDA
+📦 Item: Carne de Sol Refogada | ID: 2006 | Política: ESTOCADO
+📦 Item: Farinha de Rosca | ID: 15 | Política: ESTOCADO
+📦 Item: Ovo de Galinha | ID: 33 | Política: ESTOCADO
+================================================================================
+❌ ERRO CRÍTICO NA EXECUÇÃO COM AGRUPAMENTO: 'PedidoDeProducao' object has no attribute 'lotes_consolidados'
+================================================================================
+
+📋 RELATÓRIO FINAL:
+   Execução: {'agrupamento': {}}
+================================================================================
+❌ EXECUÇÃO COM AGRUPAMENTO FINALIZADA COM ERROS!
+📄 Log salvo em: logs/execucao_coxinhas_agrupado_simples_20250912_230124.log
+================================================================================

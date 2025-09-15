@@ -1,0 +1,25 @@
+================================================================================
+🍟 TESTE: PRODUÇÃO DE 40 COXINHAS DE FRANGO
+Sistema de Bateladas com Nova Lógica de Unidades por Cesta
+Data/Hora: 11/09/2025 21:22:08
+================================================================================
+
+🍟 INICIANDO TESTE COMPLETO - 40 COXINHAS DE FRANGO
+
+============================================================
+📋 INFORMAÇÕES DA FRITADEIRA
+============================================================
+   Nome: Fritadeira 1
+   ID: 32
+   Número de cestas: 4
+   Setor: TipoSetor.CONFEITARIA
+   Operadores: 4
+   Temperatura: 120°C - 250°C
+   Setup padrão: 10 minutos
+
+🔄 Criando atividade de fritura de coxinha...
+💥 ERRO DURANTE OS TESTES: [Errno 2] No such file or directory: 'data/almoxarifado/itens_almoxarifado.json'
+================================================================================
+❌ TESTE FINALIZADO COM ERROS!
+📄 Log salvo em: logs/teste_coxinha_40_20250911_212208.log
+================================================================================

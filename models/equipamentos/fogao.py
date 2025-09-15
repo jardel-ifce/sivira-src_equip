@@ -95,14 +95,20 @@ class Fogao(Equipamento):
         
         return True
 
-    def validar_capacidade_boca(self, quantidade: float) -> bool:
+    def validar_capacidade_boca(self, quantidade: float, bypass_capacidade: bool = False) -> bool:
         """Valida se a quantidade está dentro da capacidade da boca."""
-        if not (self.capacidade_por_boca_gramas_min <= quantidade <= self.capacidade_por_boca_gramas_max):
+        if not bypass_capacidade and not (self.capacidade_por_boca_gramas_min <= quantidade <= self.capacidade_por_boca_gramas_max):
             logger.warning(
                 f"❌ Quantidade {quantidade}g fora dos limites da boca "
                 f"({self.capacidade_por_boca_gramas_min}-{self.capacidade_por_boca_gramas_max}g) do {self.nome}"
             )
             return False
+        elif bypass_capacidade and quantidade < self.capacidade_por_boca_gramas_min:
+            logger.info(f"🔧 BYPASS: {self.nome} - Quantidade {quantidade}g abaixo do mínimo {self.capacidade_por_boca_gramas_min}g (ignorado)")
+        elif bypass_capacidade and quantidade > self.capacidade_por_boca_gramas_max:
+            logger.warning(
+                f"❌ BYPASS: {self.nome} - Quantidade {quantidade}g excede máximo {self.capacidade_por_boca_gramas_max}g (respeitando máximo)")
+            return False  # Bypass não ignora máximo por segurança
         return True
 
     def obter_quantidade_maxima_item_boca_periodo(self, boca_index: int, id_item: int, inicio: datetime, fim: datetime) -> float:
@@ -152,7 +158,7 @@ class Fogao(Equipamento):
         return quantidade_maxima
 
     def validar_nova_ocupacao_item_boca(self, boca_index: int, id_item: int, quantidade_nova: float, 
-                                       inicio: datetime, fim: datetime) -> bool:
+                                       inicio: datetime, fim: datetime, bypass_capacidade: bool = False) -> bool:
         """
         Simula uma nova ocupação em uma boca e verifica se a capacidade máxima será respeitada
         em todos os momentos de sobreposição.
@@ -195,12 +201,15 @@ class Fogao(Equipamento):
                 quantidade_total += quantidade_nova
             
             # Verifica se excede capacidade
-            if not self.validar_capacidade_boca(quantidade_total):
-                logger.debug(
-                    f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
-                    f"({quantidade_total}g > {self.capacidade_por_boca_gramas_max}g)"
-                )
-                return False
+            if not self.validar_capacidade_boca(quantidade_total, bypass_capacidade):
+                if not bypass_capacidade:
+                    logger.debug(
+                        f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
+                        f"({quantidade_total}g > {self.capacidade_por_boca_gramas_max}g)"
+                    )
+                    return False
+                else:
+                    logger.debug(f"🔧 BYPASS: {self.nome} Boca {boca_index + 1} continua após validação ignorada")
         
         return True
 
@@ -210,13 +219,14 @@ class Fogao(Equipamento):
         quantidade: float, 
         inicio: datetime, 
         fim: datetime,
-        id_item: int
+        id_item: int,
+        bypass_capacidade: bool = False
     ) -> bool:
         """Verifica se é possível ocupar uma boca específica com os parâmetros dados para um item."""
         if not self.boca_disponivel_para_item(boca_index, inicio, fim, id_item):
             return False
         
-        return self.validar_nova_ocupacao_item_boca(boca_index, id_item, quantidade, inicio, fim)
+        return self.validar_nova_ocupacao_item_boca(boca_index, id_item, quantidade, inicio, fim, bypass_capacidade)
 
     # ==========================================================
     # 🔍 Consulta de Ocupação (para o Gestor) - ATUALIZADAS
@@ -341,14 +351,15 @@ class Fogao(Equipamento):
         tipo_chama: TipoChama,
         pressoes_chama: List[TipoPressaoChama],
         inicio: datetime,
-        fim: datetime
+        fim: datetime,
+        bypass_capacidade: bool = False
     ) -> bool:
         """Adiciona uma ocupação específica a uma boca específica com validação por item."""
         if boca_index < 0 or boca_index >= self.numero_bocas:
             logger.warning(f"❌ Índice de boca inválido: {boca_index}")
             return False
 
-        if not self.verificar_disponibilidade_boca(boca_index, quantidade_alocada, inicio, fim, id_item):
+        if not self.verificar_disponibilidade_boca(boca_index, quantidade_alocada, inicio, fim, id_item, bypass_capacidade):
             quantidade_atual = self.obter_quantidade_maxima_item_boca_periodo(boca_index, id_item, inicio, fim)
             logger.error(
                 f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Nova quantidade {quantidade_alocada}g + "
