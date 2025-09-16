@@ -38,7 +38,35 @@ class GestorBancadas:
         return ordenadas
     
     # ==========================================================
-    # 🔁 Obter frações necessárias 
+    # 🔧 Métodos utilitários
+    # ==========================================================
+    def _calcular_fracoes_disponiveis(self, bancada: Bancada, inicio: datetime, fim: datetime) -> int:
+        """
+        Calcula quantas frações estão disponíveis em uma bancada para o período especificado.
+
+        Args:
+            bancada: A bancada a ser verificada
+            inicio: Início do período
+            fim: Fim do período
+
+        Returns:
+            int: Número de frações livres
+        """
+        fracoes_disponiveis = 0
+        for i in range(bancada.numero_fracoes):
+            fracao_livre = True
+            for ocupacao in bancada.fracoes_ocupacoes[i]:
+                ocupacao_inicio = ocupacao[4]
+                ocupacao_fim = ocupacao[5]
+                if bancada._tem_sobreposicao_temporal(inicio, fim, ocupacao_inicio, ocupacao_fim):
+                    fracao_livre = False
+                    break
+            if fracao_livre:
+                fracoes_disponiveis += 1
+        return fracoes_disponiveis
+
+    # ==========================================================
+    # 🔁 Obter frações necessárias
     # ==========================================================
     def _obter_fracoes_necessarias(self, atividade: "AtividadeModular", bancada: Bancada) -> int:
         """
@@ -63,8 +91,95 @@ class GestorBancadas:
             logger.warning(f"⚠️ Erro ao tentar obter frações para {bancada.nome}: {e}")
         return 1
     
+    def _tentar_alocacao_integral(
+        self,
+        atividade: "AtividadeModular",
+        equipamentos_ordenados: List[Bancada],
+        horario_inicio_tentativa: datetime,
+        horario_final_tentativa: datetime
+    ) -> Tuple[bool, Optional[List[Bancada]], Optional[datetime], Optional[datetime]]:
+        """Tenta alocar a atividade integralmente em uma única bancada."""
+        for bancada in equipamentos_ordenados:
+            fracoes_necessarias = self._obter_fracoes_necessarias(atividade, bancada)
+            fracoes_disponiveis = self._calcular_fracoes_disponiveis(bancada, horario_inicio_tentativa, horario_final_tentativa)
+
+            if fracoes_disponiveis >= fracoes_necessarias:
+                sucesso = bancada.ocupar_fracoes(
+                    id_ordem=atividade.id_ordem,
+                    id_pedido=atividade.id_pedido,
+                    id_atividade=atividade.id_atividade,
+                    id_item=atividade.id_item if hasattr(atividade, 'id_item') else 0,
+                    quantidade_fracoes=fracoes_necessarias,
+                    inicio=horario_inicio_tentativa,
+                    fim=horario_final_tentativa
+                )
+                if sucesso:
+                    atividade.equipamento_alocado = bancada
+                    atividade.equipamentos_selecionados = [bancada]
+                    atividade.alocada = True
+
+                    logger.info(
+                        f"✅ Atividade {atividade.id_atividade} alocada INTEIRAMENTE na {bancada.nome} "
+                        f"({fracoes_necessarias} frações) "
+                        f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
+                    )
+                    return True, [bancada], horario_inicio_tentativa, horario_final_tentativa
+
+        return False, None, None, None
+
+    def _tentar_alocacao_dividida(
+        self,
+        atividade: "AtividadeModular",
+        equipamentos_ordenados: List[Bancada],
+        horario_inicio_tentativa: datetime,
+        horario_final_tentativa: datetime
+    ) -> Tuple[bool, Optional[List[Bancada]], Optional[datetime], Optional[datetime]]:
+        """Tenta dividir a atividade entre múltiplas bancadas."""
+        fracoes_total_necessarias = None
+        fracoes_acumuladas = 0
+        bancadas_utilizadas = set()
+
+        for bancada in equipamentos_ordenados:
+            fracoes_disponiveis = self._calcular_fracoes_disponiveis(bancada, horario_inicio_tentativa, horario_final_tentativa)
+
+            if fracoes_disponiveis > 0:
+                if fracoes_total_necessarias is None:
+                    fracoes_total_necessarias = self._obter_fracoes_necessarias(atividade, bancada)
+
+                usar_fracoes = min(fracoes_total_necessarias - fracoes_acumuladas, fracoes_disponiveis)
+
+                sucesso = bancada.ocupar_fracoes(
+                    id_ordem=atividade.id_ordem,
+                    id_pedido=atividade.id_pedido,
+                    id_atividade=atividade.id_atividade,
+                    id_item=atividade.id_item if hasattr(atividade, 'id_item') else 0,
+                    quantidade_fracoes=usar_fracoes,
+                    inicio=horario_inicio_tentativa,
+                    fim=horario_final_tentativa
+                )
+
+                if sucesso:
+                    bancadas_utilizadas.add(bancada)
+                    fracoes_acumuladas += usar_fracoes
+
+                if fracoes_acumuladas >= fracoes_total_necessarias:
+                    bancadas_lista = list(bancadas_utilizadas)
+                    atividade.equipamento_alocado = bancadas_lista[0]
+                    atividade.equipamentos_selecionados = bancadas_lista
+                    atividade.alocada = True
+
+                    logger.info(
+                        f"🧩 Atividade {atividade.id_atividade} dividida entre "
+                        f"{', '.join(b.nome for b in bancadas_lista)} "
+                        f"({fracoes_acumuladas} frações total) "
+                        f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
+                    )
+                    return True, bancadas_lista, horario_inicio_tentativa, horario_final_tentativa
+
+        return False, None, None, None
+
     # ==========================================================
-    # 🎯 Alocação - CORRIGIDA PARA RETORNAR TODAS AS BANCADAS
+    # 🎯 Alocação 
     # ==========================================================
     def alocar(
         self,
@@ -76,7 +191,7 @@ class GestorBancadas:
         """
         ✅ CORRIGIDO: Retorna sempre lista de bancadas para garantir processamento adequado.
         Isso força o AtividadeModular a reconhecer alocações múltiplas e consolidar o registro.
-        
+
         Returns:
             Tuple[bool, Optional[List[Bancada]], Optional[datetime], Optional[datetime]]
             - bool: Sucesso da alocação
@@ -92,77 +207,19 @@ class GestorBancadas:
         while horario_final_tentativa - duracao >= inicio:
             horario_inicio_tentativa = horario_final_tentativa - duracao
 
-            # 1️⃣ Tenta alocar integralmente em uma bancada (prioridade por FIP)
-            for bancada in equipamentos_ordenados:
-                fracoes_necessarias = self._obter_fracoes_necessarias(atividade, bancada)
+            # 1️⃣ Tenta alocar integralmente em uma bancada
+            sucesso, bancadas, inicio_real, fim_real = self._tentar_alocacao_integral(
+                atividade, equipamentos_ordenados, horario_inicio_tentativa, horario_final_tentativa
+            )
+            if sucesso:
+                return sucesso, bancadas, inicio_real, fim_real
 
-                if bancada.quantidade_fracoes_disponiveis(horario_inicio_tentativa, horario_final_tentativa) >= fracoes_necessarias:
-                    sucesso = bancada.ocupar_fracoes(
-                        id_ordem=atividade.id_ordem,
-                        id_pedido=atividade.id_pedido,
-                        id_atividade=atividade.id_atividade,
-                        id_item=atividade.id_item if hasattr(atividade, 'id_item') else 0,
-                        quantidade_fracoes=fracoes_necessarias,
-                        inicio=horario_inicio_tentativa,
-                        fim=horario_final_tentativa
-                    )
-                    if sucesso:
-                        # ✅ COMPATIBILIDADE: Configura adequadamente a atividade
-                        atividade.equipamento_alocado = bancada
-                        atividade.equipamentos_selecionados = [bancada]
-                        atividade.alocada = True
-                        
-                        logger.info(
-                            f"✅ Atividade {atividade.id_atividade} alocada INTEIRAMENTE na {bancada.nome} "
-                            f"({fracoes_necessarias} frações) "
-                            f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
-                        )
-                        # ✅ CORREÇÃO CRÍTICA: Retorna lista mesmo para bancada única (consistência)
-                        return True, [bancada], horario_inicio_tentativa, horario_final_tentativa
-
-            # 2️⃣ Fallback: tenta dividir a carga entre bancadas
-            fracoes_total_necessarias = None
-            fracoes_acumuladas = 0
-            bancadas_utilizadas = set()  # ← NOVO: Set para rastrear bancadas únicas
-
-            for bancada in equipamentos_ordenados:
-                fracoes_disponiveis = bancada.quantidade_fracoes_disponiveis(horario_inicio_tentativa, horario_final_tentativa)
-
-                if fracoes_disponiveis > 0:
-                    if fracoes_total_necessarias is None:
-                        fracoes_total_necessarias = self._obter_fracoes_necessarias(atividade, bancada)
-
-                    usar_fracoes = min(fracoes_total_necessarias - fracoes_acumuladas, fracoes_disponiveis)
-
-                    sucesso = bancada.ocupar_fracoes(
-                        id_ordem=atividade.id_ordem,
-                        id_pedido=atividade.id_pedido,
-                        id_atividade=atividade.id_atividade,
-                        id_item=atividade.id_item if hasattr(atividade, 'id_item') else 0,
-                        quantidade_fracoes=usar_fracoes,
-                        inicio=horario_inicio_tentativa,
-                        fim=horario_final_tentativa
-                    )
-
-                    if sucesso:
-                        bancadas_utilizadas.add(bancada)  # ← MODIFICAÇÃO: Adiciona ao set
-                        fracoes_acumuladas += usar_fracoes
-
-                    if fracoes_acumuladas >= fracoes_total_necessarias:
-                        # ✅ CORREÇÃO: Para múltiplas bancadas, configura adequadamente
-                        bancadas_lista = list(bancadas_utilizadas)
-                        atividade.equipamento_alocado = bancadas_lista[0]  # Primeira como principal
-                        atividade.equipamentos_selecionados = bancadas_lista
-                        atividade.alocada = True
-                        
-                        logger.info(
-                            f"🧩 Atividade {atividade.id_atividade} dividida entre "
-                            f"{', '.join(b.nome for b in bancadas_lista)} "
-                            f"({fracoes_acumuladas} frações total) "
-                            f"de {horario_inicio_tentativa.strftime('%H:%M')} até {horario_final_tentativa.strftime('%H:%M')}."
-                        )
-                        # ✅ CORREÇÃO CRÍTICA: Retorna lista de bancadas únicas
-                        return True, bancadas_lista, horario_inicio_tentativa, horario_final_tentativa
+            # 2️⃣ Fallback: tenta dividir entre bancadas
+            sucesso, bancadas, inicio_real, fim_real = self._tentar_alocacao_dividida(
+                atividade, equipamentos_ordenados, horario_inicio_tentativa, horario_final_tentativa
+            )
+            if sucesso:
+                return sucesso, bancadas, inicio_real, fim_real
 
             # Nenhuma alocação possível nesta janela → tenta retroceder
             horario_final_tentativa -= timedelta(minutes=1)
@@ -231,7 +288,7 @@ class GestorBancadas:
         """Retorna estatísticas consolidadas de todas as bancadas."""
         estatisticas = {
             'total_bancadas': len(self.bancadas),
-            'total_fracoes': sum(b.qtd_fracoes for b in self.bancadas),
+            'total_fracoes': sum(b.numero_fracoes for b in self.bancadas),
             'fracoes_utilizadas': 0,
             'total_ocupacoes': 0,
             'bancadas_utilizadas': 0,
@@ -262,20 +319,34 @@ class GestorBancadas:
         """Retorna lista de bancadas que têm frações suficientes disponíveis."""
         bancadas_disponiveis = []
         for bancada in self.bancadas:
-            if bancada.verificar_espaco_fracoes(fracoes_necessarias, inicio, fim):
+            fracoes_disponiveis = self._calcular_fracoes_disponiveis(bancada, inicio, fim)
+
+            if fracoes_disponiveis >= fracoes_necessarias:
                 bancadas_disponiveis.append(bancada)
         return bancadas_disponiveis
 
     def obter_capacidade_total_disponivel(self, inicio: datetime, fim: datetime) -> int:
         """Retorna total de frações disponíveis em todas as bancadas."""
         return sum(
-            bancada.quantidade_fracoes_disponiveis(inicio, fim) 
+            self._calcular_fracoes_disponiveis(bancada, inicio, fim)
             for bancada in self.bancadas
         )
 
     # ==========================================================
     # 📊 Métodos para análise de alocações múltiplas
     # ==========================================================
+    def _contar_fracoes_atividade(self, bancada: Bancada, id_ordem: int, id_pedido: int, id_atividade: int) -> int:
+        """Conta quantas frações uma atividade usa em uma bancada específica."""
+        fracoes_utilizadas = 0
+        for fracao_index in range(bancada.numero_fracoes):
+            ocupacoes_fracao = [
+                oc for oc in bancada.fracoes_ocupacoes[fracao_index]
+                if (oc[0] == id_ordem and oc[1] == id_pedido and oc[2] == id_atividade)
+            ]
+            if ocupacoes_fracao:
+                fracoes_utilizadas += 1
+        return fracoes_utilizadas
+
     def obter_detalhes_alocacao_atividade(self, atividade: "AtividadeModular") -> dict:
         """
         🔍 Retorna detalhes completos da alocação de uma atividade,
@@ -288,32 +359,21 @@ class GestorBancadas:
             'bancadas_utilizadas': [],
             'fracoes_total': 0
         }
-        
+
         # Coleta informações de todas as bancadas que processam esta atividade
         for bancada in self.bancadas:
-            fracoes_utilizadas = 0
-            ocupacoes_atividade = []
-            
-            for fracao_index in range(bancada.qtd_fracoes):
-                ocupacoes_fracao = [
-                    oc for oc in bancada.ocupacoes_por_fracao[fracao_index]
-                    if (oc[0] == atividade.id_ordem and 
-                        oc[1] == atividade.id_pedido and 
-                        oc[2] == atividade.id_atividade)
-                ]
-                
-                if ocupacoes_fracao:
-                    fracoes_utilizadas += 1
-                    ocupacoes_atividade.extend(ocupacoes_fracao)
-            
+            fracoes_utilizadas = self._contar_fracoes_atividade(
+                bancada, atividade.id_ordem, atividade.id_pedido, atividade.id_atividade
+            )
+
             if fracoes_utilizadas > 0:
                 detalhes['bancadas_utilizadas'].append({
                     'nome': bancada.nome,
                     'fracoes_utilizadas': fracoes_utilizadas,
-                    'ocupacoes': len(ocupacoes_atividade)
+                    'ocupacoes': fracoes_utilizadas  # Simplificado: 1 ocupação por fração
                 })
                 detalhes['fracoes_total'] += fracoes_utilizadas
-        
+
         return detalhes
 
     def listar_alocacoes_multiplas(self) -> List[dict]:
@@ -322,35 +382,27 @@ class GestorBancadas:
         """
         alocacoes_multiplas = []
         atividades_processadas = set()
-        
+
         for bancada in self.bancadas:
-            for fracao_index in range(bancada.qtd_fracoes):
-                for ocupacao in bancada.ocupacoes_por_fracao[fracao_index]:
+            for fracao_index in range(bancada.numero_fracoes):
+                for ocupacao in bancada.fracoes_ocupacoes[fracao_index]:
                     id_ordem, id_pedido, id_atividade = ocupacao[0], ocupacao[1], ocupacao[2]
                     chave_atividade = (id_ordem, id_pedido, id_atividade)
-                    
+
                     if chave_atividade not in atividades_processadas:
-                        # Conta quantas bancadas diferentes processam esta atividade
+                        # Usa o método utilitário para contar frações por bancada
                         bancadas_atividade = []
                         fracoes_total = 0
-                        
+
                         for b in self.bancadas:
-                            fracoes_bancada = 0
-                            for fi in range(b.qtd_fracoes):
-                                ocupacoes_atividade = [
-                                    oc for oc in b.ocupacoes_por_fracao[fi]
-                                    if (oc[0] == id_ordem and oc[1] == id_pedido and oc[2] == id_atividade)
-                                ]
-                                if ocupacoes_atividade:
-                                    fracoes_bancada += 1
-                            
+                            fracoes_bancada = self._contar_fracoes_atividade(b, id_ordem, id_pedido, id_atividade)
                             if fracoes_bancada > 0:
                                 bancadas_atividade.append({
                                     'nome': b.nome,
                                     'fracoes_utilizadas': fracoes_bancada
                                 })
                                 fracoes_total += fracoes_bancada
-                        
+
                         if len(bancadas_atividade) > 1:
                             alocacoes_multiplas.append({
                                 'id_ordem': id_ordem,
@@ -363,7 +415,7 @@ class GestorBancadas:
                                 'inicio': ocupacao[4].strftime('%H:%M [%d/%m]'),
                                 'fim': ocupacao[5].strftime('%H:%M [%d/%m]')
                             })
-                        
+
                         atividades_processadas.add(chave_atividade)
-        
+
         return alocacoes_multiplas

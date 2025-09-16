@@ -649,7 +649,7 @@ class AtividadeModular:
             if tem_fim_obrigatorio:
                 logger.error(f"   ⚠️ RESTRIÇÃO CRÍTICA: Atividade DEVE terminar EXATAMENTE às {self.fim_obrigatorio.strftime('%H:%M')}")
                 logger.error(f"   📍 Isso significa que deve começar às {(self.fim_obrigatorio - self.duracao).strftime('%H:%M')}")
-            
+
             return False, None, None, self.tempo_maximo_de_espera, []
             
         except (QuantityError, IntraActivityTimingError):
@@ -998,67 +998,67 @@ class AtividadeModular:
     def _alocar_camara(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.REFRIGERACAO_CONGELAMENTO)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_bancada(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.BANCADAS)
-        return gestor.alocar(inicio, fim, self, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self)
     
     def _alocar_fogao(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.FOGOES)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_batedeira(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.BATEDEIRAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_balanca(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.BALANCAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_forno(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.FORNOS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_fritadeira(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.FRITADEIRAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_misturadora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.MISTURADORAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_misturadora_com_coccao(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.MISTURADORAS_COM_COCCAO)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_armario_fermentacao(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.ARMARIOS_PARA_FERMENTACAO)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_modeladora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.MODELADORAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_divisora_boleadora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.DIVISORAS_BOLEADORAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_embaladora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
         bypass = self._deve_ignorar_tipo(TipoEquipamento.EMBALADORAS)
-        return gestor.alocar(inicio, fim, self, self.quantidade, bypass_capacidade=bypass)
+        return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _deve_ignorar_tipo(self, tipo_equipamento):
         """

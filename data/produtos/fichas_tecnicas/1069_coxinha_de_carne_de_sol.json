@@ -20,13 +20,13 @@
         "id_ficha_tecnica": 2003
       },
       {
-        "id_item": 2006,
+        "id_item": 2008,
         "descricao": "Carne de Sol Refogada",
         "nome": "carne_de_sol_refogada",
         "tipo_item": "SUBPRODUTO",
         "politica_producao": "ESTOCADO",
         "proporcao": 83.33,
-        "id_ficha_tecnica": 2006
+        "id_ficha_tecnica": 2008
       },
       {
         "id_item": 15,

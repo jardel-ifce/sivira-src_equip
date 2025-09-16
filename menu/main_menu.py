@@ -848,7 +848,31 @@ class MenuPrincipal:
                     print(f"\n🎉 Execução sequencial da Ordem {ordem_atual} concluída!")
                     print(f"📈 Sistema avançou para Ordem {nova_ordem}")
                     print("💡 Novos pedidos serão registrados na nova ordem")
-                    
+
+                    # 🆕 CAPTURA DE OCUPAÇÕES DETALHADAS DOS EQUIPAMENTOS
+                    try:
+                        from utils.logs.capturador_ocupacoes_equipamentos import CapturadorOcupacoes
+                        print("\n🔍 CAPTURANDO OCUPAÇÕES DETALHADAS DOS EQUIPAMENTOS ATIVOS...")
+                        print("=" * 60)
+
+                        capturador = CapturadorOcupacoes()
+                        pedidos_ids = [p.id_pedido for p in pedidos_ordem]
+
+                        # Gera relatório com ocupações detalhadas
+                        arquivo_relatorio = capturador.gerar_relatorio_ocupacoes_detalhadas(
+                            id_ordem=ordem_atual,
+                            pedidos_inclusos=pedidos_ids,
+                            salvar_arquivo=True
+                        )
+
+                        if arquivo_relatorio:
+                            print(f"📄 Relatório detalhado salvo: {arquivo_relatorio}")
+                        else:
+                            print("⚠️ Não foi possível gerar relatório detalhado")
+
+                    except Exception as e:
+                        print(f"⚠️ Erro ao capturar ocupações detalhadas: {e}")
+
                     # 🆕 MODIFICAÇÃO: Limpeza automática após execução bem-sucedida
                     try:
                         from utils.logs.gerenciador_logs import limpar_arquivo_pedidos_salvos
@@ -857,7 +881,7 @@ class MenuPrincipal:
                             print("✅ Arquivo de pedidos salvos limpo após execução bem-sucedida")
                     except Exception as e:
                         print(f"⚠️ Erro na limpeza pós-execução: {e}")
-                    
+
                     # Mostra estatísticas
                     stats = self.gestor_producao.obter_estatisticas()
                     print(f"📊 Total processado: {stats.get('total_pedidos', 0)} pedidos")
@@ -935,7 +959,31 @@ class MenuPrincipal:
                     print(f"\n🎉 Execução otimizada da Ordem {ordem_atual} concluída!")
                     print(f"📈 Sistema avançou para Ordem {nova_ordem}")
                     print("💡 Novos pedidos serão registrados na nova ordem")
-                    
+
+                    # 🆕 CAPTURA DE OCUPAÇÕES DETALHADAS DOS EQUIPAMENTOS
+                    try:
+                        from utils.logs.capturador_ocupacoes_equipamentos import CapturadorOcupacoes
+                        print("\n🔍 CAPTURANDO OCUPAÇÕES DETALHADAS DOS EQUIPAMENTOS ATIVOS...")
+                        print("=" * 60)
+
+                        capturador = CapturadorOcupacoes()
+                        pedidos_ids = [p.id_pedido for p in pedidos_ordem]
+
+                        # Gera relatório com ocupações detalhadas
+                        arquivo_relatorio = capturador.gerar_relatorio_ocupacoes_detalhadas(
+                            id_ordem=ordem_atual,
+                            pedidos_inclusos=pedidos_ids,
+                            salvar_arquivo=True
+                        )
+
+                        if arquivo_relatorio:
+                            print(f"📄 Relatório detalhado salvo: {arquivo_relatorio}")
+                        else:
+                            print("⚠️ Não foi possível gerar relatório detalhado")
+
+                    except Exception as e:
+                        print(f"⚠️ Erro ao capturar ocupações detalhadas: {e}")
+
                     # 🆕 MODIFICAÇÃO: Limpeza automática após execução bem-sucedida
                     try:
                         from utils.logs.gerenciador_logs import limpar_arquivo_pedidos_salvos
@@ -944,7 +992,7 @@ class MenuPrincipal:
                             print("✅ Arquivo de pedidos salvos limpo após execução bem-sucedida")
                     except Exception as e:
                         print(f"⚠️ Erro na limpeza pós-execução: {e}")
-                    
+
                     # Mostra estatísticas
                     stats = self.gestor_producao.obter_estatisticas()
                     print(f"📊 Total processado: {stats.get('total_pedidos', 0)} pedidos")

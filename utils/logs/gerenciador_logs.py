@@ -20,7 +20,8 @@ PASTAS_INICIALIZACAO = [
     "logs/equipamentos",
     "logs/erros",
     "logs/execucoes",
-    "logs/restricoes"  # Incluir restrições na limpeza
+    "logs/restricoes",  # Incluir restrições na limpeza
+    "logs/equipamentos_detalhados"  # 🆕 Incluir logs detalhados na limpeza
 ]
 
 def limpar_arquivo_pedidos_salvos():

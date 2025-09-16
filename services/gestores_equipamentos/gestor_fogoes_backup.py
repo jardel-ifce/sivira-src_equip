@@ -15,30 +15,29 @@ logger = setup_logger("GestorFogoes")
 class GestorFogoes:
     """
     🎓 Gestor de Fogões com Algoritmos de Pesquisa Operacional Otimizados
-
+    
     Baseado em:
     - Multiple Knapsack Problem para verificação de viabilidade
-    - First Fit Decreasing (FFD) para distribuição ótima
+    - First Fit Decreasing (FFD) para distribuição ótima  
     - Binary Space Partitioning para balanceamento de cargas
     - Load Balancing para redistribuição eficiente
     - Backward Scheduling convencional
     - 🧪 Módulo de Teste Completo antes da execução
-
+    
     🚀 OTIMIZAÇÕES IMPLEMENTADAS:
     - Verificação rápida de capacidade teórica ANTES da análise temporal
     - Early exit para casos impossíveis (ganho de 90-95% em performance)
     - Verificação em cascata: capacidade → tempo → distribuição
     - Logs de performance detalhados para monitoramento
-
+    
     Funcionalidades:
     - Verificação prévia de viabilidade total do sistema
     - Distribuição otimizada respeitando capacidades mín/máx
     - Priorização por FIP com balanceamento de carga
     - Soma quantidades do mesmo id_item em intervalos sobrepostos
     - Teste completo: divisão → validação → execução
-    - 🔗 CONSOLIDAÇÃO IMPLÍCITA: Mesma atividade + mesmo intervalo
     """
-
+    
     def __init__(self, fogoes: List[Fogao]):
         self.fogoes = fogoes
         self.debug_mode = True
@@ -55,20 +54,20 @@ class GestorFogoes:
     ) -> Tuple[bool, str]:
         """
         🚀 OTIMIZAÇÃO PRINCIPAL: Verifica capacidade teórica antes de análise temporal
-
+        
         Sequência otimizada:
-        1. Capacidade teórica máxima (ultrarrápido - O(n))
+        1. Capacidade teórica máxima (ultrarrápido - O(n)) 
         2. Verificação de configurações básicas (rápido)
         3. Análise temporal (custoso - só se passou nas anteriores)
-
+        
         Ganho estimado: 70-90% redução no tempo para casos inviáveis
         """
-
+        
         # 🚀 FASE 1: Verificação ultrarrápida de capacidade teórica total
         capacidade_maxima_teorica = sum(
             f.numero_bocas * f.capacidade_por_boca_gramas_max for f in self.fogoes
         )
-
+        
         # Early exit se teoricamente impossível
         if quantidade_total > capacidade_maxima_teorica:
             logger.debug(
@@ -76,23 +75,23 @@ class GestorFogoes:
                 f"- Rejeitado em ~0.1ms"
             )
             return False, f"Quantidade {quantidade_total}g excede capacidade máxima teórica do sistema ({capacidade_maxima_teorica}g)"
-
+        
         # 🚀 FASE 2: Verificação rápida de configurações e capacidades mínimas
         fogoes_com_config = 0
         capacidade_min_global = float('inf')
-
+        
         for fogao in self.fogoes:
             tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
             pressoes = self._obter_pressoes_chama_para_fogao(atividade, fogao)
-
+            
             if tipo_chama is not None and pressoes:
                 fogoes_com_config += 1
                 capacidade_min_global = min(capacidade_min_global, fogao.capacidade_por_boca_gramas_min)
-
+        
         if fogoes_com_config == 0:
             logger.debug(f"⚡ Early exit: Nenhum fogão com configuração válida")
             return False, "Nenhum fogão com configuração válida encontrado"
-
+        
         # ✅ SISTEMA SIMPLIFICADO: Verifica se algum fogão pode processar (apenas validação, sem registro de restrições)
         fogoes_com_config = 0
         for fogao in self.fogoes:
@@ -113,10 +112,10 @@ class GestorFogoes:
         return viavel, motivo
 
     def _verificar_viabilidade_temporal_detalhada(
-        self,
-        atividade: "AtividadeModular",
+        self, 
+        atividade: "AtividadeModular", 
         quantidade_total: float,
-        inicio: datetime,
+        inicio: datetime, 
         fim: datetime
     ) -> Tuple[bool, str]:
         """
@@ -124,66 +123,66 @@ class GestorFogoes:
         Esta é a parte custosa que agora só roda quando realmente necessário
         """
         cap_disponivel, cap_teorica = self._calcular_capacidade_total_sistema(atividade, inicio, fim)
-
+        
         logger.debug(f"🧮 Capacidade disponível: {cap_disponivel}g, teórica: {cap_teorica}g")
-
+        
         if quantidade_total > cap_disponivel:
             return False, f"Quantidade {quantidade_total}g excede capacidade disponível ({cap_disponivel}g)"
-
+        
         # Verifica se é possível respeitar capacidades mínimas
         fogoes_elegiveis = []
         for fogao in self.fogoes:
             tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
             pressoes = self._obter_pressoes_chama_para_fogao(atividade, fogao)
-
+            
             if tipo_chama is not None and pressoes:
                 bocas_disponiveis = fogao.bocas_disponiveis_periodo(inicio, fim)
                 if bocas_disponiveis:
                     fogoes_elegiveis.append(fogao)
-
+        
         if not fogoes_elegiveis:
             return False, "Nenhum fogão elegível encontrado"
-
+        
         logger.debug(f"✅ Viabilidade confirmada com {len(fogoes_elegiveis)} fogões elegíveis")
         return True, "Sistema viável após análise temporal completa"
 
     # ==========================================================
     # 📊 Multiple Knapsack Problem - Verificação de Viabilidade (OTIMIZADA)
     # ==========================================================
-
+    
     def _calcular_capacidade_total_sistema(
-        self,
-        atividade: "AtividadeModular",
-        inicio: datetime,
+        self, 
+        atividade: "AtividadeModular", 
+        inicio: datetime, 
         fim: datetime
     ) -> Tuple[float, float]:
         """
         🚀 OTIMIZADO: Calcula capacidade total disponível considerando múltiplos "recipientes" (fogões)
         Agora usa verificação em cascata para melhor performance.
-
+        
         Retorna: (capacidade_disponivel, capacidade_maxima_teorica)
         """
         # Primeiro calcular capacidade teórica (rápido)
         capacidade_maxima_teorica = sum(
             f.numero_bocas * f.capacidade_por_boca_gramas_max for f in self.fogoes
         )
-
+        
         # Depois calcular disponibilidade real (custoso)
         capacidade_disponivel_total = 0.0
-
+        
         for fogao in self.fogoes:
             # Verifica configurações (análise temporal se necessário)
             tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
             pressoes = self._obter_pressoes_chama_para_fogao(atividade, fogao)
-
+            
             if tipo_chama is None or not pressoes:
                 continue
-
+            
             bocas_disponiveis = fogao.bocas_disponiveis_periodo(inicio, fim)
             capacidade_fogao = len(bocas_disponiveis) * fogao.capacidade_por_boca_gramas_max
-
+            
             capacidade_disponivel_total += capacidade_fogao
-
+        
         return capacidade_disponivel_total, capacidade_maxima_teorica
 
     def _verificar_viabilidade_mkp(
@@ -205,7 +204,7 @@ class GestorFogoes:
     # ==========================================================
     # 🧪 MÓDULO DE TESTE COMPLETO - Simulação Antes da Execução
     # ==========================================================
-
+    
     def _testar_distribuicao_completa(
         self,
         quantidade_total: float,
@@ -217,18 +216,18 @@ class GestorFogoes:
         """
         🧪 Módulo de teste completo que simula toda a operação:
         1. Testa divisão da quantidade entre fogões
-        2. Valida distribuição nas bocas de cada fogão
+        2. Valida distribuição nas bocas de cada fogão  
         3. Verifica se todas as bocas atendem limites mín/máx
         4. Retorna plano de alocação detalhado ou None se inviável
-
+        
         Retorna: Lista de dicts com plano completo de alocação ou None
         """
         logger.debug(f"🧪 TESTE: Simulando distribuição completa de {quantidade_total}g")
-
+        
         if not fogoes_disponiveis:
             logger.debug(f"❌ TESTE: Nenhum fogão disponível")
             return None
-
+        
         # Fase 1: Testa múltiplas estratégias de distribuição
         estrategias_teste = [
             ("proporcional", self._testar_distribuicao_proporcional),
@@ -246,10 +245,10 @@ class GestorFogoes:
                 return plano_alocacao
             else:
                 logger.debug(f"❌ TESTE: Estratégia {nome_estrategia} REJEITADA")
-
+        
         logger.debug(f"❌ TESTE: Todas as estratégias falharam")
         return None
-
+    
     def _testar_distribuicao_proporcional(
         self,
         quantidade_total: float,
@@ -261,29 +260,29 @@ class GestorFogoes:
         """Testa distribuição proporcional pura"""
         capacidade_total = sum(cap for _, cap in fogoes_disponiveis)
         plano = []
-
+        
         for fogao, cap_disponivel in fogoes_disponiveis:
             proporcao = cap_disponivel / capacidade_total
             quantidade_fogao = quantidade_total * proporcao
-
+            
             # ✅ SISTEMA SIMPLIFICADO: Aceita todas as quantidades (restrições registradas automaticamente)
             if quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
                 logger.debug(f"   🔧 {fogao.nome}: {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g (aceito, restrição registrada)")
-
+            
             # Testa distribuição nas bocas
             plano_fogao = self._testar_distribuicao_bocas_fogao(
                 fogao, quantidade_fogao, atividade, inicio, fim
             )
-
+            
             if not plano_fogao:
                 logger.debug(f"   ❌ {fogao.nome}: falha na distribuição das bocas")
                 return None
-
+            
             plano.extend(plano_fogao)
             logger.debug(f"   ✅ {fogao.nome}: {quantidade_fogao:.1f}g em {len(plano_fogao)} bocas")
-
+        
         return plano
-
+    
     def _testar_distribuicao_ffd_melhorada(
         self,
         quantidade_total: float,
@@ -296,12 +295,12 @@ class GestorFogoes:
         fogoes_ordenados = sorted(fogoes_disponiveis, key=lambda x: x[1], reverse=True)
         plano = []
         quantidade_restante = quantidade_total
-
+        
         # Distribui sequencialmente, mas deixa espaço para o último
         for i, (fogao, cap_disponivel) in enumerate(fogoes_ordenados):
             if quantidade_restante <= 0:
                 break
-
+            
             if i == len(fogoes_ordenados) - 1:
                 # Último fogão: recebe tudo que sobrou
                 quantidade_fogao = quantidade_restante
@@ -309,34 +308,34 @@ class GestorFogoes:
                 # Calcula quanto pode alocar sem inviabilizar o último
                 fogoes_restantes = fogoes_ordenados[i+1:]
                 capacidade_min_restantes = min(f.capacidade_por_boca_gramas_min for f, _ in fogoes_restantes)
-
+                
                 # Deixa pelo menos o mínimo para os próximos
                 quantidade_maxima = quantidade_restante - capacidade_min_restantes
                 quantidade_fogao = min(cap_disponivel, quantidade_maxima)
-
+            
             # ✅ SISTEMA SIMPLIFICADO: Aceita todas as quantidades (restrições registradas automaticamente)
             if quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
                 logger.debug(f"   🔧 FFD: {fogao.nome} {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g (aceito, restrição registrada)")
-
+            
             # Testa distribuição nas bocas
             plano_fogao = self._testar_distribuicao_bocas_fogao(
                 fogao, quantidade_fogao, atividade, inicio, fim
             )
-
+            
             if not plano_fogao:
                 logger.debug(f"   ❌ FFD: {fogao.nome} falha na distribuição das bocas")
                 return None
-
+            
             plano.extend(plano_fogao)
             quantidade_restante -= quantidade_fogao
             logger.debug(f"   ✅ FFD: {fogao.nome} {quantidade_fogao:.1f}g, restam {quantidade_restante:.1f}g")
-
+        
         if quantidade_restante > 1:
             logger.debug(f"   ❌ FFD: Restaram {quantidade_restante:.1f}g não alocados")
             return None
-
+        
         return plano
-
+    
     def _testar_distribuicao_balanceada(
         self,
         quantidade_total: float,
@@ -349,10 +348,10 @@ class GestorFogoes:
         # Inicia com distribuição uniforme simples
         num_fogoes = len(fogoes_disponiveis)
         quantidade_media = quantidade_total / num_fogoes
-
+        
         plano = []
         quantidade_distribuida = 0
-
+        
         for i, (fogao, cap_disponivel) in enumerate(fogoes_disponiveis):
             if i == len(fogoes_disponiveis) - 1:
                 # Último fogão: recebe o que sobrou para garantir total exato
@@ -363,35 +362,35 @@ class GestorFogoes:
                     fogao.capacidade_por_boca_gramas_min,
                     min(quantidade_media, cap_disponivel)
                 )
-
+            
             # ✅ SISTEMA SIMPLIFICADO: Aceita todas as quantidades (restrições registradas automaticamente)
             if quantidade_fogao < fogao.capacidade_por_boca_gramas_min:
                 logger.debug(f"   🔧 Balanceada: {fogao.nome} {quantidade_fogao:.1f}g < mínimo {fogao.capacidade_por_boca_gramas_min}g (aceito, restrição registrada)")
-
+            
             if quantidade_fogao > cap_disponivel:
                 logger.debug(f"   ❌ Balanceada: {fogao.nome} ficaria com {quantidade_fogao:.1f}g > capacidade {cap_disponivel}g")
                 return None
-
+            
             # Testa distribuição nas bocas
             plano_fogao = self._testar_distribuicao_bocas_fogao(
                 fogao, quantidade_fogao, atividade, inicio, fim
             )
-
+            
             if not plano_fogao:
                 logger.debug(f"   ❌ Balanceada: {fogao.nome} falha na distribuição das bocas")
                 return None
-
+            
             plano.extend(plano_fogao)
             quantidade_distribuida += quantidade_fogao
             logger.debug(f"   ✅ Balanceada: {fogao.nome} {quantidade_fogao:.1f}g")
-
+        
         # Verifica se quantidade total está correta
         if abs(quantidade_distribuida - quantidade_total) > 1:
             logger.debug(f"   ❌ Balanceada: diferença {abs(quantidade_distribuida - quantidade_total):.1f}g")
             return None
-
+        
         return plano
-
+    
     def _testar_distribuicao_bocas_fogao(
         self,
         fogao: Fogao,
@@ -402,41 +401,41 @@ class GestorFogoes:
     ) -> Optional[List[Dict]]:
         """
         Testa distribuição da quantidade nas bocas de um fogão específico
-
+        
         Retorna: Lista de alocações por boca ou None se inviável
         """
         bocas_disponiveis = fogao.bocas_disponiveis_periodo(inicio, fim)
-
+        
         if not bocas_disponiveis:
             return None
-
+        
         # Calcula bocas necessárias
         bocas_necessarias = ceil(quantidade_fogao / fogao.capacidade_por_boca_gramas_max)
         bocas_necessarias = min(bocas_necessarias, len(bocas_disponiveis))
-
+        
         # ✅ SISTEMA SIMPLIFICADO: Aceita todas as quantidades (restrições registradas automaticamente)
         if quantidade_fogao < bocas_necessarias * fogao.capacidade_por_boca_gramas_min:
             logger.debug(f"   🔧 {fogao.nome} {quantidade_fogao:.1f}g < mínimo {bocas_necessarias * fogao.capacidade_por_boca_gramas_min:.1f}g (aceito, restrição registrada)")
         if quantidade_fogao > bocas_necessarias * fogao.capacidade_por_boca_gramas_max:
             return None
-
+        
         # Calcula distribuição entre bocas
         distribuicao_bocas = self._distribuir_quantidade_entre_bocas(
             quantidade_fogao, bocas_necessarias,
             fogao.capacidade_por_boca_gramas_min, fogao.capacidade_por_boca_gramas_max
         )
-
+        
         if not distribuicao_bocas:
             return None
-
+        
         # Cria plano de alocação detalhado
         plano_fogao = []
         tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
         pressoes = self._obter_pressoes_chama_para_fogao(atividade, fogao)
-
+        
         for i, quantidade_boca in enumerate(distribuicao_bocas):
             boca_idx = bocas_disponiveis[i]
-
+            
             plano_fogao.append({
                 'fogao': fogao,
                 'boca_idx': boca_idx,
@@ -446,9 +445,9 @@ class GestorFogoes:
                 'inicio': inicio,
                 'fim': fim
             })
-
+        
         return plano_fogao
-
+    
     def _executar_plano_alocacao(
         self,
         plano_alocacao: List[Dict],
@@ -458,10 +457,10 @@ class GestorFogoes:
         Executa o plano de alocação testado e aprovado
         """
         logger.debug(f"🚀 EXECUTANDO plano com {len(plano_alocacao)} alocações")
-
+        
         id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
         alocacoes_realizadas = []
-
+        
         try:
             for i, alocacao in enumerate(plano_alocacao):
                 fogao = alocacao['fogao']
@@ -471,9 +470,9 @@ class GestorFogoes:
                 pressoes = alocacao['pressoes']
                 inicio = alocacao['inicio']
                 fim = alocacao['fim']
-
+                
                 logger.debug(f"   🎯 {i+1}/{len(plano_alocacao)}: {fogao.nome} Boca {boca_idx} = {quantidade:.1f}g")
-
+                
                 sucesso = fogao.adicionar_ocupacao_boca(
                     boca_index=boca_idx,
                     id_ordem=id_ordem,
@@ -486,37 +485,37 @@ class GestorFogoes:
                     inicio=inicio,
                     fim=fim
                 )
-
+                
                 if not sucesso:
                     raise Exception(f"Falha na alocação {fogao.nome} Boca {boca_idx}")
-
+                
                 alocacoes_realizadas.append(alocacao)
-
+            
             # Atualiza atividade
             fogoes_utilizados = list(set(a['fogao'] for a in plano_alocacao))
-
+            
             atividade.equipamentos_selecionados = fogoes_utilizados
             atividade.equipamento_alocado = fogoes_utilizados[0] if len(fogoes_utilizados) == 1 else fogoes_utilizados
             atividade.alocada = True
-
+            
             logger.debug(f"✅ EXECUÇÃO COMPLETA: {len(fogoes_utilizados)} fogões utilizados")
             return True
-
+            
         except Exception as e:
             logger.error(f"❌ ERRO NA EXECUÇÃO: {e}")
-
+            
             # Rollback de todas as alocações realizadas
             logger.debug(f"🔄 ROLLBACK: Desfazendo {len(alocacoes_realizadas)} alocações")
             for alocacao in alocacoes_realizadas:
                 fogao = alocacao['fogao']
                 fogao.liberar_por_atividade(id_ordem, id_pedido, id_atividade)
-
+            
             return False
 
     # ==========================================================
     # 🎯 Alocação Principal com Backward Scheduling (OTIMIZADA)
     # ==========================================================
-
+    
     def alocar(
         self,
         inicio: datetime,
@@ -527,35 +526,34 @@ class GestorFogoes:
     ) -> Tuple[bool, Optional[Fogao], Optional[datetime], Optional[datetime]]:
         """
         🚀 VERSÃO OTIMIZADA: Alocação otimizada com algoritmos de pesquisa operacional e backward scheduling
-
+        
         Melhorias implementadas:
         - Verificação rápida de capacidade antes da análise temporal
         - Early exit para casos impossíveis (ganho de 90-95% em performance)
         - Logs de diagnóstico melhorados para depuração
         - Contadores de performance para monitoramento
-        - 🔗 CONSOLIDAÇÃO IMPLÍCITA: Mesma atividade + mesmo intervalo
         """
         duracao = atividade.duracao
         id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
         quantidade_total = float(quantidade_produto)
-
+        
         logger.info(f"🎯 Iniciando alocação otimizada: {quantidade_total}g")
         logger.info(f"📅 Janela: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}")
-
+        
         # 🚀 CONTADORES DE PERFORMANCE para diagnóstico
         tentativas_total = 0
         early_exits = 0
         analises_temporais = 0
-
+        
         # REMOVIDO: Lógica de agrupamento explícito (agora implícito nos equipamentos)
-
+        
         # Backward scheduling convencional
         horario_final_tentativa = fim
-
+        
         while horario_final_tentativa - duracao >= inicio:
             tentativas_total += 1
             horario_inicio_tentativa = horario_final_tentativa - duracao
-
+            
             # Log de progresso a cada hora de tentativas (para não poluir o log)
             if tentativas_total % 60 == 0:
                 tempo_restante = (horario_final_tentativa - duracao - inicio)
@@ -564,7 +562,7 @@ class GestorFogoes:
                     f"🔍 Tentativa {tentativas_total:,} - testando {horario_final_tentativa.strftime('%H:%M')} "
                     f"({horas_restantes:.1f}h restantes)"
                 )
-
+            
             # Fase 1: Verificação MKP OTIMIZADA (com registro automático de restrições)
             viavel, motivo = self._verificar_viabilidade_mkp(
                 atividade, quantidade_total, horario_inicio_tentativa, horario_final_tentativa
@@ -576,22 +574,22 @@ class GestorFogoes:
                     early_exits += 1
                 else:
                     analises_temporais += 1
-
+                
                 logger.debug(f"❌ MKP inviável em {horario_inicio_tentativa.strftime('%H:%M')}: {motivo}")
                 horario_final_tentativa -= timedelta(minutes=1)
                 continue
-
+                
             analises_temporais += 1  # Se chegou aqui, fez análise temporal
-
+            
             # Fase 2: Identifica fogões disponíveis
             fogoes_disponiveis = self._obter_fogoes_disponiveis(
                 atividade, horario_inicio_tentativa, horario_final_tentativa
             )
-
+            
             if not fogoes_disponiveis:
                 horario_final_tentativa -= timedelta(minutes=1)
                 continue
-
+            
             # Fase 3: Tenta alocação em fogão único (otimização)
             for fogao, cap_disponivel in fogoes_disponiveis:
                 if cap_disponivel >= quantidade_total:
@@ -608,13 +606,13 @@ class GestorFogoes:
                             f"Análises temporais: {analises_temporais:,})"
                         )
                         return True, fogao, horario_inicio_tentativa, horario_final_tentativa
-
+            
             # Fase 4: Usa módulo de teste completo para distribuição múltipla
             sucesso_multipla = self._tentar_alocacao_multipla_com_teste(
                 quantidade_total, fogoes_disponiveis, atividade,
                 horario_inicio_tentativa, horario_final_tentativa
             )
-
+            
             if sucesso_multipla:
                 fogoes_utilizados = sucesso_multipla
                 # 🚀 LOG DE PERFORMANCE
@@ -625,12 +623,12 @@ class GestorFogoes:
                     f"Análises temporais: {analises_temporais:,})"
                 )
                 return True, fogoes_utilizados, horario_inicio_tentativa, horario_final_tentativa
-
+            
             horario_final_tentativa -= timedelta(minutes=1)
-
+        
         # 🚀 DIAGNÓSTICO DETALHADO DE PERFORMANCE
         eficiencia_otimizacao = (early_exits / tentativas_total * 100) if tentativas_total > 0 else 0
-
+        
         logger.error(
             f"❌ Falha na alocação de {quantidade_total}g após backward scheduling completo\n"
             f"📊 ESTATÍSTICAS DE PERFORMANCE:\n"
@@ -639,7 +637,7 @@ class GestorFogoes:
             f"   Análises temporais: {analises_temporais:,}\n"
             f"   Economia estimada: {early_exits * 95}% de tempo computacional"
         )
-
+        
         return False, None, None, None
 
     def _tentar_alocacao_multipla_com_teste(
@@ -654,28 +652,58 @@ class GestorFogoes:
         🧪 Usa módulo de teste completo para alocação múltipla
         """
         logger.debug(f"🧪 INICIANDO TESTE COMPLETO para alocação múltipla")
-
+        
         # Usa módulo de teste completo
         plano_alocacao = self._testar_distribuicao_completa(
             quantidade_total, fogoes_disponiveis, atividade, inicio, fim
         )
-
+        
         if not plano_alocacao:
             logger.debug(f"❌ TESTE: Nenhuma estratégia de distribuição foi aprovada")
             return None
-
+        
         # Se teste passou, executa o plano
         sucesso = self._executar_plano_alocacao(plano_alocacao, atividade)
-
+        
         if sucesso:
             fogoes_utilizados = list(set(a['fogao'] for a in plano_alocacao))
             return fogoes_utilizados
-
+        
         return None
 
     # ==========================================================
-    # 🔗 CONSOLIDAÇÃO IMPLÍCITA: Mesma atividade + mesmo intervalo
+    # 🔗 CONSOLIDAÇÃO AUTOMÁTICA + Agrupamento por ID Item
     # ==========================================================
+    
+    # REMOVIDO: Método de agrupamento explícito (agora implícito nos equipamentos)
+
+    # REMOVIDO: Método de atualização de ocupação (agora implícito nos equipamentos)
+
+    # ==========================================================
+    # 🔧 Métodos Auxiliares (mantidos do original)
+    # ==========================================================
+    
+    def _obter_fogoes_disponiveis(
+        self, 
+        atividade: "AtividadeModular", 
+        inicio: datetime, 
+        fim: datetime
+    ) -> List[Tuple[Fogao, float]]:
+        """Obtém fogões disponíveis com suas capacidades"""
+        fogoes_disponiveis = []
+        fogoes_ordenados = self._ordenar_por_fip(atividade)
+        
+        for fogao in fogoes_ordenados:
+            tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
+            pressoes = self._obter_pressoes_chama_para_fogao(atividade, fogao)
+            
+            if tipo_chama is not None and pressoes:
+                bocas_disponiveis = fogao.bocas_disponiveis_periodo(inicio, fim)
+                if bocas_disponiveis:
+                    capacidade_disponivel = len(bocas_disponiveis) * fogao.capacidade_por_boca_gramas_max
+                    fogoes_disponiveis.append((fogao, capacidade_disponivel))
+        
+        return fogoes_disponiveis
 
     def _pode_consolidar_por_atividade(
         self,
@@ -686,10 +714,10 @@ class GestorFogoes:
         fim: datetime
     ) -> Optional[int]:
         """
-        CONSOLIDAÇÃO IMPLÍCITA: Verifica se pode consolidar com ocupação existente
+        Verifica se pode consolidar com ocupação existente baseado em:
         - Mesmo ID de atividade
         - Mesmo intervalo temporal
-        - Capacidade máxima do equipamento respeitada
+        - Capacidade máxima do equipamento
 
         Retorna índice da boca que pode consolidar ou None
         """
@@ -737,7 +765,7 @@ class GestorFogoes:
         fim: datetime
     ) -> bool:
         """
-        Adiciona nova ocupação na boca existente (mantém registros separados)
+        Adiciona nova ocupação na boca existente (mantém registros separados dos pedidos)
         """
         # Busca uma ocupação compatível para obter configurações
         ocupacao_referencia = None
@@ -782,7 +810,7 @@ class GestorFogoes:
         fim: datetime
     ) -> bool:
         """
-        Tenta alocação em um único fogão com consolidação implícita
+        Tenta alocação em um único fogão com consolidação simplificada
 
         Lógica:
         1. Verifica se pode consolidar (mesmo id_atividade + mesmo intervalo + capacidade)
@@ -791,7 +819,7 @@ class GestorFogoes:
         """
         id_ordem, id_pedido, id_atividade, id_item = self._obter_ids_atividade(atividade)
 
-        # 🔗 CONSOLIDAÇÃO IMPLÍCITA: Verifica se pode consolidar
+        # 🔗 CONSOLIDAÇÃO SIMPLIFICADA: Verifica se pode consolidar
         boca_consolidacao = self._pode_consolidar_por_atividade(
             fogao, id_atividade, quantidade, inicio, fim
         )
@@ -856,32 +884,6 @@ class GestorFogoes:
 
         return True
 
-    # ==========================================================
-    # 🔧 Métodos Auxiliares (mantidos do original)
-    # ==========================================================
-
-    def _obter_fogoes_disponiveis(
-        self,
-        atividade: "AtividadeModular",
-        inicio: datetime,
-        fim: datetime
-    ) -> List[Tuple[Fogao, float]]:
-        """Obtém fogões disponíveis com suas capacidades"""
-        fogoes_disponiveis = []
-        fogoes_ordenados = self._ordenar_por_fip(atividade)
-
-        for fogao in fogoes_ordenados:
-            tipo_chama = self._obter_tipo_chama_para_fogao(atividade, fogao)
-            pressoes = self._obter_pressoes_chama_para_fogao(atividade, fogao)
-
-            if tipo_chama is not None and pressoes:
-                bocas_disponiveis = fogao.bocas_disponiveis_periodo(inicio, fim)
-                if bocas_disponiveis:
-                    capacidade_disponivel = len(bocas_disponiveis) * fogao.capacidade_por_boca_gramas_max
-                    fogoes_disponiveis.append((fogao, capacidade_disponivel))
-
-        return fogoes_disponiveis
-
     def _distribuir_quantidade_entre_bocas(
         self,
         quantidade_total: float,
@@ -892,19 +894,19 @@ class GestorFogoes:
         """Distribui quantidade entre bocas respeitando limites"""
         if num_bocas <= 0:
             return []
-
+        
         # ✅ SISTEMA SIMPLIFICADO: Aceita todas as quantidades (restrições registradas automaticamente)
         if quantidade_total < num_bocas * capacidade_min:
             logger.debug(f"   🔧 Distribuição: {quantidade_total:.1f}g < mínimo total {num_bocas * capacidade_min:.1f}g (aceito, restrição registrada)")
         if quantidade_total > num_bocas * capacidade_max:
             return []
-
+        
         distribuicao = []
         quantidade_restante = quantidade_total
-
+        
         for i in range(num_bocas):
             bocas_restantes = num_bocas - i
-
+            
             if bocas_restantes == 1:
                 quantidade_boca = quantidade_restante
             else:
@@ -913,22 +915,22 @@ class GestorFogoes:
                     quantidade_restante - (bocas_restantes - 1) * capacidade_min
                 )
                 quantidade_boca = min(quantidade_restante, max_nesta_boca)
-
+            
             if quantidade_boca > capacidade_max:
                 return []
             # ✅ SISTEMA SIMPLIFICADO: Aceita todas as quantidades
             elif quantidade_boca < capacidade_min:
                 logger.debug(f"   🔧 Boca: {quantidade_boca:.1f}g < mínimo {capacidade_min}g (aceito, restrição registrada)")
-
+            
             distribuicao.append(quantidade_boca)
             quantidade_restante -= quantidade_boca
-
+        
         return distribuicao
 
     # ==========================================================
     # 🔧 Métodos de Configuração (do código original)
     # ==========================================================
-
+    
     def _ordenar_por_fip(self, atividade: "AtividadeModular") -> List[Fogao]:
         """Ordena fogões por FIP (menor = maior prioridade)"""
         return sorted(self.fogoes, key=lambda f: atividade.fips_equipamentos.get(f, 999))
@@ -936,7 +938,7 @@ class GestorFogoes:
     def _obter_ids_atividade(self, atividade: "AtividadeModular") -> Tuple[int, int, int, int]:
         """Extrai IDs da atividade"""
         id_ordem = getattr(atividade, 'id_ordem', 0)
-        id_pedido = getattr(atividade, 'id_pedido', 0)
+        id_pedido = getattr(atividade, 'id_pedido', 0) 
         id_atividade = getattr(atividade, 'id_atividade', 0)
         id_item = getattr(atividade, 'id_item', getattr(atividade, 'id_produto', 0))
         return id_ordem, id_pedido, id_atividade, id_item
@@ -947,16 +949,16 @@ class GestorFogoes:
             chave = unicodedata.normalize("NFKD", fogao.nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
             config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave, {})
             tipo_chama_raw = config.get("tipo_chama")
-
+            
             if not tipo_chama_raw:
                 return None
-
+                
             if isinstance(tipo_chama_raw, list):
                 tipo_chama_raw = tipo_chama_raw[0] if tipo_chama_raw else None
-
+                
             if not tipo_chama_raw:
                 return None
-
+                
             return TipoChama[tipo_chama_raw.upper()]
         except Exception:
             return None
@@ -967,17 +969,17 @@ class GestorFogoes:
             chave = unicodedata.normalize("NFKD", fogao.nome.lower()).encode("ASCII", "ignore").decode().replace(" ", "_")
             config = getattr(atividade, "configuracoes_equipamentos", {}).get(chave, {})
             pressoes_raw = config.get("pressao_chama", [])
-
+            
             if isinstance(pressoes_raw, str):
                 pressoes_raw = [pressoes_raw]
-
+                
             pressoes = []
             for p in pressoes_raw:
                 try:
                     pressoes.append(TipoPressaoChama[p.upper()])
                 except Exception:
                     pass
-
+            
             return pressoes
         except Exception:
             return []
@@ -985,13 +987,13 @@ class GestorFogoes:
     # ==========================================================
     # 🔓 Métodos de Liberação (mantidos do original)
     # ==========================================================
-
+    
     def liberar_por_atividade(self, atividade: "AtividadeModular"):
         """Libera ocupações por atividade"""
         id_ordem, id_pedido, id_atividade, _ = self._obter_ids_atividade(atividade)
         for fogao in self.fogoes:
             fogao.liberar_por_atividade(id_ordem, id_pedido, id_atividade)
-
+    
     def liberar_por_pedido(self, atividade: "AtividadeModular"):
         """Libera ocupações por pedido"""
         id_ordem, id_pedido, _, _ = self._obter_ids_atividade(atividade)
@@ -1020,7 +1022,7 @@ class GestorFogoes:
         return {
             "algoritmos_implementados": [
                 "Multiple Knapsack Problem (MKP)",
-                "First Fit Decreasing (FFD)",
+                "First Fit Decreasing (FFD)", 
                 "Binary Space Partitioning (BSP)",
                 "Load Balancing com Early Exit",
                 "Módulo de Teste Completo"
@@ -1046,12 +1048,12 @@ class GestorFogoes:
         🔧 Diagnóstico completo do sistema de fogões para depuração.
         """
         total_ocupacoes = sum(
-            sum(len(boca_ocupacoes) for boca_ocupacoes in f.ocupacoes_por_boca)
+            sum(len(boca_ocupacoes) for boca_ocupacoes in f.ocupacoes_por_boca) 
             for f in self.fogoes
         )
-
+        
         total_bocas = sum(f.numero_bocas for f in self.fogoes)
-
+        
         capacidades = {
             "total_bocas": total_bocas,
             "capacidade_teorica_total": sum(
@@ -1073,13 +1075,13 @@ class GestorFogoes:
                 for f in self.fogoes
             ]
         }
-
+        
         return {
             "total_fogoes": len(self.fogoes),
             "total_bocas": total_bocas,
             "total_ocupacoes_ativas": total_ocupacoes,
             "capacidades": capacidades,
             "sistema_otimizado": True,
-            "versao": "2.0 - Otimizada com Early Exit e Módulo de Teste + Consolidação Implícita",
+            "versao": "2.0 - Otimizada com Early Exit e Módulo de Teste",
             "timestamp": datetime.now().isoformat()
         }

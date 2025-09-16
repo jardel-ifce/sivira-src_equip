@@ -77,7 +77,7 @@ class FabricaEquipamentos:
             setor=TipoSetor.COZINHA,
             numero_operadores=6,  # CORRIGIDO: 1 → 6
             chamas_suportadas=[TipoChama.BAIXA, TipoChama.MEDIA, TipoChama.ALTA],
-            capacidade_por_boca_gramas_min=1,  # CORRIGIDO: 2000 → 500 (permite batches pequenos)
+            capacidade_por_boca_gramas_min=500,  # CORRIGIDO: 2000 → 500 (permite batches pequenos)
             capacidade_por_boca_gramas_max=30000,
             numero_bocas=6,
             pressao_chamas_suportadas=[TipoPressaoChama.ALTA_PRESSAO, TipoPressaoChama.CHAMA_DUPLA]
@@ -91,7 +91,7 @@ class FabricaEquipamentos:
             setor=TipoSetor.CONFEITARIA,
             numero_operadores=4,  # CORRIGIDO: 1 → 4
             chamas_suportadas=[TipoChama.BAIXA, TipoChama.MEDIA, TipoChama.ALTA],
-            capacidade_por_boca_gramas_min=1,  # CORRIGIDO: 2000 → 500 (permite batches pequenos)
+            capacidade_por_boca_gramas_min=500,  # CORRIGIDO: 2000 → 500 (permite batches pequenos)
             capacidade_por_boca_gramas_max=30000,
             numero_bocas=4,  # CORRIGIDO: 6 → 4
             pressao_chamas_suportadas=[TipoPressaoChama.BAIXA_PRESSAO, TipoPressaoChama.CHAMA_UNICA]

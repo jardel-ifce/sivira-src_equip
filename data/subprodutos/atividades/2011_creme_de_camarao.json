@@ -27,7 +27,7 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:10:00" },
+        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:10:00" },
         { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:15:00" },
         { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:20:00" }
       ]
@@ -61,7 +61,7 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:20:00" },
+        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:20:00" },
         { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:25:00" },
         { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:30:00" }
       ]
@@ -92,7 +92,7 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:08:00" },
+        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:08:00" },
         { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:12:00" },
         { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:15:00" }
       ]
@@ -112,7 +112,8 @@
       "configuracoes_equipamentos": {
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,
-          "tipo_de_armazenamento": "CAIXAS"
+          "tipo_de_armazenamento": "CAIXAS",
+          "gramas_por_caixa": 1000
         }
       },
       "tipos_profissionais_permitidos": ["ALMOXARIFE"],
@@ -121,7 +122,7 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 2000, "quantidade_max": 15000, "duracao": "00:05:00" },
+        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:05:00" },
         { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:08:00" },
         { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:10:00" }
       ]

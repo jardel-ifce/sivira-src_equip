@@ -3,11 +3,14 @@ from enums.equipamentos.tipo_equipamento import TipoEquipamento
 from enums.producao.tipo_setor import TipoSetor
 from enums.equipamentos.tipo_chama import TipoChama
 from enums.equipamentos.tipo_pressao_chama import TipoPressaoChama
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Set
 from datetime import datetime
 from utils.logs.logger_factory import setup_logger
+from utils.logs.registrador_restricoes import RegistradorRestricoes
+from utils.logs.logger_ocupacao_detalhada import logger_ocupacao_detalhada
 
 logger = setup_logger('Fogao')
+registrador_restricoes = RegistradorRestricoes()
 
 
 class Fogao(Equipamento):
@@ -55,6 +58,12 @@ class Fogao(Equipamento):
             [] for _ in range(numero_bocas)
         ]
 
+        # 🚨 Sistema de restrições para capacidade mínima (igual ao HotMix)
+        self.restricoes_registradas: List[Tuple[int, int, int, int, float, datetime, datetime, str]] = []
+
+        # 🆕 Cache para evitar registros duplicados
+        self.restricoes_ja_registradas: Set[Tuple[int, int, int]] = set()  # (id_ordem, id_pedido, id_atividade)
+
     # ==========================================================
     # ✅ Validações - ATUALIZADAS PARA SOBREPOSIÇÃO POR ITEM
     # ==========================================================
@@ -95,21 +104,71 @@ class Fogao(Equipamento):
         
         return True
 
-    def validar_capacidade_boca(self, quantidade: float, bypass_capacidade: bool = False) -> bool:
-        """Valida se a quantidade está dentro da capacidade da boca."""
-        if not bypass_capacidade and not (self.capacidade_por_boca_gramas_min <= quantidade <= self.capacidade_por_boca_gramas_max):
+    def validar_capacidade_boca(self, quantidade: float) -> bool:
+        """
+        Valida se a quantidade está dentro da capacidade da boca.
+        ✅ SISTEMA SIMPLIFICADO: Aceita quantidades pequenas e registra restrições automaticamente.
+        """
+        # Verifica apenas se excede o máximo (restrição de segurança)
+        if quantidade > self.capacidade_por_boca_gramas_max:
             logger.warning(
-                f"❌ Quantidade {quantidade}g fora dos limites da boca "
-                f"({self.capacidade_por_boca_gramas_min}-{self.capacidade_por_boca_gramas_max}g) do {self.nome}"
+                f"❌ Quantidade {quantidade}g excede capacidade máxima da boca "
+                f"({self.capacidade_por_boca_gramas_max}g) do {self.nome}"
             )
             return False
-        elif bypass_capacidade and quantidade < self.capacidade_por_boca_gramas_min:
-            logger.info(f"🔧 BYPASS: {self.nome} - Quantidade {quantidade}g abaixo do mínimo {self.capacidade_por_boca_gramas_min}g (ignorado)")
-        elif bypass_capacidade and quantidade > self.capacidade_por_boca_gramas_max:
-            logger.warning(
-                f"❌ BYPASS: {self.nome} - Quantidade {quantidade}g excede máximo {self.capacidade_por_boca_gramas_max}g (respeitando máximo)")
-            return False  # Bypass não ignora máximo por segurança
+
+        # ✅ ACEITA QUANTIDADES PEQUENAS: Restrição registrada automaticamente no nível superior
+        if quantidade < self.capacidade_por_boca_gramas_min:
+            logger.debug(f"🔧 {self.nome} - Quantidade {quantidade}g abaixo do mínimo {self.capacidade_por_boca_gramas_min}g (aceito, restrição registrada)")
+
         return True
+
+    def _registrar_restricao_capacidade_minima(
+        self,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
+        quantidade: float,
+        inicio: datetime,
+        fim: datetime,
+        motivo: str
+    ) -> None:
+        """Registra uma restrição de capacidade mínima para análise posterior (apenas uma vez por atividade)."""
+        # 🆕 CACHE: Evita registros duplicados
+        chave_restricao = (id_ordem, id_pedido, id_atividade)
+        if chave_restricao in self.restricoes_ja_registradas:
+            logger.debug(f"🔧 Restrição já registrada para atividade {id_atividade} - ignorando duplicação")
+            return
+
+        self.restricoes_ja_registradas.add(chave_restricao)
+
+        restricao = (id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim, motivo)
+        self.restricoes_registradas.append(restricao)
+
+        # 🆕 INTEGRAÇÃO COM SISTEMA CENTRALIZADO (igual ao HotMix)
+        registrador_restricoes.registrar_restricao(
+            id_ordem=id_ordem,
+            id_pedido=id_pedido,
+            id_atividade=id_atividade,
+            id_item=id_item,
+            equipamento_nome=self.nome,
+            capacidade_atual=quantidade,
+            capacidade_minima=self.capacidade_por_boca_gramas_min,
+            inicio=inicio,
+            fim=fim,
+            detalhes_extras={
+                "tipo_restricao": "CAPACIDADE_MINIMA",
+                "motivo_especifico": motivo
+            }
+        )
+
+        logger.warning(
+            f"🚨 RESTRIÇÃO REGISTRADA - {self.nome} | "
+            f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
+            f"Quantidade {quantidade}g | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+            f"Motivo: {motivo}"
+        )
 
     def obter_quantidade_maxima_item_boca_periodo(self, boca_index: int, id_item: int, inicio: datetime, fim: datetime) -> float:
         """
@@ -157,8 +216,8 @@ class Fogao(Equipamento):
         
         return quantidade_maxima
 
-    def validar_nova_ocupacao_item_boca(self, boca_index: int, id_item: int, quantidade_nova: float, 
-                                       inicio: datetime, fim: datetime, bypass_capacidade: bool = False) -> bool:
+    def validar_nova_ocupacao_item_boca(self, boca_index: int, id_item: int, quantidade_nova: float,
+                                       inicio: datetime, fim: datetime) -> bool:
         """
         Simula uma nova ocupação em uma boca e verifica se a capacidade máxima será respeitada
         em todos os momentos de sobreposição.
@@ -201,32 +260,147 @@ class Fogao(Equipamento):
                 quantidade_total += quantidade_nova
             
             # Verifica se excede capacidade
-            if not self.validar_capacidade_boca(quantidade_total, bypass_capacidade):
-                if not bypass_capacidade:
-                    logger.debug(
-                        f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
-                        f"({quantidade_total}g > {self.capacidade_por_boca_gramas_max}g)"
-                    )
-                    return False
-                else:
-                    logger.debug(f"🔧 BYPASS: {self.nome} Boca {boca_index + 1} continua após validação ignorada")
+            if not self.validar_capacidade_boca(quantidade_total):
+                logger.debug(
+                    f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
+                    f"({quantidade_total}g > {self.capacidade_por_boca_gramas_max}g)"
+                )
+                return False
         
         return True
 
-    def verificar_disponibilidade_boca(
-        self, 
-        boca_index: int, 
-        quantidade: float, 
-        inicio: datetime, 
-        fim: datetime,
+    def esta_disponivel_para_item_no_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> bool:
+        """
+        Verifica se há bocas disponíveis para processar um item específico usando janelas simultâneas.
+        Implementação similar ao HotMix para consistência.
+        """
+        bocas_disponiveis = self.bocas_disponiveis_para_item_periodo(inicio, fim, id_item)
+        if not bocas_disponiveis:
+            return False
+
+        # Se temos bocas disponíveis, verifica restrições de capacidade
+        for boca_index in bocas_disponiveis:
+            # Verifica se pode processar pelo menos a capacidade mínima
+            # ✅ Sempre verifica disponibilidade (bypass implícito com registro de restrições)
+            if self.capacidade_por_boca_gramas_min > 0:
+                return True
+
+        return False
+
+    def obter_quantidade_maxima_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> float:
+        """
+        Calcula a máxima quantidade de um item que pode ser processada simultaneamente
+        considerando todas as bocas durante o período especificado.
+        """
+        quantidade_maxima_total = 0.0
+
+        for boca_index in range(self.numero_bocas):
+            quantidade_boca = self.obter_quantidade_maxima_item_boca_periodo(boca_index, id_item, inicio, fim)
+            quantidade_maxima_total += quantidade_boca
+
+        return quantidade_maxima_total
+
+    def obter_capacidade_disponivel_item(self, id_item: int, inicio: datetime, fim: datetime) -> float:
+        """
+        Calcula a capacidade disponível total para um item em todas as bocas.
+        """
+        capacidade_total = 0.0
+
+        bocas_disponiveis = self.bocas_disponiveis_para_item_periodo(inicio, fim, id_item)
+        for boca_index in bocas_disponiveis:
+            quantidade_atual = self.obter_quantidade_maxima_item_boca_periodo(boca_index, id_item, inicio, fim)
+            capacidade_restante = self.capacidade_por_boca_gramas_max - quantidade_atual
+            capacidade_total += max(0, capacidade_restante)
+
+        return capacidade_total
+
+    def validar_nova_ocupacao_item(
+        self,
         id_item: int,
-        bypass_capacidade: bool = False
+        quantidade: float,
+        inicio: datetime,
+        fim: datetime,
+        id_ordem: int = 0,
+        id_pedido: int = 0,
+        id_atividade: int = 0
+    ) -> bool:
+        """
+        Valida se uma nova ocupação pode ser alocada usando lógica de janelas simultâneas.
+        VERSÃO PARA VERIFICAÇÃO DE VIABILIDADE: Não registra restrições.
+        """
+        # Segunda validação: verifica se há bocas disponíveis com capacidade
+        bocas_disponiveis = self.bocas_disponiveis_para_item_periodo(inicio, fim, id_item)
+        if not bocas_disponiveis:
+            return False
+
+        # Terceira validação: verifica se alguma boca pode acomodar a quantidade
+        for boca_index in bocas_disponiveis:
+            if self.validar_nova_ocupacao_item_boca(boca_index, id_item, quantidade, inicio, fim):
+                return True
+
+        # Se chegou aqui, nenhuma boca pode acomodar
+        return False
+
+    def validar_nova_ocupacao_item_com_restricoes(
+        self,
+        id_item: int,
+        quantidade: float,
+        inicio: datetime,
+        fim: datetime,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int
+    ) -> bool:
+        """
+        Valida nova ocupação E registra restrições quando necessário.
+        VERSÃO PARA ALOCAÇÃO EFETIVA: Registra restrições.
+        """
+        # ✅ SISTEMA SIMPLIFICADO: Registra restrição automaticamente se abaixo do mínimo
+        if quantidade < self.capacidade_por_boca_gramas_min:
+            self._registrar_restricao_capacidade_minima(
+                id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim,
+                f"Quantidade {quantidade}g abaixo da capacidade mínima {self.capacidade_por_boca_gramas_min}g"
+            )
+            logger.warning(
+                f"❌ {self.nome} - Quantidade {quantidade}g abaixo da capacidade mínima por boca ({self.capacidade_por_boca_gramas_min}g)"
+            )
+            # ✅ CONTINUA: Sistema aceita quantidades pequenas automaticamente
+
+        # Segunda validação: verifica se há bocas disponíveis com capacidade
+        bocas_disponiveis = self.bocas_disponiveis_para_item_periodo(inicio, fim, id_item)
+        if not bocas_disponiveis:
+            self._registrar_restricao_capacidade_minima(
+                id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim,
+                "Nenhuma boca disponível para o período"
+            )
+            return False
+
+        # Terceira validação: verifica se alguma boca pode acomodar a quantidade
+        for boca_index in bocas_disponiveis:
+            if self.validar_nova_ocupacao_item_boca(boca_index, id_item, quantidade, inicio, fim):
+                return True
+
+        # Se chegou aqui, nenhuma boca pode acomodar
+        capacidade_disponivel = self.obter_capacidade_disponivel_item(id_item, inicio, fim)
+        self._registrar_restricao_capacidade_minima(
+            id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim,
+            f"Capacidade insuficiente: {quantidade}g solicitado > {capacidade_disponivel}g disponível"
+        )
+        return False
+
+    def verificar_disponibilidade_boca(
+        self,
+        boca_index: int,
+        quantidade: float,
+        inicio: datetime,
+        fim: datetime,
+        id_item: int
     ) -> bool:
         """Verifica se é possível ocupar uma boca específica com os parâmetros dados para um item."""
         if not self.boca_disponivel_para_item(boca_index, inicio, fim, id_item):
             return False
         
-        return self.validar_nova_ocupacao_item_boca(boca_index, id_item, quantidade, inicio, fim, bypass_capacidade)
+        return self.validar_nova_ocupacao_item_boca(boca_index, id_item, quantidade, inicio, fim)
 
     # ==========================================================
     # 🔍 Consulta de Ocupação (para o Gestor) - ATUALIZADAS
@@ -351,15 +525,24 @@ class Fogao(Equipamento):
         tipo_chama: TipoChama,
         pressoes_chama: List[TipoPressaoChama],
         inicio: datetime,
-        fim: datetime,
-        bypass_capacidade: bool = False
+        fim: datetime
     ) -> bool:
         """Adiciona uma ocupação específica a uma boca específica com validação por item."""
         if boca_index < 0 or boca_index >= self.numero_bocas:
             logger.warning(f"❌ Índice de boca inválido: {boca_index}")
             return False
 
-        if not self.verificar_disponibilidade_boca(boca_index, quantidade_alocada, inicio, fim, id_item, bypass_capacidade):
+        # ✅ SISTEMA SIMPLIFICADO: Valida e registra restrições durante a alocação efetiva
+        if not self.validar_nova_ocupacao_item_com_restricoes(
+            id_item, quantidade_alocada, inicio, fim,
+            id_ordem, id_pedido, id_atividade
+        ):
+            # ✅ Ainda assim aceita a alocação (sistema implícito)
+            logger.debug(f"🔧 {self.nome} - Restrição registrada mas alocação aceita (bypass implícito)")
+            # Nota: O método já registrou a restrição, agora continuamos com a alocação
+
+        # Validação final de disponibilidade da boca específica
+        if not self.verificar_disponibilidade_boca(boca_index, quantidade_alocada, inicio, fim, id_item):
             quantidade_atual = self.obter_quantidade_maxima_item_boca_periodo(boca_index, id_item, inicio, fim)
             logger.error(
                 f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Nova quantidade {quantidade_alocada}g + "
@@ -785,6 +968,206 @@ class Fogao(Equipamento):
             }
         
         return {}
+
+    # ==========================================================
+    # 🚨 Métodos para gerenciar restrições (igual ao HotMix)
+    # ==========================================================
+    def obter_restricoes_registradas(self) -> List[Tuple[int, int, int, int, float, datetime, datetime, str]]:
+        """Retorna todas as restrições registradas."""
+        return self.restricoes_registradas.copy()
+
+    def limpar_restricoes_registradas(self) -> int:
+        """Limpa todas as restrições registradas e retorna quantas foram removidas."""
+        quantidade = len(self.restricoes_registradas)
+        self.restricoes_registradas.clear()
+        logger.info(f"🧹 {self.nome} - {quantidade} restrições removidas.")
+        return quantidade
+
+    def relatorio_restricoes(self) -> dict:
+        """
+        Gera relatório detalhado das restrições registradas.
+        """
+        if not self.restricoes_registradas:
+            return {
+                'total_restricoes': 0,
+                'restricoes_por_motivo': {},
+                'restricoes_por_item': {},
+                'restricoes_detalhadas': []
+            }
+
+        restricoes_por_motivo = {}
+        restricoes_por_item = {}
+        restricoes_detalhadas = []
+
+        for restricao in self.restricoes_registradas:
+            id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim, motivo = restricao
+
+            # Contabiliza por motivo
+            if motivo not in restricoes_por_motivo:
+                restricoes_por_motivo[motivo] = 0
+            restricoes_por_motivo[motivo] += 1
+
+            # Contabiliza por item
+            if id_item not in restricoes_por_item:
+                restricoes_por_item[id_item] = {
+                    'quantidade_restricoes': 0,
+                    'quantidade_total_afetada': 0.0
+                }
+            restricoes_por_item[id_item]['quantidade_restricoes'] += 1
+            restricoes_por_item[id_item]['quantidade_total_afetada'] += quantidade
+
+            # Adiciona detalhes
+            restricoes_detalhadas.append({
+                'id_ordem': id_ordem,
+                'id_pedido': id_pedido,
+                'id_atividade': id_atividade,
+                'id_item': id_item,
+                'quantidade': quantidade,
+                'inicio': inicio.strftime('%H:%M [%d/%m]'),
+                'fim': fim.strftime('%H:%M [%d/%m]'),
+                'motivo': motivo
+            })
+
+        return {
+            'total_restricoes': len(self.restricoes_registradas),
+            'restricoes_por_motivo': restricoes_por_motivo,
+            'restricoes_por_item': restricoes_por_item,
+            'restricoes_detalhadas': restricoes_detalhadas
+        }
+
+    # ==========================================================
+    # 🔗 CONSOLIDAÇÃO AUTOMÁTICA (similar ao HotMix)
+    # ==========================================================
+    def pode_consolidar_ocupacao(
+        self,
+        id_item: int,
+        quantidade: float,
+        tipo_chama: TipoChama,
+        pressoes_chama: List[TipoPressaoChama],
+        inicio: datetime,
+        fim: datetime
+    ) -> Optional[int]:
+        """
+        🔗 Verifica se pode consolidar uma nova ocupação com uma existente do mesmo item.
+        Retorna o índice da boca que pode ser consolidada, ou None se não for possível.
+        """
+        for boca_index in range(self.numero_bocas):
+            for ocupacao in self.ocupacoes_por_boca[boca_index]:
+                # Verifica se é o mesmo item
+                if ocupacao[3] != id_item:
+                    continue
+
+                # Verifica se há sobreposição temporal EXATA
+                if ocupacao[7] != inicio or ocupacao[8] != fim:
+                    continue
+
+                # Verifica se as configurações são compatíveis
+                if ocupacao[5] != tipo_chama:  # tipo_chama
+                    continue
+
+                if ocupacao[6] != pressoes_chama:  # pressoes_chama
+                    continue
+
+                # Verifica se a soma das quantidades não excede a capacidade máxima
+                quantidade_total = ocupacao[4] + quantidade
+                if quantidade_total > self.capacidade_por_boca_gramas_max:
+                    continue
+
+                logger.debug(
+                    f"🔗 {self.nome} - Boca {boca_index + 1}: Pode consolidar item {id_item} "
+                    f"({ocupacao[4]}g + {quantidade}g = {quantidade_total}g) "
+                    f"no período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+                )
+
+                return boca_index
+
+        return None
+
+    def consolidar_ocupacao(
+        self,
+        boca_index: int,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int,
+        quantidade_adicional: float,
+        inicio: datetime,
+        fim: datetime
+    ) -> bool:
+        """
+        🔗 Consolida uma nova atividade com uma ocupação existente do mesmo item.
+        """
+        for i, ocupacao in enumerate(self.ocupacoes_por_boca[boca_index]):
+            # Encontra a ocupação do mesmo item no mesmo período
+            if (ocupacao[3] == id_item and
+                ocupacao[7] == inicio and
+                ocupacao[8] == fim):
+
+                # Calcula nova quantidade total
+                quantidade_original = ocupacao[4]
+                quantidade_total = quantidade_original + quantidade_adicional
+
+                # Atualiza a ocupação existente
+                ocupacao_atualizada = (
+                    ocupacao[0],  # id_ordem original
+                    ocupacao[1],  # id_pedido original
+                    ocupacao[2],  # id_atividade original
+                    ocupacao[3],  # id_item
+                    quantidade_total,  # quantidade atualizada
+                    ocupacao[5],  # tipo_chama
+                    ocupacao[6],  # pressoes_chama
+                    ocupacao[7],  # inicio
+                    ocupacao[8]   # fim
+                )
+
+                self.ocupacoes_por_boca[boca_index][i] = ocupacao_atualizada
+
+                logger.info(
+                    f"🔗 {self.nome} - Boca {boca_index + 1}: CONSOLIDAÇÃO AUTOMÁTICA | "
+                    f"Item {id_item} | Quantidade {quantidade_original}g → {quantidade_total}g | "
+                    f"Atividades: {ocupacao[2]} + {id_atividade} | "
+                    f"{inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')}"
+                )
+
+                return True
+
+        return False
+
+    def verificar_oportunidade_consolidacao(
+        self,
+        id_item: int,
+        quantidade: float,
+        tipo_chama: TipoChama,
+        pressoes_chama: List[TipoPressaoChama],
+        inicio: datetime,
+        fim: datetime
+    ) -> Tuple[bool, Optional[int], Optional[str]]:
+        """
+        🔍 Verifica se há oportunidade de consolidação para uma nova ocupação.
+
+        Returns:
+            Tuple[bool, Optional[int], Optional[str]]: (pode_consolidar, boca_index, detalhes)
+        """
+        boca_consolidacao = self.pode_consolidar_ocupacao(
+            id_item, quantidade, tipo_chama, pressoes_chama, inicio, fim
+        )
+
+        if boca_consolidacao is not None:
+            # Encontra detalhes da ocupação existente
+            for ocupacao in self.ocupacoes_por_boca[boca_consolidacao]:
+                if (ocupacao[3] == id_item and
+                    ocupacao[7] == inicio and
+                    ocupacao[8] == fim and
+                    ocupacao[5] == tipo_chama and
+                    ocupacao[6] == pressoes_chama):
+
+                    detalhes = (
+                        f"Item {id_item} pode ser consolidado na boca {boca_consolidacao + 1} "
+                        f"com ocupação existente ({ocupacao[4]}g + {quantidade}g)"
+                    )
+                    return True, boca_consolidacao, detalhes
+
+        return False, None, "Nenhuma oportunidade de consolidação encontrada"
 
     def calcular_pico_utilizacao_item(self, id_item: int) -> dict:
         """

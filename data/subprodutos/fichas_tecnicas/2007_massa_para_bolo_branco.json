@@ -1,8 +1,8 @@
 {
-  "id_ficha_tecnica": 2006,
-  "id_item": 2006,
-  "nome": "massa_para_bolo_de_chocolate",
-  "descricao": "Massa para bolo de chocolate",
+  "id_ficha_tecnica": 2007,
+  "id_item": 2007,
+  "nome": "massa_para_bolo_branco",
+  "descricao": "Massa para bolo branco",
   "tipo_item": "SUBPRODUTO",
   "unidade_medida": "GRAMAS",
   "peso_unitario": 0,

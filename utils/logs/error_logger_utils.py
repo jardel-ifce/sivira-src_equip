@@ -360,11 +360,12 @@ def log_temporal_scheduling_error(id_ordem: int, id_pedido: int, id_atividade: i
     )
 
 
+
 def log_generic_error(id_ordem: int, id_pedido: int, id_atividade: int, nome_atividade: str,
                      tipo_erro: str, descricao: str, detalhes: Dict[str, Any],
                      nivel_impacto: str = "MÉDIO", contexto_adicional: Optional[Dict] = None):
     """Registra erro genérico do sistema."""
-    
+
     return error_logger.log_structured_error(
         id_ordem=id_ordem,
         id_pedido=id_pedido,

@@ -22,184 +22,10 @@ class GestorFornos:
     def __init__(self, fornos: List['Forno']):
         self.fornos = fornos
 
-    # ==========================================================
-    # 🔄 MÉTODOS DE AGRUPAMENTO (NOVOS - seguindo padrão do Fogão)
-    # ==========================================================
-    def encontrar_ocupacao_compativel(
-        self, 
-        atividade: "AtividadeModular", 
-        quantidade_adicional: int,
-        inicio: datetime, 
-        fim: datetime
-    ) -> Optional[Tuple[Forno, int, float]]:
-        """
-        Encontra uma ocupação existente compatível onde pode adicionar mais quantidade.
-        
-        Critérios de compatibilidade:
-        - Mesmo período temporal (início e fim exatos)
-        - Mesma duração
-        - Mesmo id_item
-        - Espaço disponível no nível
-        - Mesmos parâmetros (temperatura, vaporização, velocidade)
-        
-        Returns: (forno, nivel_index, quantidade_atual) ou None
-        """
-        
-        duracao_atividade = atividade.duracao
-        id_item_atividade = getattr(atividade, 'id_item', getattr(atividade, 'id_produto', 0))
-        
-        for forno in self.fornos:
-            # Obter parâmetros necessários
-            temperatura = self._obter_temperatura_desejada(atividade, forno)
-            vaporizacao = self._obter_vaporizacao_desejada(atividade, forno)
-            velocidade = self._obter_velocidade_desejada(atividade, forno)
-            unidades_por_nivel = self._obter_unidades_por_nivel(atividade, forno)
-            gramas_por_nivel = self._obter_gramas_por_nivel(atividade, forno)
-            
-            if not unidades_por_nivel and not gramas_por_nivel:
-                continue
-            
-            capacidade_por_nivel = unidades_por_nivel or gramas_por_nivel
-            
-            for nivel_idx in range(forno.qtd_niveis):
-                # Verificar todas as ocupações deste nível
-                for ocupacao in forno.niveis_ocupacoes[nivel_idx]:
-                    (id_o_exist, id_p_exist, id_a_exist, id_i_exist, qtd_exist, ini_exist, fim_exist) = ocupacao
-                    
-                    # CRITÉRIO 1: Sobreposição temporal exata
-                    if ini_exist != inicio or fim_exist != fim:
-                        continue
-                    
-                    # CRITÉRIO 2: Mesma duração (fim - início)
-                    duracao_existente = fim_exist - ini_exist
-                    if duracao_existente != duracao_atividade:
-                        continue
-                    
-                    # CRITÉRIO 3: Mesmo id_item (produto/subproduto)
-                    if id_i_exist != id_item_atividade:
-                        continue
-                    
-                    # CRITÉRIO 4: Verificar compatibilidade de parâmetros
-                    temp_ok = all(registro[4] == temperatura for registro in forno.registro_temperatura
-                                if registro[3] == nivel_idx and registro[5] == inicio and registro[6] == fim)
-                    vap_ok = all(registro[4] == vaporizacao for registro in forno.registro_vaporizacao
-                                if forno.tem_vaporizacao and registro[3] == nivel_idx and registro[5] == inicio and registro[6] == fim)
-                    vel_ok = all(registro[4] == velocidade for registro in forno.registro_velocidade
-                                if forno.tem_velocidade and registro[3] == nivel_idx and registro[5] == inicio and registro[6] == fim)
-                    
-                    if not (temp_ok and vap_ok and vel_ok):
-                        continue
-                    
-                    # CRITÉRIO 5: Verificar se há espaço para mais quantidade
-                    # Calcular quantidade total atual no nível para este item e horário
-                    quantidade_total_atual = sum(
-                        oc[4] for oc in forno.niveis_ocupacoes[nivel_idx]
-                        if (oc[3] == id_item_atividade and oc[5] == inicio and oc[6] == fim)
-                    )
-                    
-                    quantidade_total_seria = quantidade_total_atual + quantidade_adicional
-                    
-                    if quantidade_total_seria <= capacidade_por_nivel:
-                        logger.info(
-                            f"🔍 Compatibilidade encontrada: {forno.nome} Nível {nivel_idx} | "
-                            f"Atual: {quantidade_total_atual} + Nova: {quantidade_adicional} = {quantidade_total_seria} ≤ {capacidade_por_nivel}"
-                        )
-                        return forno, nivel_idx, quantidade_total_atual
-        
-        return None
+    # REMOVIDO: Métodos de agrupamento explícito (agora implícito nos equipamentos)
 
-    def atualizar_ocupacao_existente(
-        self,
-        forno: Forno,
-        nivel_idx: int,
-        atividade: "AtividadeModular",
-        nova_quantidade_total: float,
-        inicio: datetime,
-        fim: datetime,
-        id_ordem: int,
-        id_pedido: int,
-        id_atividade: int,
-        id_item: int
-    ) -> bool:
-        """
-        Atualiza uma ocupação existente combinando com nova quantidade.
-        Remove todas as ocupações compatíveis e adiciona uma nova com quantidade somada.
-        """
-        
-        # Encontrar e remover todas as ocupações compatíveis no nível
-        ocupacoes_removidas = []
-        ocupacoes_mantidas = []
-        
-        for ocupacao in forno.niveis_ocupacoes[nivel_idx]:
-            (id_o_exist, id_p_exist, id_a_exist, id_i_exist, qtd_exist, ini_exist, fim_exist) = ocupacao
-            
-            if (ini_exist == inicio and fim_exist == fim and id_i_exist == id_item):
-                ocupacoes_removidas.append(ocupacao)
-            else:
-                ocupacoes_mantidas.append(ocupacao)
-        
-        if not ocupacoes_removidas:
-            logger.warning(f"⚠️ Nenhuma ocupação compatível encontrada para atualizar no {forno.nome} nível {nivel_idx}")
-            return False
-        
-        # Atualizar lista de ocupações do nível
-        forno.niveis_ocupacoes[nivel_idx] = ocupacoes_mantidas
-        
-        # Obter parâmetros para a nova ocupação (usar os da primeira ocupação removida como base)
-        primeira_removida = ocupacoes_removidas[0]
-        
-        # Obter parâmetros do JSON
-        temperatura = self._obter_temperatura_desejada(atividade, forno)
-        vaporizacao = self._obter_vaporizacao_desejada(atividade, forno)
-        velocidade = self._obter_velocidade_desejada(atividade, forno)
-        
-        # Adicionar nova ocupação com quantidade somada
-        forno.niveis_ocupacoes[nivel_idx].append((
-            id_ordem,  # ← Ordem do novo pedido (mais recente)
-            id_pedido, # ← Pedido do novo pedido (mais recente)
-            id_atividade,
-            id_item,
-            nova_quantidade_total,  # ← Quantidade combinada
-            inicio,
-            fim
-        ))
-        
-        # Atualizar registros de parâmetros (remover antigos e adicionar novos)
-        # Temperatura
-        forno.registro_temperatura = [
-            r for r in forno.registro_temperatura
-            if not (r[3] == nivel_idx and r[5] == inicio and r[6] == fim and 
-                   any(r[0] == oc[0] and r[1] == oc[1] and r[2] == oc[2] for oc in ocupacoes_removidas))
-        ]
-        forno.registro_temperatura.append((id_ordem, id_pedido, id_atividade, nivel_idx, temperatura, inicio, fim))
-        
-        # Vaporização
-        if forno.tem_vaporizacao:
-            forno.registro_vaporizacao = [
-                r for r in forno.registro_vaporizacao
-                if not (r[3] == nivel_idx and r[5] == inicio and r[6] == fim and 
-                       any(r[0] == oc[0] and r[1] == oc[1] and r[2] == oc[2] for oc in ocupacoes_removidas))
-            ]
-            forno.registro_vaporizacao.append((id_ordem, id_pedido, id_atividade, nivel_idx, vaporizacao, inicio, fim))
-        
-        # Velocidade
-        if forno.tem_velocidade:
-            forno.registro_velocidade = [
-                r for r in forno.registro_velocidade
-                if not (r[3] == nivel_idx and r[5] == inicio and r[6] == fim and 
-                       any(r[0] == oc[0] and r[1] == oc[1] and r[2] == oc[2] for oc in ocupacoes_removidas))
-            ]
-            forno.registro_velocidade.append((id_ordem, id_pedido, id_atividade, nivel_idx, velocidade, inicio, fim))
-        
-        quantidade_anterior = sum(oc[4] for oc in ocupacoes_removidas)
-        
-        logger.info(
-            f"🔄 Agrupamento realizado: {forno.nome} Nível {nivel_idx} | "
-            f"Quantidade anterior: {quantidade_anterior:.0f} → Nova: {nova_quantidade_total:.0f} | "
-            f"Ocupações combinadas: {len(ocupacoes_removidas)} → 1"
-        )
-        
-        return True
+    # REMOVIDO: Método de agrupamento explícito (agora implícito nos equipamentos)
+
 
     # ==========================================================
     # 📊 Ordenação dos equipamentos por FIP (fator de importância)
@@ -306,7 +132,7 @@ class GestorFornos:
         """
         🔥 ÚNICO método público - Interface para AtividadeModular.
         
-        ✔️ CORREÇÃO: Implementa ETAPA 0 de agrupamento antes das 3 fases originais:
+        REMOVIDO: Lógica de agrupamento (agora implícita nos equipamentos):
         🔄 ETAPA 0: Tenta soma de ocupações com horários EXATOS
         🎯 FASE 1: Tenta usar UM forno completo (prioriza capacidade sobre FIP)
         🔄 FASE 2: Se produto existe, tenta compartilhar níveis + complemento no MESMO forno  
@@ -337,37 +163,7 @@ class GestorFornos:
         logger.info(f"⏱️ Duração: {atividade.duracao}")
         logger.info("=" * 60)
         
-        # ==========================================================
-        # 🔄 ETAPA 0: TENTATIVA DE AGRUPAMENTO (NOVO)
-        # ==========================================================
-        logger.info("🔍 ETAPA 0: Verificando possibilidade de agrupamento...")
-        
-        ocupacao_compativel = self.encontrar_ocupacao_compativel(
-            atividade, quantidade_int, inicio, fim
-        )
-        
-        if ocupacao_compativel:
-            forno, nivel_idx, quantidade_existente = ocupacao_compativel
-            quantidade_nova_total = quantidade_existente + quantidade_int
-            
-            logger.info(
-                f"✅ Ocupação compatível encontrada: {forno.nome} Nível {nivel_idx} "
-                f"({quantidade_existente:.0f} + {quantidade_int} = {quantidade_nova_total:.0f})"
-            )
-            
-            # Atualizar a ocupação existente com a nova quantidade
-            sucesso = self.atualizar_ocupacao_existente(
-                forno, nivel_idx, atividade, quantidade_nova_total, inicio, fim,
-                id_ordem, id_pedido, id_atividade, id_item
-            )
-            
-            if sucesso:
-                logger.info(f"🔄 Agrupamento bem-sucedido: {quantidade_int} unidades adicionadas à ocupação existente")
-                return True, [forno], inicio, fim
-            else:
-                logger.warning("⚠️ Falha no agrupamento, tentando alocação normal...")
-        else:
-            logger.info("📊 Nenhuma ocupação compatível encontrada para agrupamento")
+        # REMOVIDO: Lógica explícita de agrupamento (agora implícita nos equipamentos)
         
         # ==========================================================
         # 🚀 ETAPAS 1-3: Executar algoritmo original das 3 fases

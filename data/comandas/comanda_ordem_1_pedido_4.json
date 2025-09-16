@@ -1,0 +1,85 @@
+{
+  "id_ordem": 1,
+  "id_pedido": 4,
+  "data_reserva": "2025-06-23",
+  "itens": [
+    {
+      "id_item": 1074,
+      "nome": "Folhado de queijos finos",
+      "politica_producao": "SOB_DEMANDA",
+      "quantidade_necessaria": 12,
+      "itens_necessarios": [
+        {
+          "id_item": 2004,
+          "nome": "Massa para Folhados",
+          "politica_producao": "SOB_DEMANDA",
+          "quantidade_necessaria": 600.0,
+          "itens_necessarios": [
+            {
+              "id_item": 3,
+              "nome": "Farinha de trigo para pães",
+              "quantidade_necessaria": 419.58,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 10,
+              "nome": "Água mineral",
+              "quantidade_necessaria": 16.78,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 5,
+              "nome": "Sal refinado",
+              "quantidade_necessaria": 8.39,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 13,
+              "nome": "Açúcar cristal",
+              "quantidade_necessaria": 8.39,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 15,
+              "nome": "Gordura hidrogenada",
+              "quantidade_necessaria": 41.96,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 16,
+              "nome": "Margarina para folhados",
+              "quantidade_necessaria": 104.9,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            }
+          ]
+        },
+        {
+          "id_item": 2010,
+          "nome": "Creme de Queijo",
+          "politica_producao": "ESTOCADO",
+          "quantidade_necessaria": 540.0
+        },
+        {
+          "id_item": 33,
+          "nome": "Ovo de Galinha",
+          "quantidade_necessaria": 60.0,
+          "unidade_medida": "GRAMAS",
+          "tipo_item": "INSUMO",
+          "politica_producao": "ESTOCADO"
+        }
+      ]
+    }
+  ]
+}

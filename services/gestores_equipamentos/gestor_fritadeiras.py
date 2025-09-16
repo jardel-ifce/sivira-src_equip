@@ -11,7 +11,7 @@ import math
 logger = setup_logger('GestorFritadeiras')
 
 # 🔗 NOVO: Importação do cache de agrupamento automático
-from utils.agrupamento.cache_atividades_intervalo import cache_atividades_intervalo
+# REMOVIDO: Cache de agrupamento automático (não mais necessário)
 
 
 class GestorFritadeiras:
@@ -467,26 +467,7 @@ class GestorFritadeiras:
         logger.info(f"🎯 Iniciando alocação: {quantidade_total} unidades")
         logger.info(f"📅 Janela: {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}")
 
-        # 🔗 NOVO: Verificar oportunidades de agrupamento automático
-        quantidade_gramas = quantidade_total * 120  # peso unitário coxinha
-
-        grupo_consolidacao = cache_atividades_intervalo.adicionar_atividade_pendente(
-            id_atividade=id_atividade,
-            id_item=id_item,
-            quantidade=quantidade_gramas,
-            inicio=inicio,
-            fim=fim,
-            atividade_obj=atividade,
-            tipo_equipamento="FRITADEIRAS",
-            callback_sucesso=lambda: self._callback_sucesso_consolidacao(atividade),
-            callback_falha=lambda: self._callback_falha_consolidacao(atividade)
-        )
-
-        if grupo_consolidacao:
-            logger.info(f"🔗 Oportunidade de agrupamento detectada! Tentando consolidação automática...")
-            return self._tentar_alocacao_grupo_consolidado(grupo_consolidacao, atividade, inicio, fim)
-
-        # Se não há agrupamento, tenta alocação individual
+        # REMOVIDO: Lógica de agrupamento automático (agora implícito nos scripts de produção)
         logger.debug(f"📝 Primeira atividade do grupo ou sem oportunidade de agrupamento - tentando alocação individual")
 
         # Backward scheduling (padrão do GestorFogoes)
@@ -562,167 +543,8 @@ class GestorFritadeiras:
     # ==========================================================
     # 🔗 NOVO: Métodos para Agrupamento Automático
     # ==========================================================
-    def _tentar_alocacao_grupo_consolidado(self, grupo_consolidacao, atividade, inicio, fim):
-        """🔗 Tenta alocar um grupo consolidado de atividades."""
-        cache_atividades_intervalo.marcar_grupo_em_execucao(grupo_consolidacao)
-
-        try:
-            # Calcula parâmetros consolidados
-            quantidade_total_gramas = grupo_consolidacao.quantidade_total
-            quantidade_total_unidades = int(quantidade_total_gramas / 120)  # peso unitário coxinha
-
-            logger.info(
-                f"🔗 Executando consolidação automática: {len(grupo_consolidacao.atividades)} atividades, "
-                f"{quantidade_total_gramas}g ({quantidade_total_unidades} unidades)"
-            )
-
-            # Backward scheduling
-            duracao = atividade.duracao
-            horario_final_tentativa = fim
-
-            while horario_final_tentativa - duracao >= inicio:
-                horario_inicial_tentativa = horario_final_tentativa - duracao
-                horario_final_real = horario_inicial_tentativa + duracao
-
-                # Tentar alocação em cada fritadeira (ordenadas por FIP)
-                fritadeiras_ordenadas = self._ordenar_por_fip(atividade)
-
-                for fritadeira in fritadeiras_ordenadas:
-                    # Obter parâmetros desta fritadeira
-                    temperatura = self._obter_temperatura(atividade, fritadeira)
-                    unidades_por_fracao = self._obter_unidades_por_fracao(atividade, fritadeira)
-                    setup_minutos = self._obter_setup_minutos(atividade, fritadeira)
-
-                    if not temperatura or not unidades_por_fracao:
-                        logger.debug(f"❌ Parâmetros inválidos para {fritadeira.nome}")
-                        continue
-
-                    # Verificar se fritadeira suporta a temperatura
-                    if not fritadeira.validar_temperatura(temperatura):
-                        logger.debug(f"❌ Temperatura {temperatura}°C incompatível com {fritadeira.nome}")
-                        continue
-
-                    # Verificar disponibilidade no período para quantidade consolidada
-                    if not fritadeira.verificar_disponibilidade_equipamento(
-                        quantidade_total_unidades, temperatura,
-                        horario_inicial_tentativa, horario_final_real,
-                        unidades_por_fracao
-                    ):
-                        logger.debug(f"❌ {fritadeira.nome} indisponível para quantidade consolidada")
-                        continue
-
-                    # Tentar ocupar usando a lógica consolidada
-                    sucesso = self._executar_ocupacao_consolidada(
-                        fritadeira, grupo_consolidacao, temperatura, setup_minutos,
-                        horario_inicial_tentativa, horario_final_real, unidades_por_fracao
-                    )
-
-                    if sucesso:
-                        # Marcar todas as atividades como alocadas
-                        for atividade_pendente in grupo_consolidacao.atividades:
-                            atividade_obj = atividade_pendente.atividade_obj
-                            atividade_obj.equipamento_alocado = fritadeira
-                            atividade_obj.equipamentos_selecionados = [fritadeira]
-                            atividade_obj.alocada = True
-                            # Marcar como consolidada automaticamente
-                            atividade_obj._já_consolidada_automaticamente = True
-
-                        # Gerar log de consolidação
-                        self._gerar_log_consolidacao_automatica(
-                            grupo_consolidacao, fritadeira,
-                            horario_inicial_tentativa, horario_final_real
-                        )
-
-                        cache_atividades_intervalo.marcar_grupo_concluido(grupo_consolidacao, True)
-
-                        logger.info(
-                            f"✅ Consolidação automática bem-sucedida: {quantidade_total_unidades} unidades "
-                            f"na {fritadeira.nome} | {horario_inicial_tentativa.strftime('%H:%M')} → "
-                            f"{horario_final_real.strftime('%H:%M')}"
-                        )
-
-                        return True, [fritadeira], horario_inicial_tentativa, horario_final_real
-
-                # Tenta horário anterior
-                horario_final_tentativa -= timedelta(minutes=1)
-
-            # Se chegou aqui, a consolidação falhou
-            cache_atividades_intervalo.marcar_grupo_concluido(grupo_consolidacao, False)
-            logger.warning(f"❌ Consolidação automática falhou - nenhuma fritadeira conseguiu processar")
-            return False, None, None, None
-
-        except Exception as e:
-            cache_atividades_intervalo.marcar_grupo_concluido(grupo_consolidacao, False)
-            logger.error(f"❌ Erro na consolidação automática: {e}")
-            return False, None, None, None
-
-    def _executar_ocupacao_consolidada(self, fritadeira, grupo_consolidacao, temperatura, setup_minutos,
-                                     inicio, fim, unidades_por_fracao):
-        """Executa a ocupação consolidada na fritadeira."""
-        quantidade_total_unidades = int(grupo_consolidacao.quantidade_total / 120)
-
-        # Usar a primeira atividade como representante para IDs
-        atividade_representante = grupo_consolidacao.atividades[0]
-
-        sucesso = fritadeira.ocupar_distribuido(
-            id_ordem=atividade_representante.id_atividade,  # Usar ID da atividade como ordem consolidada
-            id_pedido=999,  # ID especial para consolidação
-            id_atividade=atividade_representante.id_atividade,
-            id_item=grupo_consolidacao.id_item,
-            quantidade_total=quantidade_total_unidades,
-            temperatura=temperatura,
-            setup_minutos=setup_minutos,
-            inicio=inicio,
-            fim=fim,
-            unidades_por_fracao=unidades_por_fracao
-        )
-
-        return sucesso
-
-    def _gerar_log_consolidacao_automatica(self, grupo_consolidacao, fritadeira, inicio, fim):
-        """Gera log específico para consolidação automática."""
-        try:
-            from utils.logs.log_subprodutos_agrupados import registrar_log_subproduto_agrupado
-
-            # Extrair informações das atividades
-            ordens_e_pedidos = []
-            for atividade_pendente in grupo_consolidacao.atividades:
-                atividade_obj = atividade_pendente.atividade_obj
-                ordens_e_pedidos.append({
-                    'ordem': getattr(atividade_obj, 'id_ordem', 0),
-                    'pedido': getattr(atividade_obj, 'id_pedido', 0)
-                })
-
-            # Usar a primeira atividade como representante
-            atividade_representante = grupo_consolidacao.atividades[0].atividade_obj
-
-            registrar_log_subproduto_agrupado(
-                ordens_e_pedidos=ordens_e_pedidos,
-                id_atividade=grupo_consolidacao.atividades[0].id_atividade,
-                nome_item="fritura_de_coxinhas_consolidada",
-                nome_atividade="fritura_consolidada_automatica",
-                equipamentos_alocados=[(fritadeira.nome, inicio, fim)],
-                quantidade_total=grupo_consolidacao.quantidade_total,
-                detalhes_consolidacao={
-                    'tipo_consolidacao': 'AUTOMATICA_TEMPORAL',
-                    'num_atividades_consolidadas': len(grupo_consolidacao.atividades),
-                    'economia_capacidade': len(grupo_consolidacao.atividades) - 1,
-                    'intervalo_consolidacao': f"{inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
-                }
-            )
-
-            logger.info(f"📄 Log de consolidação automática gerado para {len(grupo_consolidacao.atividades)} atividades")
-
-        except Exception as e:
-            logger.error(f"❌ Erro ao gerar log de consolidação: {e}")
-
-    def _callback_sucesso_consolidacao(self, atividade):
-        """Callback executado quando consolidação é bem-sucedida."""
-        logger.debug(f"✅ Callback sucesso: atividade {atividade.id_atividade} consolidada com sucesso")
-
-    def _callback_falha_consolidacao(self, atividade):
-        """Callback executado quando consolidação falha."""
-        logger.debug(f"❌ Callback falha: atividade {atividade.id_atividade} não pôde ser consolidada")
+    # REMOVIDO: Métodos de agrupamento automático (não mais necessários)
+    # Os agrupamentos são agora implícitos e gerenciados pelos scripts de produção
 
     def _tentar_alocacao_simples(self, fritadeira: Fritadeira, atividade: "AtividadeModular", 
                                 quantidade: float, temperatura: int, fracoes_necessarias: int,

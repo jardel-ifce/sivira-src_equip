@@ -1,11 +1,11 @@
 
 {
-  "id_item": 2006,
+  "id_item": 2008,
   "nome": "carne_de_sol_refogada",
   "antecipacao_de_producao": "00:00:00",
   "atividades": [
     {
-      "id_atividade": 20061,
+      "id_atividade": 20081,
       "nome": "armazenamento_sob_temperatura_para_carne_de_sol_refogada",
       "tipo_atividade": "ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CARNE_DE_SOL_REFOGADA",
       "tipo_equipamento": {
@@ -30,13 +30,13 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:03:00" },
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:03:00" },
         { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:05:00" },
         { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:07:00" }
       ]
     },
     {
-      "id_atividade": 20062,
+      "id_atividade": 20082,
       "nome": "preparo_para_armazenamento_de_carne_de_sol_refogada",
       "tipo_atividade": "PREPARO_PARA_ARMAZENAMENTO_DE_CARNE_DE_SOL_REFOGADA",
       "tipo_equipamento": {
@@ -60,13 +60,13 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:05:00" },
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:05:00" },
         { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:07:00" },
         { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:10:00" }
       ]
     },
     {
-      "id_atividade": 20063,
+      "id_atividade": 20083,
       "nome": "coccao_de_carne_de_sol_cozida_pronta",
       "tipo_atividade": "COCCAO_DE_CARNE_DE_SOL_COZIDA_PRONTA",
       "tipo_equipamento": {
@@ -94,13 +94,13 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:40:00" },
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:40:00" },
         { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:40:00" },
         { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:40:00" }
       ]
     },
     {
-      "id_atividade": 20064,
+      "id_atividade": 20084,
       "nome": "armazenamento_sob_temperatura_para_carne_de_sol_refogada_temp_menos_17",
       "tipo_atividade": "ARMAZENAMENTO_SOB_TEMPERATURA_PARA_CARNE_DE_SOL_REFOGADA",
       "tipo_equipamento": {
@@ -124,7 +124,7 @@
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 3000, "quantidade_max": 20000, "duracao": "00:03:00" },
+        { "quantidade_min": 1, "quantidade_max": 20000, "duracao": "00:03:00" },
         { "quantidade_min": 20001, "quantidade_max": 40000, "duracao": "00:05:00" },
         { "quantidade_min": 40001, "quantidade_max": 60000, "duracao": "00:07:00" }
       ]

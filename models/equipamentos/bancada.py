@@ -44,44 +44,59 @@ class Bancada(Equipamento):
         self.fracoes_ocupacoes: List[List[Tuple[int, int, int, int, datetime, datetime]]] = [[] for _ in range(self.numero_fracoes)]
 
     # ==========================================================
+    # 🔧 UTILITÁRIOS TEMPORAIS PRIVADOS
+    # ==========================================================
+    def _tem_sobreposicao_temporal(self, inicio1: datetime, fim1: datetime,
+                                  inicio2: datetime, fim2: datetime) -> bool:
+        """Verifica se dois períodos têm sobreposição temporal."""
+        return not (fim1 <= inicio2 or inicio1 >= fim2)
+
+    def _ocupacoes_que_sobrepoe(self, fracao_index: int, inicio: datetime, fim: datetime):
+        """Retorna ocupações de uma fração que se sobrepõem ao período dado."""
+        if fracao_index < 0 or fracao_index >= self.numero_fracoes:
+            return []
+
+        return [
+            ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
+            if self._tem_sobreposicao_temporal(inicio, fim, ocupacao[4], ocupacao[5])
+        ]
+
+
+    def _contar_liberacoes_por_filtro(self, filtro_ocupacao):
+        """Conta e executa liberações baseadas em filtro, retorna total liberado."""
+        total_liberadas = 0
+
+        for fracao_index in range(self.numero_fracoes):
+            antes = len(self.fracoes_ocupacoes[fracao_index])
+            self.fracoes_ocupacoes[fracao_index] = [
+                ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
+                if not filtro_ocupacao(ocupacao)
+            ]
+            liberadas_fracao = antes - len(self.fracoes_ocupacoes[fracao_index])
+            total_liberadas += liberadas_fracao
+
+        return total_liberadas
+
+    def _formatar_periodo(self, inicio: datetime, fim: datetime) -> str:
+        """Formata período de tempo de forma consistente."""
+        return f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+
+    # ==========================================================
     # 🔍 Consulta de Ocupação (para o Gestor)
     # ==========================================================
     def obter_ocupacao_fracao(self, fracao_index: int, inicio: datetime, fim: datetime) -> bool:
-        """Verifica se uma fração está ocupada no período especificado."""
-        if fracao_index < 0 or fracao_index >= self.numero_fracoes:
-            return False
-        
-        for ocupacao in self.fracoes_ocupacoes[fracao_index]:
-            if not (fim <= ocupacao[4] or inicio >= ocupacao[5]):  # há sobreposição temporal
-                return True
-        return False
+        """✅ REFATORADO: Verifica se uma fração está ocupada no período especificado."""
+        return len(self._ocupacoes_que_sobrepoe(fracao_index, inicio, fim)) > 0
 
-    def obter_ocupacao_todas_fracoes(self, inicio: datetime, fim: datetime) -> List[bool]:
-        """Retorna lista com o status de ocupação de todas as frações no período especificado."""
-        ocupacoes = []
-        for i in range(self.numero_fracoes):
-            ocupacoes.append(self.obter_ocupacao_fracao(i, inicio, fim))
-        return ocupacoes
 
-    def fracao_disponivel(self, fracao_index: int, inicio: datetime, fim: datetime) -> bool:
-        """Verifica se uma fração está completamente livre no período."""
-        return not self.obter_ocupacao_fracao(fracao_index, inicio, fim)
 
     def fracoes_disponiveis_periodo(self, inicio: datetime, fim: datetime) -> List[int]:
-        """Retorna lista de índices das frações completamente livres no período."""
-        fracoes_livres = []
-        for i in range(self.numero_fracoes):
-            if self.fracao_disponivel(i, inicio, fim):
-                fracoes_livres.append(i)
-        return fracoes_livres
+        """✅ REFATORADO: Retorna lista de índices das frações completamente livres no período."""
+        return [
+            fracao_index for fracao_index in range(self.numero_fracoes)
+            if not self.obter_ocupacao_fracao(fracao_index, inicio, fim)
+        ]
 
-    def quantidade_fracoes_disponiveis(self, inicio: datetime, fim: datetime) -> int:
-        """Retorna quantidade de frações completamente livres no período."""
-        return len(self.fracoes_disponiveis_periodo(inicio, fim))
-
-    def verificar_espaco_fracoes(self, quantidade: int, inicio: datetime, fim: datetime) -> bool:
-        """Verifica se há frações suficientes completamente livres no período."""
-        return self.quantidade_fracoes_disponiveis(inicio, fim) >= quantidade
 
     def encontrar_fracoes_para_ocupacao(self, quantidade: int, inicio: datetime, fim: datetime) -> Optional[List[int]]:
         """Encontra frações completamente livres para ocupação."""
@@ -139,11 +154,14 @@ class Bancada(Equipamento):
             return False
 
         # Verificar se fração está livre (uso exclusivo)
-        if not self.fracao_disponivel(fracao_index, inicio, fim):
-            logger.warning(
-                f"❌ Fração {fracao_index} da {self.nome} não disponível entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
-            )
-            return False
+        for ocupacao in self.fracoes_ocupacoes[fracao_index]:
+            ocupacao_inicio = ocupacao[4]
+            ocupacao_fim = ocupacao[5]
+            if self._tem_sobreposicao_temporal(inicio, fim, ocupacao_inicio, ocupacao_fim):
+                logger.warning(
+                    f"❌ Fração {fracao_index} da {self.nome} não disponível entre {self._formatar_periodo(inicio, fim)}."
+                )
+                return False
 
         self.fracoes_ocupacoes[fracao_index].append(
             (id_ordem, id_pedido, id_atividade, id_item, inicio, fim)
@@ -152,7 +170,7 @@ class Bancada(Equipamento):
         logger.info(
             f"🪵 Ocupação adicionada na {self.nome} - Fração {fracao_index} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"{self._formatar_periodo(inicio, fim)}"
         )
         return True
 
@@ -177,32 +195,6 @@ class Bancada(Equipamento):
     # ==========================================================
     # 🔐 Ocupação (Métodos de Compatibilidade)
     # ==========================================================
-    def ocupar_fracoes_especificas(
-        self,
-        fracoes: List[int],
-        id_ordem: int,
-        id_pedido: int,
-        id_atividade: int,
-        id_item: int,
-        inicio: datetime,
-        fim: datetime
-    ) -> bool:
-        """Ocupa frações específicas (mantido para compatibilidade)."""
-        sucesso = True
-        for fracao_index in fracoes:
-            if not self.adicionar_ocupacao_fracao(
-                fracao_index, id_ordem, id_pedido, id_atividade, id_item, inicio, fim
-            ):
-                sucesso = False
-
-        if sucesso:
-            logger.info(
-                f"📥 Ocupação múltipla registrada na {self.nome} | "
-                f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-                f"{len(fracoes)} frações | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
-                f"Frações: {fracoes}"
-            )
-        return sucesso
 
     def ocupar_fracoes(
         self,
@@ -214,19 +206,33 @@ class Bancada(Equipamento):
         inicio: datetime,
         fim: datetime
     ) -> bool:
-        """Ocupa automaticamente a quantidade de frações necessária (mantido para compatibilidade)."""
+        """✅ SIMPLIFICADO: Ocupa automaticamente a quantidade de frações necessária."""
         fracoes_para_ocupar = self.encontrar_fracoes_para_ocupacao(quantidade_fracoes, inicio, fim)
-        
+
         if fracoes_para_ocupar is None:
+            fracoes_disponiveis = len(self.fracoes_disponiveis_periodo(inicio, fim))
             logger.warning(
-                f"❌ Frações insuficientes na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
-                f"Necessárias: {quantidade_fracoes}, Disponíveis: {self.quantidade_fracoes_disponiveis(inicio, fim)}"
+                f"❌ Frações insuficientes na {self.nome} entre {self._formatar_periodo(inicio, fim)}. "
+                f"Necessárias: {quantidade_fracoes}, Disponíveis: {fracoes_disponiveis}"
             )
             return False
 
-        return self.ocupar_fracoes_especificas(
-            fracoes_para_ocupar, id_ordem, id_pedido, id_atividade, id_item, inicio, fim
-        )
+        # Ocupar frações diretamente
+        sucesso = True
+        for fracao_index in fracoes_para_ocupar:
+            if not self.adicionar_ocupacao_fracao(
+                fracao_index, id_ordem, id_pedido, id_atividade, id_item, inicio, fim
+            ):
+                sucesso = False
+
+        if sucesso:
+            logger.info(
+                f"📥 Ocupação múltipla registrada na {self.nome} | "
+                f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
+                f"{len(fracoes_para_ocupar)} frações | {self._formatar_periodo(inicio, fim)} | "
+                f"Frações: {fracoes_para_ocupar}"
+            )
+        return sucesso
 
     def ocupar(
         self,
@@ -247,17 +253,10 @@ class Bancada(Equipamento):
     # 🔓 Liberação
     # ==========================================================
     def liberar_por_atividade(self, id_ordem: int, id_pedido: int, id_atividade: int):
-        """Libera ocupações específicas por atividade."""
-        total_liberadas = 0
-        
-        for fracao_index in range(self.numero_fracoes):
-            antes = len(self.fracoes_ocupacoes[fracao_index])
-            self.fracoes_ocupacoes[fracao_index] = [
-                ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
-                if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
-            ]
-            liberadas_fracao = antes - len(self.fracoes_ocupacoes[fracao_index])
-            total_liberadas += liberadas_fracao
+        """✅ REFATORADO: Libera ocupações específicas por atividade."""
+        total_liberadas = self._contar_liberacoes_por_filtro(
+            lambda ocupacao: (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
+        )
 
         if total_liberadas > 0:
             logger.info(
@@ -271,17 +270,10 @@ class Bancada(Equipamento):
             )
 
     def liberar_por_pedido(self, id_ordem: int, id_pedido: int):
-        """Libera ocupações específicas por pedido."""
-        total_liberadas = 0
-        
-        for fracao_index in range(self.numero_fracoes):
-            antes = len(self.fracoes_ocupacoes[fracao_index])
-            self.fracoes_ocupacoes[fracao_index] = [
-                ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
-                if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
-            ]
-            liberadas_fracao = antes - len(self.fracoes_ocupacoes[fracao_index])
-            total_liberadas += liberadas_fracao
+        """✅ REFATORADO: Libera ocupações específicas por pedido."""
+        total_liberadas = self._contar_liberacoes_por_filtro(
+            lambda ocupacao: (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido)
+        )
 
         if total_liberadas > 0:
             logger.info(
@@ -295,17 +287,10 @@ class Bancada(Equipamento):
             )
 
     def liberar_por_ordem(self, id_ordem: int):
-        """Libera ocupações específicas por ordem."""
-        total_liberadas = 0
-        
-        for fracao_index in range(self.numero_fracoes):
-            antes = len(self.fracoes_ocupacoes[fracao_index])
-            self.fracoes_ocupacoes[fracao_index] = [
-                ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
-                if ocupacao[0] != id_ordem
-            ]
-            liberadas_fracao = antes - len(self.fracoes_ocupacoes[fracao_index])
-            total_liberadas += liberadas_fracao
+        """✅ REFATORADO: Libera ocupações específicas por ordem."""
+        total_liberadas = self._contar_liberacoes_por_filtro(
+            lambda ocupacao: ocupacao[0] == id_ordem
+        )
 
         if total_liberadas > 0:
             logger.info(
@@ -319,17 +304,10 @@ class Bancada(Equipamento):
             )
 
     def liberar_ocupacoes_finalizadas(self, horario_atual: datetime):
-        """Libera ocupações que já finalizaram."""
-        total_liberadas = 0
-        
-        for fracao_index in range(self.numero_fracoes):
-            antes = len(self.fracoes_ocupacoes[fracao_index])
-            self.fracoes_ocupacoes[fracao_index] = [
-                ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
-                if ocupacao[5] > horario_atual  # fim > horario_atual
-            ]
-            liberadas_fracao = antes - len(self.fracoes_ocupacoes[fracao_index])
-            total_liberadas += liberadas_fracao
+        """✅ REFATORADO: Libera ocupações que já finalizaram."""
+        total_liberadas = self._contar_liberacoes_por_filtro(
+            lambda ocupacao: ocupacao[5] <= horario_atual  # fim <= horario_atual
+        )
 
         if total_liberadas > 0:
             logger.info(
@@ -349,45 +327,20 @@ class Bancada(Equipamento):
         logger.info(f"🔓 Todas as {total} ocupações da {self.nome} foram removidas.")
 
     def liberar_por_intervalo(self, inicio: datetime, fim: datetime):
-        """Libera ocupações que se sobrepõem ao intervalo especificado."""
-        total_liberadas = 0
-        
-        for fracao_index in range(self.numero_fracoes):
-            antes = len(self.fracoes_ocupacoes[fracao_index])
-            self.fracoes_ocupacoes[fracao_index] = [
-                ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
-                if not (ocupacao[4] < fim and ocupacao[5] > inicio)  # remove qualquer sobreposição
-            ]
-            liberadas_fracao = antes - len(self.fracoes_ocupacoes[fracao_index])
-            total_liberadas += liberadas_fracao
+        """✅ REFATORADO: Libera ocupações que se sobrepõem ao intervalo especificado."""
+        total_liberadas = self._contar_liberacoes_por_filtro(
+            lambda ocupacao: self._tem_sobreposicao_temporal(inicio, fim, ocupacao[4], ocupacao[5])
+        )
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} entre {self._formatar_periodo(inicio, fim)}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {self._formatar_periodo(inicio, fim)}."
             )
 
-    def liberar_fracao_especifica(self, fracao_index: int, id_ordem: int, id_pedido: int, id_atividade: int):
-        """Libera ocupação específica de uma fração."""
-        if fracao_index < 0 or fracao_index >= self.numero_fracoes:
-            logger.warning(f"❌ Índice de fração inválido: {fracao_index}")
-            return
-
-        antes = len(self.fracoes_ocupacoes[fracao_index])
-        self.fracoes_ocupacoes[fracao_index] = [
-            ocupacao for ocupacao in self.fracoes_ocupacoes[fracao_index]
-            if not (ocupacao[0] == id_ordem and ocupacao[1] == id_pedido and ocupacao[2] == id_atividade)
-        ]
-        liberadas = antes - len(self.fracoes_ocupacoes[fracao_index])
-        
-        if liberadas > 0:
-            logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da fração {fracao_index} da {self.nome} "
-                f"para Atividade {id_atividade}, Pedido {id_pedido}, Ordem {id_ordem}."
-            )
 
     # ==========================================================
     # 📅 Agenda e Relatórios
@@ -413,22 +366,18 @@ class Bancada(Equipamento):
             logger.info("🔹 Nenhuma ocupação registrada em nenhuma fração.")
 
     def obter_estatisticas_uso(self, inicio: datetime, fim: datetime) -> dict:
-        """Retorna estatísticas de uso da bancada no período."""
-        total_ocupacoes = 0
+        """✅ SIMPLIFICADO: Retorna estatísticas de uso da bancada no período."""
         fracoes_utilizadas = 0
-        
+        total_ocupacoes = 0
+
         for fracao_index in range(self.numero_fracoes):
-            ocupacoes_fracao = []
-            for ocupacao in self.fracoes_ocupacoes[fracao_index]:
-                if not (fim <= ocupacao[4] or inicio >= ocupacao[5]):  # há sobreposição temporal
-                    ocupacoes_fracao.append(ocupacao)
-            
+            ocupacoes_fracao = self._ocupacoes_que_sobrepoe(fracao_index, inicio, fim)
             if ocupacoes_fracao:
                 fracoes_utilizadas += 1
                 total_ocupacoes += len(ocupacoes_fracao)
-        
+
         taxa_utilizacao_fracoes = (fracoes_utilizadas / self.numero_fracoes * 100) if self.numero_fracoes > 0 else 0.0
-        
+
         return {
             'fracoes_utilizadas': fracoes_utilizadas,
             'fracoes_total': self.numero_fracoes,
@@ -437,24 +386,24 @@ class Bancada(Equipamento):
         }
 
     def obter_distribuicao_fracoes_periodo(self, inicio: datetime, fim: datetime) -> dict:
-        """Retorna distribuição de uso de frações por atividade no período."""
+        """✅ REFATORADO: Retorna distribuição de uso de frações por atividade no período."""
         distribuicao = {}
-        
+
         for fracao_index in range(self.numero_fracoes):
-            for ocupacao in self.fracoes_ocupacoes[fracao_index]:
-                if not (fim <= ocupacao[4] or inicio >= ocupacao[5]):  # há sobreposição temporal
-                    key = f"Atividade_{ocupacao[2]}"  # id_atividade
-                    if key not in distribuicao:
-                        distribuicao[key] = {
-                            'fracoes_utilizadas': set(),
-                            'ocupacoes_count': 0
-                        }
-                    
-                    distribuicao[key]['fracoes_utilizadas'].add(fracao_index)
-                    distribuicao[key]['ocupacoes_count'] += 1
-        
+            ocupacoes_sobrepostas = self._ocupacoes_que_sobrepoe(fracao_index, inicio, fim)
+            for ocupacao in ocupacoes_sobrepostas:
+                key = f"Atividade_{ocupacao[2]}"  # id_atividade
+                if key not in distribuicao:
+                    distribuicao[key] = {
+                        'fracoes_utilizadas': set(),
+                        'ocupacoes_count': 0
+                    }
+
+                distribuicao[key]['fracoes_utilizadas'].add(fracao_index)
+                distribuicao[key]['ocupacoes_count'] += 1
+
         # Converter sets para contadores
         for key in distribuicao:
             distribuicao[key]['fracoes_utilizadas'] = len(distribuicao[key]['fracoes_utilizadas'])
-        
+
         return distribuicao

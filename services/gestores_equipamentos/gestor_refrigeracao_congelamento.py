@@ -84,6 +84,15 @@ class GestorRefrigeracaoCongelamento:
             logger.warning(f"⚠️ Erro ao tentar obter tipo de armazenamento para {equipamento.nome}: {e}")
         return None
 
+    def _obter_faixa_temperatura_atividade_atual(self, atividade: "AtividadeModular" = None, equipamento = None) -> Optional[int]:
+        """
+        🌡️ Obtém a temperatura necessária da atividade atual em contexto.
+        (Implementação corrigida para acessar a atividade corretamente)
+        """
+        if atividade is not None and equipamento is not None:
+            return self._obter_faixa_temperatura(atividade, equipamento)
+        return None
+
     def _obter_gramas_por_caixa(self, atividade: "AtividadeModular", equipamento) -> Optional[int]:
         """
         📦 Busca no JSON a quantidade de gramas por caixa para o equipamento específico.
@@ -254,20 +263,21 @@ class GestorRefrigeracaoCongelamento:
         return quantidade_maxima
 
     def _validar_nova_ocupacao_recipiente(
-        self, 
-        equipamento: RefrigeradoresCongeladores, 
-        numero_recipiente: Union[int, Tuple[int, int]], 
+        self,
+        equipamento: RefrigeradoresCongeladores,
+        numero_recipiente: Union[int, Tuple[int, int]],
         id_item: int,
-        quantidade_nova: float, 
+        quantidade_nova: float,
         capacidade_recipiente: float,
-        inicio: datetime, 
+        inicio: datetime,
         fim: datetime,
         tipo_recipiente: str = "caixa"
     ) -> bool:
         """
         🔍 Valida se uma nova ocupação pode ser adicionada ao recipiente sem exceder a capacidade.
-        Considera apenas ocupações do mesmo item (itens diferentes podem coexistir se houver espaço).
-        
+        ✅ CORRIGIDO: Itens diferentes podem coexistir em recipientes diferentes.
+        ❌ Rejeita apenas se o mesmo recipiente tem item diferente com sobreposição temporal.
+
         Args:
             equipamento: CamaraRefrigerada ou Freezer
             numero_recipiente: int para caixa ou Tuple[int, int] para (nivel_fisico, tela)
@@ -289,15 +299,18 @@ class GestorRefrigeracaoCongelamento:
                 return False  # Freezer não suporta níveis de tela
         else:
             return False
-        
-        # Verifica conflitos de itens diferentes
+
+        # ✅ REMOVIDO: Validação de temperatura movida para método específico
+        # (A validação será feita durante o cálculo de capacidade do equipamento)
+
+        # ✅ CORRIGIDO: Verifica conflitos de itens diferentes no MESMO recipiente
         for ocupacao in ocupacoes_recipiente:
             if len(ocupacao) >= 7:
                 _, _, _, item_ocup, _, inicio_ocup, fim_ocup = ocupacao[:7]
                 if not (fim <= inicio_ocup or inicio >= fim_ocup):  # há sobreposição temporal
                     if item_ocup != id_item:  # item diferente
-                        logger.debug(f"🚫 {equipamento.nome}[{numero_recipiente}]: item {item_ocup} já presente, não pode adicionar item {id_item}")
-                        return False
+                        logger.debug(f"🚫 {equipamento.nome}[{numero_recipiente}]: item {item_ocup} já presente, não pode adicionar item {id_item} - tentando próximo recipiente")
+                        return False  # ❌ Só para ESTE recipiente específico
         
         # Calcula quantidade máxima atual do mesmo item
         quantidade_atual_maxima = self._calcular_quantidade_maxima_recipiente_item(
@@ -484,22 +497,23 @@ class GestorRefrigeracaoCongelamento:
             capacidade_total += capacidade_caixas_livres
             logger.debug(f"📦 {equipamento.nome}: {len(caixas_disponiveis)} caixas livres × {capacidade_por_caixa} {unidade_medida}/caixa = {capacidade_caixas_livres} {unidade_medida}")
             
-            # Adiciona espaços aproveitáveis em caixas ocupadas usando verificação dinâmica
+            # ✅ NOVO: Adiciona espaços aproveitáveis em caixas ocupadas usando ordem de índice
             capacidade_aproveitamento = 0
-            
+
+            # Ordem por índice: primeiro tenta caixas já ocupadas (aproveitamento), depois caixas livres
             for numero_caixa in range(range_min, range_max + 1):
                 if numero_caixa in caixas_disponiveis:
                     continue  # Já contada como livre
-                    
+
                 # Usa verificação dinâmica para verificar compatibilidade
                 compativel, capacidade_disponivel = self._verificar_compatibilidade_recipiente(
                     equipamento, numero_caixa, id_item, 0, capacidade_por_caixa, inicio, fim, "caixa"
                 )
-                
+
                 if compativel and capacidade_disponivel > 0:
                     capacidade_aproveitamento += capacidade_disponivel
-                    logger.debug(f"♻️ {equipamento.nome}: caixa {numero_caixa} com {capacidade_disponivel} {unidade_medida} aproveitáveis (dinâmico)")
-            
+                    logger.debug(f"♻️ {equipamento.nome}: caixa {numero_caixa} com {capacidade_disponivel} {unidade_medida} aproveitáveis (índice: {numero_caixa})")
+
             capacidade_total += capacidade_aproveitamento
             logger.debug(f"📊 {equipamento.nome}: capacidade total = {capacidade_caixas_livres} {unidade_medida} (livres) + {capacidade_aproveitamento} {unidade_medida} (aproveitamento dinâmico) = {capacidade_total} {unidade_medida}")
         
@@ -613,10 +627,10 @@ class GestorRefrigeracaoCongelamento:
             temp = self._obter_faixa_temperatura(atividade, equipamento)
             tipo_armazenamento = self._obter_tipo_armazenamento(atividade, equipamento)
             
-            logger.debug(f"🔍 {equipamento.nome}: temp={temp}°C, tipo={tipo_armazenamento}")
-            
+            logger.info(f"🔍 {equipamento.nome}: temp={temp}°C, tipo={tipo_armazenamento}")
+
             if temp is None or tipo_armazenamento not in {"CAIXAS", "NIVEIS_TELA"}:
-                logger.debug(f"❌ {equipamento.nome}: configuração inválida")
+                logger.warning(f"❌ {equipamento.nome}: configuração inválida - temp={temp}, tipo={tipo_armazenamento}")
                 continue
                 
             # Freezer só suporta CAIXAS
@@ -670,21 +684,54 @@ class GestorRefrigeracaoCongelamento:
         )
 
         # ==========================================================
-        # 🔄 ETAPA 2: TESTA ALOCAÇÃO DIRETA (sem backward scheduling)
+        # 🔄 ETAPA 2: TESTE EQUIPAMENTO ÚNICO PRIORITÁRIO (pedido concentrado)
         # ==========================================================
-        sucesso_direto = self._tentar_alocacao_direta(
+        logger.info(f"🎯 Testando equipamentos individuais (prioridade: pedido concentrado)")
+
+        # ✅ NOVO: Testa cada equipamento individualmente na ordem de prioridade
+        for equipamento, tipo_armazenamento, capacidade_disponivel in equipamentos_compativeis:
+            if capacidade_disponivel >= quantidade_produto:
+                logger.info(f"🔍 Testando {equipamento.nome} individualmente: {capacidade_disponivel} >= {quantidade_produto} {unidade_medida}")
+
+                # Tenta alocação direta neste equipamento específico
+                sucesso_individual = self._tentar_alocacao_equipamento_unico(
+                    equipamento, tipo_armazenamento, atividade, quantidade_produto, temperatura_desejada,
+                    inicio, fim, id_ordem, id_pedido, id_atividade, id_item
+                )
+
+                if sucesso_individual:
+                    equipamento_usado, inicio_real, fim_real = sucesso_individual
+                    atividade.equipamento_alocado = equipamento_usado
+                    atividade.equipamentos_selecionados = [equipamento_usado]
+                    atividade.alocada = True
+
+                    logger.info(
+                        f"✅ Atividade {id_atividade} alocada em equipamento único: {equipamento.nome} "
+                        f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
+                        f"| Temp: {temperatura_desejada}°C"
+                    )
+                    return True, equipamento_usado, inicio_real, fim_real
+                else:
+                    logger.debug(f"❌ {equipamento.nome}: falha na alocação individual apesar da capacidade")
+
+        # ==========================================================
+        # 🔄 ETAPA 3: ALOCAÇÃO DISTRIBUÍDA (último recurso)
+        # ==========================================================
+        logger.info(f"🔄 Nenhum equipamento individual conseguiu atender - tentando distribuição")
+
+        sucesso_distribuido = self._tentar_alocacao_direta(
             equipamentos_compativeis, atividade, quantidade_produto, temperatura_desejada,
             inicio, fim, id_ordem, id_pedido, id_atividade, id_item
         )
-        
-        if sucesso_direto:
-            equipamento_usado, inicio_real, fim_real = sucesso_direto
+
+        if sucesso_distribuido:
+            equipamento_usado, inicio_real, fim_real = sucesso_distribuido
             atividade.equipamento_alocado = equipamento_usado
             atividade.equipamentos_selecionados = [equipamento_usado] if not isinstance(equipamento_usado, list) else equipamento_usado
             atividade.alocada = True
-            
+
             logger.info(
-                f"✅ Atividade {id_atividade} alocada diretamente "
+                f"✅ Atividade {id_atividade} alocada distribuída "
                 f"de {inicio_real.strftime('%H:%M')} até {fim_real.strftime('%H:%M')} "
                 f"| Temp: {temperatura_desejada}°C"
             )
@@ -743,6 +790,80 @@ class GestorRefrigeracaoCongelamento:
             f"mesmo com capacidade total confirmada! Possível problema de fragmentação."
         )
         return False, None, None, None
+
+    def _tentar_alocacao_equipamento_unico(
+        self,
+        equipamento: RefrigeradoresCongeladores,
+        tipo_armazenamento: str,
+        atividade: "AtividadeModular",
+        quantidade_produto: int,
+        temperatura_desejada: int,
+        inicio: datetime,
+        fim: datetime,
+        id_ordem: int,
+        id_pedido: int,
+        id_atividade: int,
+        id_item: int
+    ) -> Optional[Tuple[RefrigeradoresCongeladores, datetime, datetime]]:
+        """
+        ✅ NOVO: Tenta alocação em um único equipamento específico.
+        Estratégia prioritária para manter pedido concentrado.
+        """
+        logger.debug(f"🔍 Tentando alocação única em {equipamento.nome}: {quantidade_produto} unidades")
+
+        try:
+            # Determina método de ocupação baseado no tipo
+            if tipo_armazenamento == "CAIXAS":
+                tipo_produto = self._obter_tipo_produto(atividade, equipamento)
+                if tipo_produto == "UNIDADES":
+                    capacidade_por_recipiente = self._obter_unidades_por_caixa(atividade, equipamento)
+                else:
+                    capacidade_por_recipiente = self._obter_gramas_por_caixa(atividade, equipamento)
+
+                if capacidade_por_recipiente is None:
+                    return None
+
+                # Tenta ocupação usando método dinâmico
+                if isinstance(equipamento, CamaraRefrigerada):
+                    sucesso = self._ocupar_camara_caixas_volume_real_dinamico(
+                        equipamento, id_ordem, id_pedido, id_atividade, id_item,
+                        quantidade_produto, capacidade_por_recipiente, inicio, fim, temperatura_desejada
+                    )
+                elif isinstance(equipamento, Freezer):
+                    sucesso = self._ocupar_freezer_caixas_volume_real_dinamico(
+                        equipamento, id_ordem, id_pedido, id_atividade, id_item,
+                        quantidade_produto, capacidade_por_recipiente, inicio, fim, temperatura_desejada
+                    )
+                else:
+                    return None
+
+            elif tipo_armazenamento == "NIVEIS_TELA" and isinstance(equipamento, CamaraRefrigerada):
+                tipo_produto = self._obter_tipo_produto(atividade, equipamento)
+                if tipo_produto == "UNIDADES":
+                    capacidade_por_recipiente = self._obter_unidades_por_nivel(atividade, equipamento)
+                else:
+                    capacidade_por_recipiente = self._obter_gramas_por_nivel(atividade, equipamento)
+
+                if capacidade_por_recipiente is None:
+                    return None
+
+                sucesso = self._ocupar_camara_niveis_volume_real_dinamico(
+                    equipamento, id_ordem, id_pedido, id_atividade, id_item,
+                    quantidade_produto, capacidade_por_recipiente, inicio, fim, temperatura_desejada
+                )
+            else:
+                return None
+
+            if sucesso:
+                logger.info(f"✅ Alocação única bem-sucedida em {equipamento.nome}")
+                return equipamento, inicio, fim
+            else:
+                logger.debug(f"❌ Falha na alocação única em {equipamento.nome}")
+                return None
+
+        except Exception as e:
+            logger.warning(f"⚠️ Erro na alocação única em {equipamento.nome}: {e}")
+            return None
 
     def _tentar_alocacao_direta(
         self,
@@ -1218,28 +1339,32 @@ class GestorRefrigeracaoCongelamento:
             logger.debug(f"❌ {camara.nome}: temperatura incompatível")
             return False
 
-        # Configura temperatura se necessário
+        # Configura temperatura se necessário - MARCANDO PARA POSSÍVEL ROLLBACK
         temp_atual = camara.obter_temperatura_periodo(inicio, fim)
+        temperatura_configurada_aqui = False
+
         if temp_atual is None:
             if not camara.configurar_temperatura(temperatura_desejada, inicio, fim):
                 logger.debug(f"❌ {camara.nome}: falha ao configurar temperatura")
                 return False
+            temperatura_configurada_aqui = True  # Marcamos que configuramos aqui
 
         # Testa alocação baseada no tipo de armazenamento
         tipo_produto = self._obter_tipo_produto(atividade, camara)
-        
+        resultado_alocacao = False
+
         if tipo_armazenamento == "CAIXAS":
             if tipo_produto == "UNIDADES":
                 unidades_por_caixa = self._obter_unidades_por_caixa(atividade, camara)
                 if unidades_por_caixa is None:
                     logger.warning(f"⚠️ Unidades por caixa não definido para {camara.nome}. Usando conversão padrão.")
                     quantidade_ocupacao = gramas_para_caixas(quantidade_produto)
-                    return self._ocupar_camara_caixas_compativel(
+                    resultado_alocacao = self._ocupar_camara_caixas_compativel(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_ocupacao, inicio, fim, temperatura_desejada
                     )
                 else:
-                    return self._ocupar_camara_caixas_volume_real_dinamico(
+                    resultado_alocacao = self._ocupar_camara_caixas_volume_real_dinamico(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_produto, unidades_por_caixa, inicio, fim, temperatura_desejada
                     )
@@ -1248,28 +1373,28 @@ class GestorRefrigeracaoCongelamento:
                 if gramas_por_caixa is None:
                     logger.warning(f"⚠️ Gramas por caixa não definido para {camara.nome}. Usando conversão padrão.")
                     quantidade_ocupacao = gramas_para_caixas(quantidade_produto)
-                    return self._ocupar_camara_caixas_compativel(
+                    resultado_alocacao = self._ocupar_camara_caixas_compativel(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_ocupacao, inicio, fim, temperatura_desejada
                     )
                 else:
-                    return self._ocupar_camara_caixas_volume_real_dinamico(
+                    resultado_alocacao = self._ocupar_camara_caixas_volume_real_dinamico(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_produto, gramas_por_caixa, inicio, fim, temperatura_desejada
                     )
-        
+
         elif tipo_armazenamento == "NIVEIS_TELA":
             if tipo_produto == "UNIDADES":
                 unidades_por_nivel = self._obter_unidades_por_nivel(atividade, camara)
                 if unidades_por_nivel is None:
                     logger.warning(f"⚠️ Unidades por nível não definido para {camara.nome}. Usando conversão padrão.")
                     quantidade_ocupacao = gramas_para_niveis_tela(quantidade_produto)
-                    return self._ocupar_camara_niveis_compativel(
+                    resultado_alocacao = self._ocupar_camara_niveis_compativel(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_ocupacao, inicio, fim, temperatura_desejada
                     )
                 else:
-                    return self._ocupar_camara_niveis_volume_real_dinamico(
+                    resultado_alocacao = self._ocupar_camara_niveis_volume_real_dinamico(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_produto, unidades_por_nivel, inicio, fim, temperatura_desejada
                     )
@@ -1278,17 +1403,35 @@ class GestorRefrigeracaoCongelamento:
                 if gramas_por_nivel is None:
                     logger.warning(f"⚠️ Gramas por nível não definido para {camara.nome}. Usando conversão padrão.")
                     quantidade_ocupacao = gramas_para_niveis_tela(quantidade_produto)
-                    return self._ocupar_camara_niveis_compativel(
+                    resultado_alocacao = self._ocupar_camara_niveis_compativel(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_ocupacao, inicio, fim, temperatura_desejada
                     )
                 else:
-                    return self._ocupar_camara_niveis_volume_real_dinamico(
+                    resultado_alocacao = self._ocupar_camara_niveis_volume_real_dinamico(
                         camara, id_ordem, id_pedido, id_atividade, id_item,
                         quantidade_produto, gramas_por_nivel, inicio, fim, temperatura_desejada
                     )
-        
-        return False
+
+        # 🔧 ROLLBACK: Se alocação falhou E configuramos temperatura aqui, remove configuração órfã
+        if not resultado_alocacao and temperatura_configurada_aqui:
+            logger.debug(f"🔄 Rollback: removendo configuração de temperatura órfã da {camara.nome}")
+            try:
+                # Remove da lista intervalos_temperatura (formato: [(temperatura, inicio, fim), ...])
+                if hasattr(camara, 'intervalos_temperatura'):
+                    # Filtra removendo configurações órfãs que coincidem com inicio e fim
+                    camara.intervalos_temperatura = [
+                        (temp, inicio_config, fim_config)
+                        for temp, inicio_config, fim_config in camara.intervalos_temperatura
+                        if not (inicio_config == inicio and fim_config == fim)
+                    ]
+                    logger.debug(f"✅ Configuração órfã removida da {camara.nome} (temperatura {temperatura_desejada}°C, {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')})")
+                else:
+                    logger.warning(f"⚠️ Não foi possível fazer rollback: {camara.nome} não tem intervalos_temperatura")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro no rollback de temperatura da {camara.nome}: {e}")
+
+        return resultado_alocacao
 
     def _tentar_alocacao_freezer(
         self,
@@ -1319,27 +1462,31 @@ class GestorRefrigeracaoCongelamento:
             logger.debug(f"❌ {freezer.nome}: temperatura incompatível")
             return False
 
-        # Configura temperatura se necessário
+        # Configura temperatura se necessário - MARCANDO PARA POSSÍVEL ROLLBACK
         temp_atual = freezer.obter_temperatura_periodo(inicio, fim)
+        temperatura_configurada_aqui = False
+
         if temp_atual is None:
             if not freezer.configurar_temperatura(temperatura_desejada, inicio, fim):
                 logger.debug(f"❌ {freezer.nome}: falha ao configurar temperatura")
                 return False
+            temperatura_configurada_aqui = True  # Marcamos que configuramos aqui
 
         # Obtém a capacidade por recipiente baseada no tipo de produto
         tipo_produto = self._obter_tipo_produto(atividade, freezer)
-        
+        resultado_alocacao = False
+
         if tipo_produto == "UNIDADES":
             unidades_por_caixa = self._obter_unidades_por_caixa(atividade, freezer)
             if unidades_por_caixa is None:
                 logger.warning(f"⚠️ Unidades por caixa não definido para {freezer.nome}. Usando conversão padrão.")
                 quantidade_ocupacao = gramas_para_caixas(quantidade_produto)
-                return self._ocupar_freezer_caixas_compativel(
+                resultado_alocacao = self._ocupar_freezer_caixas_compativel(
                     freezer, id_ordem, id_pedido, id_atividade, id_item,
                     quantidade_ocupacao, inicio, fim, temperatura_desejada
                 )
             else:
-                return self._ocupar_freezer_caixas_volume_real_dinamico(
+                resultado_alocacao = self._ocupar_freezer_caixas_volume_real_dinamico(
                     freezer, id_ordem, id_pedido, id_atividade, id_item,
                     quantidade_produto, unidades_por_caixa, inicio, fim, temperatura_desejada
                 )
@@ -1348,15 +1495,35 @@ class GestorRefrigeracaoCongelamento:
             if gramas_por_caixa is None:
                 logger.warning(f"⚠️ Gramas por caixa não definido para {freezer.nome}. Usando conversão padrão.")
                 quantidade_ocupacao = gramas_para_caixas(quantidade_produto)
-                return self._ocupar_freezer_caixas_compativel(
+                resultado_alocacao = self._ocupar_freezer_caixas_compativel(
                     freezer, id_ordem, id_pedido, id_atividade, id_item,
                     quantidade_ocupacao, inicio, fim, temperatura_desejada
                 )
             else:
-                return self._ocupar_freezer_caixas_volume_real_dinamico(
+                resultado_alocacao = self._ocupar_freezer_caixas_volume_real_dinamico(
                     freezer, id_ordem, id_pedido, id_atividade, id_item,
                     quantidade_produto, gramas_por_caixa, inicio, fim, temperatura_desejada
                 )
+
+        # 🔧 ROLLBACK: Se alocação falhou E configuramos temperatura aqui, remove configuração órfã
+        if not resultado_alocacao and temperatura_configurada_aqui:
+            logger.debug(f"🔄 Rollback: removendo configuração de temperatura órfã do {freezer.nome}")
+            try:
+                # Remove da lista intervalos_temperatura (formato: [(temperatura, inicio, fim), ...])
+                if hasattr(freezer, 'intervalos_temperatura'):
+                    # Filtra removendo configurações órfãs que coincidem com inicio e fim
+                    freezer.intervalos_temperatura = [
+                        (temp, inicio_config, fim_config)
+                        for temp, inicio_config, fim_config in freezer.intervalos_temperatura
+                        if not (inicio_config == inicio and fim_config == fim)
+                    ]
+                    logger.debug(f"✅ Configuração órfã removida do {freezer.nome} (temperatura {temperatura_desejada}°C, {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')})")
+                else:
+                    logger.warning(f"⚠️ Não foi possível fazer rollback: {freezer.nome} não tem intervalos_temperatura")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro no rollback de temperatura do {freezer.nome}: {e}")
+
+        return resultado_alocacao
 
     # ==========================================================
     # 🆕 MÉTODOS DE OCUPAÇÃO COM VERIFICAÇÃO DINÂMICA
