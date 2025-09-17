@@ -111,14 +111,19 @@
       "tipo_equipamento": {
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6"],
+      "equipamentos_elegiveis": ["bancada_1", "bancada_4", "bancada_5", "bancada_6"],
       "fips_equipamentos": {
+        "bancada_1": 4,
         "bancada_4": 2,
         "bancada_5": 3,
         "bancada_6": 1
       },
       "tempo_maximo_de_espera": "00:00:00",
       "configuracoes_equipamentos": {
+        "bancada_1": {
+          "fracoes_necessarias": 4,
+          "numero_operadores": 1
+        },
         "bancada_4": {
           "fracoes_necessarias": 4,
           "numero_operadores": 1

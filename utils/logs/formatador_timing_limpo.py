@@ -16,16 +16,18 @@ class FormatadorTimingLimpo:
     
     @staticmethod
     def formatar_erro_timing_inter_atividade(
-        id_ordem: int, 
-        id_pedido: int, 
+        id_ordem: int,
+        id_pedido: int,
         atividade_atual: Dict[str, Any],
         atividade_sucessora: Dict[str, Any],
         timing_violation: Dict[str, Any],
-        equipamentos_envolvidos: Optional[List[Dict]] = None
+        equipamentos_envolvidos: Optional[List[Dict]] = None,
+        equipamento_conflitante: Optional[str] = None,
+        tentativas_falhadas: Optional[str] = None
     ) -> str:
         """
         Formata erro de timing entre atividades no novo padrão visual.
-        
+
         Args:
             id_ordem: ID da ordem
             id_pedido: ID do pedido
@@ -33,7 +35,9 @@ class FormatadorTimingLimpo:
             atividade_sucessora: Dados da atividade sucessora
             timing_violation: Dados da violação de tempo
             equipamentos_envolvidos: Lista de equipamentos (opcional)
-            
+            equipamento_conflitante: Equipamento específico que não pôde ser alocado (opcional)
+            tentativas_falhadas: Resumo detalhado de todas as tentativas que falharam (opcional)
+
         Returns:
             String formatada no padrão limpo especificado
         """
@@ -75,9 +79,25 @@ class FormatadorTimingLimpo:
         if equipamentos_envolvidos:
             log_formatado += "🔧 Equipamentos envolvidos:\n"
             for equip in equipamentos_envolvidos:
-                log_formatado += f"   • {equip.get('nome', 'N/A')} ({equip.get('tipo', 'N/A')})\n"
+                equipamento_nome = equip.get('nome', 'N/A')
+                equipamento_tipo = equip.get('tipo', 'N/A')
+
+                # Marcar o equipamento conflitante com ❌
+                if equipamento_conflitante and equipamento_conflitante.lower() in equipamento_nome.lower():
+                    log_formatado += f"   ❌ {equipamento_nome} ({equipamento_tipo}) - NÃO PÔDE SER ALOCADO\n"
+                else:
+                    log_formatado += f"   • {equipamento_nome} ({equipamento_tipo})\n"
             log_formatado += "\n"
-        
+        elif equipamento_conflitante:
+            # Se não há lista de equipamentos, mas há equipamento conflitante específico
+            log_formatado += "🔧 Equipamento que não pôde ser alocado:\n"
+            log_formatado += f"   ❌ {equipamento_conflitante} - NÃO PÔDE SER ALOCADO\n\n"
+
+        # Tentativas de alocação que falharam (novo)
+        if tentativas_falhadas and tentativas_falhadas != "Nenhuma tentativa específica registrada":
+            log_formatado += "🚫 Detalhes das tentativas de alocação:\n"
+            log_formatado += tentativas_falhadas + "\n\n"
+
         # Sugestões
         log_formatado += "💡 Sugestões:\n"
         log_formatado += "   • Verificar disponibilidade de equipamentos\n"
@@ -225,7 +245,24 @@ class FormatadorTimingLimpo:
         equipamentos = []
         
         try:
-            if hasattr(atividade_modular, 'equipamentos_selecionados'):
+            # Para logs de erro, sempre mostrar todos os equipamentos elegíveis (visão completa)
+            if hasattr(atividade_modular, 'equipamentos_elegiveis'):
+                for equipamento in atividade_modular.equipamentos_elegiveis:
+                    equip_info = {
+                        'nome': getattr(equipamento, 'nome', 'Equipamento_Desconhecido'),
+                        'tipo': getattr(equipamento, 'tipo_equipamento', 'TIPO_DESCONHECIDO'),
+                        'capacidade_min': getattr(equipamento, 'capacidade_minima', 'N/A'),
+                        'capacidade_max': getattr(equipamento, 'capacidade_maxima', 'N/A')
+                    }
+
+                    # Converter enum para string se necessário
+                    if hasattr(equip_info['tipo'], 'name'):
+                        equip_info['tipo'] = equip_info['tipo'].name
+
+                    equipamentos.append(equip_info)
+
+            # Fallback: se não tem equipamentos elegíveis, usar selecionados
+            elif hasattr(atividade_modular, 'equipamentos_selecionados'):
                 for equipamento in atividade_modular.equipamentos_selecionados:
                     equip_info = {
                         'nome': getattr(equipamento, 'nome', 'Equipamento_Desconhecido'),
@@ -233,26 +270,11 @@ class FormatadorTimingLimpo:
                         'capacidade_min': getattr(equipamento, 'capacidade_minima', 'N/A'),
                         'capacidade_max': getattr(equipamento, 'capacidade_maxima', 'N/A')
                     }
-                    
+
                     # Converter enum para string se necessário
                     if hasattr(equip_info['tipo'], 'name'):
                         equip_info['tipo'] = equip_info['tipo'].name
-                    
-                    equipamentos.append(equip_info)
-            
-            # Se não tem equipamentos selecionados, tentar equipamentos elegíveis
-            elif hasattr(atividade_modular, 'equipamentos_elegiveis'):
-                for equipamento in atividade_modular.equipamentos_elegiveis[:3]:  # Máximo 3 para o log
-                    equip_info = {
-                        'nome': getattr(equipamento, 'nome', 'Equipamento_Desconhecido'),
-                        'tipo': getattr(equipamento, 'tipo_equipamento', 'TIPO_DESCONHECIDO'),
-                        'capacidade_min': getattr(equipamento, 'capacidade_minima', 'N/A'),
-                        'capacidade_max': getattr(equipamento, 'capacidade_maxima', 'N/A')
-                    }
-                    
-                    if hasattr(equip_info['tipo'], 'name'):
-                        equip_info['tipo'] = equip_info['tipo'].name
-                        
+
                     equipamentos.append(equip_info)
                     
         except Exception as e:
@@ -283,22 +305,25 @@ class FormatadorTimingLimpo:
 
 # Função de conveniência para integração direta
 def reformatar_erro_timing_para_novo_formato(
-    id_ordem: int, 
-    id_pedido: int, 
+    id_ordem: int,
+    id_pedido: int,
     erro_original: str,
     atividade_atual_obj = None,
-    atividade_sucessora_obj = None
+    atividade_sucessora_obj = None,
+    equipamento_conflitante: Optional[str] = None,
+    tentativas_falhadas: Optional[str] = None
 ) -> str:
     """
     Função de conveniência para reformatar erro de timing existente para o novo formato.
-    
+
     Args:
         id_ordem: ID da ordem
-        id_pedido: ID do pedido  
+        id_pedido: ID do pedido
         erro_original: String do erro original
         atividade_atual_obj: Objeto AtividadeModular da atividade atual (opcional)
         atividade_sucessora_obj: Objeto AtividadeModular da sucessora (opcional)
-        
+        equipamento_conflitante: Equipamento específico que não pôde ser alocado (opcional)
+
     Returns:
         String formatada no novo padrão
     """
@@ -341,5 +366,7 @@ def reformatar_erro_timing_para_novo_formato(
         atividade_atual=dados['atividade_atual'],
         atividade_sucessora=dados['atividade_sucessora'],
         timing_violation=dados['timing_violation'],
-        equipamentos_envolvidos=equipamentos
+        equipamentos_envolvidos=equipamentos,
+        equipamento_conflitante=equipamento_conflitante,
+        tentativas_falhadas=tentativas_falhadas
     )

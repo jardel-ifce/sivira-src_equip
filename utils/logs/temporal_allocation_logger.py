@@ -26,6 +26,14 @@ class TemporalAllocationLogger:
     def __init__(self, base_dir: str = "logs/erros"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
+
+        # Inicializar analisador de conflitos
+        try:
+            from utils.logs.equipment_conflict_analyzer import EquipmentConflictAnalyzer
+            self.conflict_analyzer = EquipmentConflictAnalyzer()
+        except ImportError:
+            logger.warning("EquipmentConflictAnalyzer não disponível")
+            self.conflict_analyzer = None
     
     # ========================================================================
     #                    ERRO DE ALOCAÇÃO POR PRAZO
@@ -176,8 +184,8 @@ class TemporalAllocationLogger:
             successor_activity_obj=successor_activity_obj
         )
         
-        # Salvar arquivo de log
-        return self._salvar_log(id_ordem, id_pedido, log_formatado, "INTER_ACTIVITY_TIMING", {
+        # Preparar contexto adicional com análise de conflitos
+        contexto_adicional = {
             "timestamp": timestamp.isoformat(),
             "current_activity": {
                 "id": current_activity_id,
@@ -194,7 +202,53 @@ class TemporalAllocationLogger:
                 "actual_delay": str(atraso),
                 "excess": str(atraso - maximum_wait_time)
             }
-        })
+        }
+
+        # Análise de conflitos para INTER_ACTIVITY_TIMING
+        try:
+            if hasattr(self, 'conflict_analyzer') and self.conflict_analyzer:
+                # Extrair equipamentos envolvidos
+                equipamentos_necessarios = []
+
+                # Equipamento da atividade atual
+                if current_activity_obj and hasattr(current_activity_obj, 'equipamento_alocado'):
+                    equipamento_atual = current_activity_obj.equipamento_alocado
+                    if equipamento_atual:
+                        if isinstance(equipamento_atual, list):
+                            equipamentos_necessarios.extend([eq.nome for eq in equipamento_atual if hasattr(eq, 'nome')])
+                        else:
+                            if hasattr(equipamento_atual, 'nome'):
+                                equipamentos_necessarios.append(equipamento_atual.nome)
+
+                # Equipamento da atividade sucessora
+                if successor_activity_obj and hasattr(successor_activity_obj, 'equipamento_alocado'):
+                    equipamento_sucessor = successor_activity_obj.equipamento_alocado
+                    if equipamento_sucessor:
+                        if isinstance(equipamento_sucessor, list):
+                            equipamentos_necessarios.extend([eq.nome for eq in equipamento_sucessor if hasattr(eq, 'nome')])
+                        else:
+                            if hasattr(equipamento_sucessor, 'nome'):
+                                equipamentos_necessarios.append(equipamento_sucessor.nome)
+
+                # Analisar conflitos no período entre atividades
+                if equipamentos_necessarios:
+                    relatorio_conflito = self.conflict_analyzer.analisar_conflitos_equipamentos(
+                        equipamentos_necessarios,
+                        current_end_time,  # período início
+                        successor_start_time,  # período fim
+                        duracao_atividade=atraso
+                    )
+
+                    if relatorio_conflito:
+                        contexto_adicional['relatorio_conflito_detalhado'] = relatorio_conflito
+                        contexto_adicional['equipamentos_envolvidos'] = equipamentos_necessarios
+
+        except Exception as e:
+            # Se houver erro na análise, não interromper o processo
+            pass
+
+        # Salvar arquivo de log
+        return self._salvar_log(id_ordem, id_pedido, log_formatado, "INTER_ACTIVITY_TIMING", contexto_adicional)
     
     # ========================================================================
     #                    ERRO DE TIMING INTRA-ATIVIDADE
@@ -433,9 +487,23 @@ class TemporalAllocationLogger:
                 log += f"      • Equipamento livre às: {horario_livre.strftime('%H:%M')}\n"
                 log += f"      • Precisaria antecipar prazo em: {self._formatar_duracao(antecipacao_necessaria)}\n"
                 log += f"      • Novo prazo seria: {(prazo_final + antecipacao_necessaria).strftime('%d/%m %H:%M')}\n"
-        
+
         log += "\n"
-        
+
+        # 🔍 NOVA SEÇÃO: Análise detalhada de conflitos de equipamentos
+        if contexto_adicional and 'relatorio_conflito_detalhado' in contexto_adicional:
+            log += "🚨 ANÁLISE DE CONFLITOS DE EQUIPAMENTOS:\n"
+            log += "-" * 50 + "\n"
+            relatorio_conflito = contexto_adicional['relatorio_conflito_detalhado']
+            # Indentar o relatório para melhor visualização
+            linhas_relatorio = relatorio_conflito.split('\n')
+            for linha in linhas_relatorio:
+                if linha.strip():  # Ignorar linhas vazias
+                    log += f"   {linha}\n"
+                else:
+                    log += "\n"
+            log += "-" * 50 + "\n\n"
+
         # Sugestões
         log += "💡 SUGESTÕES:\n"
         sugestoes = self._gerar_sugestoes_deadline(
@@ -525,14 +593,103 @@ class TemporalAllocationLogger:
                     log += f"   • Atividade sucessora: N/A\n"
             log += "\n"
         
+        # 🚨 NOVA SEÇÃO: Análise detalhada de conflitos de equipamentos para INTER_ACTIVITY_TIMING
+        try:
+            if hasattr(self, 'conflict_analyzer') and self.conflict_analyzer:
+                # Extrair informações dos equipamentos para análise
+                equipamentos_necessarios = []
+
+                # Equipamento da atividade atual
+                if current_activity_obj and hasattr(current_activity_obj, 'equipamento_alocado'):
+                    equipamento_atual = current_activity_obj.equipamento_alocado
+                    if equipamento_atual:
+                        if isinstance(equipamento_atual, list):
+                            equipamentos_necessarios.extend([eq.nome for eq in equipamento_atual if hasattr(eq, 'nome')])
+                        else:
+                            if hasattr(equipamento_atual, 'nome'):
+                                equipamentos_necessarios.append(equipamento_atual.nome)
+
+                # Equipamento da atividade sucessora
+                if successor_activity_obj and hasattr(successor_activity_obj, 'equipamento_alocado'):
+                    equipamento_sucessor = successor_activity_obj.equipamento_alocado
+                    if equipamento_sucessor:
+                        if isinstance(equipamento_sucessor, list):
+                            equipamentos_necessarios.extend([eq.nome for eq in equipamento_sucessor if hasattr(eq, 'nome')])
+                        else:
+                            if hasattr(equipamento_sucessor, 'nome'):
+                                equipamentos_necessarios.append(equipamento_sucessor.nome)
+
+                # Analisar conflitos no período entre as atividades
+                if equipamentos_necessarios:
+                    periodo_inicio = current_end_time
+                    periodo_fim = successor_start_time
+
+                    relatorio_conflito = self.conflict_analyzer.analisar_conflitos_equipamentos(
+                        equipamentos_necessarios,
+                        periodo_inicio,
+                        periodo_fim,
+                        duracao_atividade=actual_delay
+                    )
+
+                    if relatorio_conflito and relatorio_conflito.get('conflitos_detectados'):
+                        log += "\n🚨 ANÁLISE DE CONFLITOS DE EQUIPAMENTOS:\n"
+                        log += "-" * 50 + "\n"
+
+                        log += "🔧 EQUIPAMENTOS AFETADOS:\n"
+                        log += f"   • Equipamentos envolvidos: {', '.join(equipamentos_necessarios)}\n\n"
+
+                        log += "⏱️ PERÍODO DE CONFLITO:\n"
+                        log += f"   • Início do intervalo: {periodo_inicio.strftime('%d/%m %H:%M')}\n"
+                        log += f"   • Fim do intervalo: {periodo_fim.strftime('%d/%m %H:%M')}\n"
+                        log += f"   • Duração total: {self._formatar_duracao(actual_delay)}\n\n"
+
+                        log += "❌ CONFLITOS DETECTADOS:\n"
+                        for conflito in relatorio_conflito['conflitos_detectados']:
+                            equipamento = conflito.get('equipamento', 'N/A')
+                            log += f"\n   🏭 {equipamento.upper()}:\n"
+
+                            ocupacoes = conflito.get('ocupacoes_impeditivas', [])
+                            for ocupacao in ocupacoes:
+                                inicio = ocupacao.get('inicio', 'N/A')
+                                fim = ocupacao.get('fim', 'N/A')
+                                atividade = ocupacao.get('atividade', 'N/A')
+                                pedido = ocupacao.get('pedido', 'N/A')
+
+                                log += f"      ❌ Ocupado: {inicio} → {fim}\n"
+                                log += f"      📋 Atividade: {atividade}\n"
+                                log += f"      🧾 Pedido: {pedido}\n"
+
+                        # Alternativas temporais
+                        alternativas = relatorio_conflito.get('alternativas_temporais', [])
+                        if alternativas:
+                            log += "\n⚡ ALTERNATIVAS TEMPORAIS:\n"
+                            for i, alternativa in enumerate(alternativas[:3], 1):  # Máximo 3 alternativas
+                                janela = alternativa.get('janela_livre', {})
+                                equipamentos_disp = alternativa.get('equipamentos_disponiveis', [])
+
+                                inicio_alt = janela.get('inicio', 'N/A')
+                                fim_alt = janela.get('fim', 'N/A')
+
+                                log += f"\n   🕐 Janela Livre {i}:\n"
+                                log += f"      • Período: {inicio_alt} → {fim_alt}\n"
+                                log += f"      • Equipamentos Disponíveis: {', '.join(equipamentos_disp)}\n"
+                                log += f"      • Status: ✅ Viável\n"
+
+                        log += "\n"
+        except Exception as e:
+            # Se houver erro na análise de conflitos, não interromper o log
+            pass
+
         # Sugestões
         log += "💡 SUGESTÕES:\n"
         log += f"   • Reduzir tempo de processamento das atividades\n"
         log += f"   • Alocar equipamentos mais próximos\n"
         log += f"   • Revisar tempo máximo de espera (atual: {self._formatar_duracao(maximum_wait_time)})\n"
-        
+        log += f"   • Considerar equipamentos alternativos se disponíveis\n"
+        log += f"   • Analisar sequenciamento de atividades para reduzir gaps\n"
+
         log += "\n" + "=" * 50
-        
+
         return log
     
     def _formatar_intra_activity_error(

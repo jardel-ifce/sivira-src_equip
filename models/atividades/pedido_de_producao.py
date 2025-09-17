@@ -35,6 +35,57 @@ logger = setup_logger("PedidoDeProducao")
 from datetime import datetime
 import json
 
+# ====================================================================
+#                   SISTEMA DE RASTREAMENTO DE FALHAS
+# ====================================================================
+
+class RegistroTentativasFalhadas:
+    """
+    Classe para registrar todas as tentativas de alocação que falharam
+    durante a execução de um pedido.
+    """
+    def __init__(self):
+        self.tentativas_falhadas = []
+        self.equipamentos_tentados = set()
+
+    def adicionar_falha(self, equipamento: str, motivo: str, horario_tentativa: str = "", detalhes: str = ""):
+        """Adiciona uma tentativa de alocação que falhou"""
+        self.tentativas_falhadas.append({
+            'equipamento': equipamento,
+            'motivo': motivo,
+            'horario_tentativa': horario_tentativa,
+            'detalhes': detalhes,
+            'timestamp': datetime.now().isoformat()
+        })
+        self.equipamentos_tentados.add(equipamento)
+
+    def obter_resumo_falhas(self) -> str:
+        """Retorna um resumo das falhas para incluir no log"""
+        if not self.tentativas_falhadas:
+            return "Nenhuma tentativa específica registrada"
+
+        resumo = "Equipamentos que falharam na alocação:\n"
+        for falha in self.tentativas_falhadas:
+            resumo += f"   ❌ {falha['equipamento']}: {falha['motivo']}\n"
+            if falha['horario_tentativa']:
+                resumo += f"      ⏰ Tentativa em: {falha['horario_tentativa']}\n"
+            if falha['detalhes']:
+                resumo += f"      📋 {falha['detalhes']}\n"
+
+        return resumo.strip()
+
+    def obter_lista_equipamentos(self) -> list:
+        """Retorna lista de equipamentos que falharam"""
+        return list(self.equipamentos_tentados)
+
+    def limpar(self):
+        """Limpa o registro para um novo pedido"""
+        self.tentativas_falhadas.clear()
+        self.equipamentos_tentados.clear()
+
+# Instância global para o pedido atual
+_registro_falhas_atual = RegistroTentativasFalhadas()
+
 class DebugAtividades:
     def __init__(self):
         self.logs = []
@@ -682,15 +733,20 @@ class PedidoDeProducao:
     def executar_atividades_em_ordem(self):
         """
         VERSÃO CORRIGIDA: Executa atividades com agendamento temporal em cascata.
-        
+
         NOVA FUNCIONALIDADE: Executa SUBPRODUTOS diretamente quando solicitados pelo usuário,
         mesmo sem PRODUTO principal.
-        
+
         ESTRATÉGIA:
         1. Se há PRODUTO: Executa produto primeiro, depois subprodutos sincronizados
         2. Se há apenas SUBPRODUTOS: Executa subprodutos diretamente
         3. Garante que qualquer tipo de pedido seja executado
         """
+
+        # Limpar registro de falhas para este pedido
+        _registro_falhas_atual.limpar()
+
+
         total_atividades = len(self.atividades_modulares)
         logger.info(
             f"Iniciando execução em CASCATA CORRIGIDA do pedido {self.id_pedido} com {total_atividades} atividades"
@@ -925,20 +981,82 @@ class PedidoDeProducao:
                         
                         # Coletar informações para o log
                         tipo_equipamento = "DESCONHECIDO"
-                        if hasattr(atividade, 'configuracoes_equipamentos'):
-                            tipos = list(atividade.configuracoes_equipamentos.keys())
-                            if tipos:
-                                tipo_equipamento = tipos[0]
+                        if hasattr(atividade, 'tipo_equipamento') and atividade.tipo_equipamento:
+                            # Obter o tipo de equipamento correto (ex: "BANCADAS", "FORNOS")
+                            tipos_equip = list(atividade.tipo_equipamento.keys())
+                            if tipos_equip:
+                                tipo_equipamento = tipos_equip[0]
+                        elif hasattr(atividade, 'configuracoes_equipamentos'):
+                            # Fallback: usar configurações, mas buscar o tipo real
+                            equipamentos_config = list(atividade.configuracoes_equipamentos.keys())
+                            if equipamentos_config:
+                                # Mapear equipamento específico para tipo
+                                primeiro_equip = equipamentos_config[0]
+                                if 'bancada' in primeiro_equip.lower():
+                                    tipo_equipamento = "BANCADAS"
+                                elif 'forno' in primeiro_equip.lower():
+                                    tipo_equipamento = "FORNOS"
+                                elif 'fritadeira' in primeiro_equip.lower():
+                                    tipo_equipamento = "FRITADEIRAS"
+                                elif 'fogao' in primeiro_equip.lower():
+                                    tipo_equipamento = "FOGOES"
+                                elif 'camara' in primeiro_equip.lower() or 'freezer' in primeiro_equip.lower():
+                                    tipo_equipamento = "REFRIGERACAO_CONGELAMENTO"
+                                elif 'misturadoras' in primeiro_equip.lower() or 'masseira' in primeiro_equip.lower():
+                                    tipo_equipamento = "MISTURADORAS"
+                                else:
+                                    tipo_equipamento = primeiro_equip  # Manter original se não mapear
                         
                         # Determinar equipamentos tentados
                         equipamentos_tentados = []
-                        if hasattr(atividade, 'equipamentos_elegiveis'):
-                            equipamentos_tentados = [eq.nome for eq in atividade.equipamentos_elegiveis[:3]]
+                        if hasattr(atividade, 'equipamentos_elegiveis') and atividade.equipamentos_elegiveis:
+                            # Verificar se são objetos ou strings
+                            if hasattr(atividade.equipamentos_elegiveis[0], 'nome'):
+                                equipamentos_tentados = [eq.nome for eq in atividade.equipamentos_elegiveis[:3]]
+                            else:
+                                # São strings diretas
+                                equipamentos_tentados = atividade.equipamentos_elegiveis[:3]
                         
                         # Contexto adicional com análise de disponibilidade
                         contexto = {}
                         if hasattr(atividade, 'quantidade'):
                             contexto['quantidade_necessaria'] = atividade.quantidade
+
+                        # 🔍 NOVA FUNCIONALIDADE: Análise detalhada de conflitos de equipamentos
+                        try:
+                            from utils.logs.equipment_conflict_analyzer import analisar_conflito_equipamentos
+
+                            if equipamentos_tentados and self.inicio_jornada:
+                                logger.info(f"🔍 Analisando conflitos de equipamentos para atividade {atividade.id_atividade}...")
+
+                                # Calcular período necessário baseado no backward scheduling
+                                inicio_necessario = fim_jornada_grupo - atividade.duracao
+                                fim_necessario = fim_jornada_grupo
+
+                                # Analisar conflitos específicos
+                                analise_conflito, relatorio_conflito = analisar_conflito_equipamentos(
+                                    equipamentos_tentados=equipamentos_tentados,
+                                    periodo_inicio=inicio_necessario,
+                                    periodo_fim=fim_necessario,
+                                    id_atividade=atividade.id_atividade,
+                                    nome_atividade=atividade.nome_atividade,
+                                    quantidade_necessaria=getattr(atividade, 'quantidade', None)
+                                )
+
+                                # Adicionar análise ao contexto
+                                contexto['analise_conflito_equipamentos'] = analise_conflito
+                                contexto['relatorio_conflito_detalhado'] = relatorio_conflito
+
+                                # Log resumido para debug
+                                resumo = analise_conflito.get("resumo", {})
+                                logger.info(
+                                    f"📊 Conflito analisado: {resumo.get('equipamentos_ocupados', 0)}/"
+                                    f"{resumo.get('equipamentos_tentados', 0)} equipamentos ocupados"
+                                )
+
+                        except Exception as e:
+                            logger.warning(f"⚠️ Erro na análise de conflitos: {e}")
+                            contexto['erro_analise_conflito'] = str(e)
                         
                         # Obter tempo máximo de espera da atividade
                         tempo_max_espera = None
@@ -1080,10 +1198,126 @@ class PedidoDeProducao:
             sucesso, inicio_atual, fim_atual, _, equipamentos_alocados = atividade.tentar_alocar_e_iniciar_equipamentos(
                 self.inicio_jornada, current_fim
             )
-            
+
             if not sucesso:
                 logger.warning(f"Falha na alocação da atividade {atividade.id_atividade}")
                 return False, None, None
+
+        except IntraActivityTimingError as intra_timing_err:
+            # ERRO DE TIMING DENTRO DA ATIVIDADE - GERAR LOG E JSON
+            logger.error(
+                f"ERRO DE TEMPO INTRA-ATIVIDADE na atividade {atividade.id_atividade}: "
+                f"{intra_timing_err.current_equipment} → {intra_timing_err.successor_equipment}"
+            )
+
+            # GERAR LOG NO FORMATO LIMPO PARA INTRA-ACTIVITY
+            try:
+                from utils.logs.formatador_timing_limpo import FormatadorTimingLimpo
+
+                # Preparar dados para o formatador (adaptando para formato inter-atividade)
+                atividade_atual_dados = {
+                    'nome': f"{atividade.nome_atividade} - {intra_timing_err.current_equipment}",
+                    'fim': intra_timing_err.current_end_time.strftime('%d/%m %H:%M:%S'),
+                    'duracao_estimada': '0:12:00'
+                }
+
+                atividade_sucessora_dados = {
+                    'nome': f"{atividade.nome_atividade} - {intra_timing_err.successor_equipment}",
+                    'inicio': intra_timing_err.successor_start_time.strftime('%d/%m %H:%M:%S')
+                }
+
+                timing_violation_dados = {
+                    'tempo_maximo': str(intra_timing_err.maximum_wait_time),
+                    'excesso': str(intra_timing_err.actual_delay - intra_timing_err.maximum_wait_time)
+                }
+
+                # Obter equipamentos envolvidos
+                equipamentos = [
+                    {'nome': intra_timing_err.current_equipment, 'tipo': 'EQUIPAMENTO_ATUAL'},
+                    {'nome': intra_timing_err.successor_equipment, 'tipo': 'EQUIPAMENTO_SUCESSOR'}
+                ]
+
+                # Gerar log limpo (equipamento conflitante é o sucessor)
+                log_formatado = FormatadorTimingLimpo.formatar_erro_timing_inter_atividade(
+                    id_ordem=atividade.id_ordem,
+                    id_pedido=atividade.id_pedido,
+                    atividade_atual=atividade_atual_dados,
+                    atividade_sucessora=atividade_sucessora_dados,
+                    timing_violation=timing_violation_dados,
+                    equipamentos_envolvidos=equipamentos,
+                    equipamento_conflitante=intra_timing_err.successor_equipment
+                )
+
+                # Salvar arquivo
+                import os
+                os.makedirs("logs/erros", exist_ok=True)
+                nome_arquivo = f"logs/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
+
+                with open(nome_arquivo, "w", encoding="utf-8") as f:
+                    f.write(log_formatado)
+
+                logger.info(f"Log de timing limpo (INTRA-ACTIVITY) salvo: {nome_arquivo}")
+
+            except Exception as format_err:
+                logger.warning(f"Falha ao gerar log limpo para INTRA-ACTIVITY: {format_err}")
+
+            # GERAR JSON PARA INTRA-ACTIVITY
+            try:
+                import json
+                import os
+
+                # Preparar dados para JSON
+                erro_data = {
+                    "tipo_erro": "INTRA_ACTIVITY_TIMING",
+                    "timestamp": datetime.now().isoformat(),
+                    "activity": {
+                        "id": intra_timing_err.activity_id,
+                        "name": intra_timing_err.activity_name
+                    },
+                    "equipment_transition": {
+                        "current": {
+                            "name": intra_timing_err.current_equipment,
+                            "end_time": intra_timing_err.current_end_time.isoformat()
+                        },
+                        "successor": {
+                            "name": intra_timing_err.successor_equipment,
+                            "start_time": intra_timing_err.successor_start_time.isoformat()
+                        }
+                    },
+                    "timing_violation": {
+                        "maximum_wait_time": str(intra_timing_err.maximum_wait_time),
+                        "actual_delay": str(intra_timing_err.actual_delay),
+                        "excess": str(intra_timing_err.actual_delay - intra_timing_err.maximum_wait_time)
+                    }
+                }
+
+                # Salvar JSON
+                json_filename = f"ordem_{atividade.id_ordem}_pedido_{atividade.id_pedido}_temporal_errors.json"
+                json_path = os.path.join("logs/erros", json_filename)
+
+                # Se já existe, adicionar ao array existente
+                if os.path.exists(json_path):
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        existing_data = json.load(f)
+                        if not isinstance(existing_data, list):
+                            existing_data = [existing_data]
+                else:
+                    existing_data = []
+
+                existing_data.append(erro_data)
+
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(existing_data, f, indent=2, ensure_ascii=False)
+
+                logger.info(f"📄 JSON de erro temporal (INTRA-ACTIVITY) salvo: {json_path}")
+
+            except Exception as json_err:
+                logger.warning(f"Falha ao salvar JSON de erro temporal (INTRA-ACTIVITY): {json_err}")
+
+            # Retornar falha para que o pedido seja cancelado
+            return False, None, None
+
+        try:
 
             logger.debug(f"Equipamentos alocados: {len(equipamentos_alocados) if equipamentos_alocados else 0}")
 
@@ -1095,7 +1329,7 @@ class PedidoDeProducao:
                     )
                     logger.debug("Verificação de tempo máximo de espera INTER-ATIVIDADE passou")
                     
-                except RuntimeError as timing_err:
+                except (RuntimeError, IntraActivityTimingError) as timing_err:
                     # INTERCEPTAR ERRO DE TIMING E GERAR LOG LIMPO
                     erro_msg_str = str(timing_err)
                     
@@ -1104,30 +1338,200 @@ class PedidoDeProducao:
                             f"ERRO DE TEMPO INTER-ATIVIDADE detectado entre atividades "
                             f"{atividade.id_atividade} → {atividade_sucessora.id_atividade}"
                         )
-                        
-                        # GERAR LOG USANDO LOGGER TEMPORAL UNIFICADO
+
+                        # GERAR APENAS O JSON (sem log duplicado)
                         try:
-                            from utils.logs.temporal_allocation_logger import log_inter_activity_timing_error
-                            
-                            log_inter_activity_timing_error(
+                            from utils.logs.temporal_allocation_logger import get_temporal_logger
+                            import json
+                            import os
+                            from datetime import datetime
+
+                            # Calcular atraso para uso no JSON
+                            atraso = inicio_prox_atividade - fim_atual
+
+                            # Preparar dados para JSON
+                            erro_data = {
+                                "tipo_erro": "INTER_ACTIVITY_TIMING",
+                                "timestamp": datetime.now().isoformat(),
+                                "current_activity": {
+                                    "id": atividade.id_atividade,
+                                    "name": atividade.nome_atividade,
+                                    "end_time": fim_atual.isoformat()
+                                },
+                                "successor_activity": {
+                                    "id": atividade_sucessora.id_atividade,
+                                    "name": atividade_sucessora.nome_atividade,
+                                    "start_time": inicio_prox_atividade.isoformat()
+                                },
+                                "timing_violation": {
+                                    "maximum_wait_time": str(atividade_sucessora.tempo_maximo_de_espera),
+                                    "actual_delay": str(atraso),
+                                    "excess": str(atraso - atividade_sucessora.tempo_maximo_de_espera)
+                                }
+                            }
+
+                            # Salvar JSON
+                            json_filename = f"ordem_{atividade.id_ordem}_pedido_{atividade.id_pedido}_temporal_errors.json"
+                            json_path = os.path.join("logs/erros", json_filename)
+
+                            # Se já existe, adicionar ao array existente
+                            if os.path.exists(json_path):
+                                with open(json_path, 'r', encoding='utf-8') as f:
+                                    existing_data = json.load(f)
+                                    if not isinstance(existing_data, list):
+                                        existing_data = [existing_data]
+                            else:
+                                existing_data = []
+
+                            existing_data.append(erro_data)
+
+                            with open(json_path, 'w', encoding='utf-8') as f:
+                                json.dump(existing_data, f, indent=2, ensure_ascii=False)
+
+                            logger.info(f"📄 JSON de erro temporal salvo: {json_path}")
+
+                        except Exception as json_err:
+                            logger.warning(f"Falha ao salvar JSON de erro temporal: {json_err}")
+
+                    # Tratar erro de timing DENTRO DA ATIVIDADE (INTRA-ACTIVITY)
+                    elif isinstance(timing_err, IntraActivityTimingError) or "Erro de tempo entre equipamentos" in erro_msg_str:
+                        logger.error(
+                            f"ERRO DE TEMPO INTRA-ATIVIDADE detectado na atividade {atividade.id_atividade}"
+                        )
+
+                        # GERAR LOG NO FORMATO LIMPO PARA INTRA-ACTIVITY
+                        try:
+                            from utils.logs.formatador_timing_limpo import FormatadorTimingLimpo
+
+                            # Extrair informações do erro IntraActivityTimingError
+                            if isinstance(timing_err, IntraActivityTimingError):
+                                current_equipment = timing_err.current_equipment
+                                successor_equipment = timing_err.successor_equipment
+                                current_end_time = timing_err.current_end_time
+                                successor_start_time = timing_err.successor_start_time
+                                maximum_wait_time = timing_err.maximum_wait_time
+                                actual_delay = timing_err.actual_delay
+                            else:
+                                # Fallback se for RuntimeError
+                                current_equipment = "Equipamento_Atual_Desconhecido"
+                                successor_equipment = "Equipamento_Sucessor_Desconhecido"
+                                current_end_time = datetime.now()
+                                successor_start_time = datetime.now()
+                                maximum_wait_time = timedelta(0)
+                                actual_delay = timedelta(minutes=12)
+
+                            # Preparar dados para o formatador (adaptando para formato inter-atividade)
+                            atividade_atual_dados = {
+                                'nome': f"{atividade.nome_atividade} - {current_equipment}",
+                                'fim': current_end_time.strftime('%d/%m %H:%M:%S'),
+                                'duracao_estimada': '0:12:00'
+                            }
+
+                            atividade_sucessora_dados = {
+                                'nome': f"{atividade.nome_atividade} - {successor_equipment}",
+                                'inicio': successor_start_time.strftime('%d/%m %H:%M:%S')
+                            }
+
+                            timing_violation_dados = {
+                                'tempo_maximo': str(maximum_wait_time),
+                                'excesso': str(actual_delay - maximum_wait_time)
+                            }
+
+                            # Obter equipamentos envolvidos
+                            equipamentos = [
+                                {'nome': current_equipment, 'tipo': 'EQUIPAMENTO_ATUAL'},
+                                {'nome': successor_equipment, 'tipo': 'EQUIPAMENTO_SUCESSOR'}
+                            ]
+
+                            # Gerar log limpo (equipamento conflitante é o sucessor)
+                            log_formatado = FormatadorTimingLimpo.formatar_erro_timing_inter_atividade(
                                 id_ordem=atividade.id_ordem,
                                 id_pedido=atividade.id_pedido,
-                                current_activity_id=atividade.id_atividade,
-                                current_activity_name=atividade.nome_atividade,
-                                successor_activity_id=atividade_sucessora.id_atividade,
-                                successor_activity_name=atividade_sucessora.nome_atividade,
-                                current_end_time=fim_atual,
-                                successor_start_time=inicio_prox_atividade,
-                                maximum_wait_time=atividade_sucessora.tempo_maximo_de_espera,
-                                current_activity_obj=atividade,
-                                successor_activity_obj=atividade_sucessora
+                                atividade_atual=atividade_atual_dados,
+                                atividade_sucessora=atividade_sucessora_dados,
+                                timing_violation=timing_violation_dados,
+                                equipamentos_envolvidos=equipamentos,
+                                equipamento_conflitante=successor_equipment
                             )
-                            
-                            logger.info(f"Log de erro temporal (inter-atividade) gerado para atividades {atividade.id_atividade} → {atividade_sucessora.id_atividade}")
-                            
+
+                            # Salvar arquivo
+                            import os
+                            os.makedirs("logs/erros", exist_ok=True)
+                            nome_arquivo = f"logs/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
+
+                            with open(nome_arquivo, "w", encoding="utf-8") as f:
+                                f.write(log_formatado)
+
+                            logger.info(f"Log de timing limpo (INTRA-ACTIVITY) salvo: {nome_arquivo}")
+
                         except Exception as format_err:
-                            logger.warning(f"Falha ao gerar log de erro temporal: {format_err}")
-                    
+                            logger.warning(f"Falha ao gerar log limpo para INTRA-ACTIVITY: {format_err}")
+
+                        # GERAR JSON PARA INTRA-ACTIVITY
+                        try:
+                            import json
+                            import os
+
+                            # Preparar dados para JSON
+                            if isinstance(timing_err, IntraActivityTimingError):
+                                erro_data = {
+                                    "tipo_erro": "INTRA_ACTIVITY_TIMING",
+                                    "timestamp": datetime.now().isoformat(),
+                                    "activity": {
+                                        "id": timing_err.activity_id,
+                                        "name": timing_err.activity_name
+                                    },
+                                    "equipment_transition": {
+                                        "current": {
+                                            "name": timing_err.current_equipment,
+                                            "end_time": timing_err.current_end_time.isoformat()
+                                        },
+                                        "successor": {
+                                            "name": timing_err.successor_equipment,
+                                            "start_time": timing_err.successor_start_time.isoformat()
+                                        }
+                                    },
+                                    "timing_violation": {
+                                        "maximum_wait_time": str(timing_err.maximum_wait_time),
+                                        "actual_delay": str(timing_err.actual_delay),
+                                        "excess": str(timing_err.actual_delay - timing_err.maximum_wait_time)
+                                    }
+                                }
+                            else:
+                                # Fallback para RuntimeError
+                                erro_data = {
+                                    "tipo_erro": "INTRA_ACTIVITY_TIMING",
+                                    "timestamp": datetime.now().isoformat(),
+                                    "activity": {
+                                        "id": atividade.id_atividade,
+                                        "name": atividade.nome_atividade
+                                    },
+                                    "error_message": erro_msg_str
+                                }
+
+                            # Salvar JSON
+                            json_filename = f"ordem_{atividade.id_ordem}_pedido_{atividade.id_pedido}_temporal_errors.json"
+                            json_path = os.path.join("logs/erros", json_filename)
+
+                            # Se já existe, adicionar ao array existente
+                            if os.path.exists(json_path):
+                                with open(json_path, 'r', encoding='utf-8') as f:
+                                    existing_data = json.load(f)
+                                    if not isinstance(existing_data, list):
+                                        existing_data = [existing_data]
+                            else:
+                                existing_data = []
+
+                            existing_data.append(erro_data)
+
+                            with open(json_path, 'w', encoding='utf-8') as f:
+                                json.dump(existing_data, f, indent=2, ensure_ascii=False)
+
+                            logger.info(f"📄 JSON de erro temporal (INTRA-ACTIVITY) salvo: {json_path}")
+
+                        except Exception as json_err:
+                            logger.warning(f"Falha ao salvar JSON de erro temporal (INTRA-ACTIVITY): {json_err}")
+
                     # Re-lançar exceção para tratamento no nível superior
                     raise timing_err
 
@@ -1149,15 +1553,18 @@ class PedidoDeProducao:
             raise e
 
     def _verificar_tempo_maximo_espera(
-        self, 
-        atividade_atual: AtividadeModular, 
+        self,
+        atividade_atual: AtividadeModular,
         atividade_sucessora: AtividadeModular,
-        fim_atual: datetime, 
+        fim_atual: datetime,
         inicio_prox_atividade: datetime
     ):
         """
         VERSÃO CORRIGIDA: Gera log no formato limpo ANTES de lançar exceção.
         """
+        logger.info(f"🔍 DEBUG: Verificando tempo máximo entre atividades {atividade_atual.id_atividade} → {atividade_sucessora.id_atividade}")
+        logger.info(f"🔍 DEBUG: Fim atual: {fim_atual.strftime('%H:%M:%S')}, Início sucessora: {inicio_prox_atividade.strftime('%H:%M:%S')}")
+
         if not hasattr(atividade_sucessora, 'tempo_maximo_de_espera') or atividade_sucessora.tempo_maximo_de_espera is None:
             logger.debug("Atividade sucessora não possui tempo máximo de espera definido")
             return
@@ -1198,7 +1605,30 @@ class PedidoDeProducao:
                 equipamentos = FormatadorTimingLimpo.obter_equipamentos_atividade(atividade_atual)
                 if len(equipamentos) < 3:
                     equipamentos.extend(FormatadorTimingLimpo.obter_equipamentos_atividade(atividade_sucessora))
-                
+
+                # Equipamentos apenas da atividade atual para o log (não misturar com sucessora)
+                equipamentos_para_log = FormatadorTimingLimpo.obter_equipamentos_atividade(atividade_atual)
+
+                # Identificar equipamento conflitante (geralmente o da atividade sucessora que não pôde ser alocado)
+                equipamento_conflitante = None
+                try:
+                    if hasattr(atividade_sucessora, 'equipamentos_elegiveis') and atividade_sucessora.equipamentos_elegiveis:
+                        # Primeiro equipamento elegível da sucessora é o mais provável conflitante
+                        equipamento_conflitante = atividade_sucessora.equipamentos_elegiveis[0].nome
+                    elif hasattr(atividade_sucessora, 'equipamento_alocado') and atividade_sucessora.equipamento_alocado:
+                        if isinstance(atividade_sucessora.equipamento_alocado, list):
+                            equipamento_conflitante = atividade_sucessora.equipamento_alocado[0].nome
+                        else:
+                            equipamento_conflitante = atividade_sucessora.equipamento_alocado.nome
+                    elif equipamentos:
+                        # Fallback: último equipamento da lista (mais provável ser da sucessora)
+                        equipamento_conflitante = equipamentos[-1].get('nome', 'Equipamento_Desconhecido')
+                except (AttributeError, IndexError):
+                    equipamento_conflitante = "Equipamento_Desconhecido"
+
+                # Obter resumo das tentativas falhadas
+                resumo_falhas = _registro_falhas_atual.obter_resumo_falhas()
+
                 # Gerar log limpo
                 log_formatado = FormatadorTimingLimpo.formatar_erro_timing_inter_atividade(
                     id_ordem=atividade_atual.id_ordem,
@@ -1206,7 +1636,9 @@ class PedidoDeProducao:
                     atividade_atual=atividade_atual_dados,
                     atividade_sucessora=atividade_sucessora_dados,
                     timing_violation=timing_violation_dados,
-                    equipamentos_envolvidos=equipamentos[:3]
+                    equipamentos_envolvidos=equipamentos_para_log,
+                    equipamento_conflitante=equipamento_conflitante,
+                    tentativas_falhadas=resumo_falhas
                 )
                 
                 # Salvar arquivo
