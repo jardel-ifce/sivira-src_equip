@@ -15,9 +15,9 @@ class Masseira(Equipamento):
     🥣 Classe que representa uma Masseira.
     ✔️ Controle de capacidade por peso.
     ✔️ Suporte a múltiplas velocidades e tipos de mistura.
-    ✔️ Permite ocupações simultâneas de mesma atividade com intervalos flexíveis.
-    ✔️ Validação dinâmica de capacidade considerando picos de sobreposição.
-    ✔️ MODIFICADO: Agrupamento por id_atividade (não mais por id_item).
+    ✔️ REGRA: Mesma atividade só pode ocupar no mesmo horário (início e fim exatos).
+    ✔️ Capacidade de mistura validada por peso com horários rígidos.
+    ✔️ MODIFICADO: Agrupamento por id_atividade com horário exato (rigidez como batedeiras).
     """
 
     # ============================================
@@ -58,110 +58,65 @@ class Masseira(Equipamento):
         """
         Calcula a quantidade máxima de uma atividade que estará sendo processada
         simultaneamente na masseira durante qualquer momento do período especificado.
+        ✔️ Com a nova regra, só soma ocupações com horário EXATO.
         """
-        # Lista todos os pontos temporais relevantes (inícios e fins de ocupações)
-        pontos_temporais = set()
-        ocupacoes_atividade = []
-        
-        # Coleta ocupações da mesma atividade
-        for ocupacao in self.ocupacoes:
-            if ocupacao[2] == id_atividade:  # mesmo id_atividade
-                ocupacoes_atividade.append(ocupacao)
-                pontos_temporais.add(ocupacao[7])  # início
-                pontos_temporais.add(ocupacao[8])  # fim
-        
-        # Adiciona os pontos do novo período
-        pontos_temporais.add(inicio)
-        pontos_temporais.add(fim)
-        
-        # Ordena os pontos temporais
-        pontos_ordenados = sorted(pontos_temporais)
-        
-        quantidade_maxima = 0.0
-        
-        # Verifica a quantidade em cada intervalo
-        for i in range(len(pontos_ordenados) - 1):
-            momento_inicio = pontos_ordenados[i]
-            momento_fim = pontos_ordenados[i + 1]
-            momento_meio = momento_inicio + (momento_fim - momento_inicio) / 2
-            
-            # Soma quantidade de todas as ocupações ativas neste momento
-            quantidade_momento = 0.0
-            
-            # Verifica ocupações existentes
-            for ocupacao in ocupacoes_atividade:
-                if ocupacao[7] <= momento_meio < ocupacao[8]:  # ocupação ativa neste momento
-                    quantidade_momento += ocupacao[4]
-            
-            quantidade_maxima = max(quantidade_maxima, quantidade_momento)
-        
-        return quantidade_maxima
+        quantidade_total = 0.0
 
-    def validar_nova_ocupacao_atividade(self, id_atividade: int, quantidade_nova: float, 
+        # Com a nova regra, só considera ocupações com horário EXATO
+        for ocupacao in self.ocupacoes:
+            if ocupacao[2] == id_atividade and ocupacao[7] == inicio and ocupacao[8] == fim:
+                quantidade_total += ocupacao[4]
+
+        return quantidade_total
+
+    def validar_nova_ocupacao_atividade(self, id_atividade: int, quantidade_nova: float,
                                        inicio: datetime, fim: datetime) -> bool:
         """
-        Simula uma nova ocupação e verifica se a capacidade máxima será respeitada
-        em todos os momentos de sobreposição para a mesma atividade.
+        Simula uma nova ocupação e verifica se a capacidade máxima será respeitada.
+        ✔️ Com a nova regra, só verifica ocupações com horário exato.
         """
-        # Coleta todos os pontos temporais relevantes
-        pontos_temporais = set()
-        ocupacoes_atividade = []
-        
-        for ocupacao in self.ocupacoes:
-            if ocupacao[2] == id_atividade:  # mesmo id_atividade
-                ocupacoes_atividade.append(ocupacao)
-                pontos_temporais.add(ocupacao[7])  # início
-                pontos_temporais.add(ocupacao[8])  # fim
-        
-        # Adiciona pontos da nova ocupação
-        pontos_temporais.add(inicio)
-        pontos_temporais.add(fim)
-        
-        # Ordena pontos temporais
-        pontos_ordenados = sorted(pontos_temporais)
-        
-        # Verifica quantidade em cada intervalo
-        for i in range(len(pontos_ordenados) - 1):
-            momento_inicio = pontos_ordenados[i]
-            momento_fim = pontos_ordenados[i + 1]
-            momento_meio = momento_inicio + (momento_fim - momento_inicio) / 2
-            
-            quantidade_total = 0.0
-            
-            # Soma ocupações existentes ativas neste momento
-            for ocupacao in ocupacoes_atividade:
-                if ocupacao[7] <= momento_meio < ocupacao[8]:
-                    quantidade_total += ocupacao[4]
-            
-            # Soma nova ocupação se ativa neste momento
-            if inicio <= momento_meio < fim:
-                quantidade_total += quantidade_nova
-            
-            # Verifica se excede capacidade
-            if quantidade_total > self.capacidade_gramas_max:
-                logger.debug(
-                    f"⛔ {self.nome} | Atividade {id_atividade}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
-                    f"({quantidade_total}g > {self.capacidade_gramas_max}g)"
-                )
-                return False
-        
+        quantidade_atual = self.obter_quantidade_maxima_atividade_periodo(id_atividade, inicio, fim)
+        quantidade_total = quantidade_atual + quantidade_nova
+
+        if not self.validar_capacidade(quantidade_total):
+            logger.debug(
+                f"❌ {self.nome} | Atividade {id_atividade}: Capacidade excedida "
+                f"({quantidade_total}g > {self.capacidade_gramas_max}g)"
+            )
+            return False
+
         return True
 
     def esta_disponivel_para_atividade(self, inicio: datetime, fim: datetime, id_atividade: int) -> bool:
         """
         Verifica se a masseira pode receber uma nova ocupação da atividade especificada.
-        Para a mesma atividade, sempre permite (validação de capacidade será feita separadamente).
+        ✔️ REGRA: Mesma atividade só pode ocupar no mesmo horário (início e fim exatos).
         Para atividades diferentes, não permite sobreposição.
         """
         for ocupacao in self.ocupacoes:
-            # Se é a mesma atividade, sempre permite (capacidade será validada depois)
-            if ocupacao[2] == id_atividade:
+            ocupacao_id_atividade = ocupacao[2]
+            ocupacao_inicio = ocupacao[7]  # início
+            ocupacao_fim = ocupacao[8]     # fim
+
+            # Se é a mesma atividade E mesmo horário, permite
+            if ocupacao_id_atividade == id_atividade and ocupacao_inicio == inicio and ocupacao_fim == fim:
                 continue
-                
-            # Para atividades diferentes, não pode haver sobreposição
-            if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
+
+            # Para qualquer outra situação, não pode haver sobreposição temporal
+            if not (fim <= ocupacao_inicio or inicio >= ocupacao_fim):
+                if ocupacao_id_atividade == id_atividade:
+                    logger.warning(
+                        f"⚠️ {self.nome}: Atividade {id_atividade} só pode ocupar no mesmo horário. "
+                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                    )
+                else:
+                    logger.warning(
+                        f"⚠️ {self.nome} ocupada por atividade diferente (ID: {ocupacao_id_atividade}) "
+                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
+                    )
                 return False
-        
+
         return True
 
     # ==========================================================
@@ -207,49 +162,66 @@ class Masseira(Equipamento):
     def obter_quantidade_maxima_item_periodo(self, id_item: int, inicio: datetime, fim: datetime) -> float:
         """DEPRECIADO: Usar obter_quantidade_maxima_atividade_periodo. Mantido para compatibilidade."""
         logger.warning("Método depreciado: use obter_quantidade_maxima_atividade_periodo")
-        # Busca por atividades que usam esse item
-        atividades_item = set(oc[2] for oc in self.ocupacoes if oc[3] == id_item)
-        if not atividades_item:
-            return 0.0
-        # Retorna o máximo entre todas as atividades que usam esse item
-        return max(self.obter_quantidade_maxima_atividade_periodo(ativ, inicio, fim) for ativ in atividades_item)
+        quantidade_total = 0.0
+
+        # Com a nova regra, só considera ocupações com horário EXATO
+        for ocupacao in self.ocupacoes:
+            if ocupacao[3] == id_item and ocupacao[7] == inicio and ocupacao[8] == fim:
+                quantidade_total += ocupacao[4]
+
+        return quantidade_total
 
     def esta_disponivel_para_item(self, inicio: datetime, fim: datetime, id_item: int) -> bool:
         """DEPRECIADO: Usar esta_disponivel_para_atividade. Mantido para compatibilidade."""
         logger.warning("Método depreciado: use esta_disponivel_para_atividade")
-        # Busca atividades que usam esse item
-        atividades_item = set(oc[2] for oc in self.ocupacoes if oc[3] == id_item)
-        if not atividades_item:
-            return True
-        # Se já há atividades do item, verifica se alguma pode agrupar
-        for id_atividade in atividades_item:
-            if self.esta_disponivel_para_atividade(inicio, fim, id_atividade):
-                return True
-        return False
 
-    def validar_nova_ocupacao_item(self, id_item: int, quantidade_nova: float, 
+        for ocupacao in self.ocupacoes:
+            ocupacao_id_item = ocupacao[3]
+            ocupacao_inicio = ocupacao[7]  # início
+            ocupacao_fim = ocupacao[8]     # fim
+
+            # Se é o mesmo item E mesmo horário, permite
+            if ocupacao_id_item == id_item and ocupacao_inicio == inicio and ocupacao_fim == fim:
+                continue
+
+            # Para qualquer outra situação, não pode haver sobreposição temporal
+            if not (fim <= ocupacao_inicio or inicio >= ocupacao_fim):
+                if ocupacao_id_item == id_item:
+                    logger.warning(
+                        f"⚠️ {self.nome}: Item {id_item} só pode ocupar no mesmo horário. "
+                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                    )
+                else:
+                    logger.warning(
+                        f"⚠️ {self.nome} ocupada por item diferente (ID: {ocupacao_id_item}) "
+                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
+                    )
+                return False
+
+        return True
+
+    def validar_nova_ocupacao_item(self, id_item: int, quantidade_nova: float,
                                   inicio: datetime, fim: datetime) -> bool:
         """DEPRECIADO: Usar validar_nova_ocupacao_atividade. Mantido para compatibilidade."""
         logger.warning("Método depreciado: use validar_nova_ocupacao_atividade")
-        # Busca atividades que usam esse item
-        atividades_item = [oc[2] for oc in self.ocupacoes if oc[3] == id_item]
-        if not atividades_item:
-            return quantidade_nova <= self.capacidade_gramas_max
-        # Verifica se alguma atividade pode receber a quantidade adicional
-        for id_atividade in set(atividades_item):
-            if self.validar_nova_ocupacao_atividade(id_atividade, quantidade_nova, inicio, fim):
-                return True
-        return False
+        quantidade_atual = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        quantidade_total = quantidade_atual + quantidade_nova
+
+        if not self.validar_capacidade(quantidade_total):
+            logger.debug(
+                f"❌ {self.nome} | Item {id_item}: Capacidade excedida "
+                f"({quantidade_total}g > {self.capacidade_gramas_max}g)"
+            )
+            return False
+
+        return True
 
     def obter_capacidade_disponivel_item(self, id_item: int, inicio: datetime, fim: datetime) -> float:
         """DEPRECIADO: Usar obter_capacidade_disponivel_atividade. Mantido para compatibilidade."""
         logger.warning("Método depreciado: use obter_capacidade_disponivel_atividade")
-        # Busca atividades que usam esse item
-        atividades_item = set(oc[2] for oc in self.ocupacoes if oc[3] == id_item)
-        if not atividades_item:
-            return self.capacidade_gramas_max
-        # Retorna a maior capacidade disponível entre as atividades
-        return max(self.obter_capacidade_disponivel_atividade(ativ, inicio, fim) for ativ in atividades_item)
+        quantidade_ocupada = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
+        return max(0.0, self.capacidade_gramas_max - quantidade_ocupada)
 
     def esta_disponivel(self, inicio: datetime, fim: datetime) -> bool:
         """Verifica se a masseira está completamente livre no período."""
@@ -285,6 +257,10 @@ class Masseira(Equipamento):
     # ==========================================================
     # ✅ Validações (Parâmetros técnicos)
     # ==========================================================
+    def validar_capacidade(self, quantidade_gramas: float) -> bool:
+        """Valida se a quantidade está dentro da capacidade mínima e máxima."""
+        return self.capacidade_gramas_min <= quantidade_gramas <= self.capacidade_gramas_max
+
     def validar_capacidade_individual(self, quantidade: float) -> bool:
         """Valida se a quantidade individual está dentro dos limites."""
         if quantidade < self.capacidade_gramas_min:

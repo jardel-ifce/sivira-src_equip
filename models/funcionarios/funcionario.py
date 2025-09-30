@@ -5,6 +5,7 @@ from utils.time.data_utils import mapa_dia_semana, formatar_hora_e_min
 from utils.logs.logger_factory import setup_logger
 from enums.funcionarios.tipo_folga import TipoFolga
 from enums.funcionarios.tipo_profissional import TipoProfissional
+from enums.producao.tipo_setor import TipoSetor
 
 logger = setup_logger('Funcionario')
 
@@ -20,7 +21,8 @@ class Funcionario:
         self,
         id: int,
         nome: str,
-        tipo_profissional: TipoProfissional,
+        setor: List[TipoSetor],
+        tipo_profissional: List[TipoProfissional],
         regras_folga: List[RegraFolga],
         ch_semanal: int,
         horario_inicio: time,
@@ -31,6 +33,7 @@ class Funcionario:
     ):
         self.id = id
         self.nome = nome
+        self.setor = setor
         self.tipo_profissional = tipo_profissional
         self.fip = fip
         self.ch = ch_semanal
@@ -40,8 +43,8 @@ class Funcionario:
 
 
 
-        # (id_ordem, id_pedido, id_atividade, inicio, fim)
-        self.ocupacoes: List[tuple[int, int, int, datetime, datetime]] = []
+        # (id_ordem, id_pedido, id_atividade, nome_atividade, inicio, fim)
+        self.ocupacoes: List[tuple[int, int, int, str, datetime, datetime]] = []
 
         self.regras_folga = regras_folga
         self.folga_semanal = None
@@ -90,7 +93,7 @@ class Funcionario:
         return False
     
     def verificar_disponibilidade_no_intervalo(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
-        for i, (_, _, _, ocup_inicio, ocup_fim) in enumerate(self.ocupacoes):
+        for i, (_, _, _, _, ocup_inicio, ocup_fim) in enumerate(self.ocupacoes):
             if not (fim <= ocup_inicio or inicio >= ocup_fim):
                 logger.debug(
                     f"🚫 Conflito detectado na ocupação {i}: "
@@ -120,7 +123,7 @@ class Funcionario:
         if not (fim <= inicio_intervalo or inicio >= fim_intervalo):
             return False
 
-        for _, _, _, ocup_inicio, ocup_fim in self.ocupacoes:
+        for _, _, _, _, ocup_inicio, ocup_fim in self.ocupacoes:
             if not (fim <= ocup_inicio or inicio >= ocup_fim):
                 return False
 
@@ -131,20 +134,21 @@ class Funcionario:
         id_ordem: int,
         id_pedido: int,
         id_atividade_json: int,
+        nome_atividade: str,
         inicio: datetime,
         fim: datetime
     ):
         disponivel, motivo = self.verificar_disponibilidade_no_intervalo(inicio, fim)
         if disponivel:
-            self.ocupacoes.append((id_ordem, id_pedido, id_atividade_json, inicio, fim))
+            self.ocupacoes.append((id_ordem, id_pedido, id_atividade_json, nome_atividade, inicio, fim))
             logger.info(
-                f"✅ {self.nome} | Ocupação registrada: {id_atividade_json} de {inicio.strftime('%H:%M')} "
+                f"✅ {self.nome} | Ocupação registrada: {nome_atividade} de {inicio.strftime('%H:%M')} "
                 f"até {fim.strftime('%H:%M')}."
             )
-            
+
         else:
             logger.warning(
-                f"🚫 {self.nome} | Ocupação não registrada: {id_atividade_json} de {inicio.strftime('%H:%M')} "
+                f"🚫 {self.nome} | Ocupação não registrada: {nome_atividade} de {inicio.strftime('%H:%M')} "
                 f"até {fim.strftime('%H:%M')}. Motivo: {motivo}"
             )
 
@@ -197,9 +201,9 @@ class Funcionario:
         logger.info("==============================================")
         
         for ocupacao in self.ocupacoes:
-            id_ordem, id_pedido, atividade_json_id, inicio, fim = ocupacao
+            id_ordem, id_pedido, atividade_json_id, nome_atividade, inicio, fim = ocupacao
             logger.info(
-                f"🗓️ Ocupação: Ordem {id_ordem}, Pedido {id_pedido}, Atividade {atividade_json_id} "
+                f"🗓️ Ocupação: Ordem {id_ordem}, Pedido {id_pedido}, {nome_atividade} "
                 f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}"
             )
 
@@ -218,3 +222,146 @@ class Funcionario:
                 print(f"  • {dia}")
         else:
             print("  Nenhuma folga registrada nesse período.")
+
+    # ==========================================================
+    # 📊 Contabilização de Horas
+    # ==========================================================
+    def calcular_horas_por_dia(self, data_inicio: date = None, data_fim: date = None) -> dict:
+        """
+        Calcula as horas trabalhadas por dia em um período específico.
+
+        Args:
+            data_inicio: Data início do período (opcional - se não fornecida, usa todas as ocupações)
+            data_fim: Data fim do período (opcional - se não fornecida, usa todas as ocupações)
+
+        Returns:
+            dict: {data: {'horas': float, 'atividades': [{'nome': str, 'horas': float}]}}
+        """
+        horas_por_dia = {}
+
+        for ocupacao in self.ocupacoes:
+            id_ordem, id_pedido, atividade_json_id, nome_atividade, inicio, fim = ocupacao
+
+            data_ocupacao = inicio.date()
+
+            # Filtrar por período se especificado
+            if data_inicio and data_ocupacao < data_inicio:
+                continue
+            if data_fim and data_ocupacao > data_fim:
+                continue
+
+            # Calcular duração em horas
+            duracao = fim - inicio
+            horas = duracao.total_seconds() / 3600
+
+            # Inicializar dia se não existir
+            if data_ocupacao not in horas_por_dia:
+                horas_por_dia[data_ocupacao] = {
+                    'horas': 0.0,
+                    'atividades': []
+                }
+
+            # Adicionar horas e atividade
+            horas_por_dia[data_ocupacao]['horas'] += horas
+            horas_por_dia[data_ocupacao]['atividades'].append({
+                'id_atividade': atividade_json_id,
+                'nome': nome_atividade,
+                'horas': round(horas, 2),
+                'inicio': inicio.strftime('%H:%M'),
+                'fim': fim.strftime('%H:%M'),
+                'ordem': id_ordem,
+                'pedido': id_pedido
+            })
+
+        # Arredondar total de horas por dia
+        for data in horas_por_dia:
+            horas_por_dia[data]['horas'] = round(horas_por_dia[data]['horas'], 2)
+
+        return horas_por_dia
+
+    def obter_total_horas_periodo(self, data_inicio: date = None, data_fim: date = None) -> float:
+        """
+        Obtém o total de horas trabalhadas em um período.
+
+        Args:
+            data_inicio: Data início do período (opcional)
+            data_fim: Data fim do período (opcional)
+
+        Returns:
+            float: Total de horas trabalhadas no período
+        """
+        horas_por_dia = self.calcular_horas_por_dia(data_inicio, data_fim)
+        return sum(dia['horas'] for dia in horas_por_dia.values())
+
+    def obter_media_horas_diarias(self, data_inicio: date = None, data_fim: date = None) -> float:
+        """
+        Calcula a média de horas trabalhadas por dia no período.
+
+        Args:
+            data_inicio: Data início do período (opcional)
+            data_fim: Data fim do período (opcional)
+
+        Returns:
+            float: Média de horas por dia trabalhado
+        """
+        horas_por_dia = self.calcular_horas_por_dia(data_inicio, data_fim)
+        if not horas_por_dia:
+            return 0.0
+
+        total_horas = sum(dia['horas'] for dia in horas_por_dia.values())
+        dias_trabalhados = len(horas_por_dia)
+
+        return round(total_horas / dias_trabalhados, 2) if dias_trabalhados > 0 else 0.0
+
+    def gerar_relatorio_horas(self, data_inicio: date = None, data_fim: date = None) -> str:
+        """
+        Gera um relatório detalhado das horas trabalhadas por dia.
+
+        Args:
+            data_inicio: Data início do período (opcional)
+            data_fim: Data fim do período (opcional)
+
+        Returns:
+            str: Relatório formatado em texto
+        """
+        horas_por_dia = self.calcular_horas_por_dia(data_inicio, data_fim)
+
+        if not horas_por_dia:
+            return f"📊 {self.nome}: Nenhuma ocupação registrada no período especificado."
+
+        relatorio = []
+        relatorio.append("=" * 60)
+        relatorio.append(f"📊 RELATÓRIO DE HORAS - {self.nome}")
+        relatorio.append("=" * 60)
+
+        # Período
+        if data_inicio or data_fim:
+            periodo_inicio = data_inicio.strftime('%d/%m/%Y') if data_inicio else "início"
+            periodo_fim = data_fim.strftime('%d/%m/%Y') if data_fim else "fim"
+            relatorio.append(f"📅 Período: {periodo_inicio} até {periodo_fim}")
+
+        # Totais
+        total_horas = self.obter_total_horas_periodo(data_inicio, data_fim)
+        media_diaria = self.obter_media_horas_diarias(data_inicio, data_fim)
+        dias_trabalhados = len(horas_por_dia)
+
+        relatorio.append(f"⏰ Total de horas: {total_horas}h")
+        relatorio.append(f"📈 Média diária: {media_diaria}h")
+        relatorio.append(f"📆 Dias trabalhados: {dias_trabalhados}")
+        relatorio.append("")
+
+        # Detalhes por dia
+        relatorio.append("📋 DETALHAMENTO POR DIA:")
+        for data in sorted(horas_por_dia.keys()):
+            dia_info = horas_por_dia[data]
+            relatorio.append(f"\n📅 {data.strftime('%A, %d/%m/%Y')} - {dia_info['horas']}h:")
+
+            for atividade in dia_info['atividades']:
+                relatorio.append(
+                    f"   • {atividade['nome']} ({atividade['inicio']}-{atividade['fim']}) "
+                    f"- {atividade['horas']}h | O:{atividade['ordem']} P:{atividade['pedido']}"
+                )
+
+        relatorio.append("\n" + "=" * 60)
+
+        return "\n".join(relatorio)

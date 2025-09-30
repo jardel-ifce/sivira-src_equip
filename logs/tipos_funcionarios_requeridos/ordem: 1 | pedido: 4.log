@@ -1,0 +1,63 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 4
+Iniciado em: 30/09/2025 10:36:41
+================================================================================
+
+🔸 ATIVIDADE 10048: retirada_de_paes_baguete_da_coccao
+   ⏰ Horário: 06:57 [26/06/2025] - 07:00 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10046: corte_de_pestana_para_paes_baguete
+   ⏰ Horário: 06:33 [26/06/2025] - 06:37 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10044: preparo_de_pao_baguete_para_fermentacao
+   ⏰ Horário: 04:00 [26/06/2025] - 04:03 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10043: modelagem_de_paes_baguete
+   ⏰ Horário: 03:40 [26/06/2025] - 04:00 [26/06/2025]
+   👥 Funcionários necessários: 3
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10042: divisao_de_massas_para_pao_baguete
+   ⏰ Horário: 03:32 [26/06/2025] - 03:40 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10041: pesagem_de_massas_para_pao_baguete
+   ⏰ Horário: 03:26 [26/06/2025] - 03:32 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20021: mistura_de_massas_suaves
+   ⏰ Horário: 03:19 [26/06/2025] - 03:26 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 30/09/2025 10:36:41
+================================================================================

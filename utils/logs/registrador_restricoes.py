@@ -12,6 +12,7 @@ import os
 from datetime import datetime
 from typing import Dict, Any, List
 from utils.logs.logger_factory import setup_logger
+from utils.mapeamento.mapeador_itens import mapeador_itens
 
 logger = setup_logger("RegistradorRestricoes")
 
@@ -45,6 +46,7 @@ class RegistradorRestricoes:
     ):
         """
         Registra uma alocação que foi feita abaixo da capacidade mínima.
+        O nome do item é obtido automaticamente através do mapeamento do id_item.
 
         Args:
             id_ordem: ID da ordem
@@ -69,11 +71,15 @@ class RegistradorRestricoes:
         # Carregar restrições existentes ou criar novo arquivo
         restricoes_data = self._carregar_restricoes_existentes(arquivo_restricoes)
 
+        # Buscar nome do item dinamicamente
+        nome_item = mapeador_itens.obter_nome_item(id_item)
+
         # Criar registro da nova restrição
         nova_restricao = {
             "id_atividade": id_atividade,
             "id_pedido": id_pedido,
             "id_item": id_item,
+            "nome_item": nome_item,
             "equipamento": equipamento_nome,
             "status": "PEDIDO_COM_RESTRICAO",
             "capacidade_atual": capacidade_atual,

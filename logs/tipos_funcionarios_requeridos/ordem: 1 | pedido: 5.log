@@ -1,0 +1,56 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 5
+Iniciado em: 30/09/2025 10:36:41
+================================================================================
+
+🔸 ATIVIDADE 10057: retirada_de_paes_tranca_de_queijo_finos_da_coccao
+   ⏰ Horário: 06:57 [26/06/2025] - 07:00 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10055: preparo_de_paes_tranca_de_queijo_finos_para_coccao
+   ⏰ Horário: 06:33 [26/06/2025] - 06:37 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10053: preparo_de_pao_tranca_de_queijo_finos_para_fermentacao
+   ⏰ Horário: 05:00 [26/06/2025] - 05:03 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10052: modelagem_e_recheio_de_paes_tranca_de_queijo_finos
+   ⏰ Horário: 04:50 [26/06/2025] - 05:00 [26/06/2025]
+   👥 Funcionários necessários: 3
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10051: pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos
+   ⏰ Horário: 04:44 [26/06/2025] - 04:50 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20021: mistura_de_massas_suaves
+   ⏰ Horário: 04:37 [26/06/2025] - 04:44 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
+   🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
+   📅 Registrado: 10:36:41
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 30/09/2025 10:36:41
+================================================================================

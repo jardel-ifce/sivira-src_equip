@@ -1,0 +1,56 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 9
+Iniciado em: 30/09/2025 10:36:41
+================================================================================
+
+🔸 ATIVIDADE 10716: fritura_de_coxinhas_de_queijos_finos
+   ⏰ Horário: 07:52 [26/06/2025] - 07:56 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10715: preparacao_para_fritura_de_coxinha_de_queijos_finos
+   ⏰ Horário: 07:49 [26/06/2025] - 07:52 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10713: preparacao_para_refrigeracao_de_coxinha_de_queijos_finos
+   ⏰ Horário: 06:46 [26/06/2025] - 06:49 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10712: empanamento_de_coxinhas_de_queijos_finos
+   ⏰ Horário: 06:43 [26/06/2025] - 06:46 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10711: modelagem_e_recheio_de_coxinhas_de_queijos_finos
+   ⏰ Horário: 06:23 [26/06/2025] - 06:43 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
+   ⏰ Horário: 06:11 [26/06/2025] - 06:23 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 30/09/2025 10:36:41
+================================================================================

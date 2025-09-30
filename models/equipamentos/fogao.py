@@ -281,7 +281,7 @@ class Fogao(Equipamento):
         # Se temos bocas disponíveis, verifica restrições de capacidade
         for boca_index in bocas_disponiveis:
             # Verifica se pode processar pelo menos a capacidade mínima
-            # ✅ Sempre verifica disponibilidade (bypass implícito com registro de restrições)
+            # ✅ Sempre verifica disponibilidade
             if self.capacidade_por_boca_gramas_min > 0:
                 return True
 
@@ -538,7 +538,7 @@ class Fogao(Equipamento):
             id_ordem, id_pedido, id_atividade
         ):
             # ✅ Ainda assim aceita a alocação (sistema implícito)
-            logger.debug(f"🔧 {self.nome} - Restrição registrada mas alocação aceita (bypass implícito)")
+            logger.debug(f"🔧 {self.nome} - Restrição registrada mas alocação aceita")
             # Nota: O método já registrou a restrição, agora continuamos com a alocação
 
         # Validação final de disponibilidade da boca específica

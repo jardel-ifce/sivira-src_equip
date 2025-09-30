@@ -554,11 +554,12 @@ def registrar_log_equipamentos(id_ordem: int, id_pedido: int, id_atividade: int,
                 )
                 arq.write(linha)
 
-def registrar_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int, 
-                               funcionarios_alocados: list[tuple], nome_item: str, 
-                               nome_atividade: str, inicio: datetime, fim: datetime):
+def registrar_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int,
+                               funcionarios_alocados: list[tuple], nome_item: str,
+                               nome_atividade: str, inicio: datetime, fim: datetime,
+                               tipos_necessarios: list = None):
     """
-    🔥 Registra os logs de funcionários.
+    🔥 Registra os logs de funcionários com indicadores de status.
     """
     if id_pedido:
         os.makedirs("logs/funcionarios", exist_ok=True)
@@ -567,12 +568,28 @@ def registrar_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int,
             str_inicio = inicio.strftime('%H:%M') + f" [{inicio.strftime('%d/%m')}]"
             str_fim = fim.strftime('%H:%M') + f" [{fim.strftime('%d/%m')}]"
 
-            for funcionario in funcionarios_alocados:
+            if funcionarios_alocados:
+                # Funcionários foram alocados com sucesso
+                for funcionario in funcionarios_alocados:
+                    linha = (
+                        f"{id_ordem} | "
+                        f"{id_pedido} | "
+                        f"{id_atividade} | {nome_item} | {nome_atividade} | "
+                        f"{funcionario.nome} ✅ | {str_inicio} | {str_fim} \n"
+                    )
+                    arq.write(linha)
+            else:
+                # Nenhum funcionário disponível
+                tipos_str = ""
+                if tipos_necessarios:
+                    tipos_names = [tipo.name for tipo in tipos_necessarios]
+                    tipos_str = f" (Tipos necessários: {', '.join(tipos_names)})"
+
                 linha = (
                     f"{id_ordem} | "
                     f"{id_pedido} | "
                     f"{id_atividade} | {nome_item} | {nome_atividade} | "
-                    f"{funcionario.nome} | {str_inicio} | {str_fim} \n"
+                    f"Funcionário Indisponível ❌{tipos_str} | {str_inicio} | {str_fim} \n"
                 )
                 arq.write(linha)
                 
@@ -655,6 +672,49 @@ def remover_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int):
         for linha in linhas:
             if f"{id_atividade} |" not in linha:
                 f.write(linha)
+
+def apagar_todos_logs_funcionarios():
+    """
+    🗑️ Apaga TODOS os logs de funcionários da pasta logs/funcionarios/.
+
+    Esta função remove todos os arquivos .log da pasta de funcionários,
+    útil para limpar completamente as alocações antes de uma nova execução.
+
+    Returns:
+        int: Número de arquivos removidos
+    """
+    pasta_funcionarios = "logs/funcionarios"
+
+    if not os.path.exists(pasta_funcionarios):
+        logger.info(f"📁 Pasta {pasta_funcionarios} não existe")
+        return 0
+
+    arquivos_removidos = 0
+
+    try:
+        # Listar todos os arquivos .log na pasta
+        arquivos = [f for f in os.listdir(pasta_funcionarios) if f.endswith('.log')]
+
+        if not arquivos:
+            logger.info(f"📄 Nenhum arquivo .log encontrado em {pasta_funcionarios}")
+            return 0
+
+        # Remover cada arquivo
+        for arquivo in arquivos:
+            caminho = os.path.join(pasta_funcionarios, arquivo)
+            try:
+                os.remove(caminho)
+                logger.info(f"🗑️ Removido: {arquivo}")
+                arquivos_removidos += 1
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao remover {arquivo}: {e}")
+
+        logger.info(f"🧹 Limpeza concluída: {arquivos_removidos} arquivos removidos de {pasta_funcionarios}")
+
+    except Exception as e:
+        logger.error(f"❌ Erro ao acessar pasta {pasta_funcionarios}: {e}")
+
+    return arquivos_removidos
 
 def _gerar_descricao_erro_legivel(id_ordem: int, id_pedido: int, excecao: Exception) -> str:
     """

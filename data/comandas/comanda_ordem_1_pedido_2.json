@@ -4,29 +4,29 @@
   "data_reserva": "2025-06-23",
   "itens": [
     {
-      "id_item": 1059,
-      "nome": "Folhado de carne de sol",
+      "id_item": 1002,
+      "nome": "Pão Hambúrguer",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 10,
+      "quantidade_necessaria": 120,
       "itens_necessarios": [
         {
-          "id_item": 2004,
-          "nome": "Massa para Folhados",
+          "id_item": 2002,
+          "nome": "Massa Suave",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 500.0,
+          "quantidade_necessaria": 7800.0,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 349.65,
+              "quantidade_necessaria": 4634.58,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 10,
-              "nome": "Água mineral",
-              "quantidade_necessaria": 13.99,
+              "id_item": 4,
+              "nome": "Gelo para alimentos",
+              "quantidade_necessaria": 2549.02,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -34,7 +34,15 @@
             {
               "id_item": 5,
               "nome": "Sal refinado",
-              "quantidade_necessaria": 6.99,
+              "quantidade_necessaria": 46.35,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 6,
+              "nome": "Fermento biológico seco",
+              "quantidade_necessaria": 92.69,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -42,84 +50,28 @@
             {
               "id_item": 13,
               "nome": "Açúcar cristal",
-              "quantidade_necessaria": 6.99,
+              "quantidade_necessaria": 231.73,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 15,
-              "nome": "Gordura hidrogenada",
-              "quantidade_necessaria": 34.97,
+              "id_item": 14,
+              "nome": "Margarina com sal",
+              "quantidade_necessaria": 231.73,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 16,
-              "nome": "Margarina para folhados",
-              "quantidade_necessaria": 87.41,
+              "id_item": 7,
+              "nome": "Aditivo em pasta",
+              "quantidade_necessaria": 13.9,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             }
           ]
-        },
-        {
-          "id_item": 2008,
-          "nome": "Carne de sol refogada",
-          "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 450.0,
-          "itens_necessarios": [
-            {
-              "id_item": 27,
-              "nome": "Carne de sol cozida pronta",
-              "quantidade_necessaria": 300.0,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 28,
-              "nome": "Cebola roxa",
-              "quantidade_necessaria": 60.0,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 29,
-              "nome": "Manteiga da terra",
-              "quantidade_necessaria": 60.0,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 30,
-              "nome": "Cheiro verde",
-              "quantidade_necessaria": 15.0,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            },
-            {
-              "id_item": 31,
-              "nome": "Pimenta de cheiro",
-              "quantidade_necessaria": 15.0,
-              "unidade_medida": "GRAMAS",
-              "tipo_item": "INSUMO",
-              "politica_producao": "ESTOCADO"
-            }
-          ]
-        },
-        {
-          "id_item": 33,
-          "nome": "Ovo de Galinha",
-          "quantidade_necessaria": 50.0,
-          "unidade_medida": "GRAMAS",
-          "tipo_item": "INSUMO",
-          "politica_producao": "ESTOCADO"
         }
       ]
     }

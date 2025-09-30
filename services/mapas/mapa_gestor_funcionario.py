@@ -1,4 +1,4 @@
-from services.gestor_funcionario import GestorFuncionario
+from services.gestores.funcionarios.gestor_funcionario import GestorFuncionario
 from factory.fabrica_funcionarios import (
     funcionario_1,
     funcionario_2,

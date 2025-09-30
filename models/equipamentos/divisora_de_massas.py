@@ -139,9 +139,9 @@ class DivisoraDeMassas(Equipamento):
         """Valida se a quantidade está dentro da capacidade da divisora."""
         if quantidade_gramas < self.capacidade_gramas_min:
             logger.warning(
-                f"⚠️ Quantidade {quantidade_gramas}g abaixo da capacidade mínima ({self.capacidade_gramas_min}g) da {self.nome}."
+                f"⚠️ Quantidade {quantidade_gramas}g abaixo da capacidade mínima ({self.capacidade_gramas_min}g) da {self.nome} - ACEITO (registrar restrição se necessário)."
             )
-            return False
+            # Aceita a alocação mesmo abaixo do mínimo (padrão atual do sistema)
         if quantidade_gramas > self.capacidade_gramas_max:
             logger.warning(
                 f"⚠️ Quantidade {quantidade_gramas}g acima da capacidade máxima ({self.capacidade_gramas_max}g) da {self.nome}."

@@ -11,7 +11,8 @@ from services.rollback.rollback import rollback_equipamentos, rollback_funcionar
 from models.ficha_tecnica.ficha_tecnica_modular import FichaTecnicaModular
 from enums.producao.tipo_item import TipoItem
 from enums.producao.politica_producao import PoliticaProducao
-from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
+from services.gestores.almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
+from utils.logs.registrador_funcionarios import registrador_funcionarios
 from utils.logs.logger_factory import setup_logger
 from utils.logs.gerenciador_logs import (
     registrar_erro_execucao_pedido, 
@@ -27,7 +28,7 @@ from utils.logs.timing_exceptions import (
 )
 from utils.logs.timing_logger import timing_logger
 from utils.logs.formatador_timing_limpo import reformatar_erro_timing_para_novo_formato
-from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva as gerar_comanda_reserva_modulo
+from services.gestores.comandas.gestor_comandas import gerar_comanda_reserva as gerar_comanda_reserva_modulo
 
 logger = setup_logger("PedidoDeProducao")
 
@@ -135,7 +136,7 @@ class PedidoDeProducao:
         quantidade: int,
         inicio_jornada: datetime,
         fim_jornada: datetime,
-        todos_funcionarios: Optional[List[Funcionario]] = None,
+        # Removido: todos_funcionarios (sistema apenas registra tipos necessários)
         gestor_almoxarifado: Optional[GestorAlmoxarifado] = None
     ):
         # =============================================================================
@@ -154,10 +155,13 @@ class PedidoDeProducao:
         self.fim_jornada = fim_jornada
 
         # =============================================================================
-        #                           FUNCIONÁRIOS
+        #                    REGISTRO DE TIPOS DE FUNCIONÁRIOS
         # =============================================================================
-        self.todos_funcionarios = todos_funcionarios or []
-        self.funcionarios_elegiveis: List[Funcionario] = []
+        # Sistema apenas registra tipos necessários, sem alocação real
+        self.funcionarios_elegiveis = []  # Lista vazia - sistema apenas registra tipos
+
+        # 📝 REGISTRO DE FUNCIONÁRIOS: Registra requisitos diretamente no log
+        logger.info(f"📋 Sistema de registro de funcionários ativo para pedido {id_pedido}")
 
         # =============================================================================
         #                        ESTRUTURA TÉCNICA
@@ -181,7 +185,6 @@ class PedidoDeProducao:
         # =============================================================================
         self.atividades_executadas = []  # Atividades já executadas com sucesso
         self.pedido_cancelado = False   # Flag para indicar se pedido foi cancelado
-        self.bypass_capacidade = None  # Set de TipoEquipamento para ignorar validação de capacidade
         
         # Log de inicialização
         logger.info(
@@ -191,19 +194,6 @@ class PedidoDeProducao:
             f"Período: {self.inicio_jornada.strftime('%d/%m %H:%M')} - {self.fim_jornada.strftime('%d/%m %H:%M')}"
         )
     
-    def configurar_bypass_capacidade(self, tipos_bypass):
-        """
-        Configura quais tipos de equipamentos devem ignorar validação de capacidade.
-        
-        Args:
-            tipos_bypass: Set de TipoEquipamento para ignorar, ou None para validar todos
-        """
-        self.bypass_capacidade = tipos_bypass
-        if tipos_bypass:
-            logger.info(f"🔧 BYPASS: Pedido {self.id_pedido} configurado para ignorar validação de capacidade")
-            logger.info(f"📋 Tipos com bypass: {[tipo.name for tipo in tipos_bypass]}")
-        else:
-            logger.info(f"✅ VALIDAÇÃO: Pedido {self.id_pedido} configurado para validar capacidade normalmente")
 
     # =============================================================================
     #                        MONTAGEM DA ESTRUTURA
@@ -220,12 +210,8 @@ class PedidoDeProducao:
                 quantidade_requerida=self.quantidade
             )
             
-            # Filtrar funcionários considerando produto principal e subprodutos
-            self.funcionarios_elegiveis = self._filtrar_funcionarios_abrangente()
-            
-            logger.info(
-                f"Estrutura montada: {len(self.funcionarios_elegiveis)} funcionários elegíveis"
-            )
+            # Sistema apenas registra tipos necessários (sem funcionários reais)
+            logger.info(f"Estrutura montada: Sistema de registro de tipos de funcionários ativo")
             
         except Exception as e:
             logger.error(f"Erro ao montar estrutura do pedido {self.id_pedido}: {e}")
@@ -615,17 +601,16 @@ class PedidoDeProducao:
                         tipo_item=ficha_modular.tipo_item,
                         quantidade=ficha_modular.quantidade_requerida,  # Quantidade total (sem subtração)
                         id_pedido=self.id_pedido,
-                        id_produto=self.id_produto,
-                        funcionarios_elegiveis=self.funcionarios_elegiveis,
+                        id_produto=dados_gerais.get("id_item", self.id_produto),  # Usar id_item do subproduto se disponível
+                        funcionarios_elegiveis=self.funcionarios_elegiveis,  # Lista vazia - sistema apenas registra tipos
                         peso_unitario=ficha_modular.peso_unitario,
                         dados=dados_atividade,
                         nome_item=nome_item_final
                     )
                     
-                    # Configura bypass de capacidade na atividade se habilitado no pedido
-                    if self.bypass_capacidade:
-                        atividade.configurar_bypass_capacidade(self.bypass_capacidade)
-                        logger.info(f"🔧 BYPASS propagado para atividade {atividade.id_atividade} ({atividade.nome_item})")
+
+                    # 📝 SISTEMA DE REGISTRO: Atividades registram diretamente no log
+
                     self.atividades_modulares.append(atividade)
                     atividades_criadas += 1
                     
@@ -827,10 +812,30 @@ class PedidoDeProducao:
                 f"Pedido {self.id_pedido} executado com sucesso! "
                 f"Total de atividades executadas: {len(self.atividades_executadas)}"
             )
-            
+
+            # 📝 FINALIZAÇÃO DO LOG DE FUNCIONÁRIOS
+            try:
+                registrador_funcionarios.finalizar_log(
+                    id_ordem=self.id_ordem,
+                    id_pedido=self.id_pedido
+                )
+                logger.info(f"📄 Log de funcionários finalizado automaticamente")
+            except Exception as save_error:
+                logger.warning(f"⚠️ Falha ao finalizar log de funcionários: {save_error}")
+
         except Exception as e:
             logger.error(f"Falha na execução do pedido {self.id_pedido}: {e}")
-            
+
+            # 📝 FINALIZAÇÃO DO LOG MESMO COM FALHA
+            try:
+                registrador_funcionarios.finalizar_log(
+                    id_ordem=self.id_ordem,
+                    id_pedido=self.id_pedido
+                )
+                logger.info(f"📄 Log de funcionários finalizado mesmo com falha na execução")
+            except Exception as save_error:
+                logger.warning(f"⚠️ Falha ao finalizar log após erro de execução: {save_error}")
+
             # CANCELAMENTO EM CASCATA
             self._cancelar_pedido_completo(str(e))
             raise
@@ -1731,7 +1736,6 @@ class PedidoDeProducao:
         logger.info(f"Executando rollback completo do pedido {self.id_pedido} da ordem {self.id_ordem}")
 
         equipamentos_liberados = 0
-        funcionarios_liberados = 0
 
         try:
             # Liberar equipamentos de todas as atividades
@@ -1745,22 +1749,12 @@ class PedidoDeProducao:
                     )
                     equipamentos_liberados += len(atividade.equipamentos_selecionados)
 
-            # Liberar funcionários
-            if self.funcionarios_elegiveis:
-                rollback_funcionarios(
-                    funcionarios_alocados=self.funcionarios_elegiveis,
-                    id_ordem=self.id_ordem,
-                    id_pedido=self.id_pedido
-                )
-                funcionarios_liberados = len(self.funcionarios_elegiveis)
+            # Sistema não aloca funcionários reais (apenas registra tipos necessários)
 
             # Limpar logs
             apagar_logs_por_pedido_e_ordem(self.id_ordem, self.id_pedido)
 
-            logger.info(
-                f"Rollback concluído: "
-                f"{equipamentos_liberados} equipamentos e {funcionarios_liberados} funcionários liberados"
-            )
+            logger.info(f"Rollback concluído: {equipamentos_liberados} equipamentos liberados")
             
         except Exception as e:
             logger.error(f"Erro durante rollback: {e}")
@@ -1934,7 +1928,7 @@ class PedidoDeProducao:
             "total_atividades": len(self.atividades_modulares),
             "atividades_alocadas": atividades_alocadas,
             "atividades_executadas": len(self.atividades_executadas),
-            "funcionarios_elegiveis": len(self.funcionarios_elegiveis),
+            # Sistema apenas registra tipos (sem funcionários reais)
             "equipamentos_alocados": len(self.equipamentos_alocados_no_pedido),
             "tem_gestor_almoxarifado": self.gestor_almoxarifado is not None,
             "ficha_tecnica_montada": self.ficha_tecnica_modular is not None,

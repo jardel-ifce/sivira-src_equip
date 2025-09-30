@@ -1,0 +1,84 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 7
+Iniciado em: 30/09/2025 10:36:41
+================================================================================
+
+🔸 ATIVIDADE 10696: fritura_de_coxinhas_de_carne_de_sol
+   ⏰ Horário: 07:52 [26/06/2025] - 07:56 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10695: preparacao_para_fritura_de_coxinha_de_carne_de_sol
+   ⏰ Horário: 07:49 [26/06/2025] - 07:52 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10693: preparacao_para_refrigeracao_de_coxinha_de_carne_de_sol
+   ⏰ Horário: 06:46 [26/06/2025] - 06:49 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10692: empanamento_de_coxinhas_de_carne_de_sol
+   ⏰ Horário: 06:43 [26/06/2025] - 06:46 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10691: modelagem_e_recheio_de_coxinhas_de_carne_de_sol
+   ⏰ Horário: 06:23 [26/06/2025] - 06:43 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
+   ⏰ Horário: 06:11 [26/06/2025] - 06:23 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20084: armazenamento_sob_temperatura_para_carne_de_sol_refogada_temp_menos_17
+   ⏰ Horário: 06:20 [26/06/2025] - 06:23 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: ALMOXARIFE
+   🎯 Prioridades (FIPs): ALMOXARIFE:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20083: coccao_de_carne_de_sol_cozida_pronta
+   ⏰ Horário: 05:40 [26/06/2025] - 06:20 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20082: preparo_para_armazenamento_de_carne_de_sol_refogada
+   ⏰ Horário: 05:30 [26/06/2025] - 05:40 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20081: armazenamento_sob_temperatura_para_carne_de_sol_refogada
+   ⏰ Horário: 05:27 [26/06/2025] - 05:30 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 10:36:41
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 30/09/2025 10:36:41
+================================================================================

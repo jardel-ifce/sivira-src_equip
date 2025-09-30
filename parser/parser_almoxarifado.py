@@ -6,7 +6,7 @@ from enums.producao.politica_producao import PoliticaProducao
 from enums.producao.unidade_medida import UnidadeMedida
 from models.almoxarifado.item_almoxarifado import ItemAlmoxarifado
 from models.almoxarifado.almoxarifado import Almoxarifado
-from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
+from services.gestores.almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
 from utils.logs.logger_factory import setup_logger
 
 logger = setup_logger("ParserAlmoxarifado")

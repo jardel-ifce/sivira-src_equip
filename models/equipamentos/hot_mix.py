@@ -303,22 +303,16 @@ class HotMix(Equipamento):
     def validar_capacidade(
         self,
         quantidade: int,
-        bypass: bool = False,
         contexto_restricao: dict = None
     ) -> bool:
         """
-        🆕 NOVA LÓGICA: Valida capacidade e registra restrições quando abaixo do mínimo.
+        Valida capacidade e registra restrições quando abaixo do mínimo.
+        Agora todos os equipamentos permitem alocação mesmo abaixo do mínimo, registrando restrições.
 
         Args:
             quantidade: Quantidade a ser validada
-            bypass: Se True, ignora todas as validações
             contexto_restricao: Dados para registrar restrição (ordem, pedido, atividade, etc.)
         """
-        # 🚨 DEBUG: Log todas as chamadas para investigar
-        logger.info(f"🔍 DEBUG: validar_capacidade chamado - quantidade={quantidade}g, bypass={bypass}, contexto={bool(contexto_restricao)}")
-        if bypass:
-            logger.info(f"🔧 BYPASS: Ignorando validação de capacidade para {quantidade}g no {self.nome}")
-            return True
 
         # Verificar se excede capacidade máxima (limite rígido)
         if quantidade > self.capacidade_gramas_max:

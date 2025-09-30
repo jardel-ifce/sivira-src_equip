@@ -22,11 +22,10 @@ from pathlib import Path
 # Imports do sistema de produção
 from models.atividades.pedido_de_producao import PedidoDeProducao
 from models.almoxarifado.almoxarifado import Almoxarifado
-from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
-from factory.fabrica_funcionarios import funcionarios_disponiveis
+from services.gestores.almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
 from parser.carregador_json_itens_almoxarifado import carregar_itens_almoxarifado
 from utils.logs.gerenciador_logs import limpar_todos_os_logs
-from services.gestor_comandas.gestor_comandas import gerar_comanda_reserva
+from services.gestores.comandas.gestor_comandas import gerar_comanda_reserva
 from utils.comandas.limpador_comandas import apagar_todas_as_comandas
 from utils.ordenador.ordenador_pedidos import ordenar_pedidos_por_restricoes
 from enums.producao.tipo_item import TipoItem
@@ -260,7 +259,6 @@ class SistemaDeProducao:
                 quantidade=quantidade,
                 inicio_jornada=inicio_jornada,
                 fim_jornada=fim_jornada,
-                todos_funcionarios=funcionarios_disponiveis,
                 gestor_almoxarifado=self.gestor_almoxarifado
             )
             

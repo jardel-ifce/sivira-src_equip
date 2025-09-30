@@ -4,29 +4,29 @@
   "data_reserva": "2025-06-23",
   "itens": [
     {
-      "id_item": 1074,
-      "nome": "Folhado de queijos finos",
+      "id_item": 1004,
+      "nome": "Pão Baguete",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 12,
+      "quantidade_necessaria": 20,
       "itens_necessarios": [
         {
-          "id_item": 2004,
-          "nome": "Massa para Folhados",
+          "id_item": 2002,
+          "nome": "Massa Suave",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 600.0,
+          "quantidade_necessaria": 1295.72,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 419.58,
+              "quantidade_necessaria": 769.89,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 10,
-              "nome": "Água mineral",
-              "quantidade_necessaria": 16.78,
+              "id_item": 4,
+              "nome": "Gelo para alimentos",
+              "quantidade_necessaria": 423.44,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -34,7 +34,15 @@
             {
               "id_item": 5,
               "nome": "Sal refinado",
-              "quantidade_necessaria": 8.39,
+              "quantidade_necessaria": 7.7,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 6,
+              "nome": "Fermento biológico seco",
+              "quantidade_necessaria": 15.4,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -42,23 +50,23 @@
             {
               "id_item": 13,
               "nome": "Açúcar cristal",
-              "quantidade_necessaria": 8.39,
+              "quantidade_necessaria": 38.49,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 15,
-              "nome": "Gordura hidrogenada",
-              "quantidade_necessaria": 41.96,
+              "id_item": 14,
+              "nome": "Margarina com sal",
+              "quantidade_necessaria": 38.49,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 16,
-              "nome": "Margarina para folhados",
-              "quantidade_necessaria": 104.9,
+              "id_item": 7,
+              "nome": "Aditivo em pasta",
+              "quantidade_necessaria": 2.31,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -66,15 +74,9 @@
           ]
         },
         {
-          "id_item": 2010,
-          "nome": "Creme de Queijo",
-          "politica_producao": "ESTOCADO",
-          "quantidade_necessaria": 540.0
-        },
-        {
-          "id_item": 33,
-          "nome": "Ovo de Galinha",
-          "quantidade_necessaria": 60.0,
+          "id_item": 50,
+          "nome": "Gergelim Branco",
+          "quantidade_necessaria": 4.28,
           "unidade_medida": "GRAMAS",
           "tipo_item": "INSUMO",
           "politica_producao": "ESTOCADO"

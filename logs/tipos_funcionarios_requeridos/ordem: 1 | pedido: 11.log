@@ -1,0 +1,91 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 11
+Iniciado em: 30/09/2025 10:36:41
+================================================================================
+
+🔸 ATIVIDADE 10594: preparo_de_folhado_de_carne_de_sol_para_coccao
+   ⏰ Horário: 07:36 [26/06/2025] - 07:40 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10592: preparacao_para_refrigeracao_de_folhado_de_carne_de_sol
+   ⏰ Horário: 06:33 [26/06/2025] - 06:36 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 10591: modelagem_e_recheio_de_folhado_de_carne_de_sol
+   ⏰ Horário: 06:13 [26/06/2025] - 06:33 [26/06/2025]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20045: armazenamento_sob_temperatura_para_massas_folhadas
+   ⏰ Horário: 06:08 [26/06/2025] - 06:13 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: ALMOXARIFE
+   🎯 Prioridades (FIPs): ALMOXARIFE:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20044: laminacao_2_de_massas_para_folhados
+   ⏰ Horário: 05:56 [26/06/2025] - 06:08 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20042: laminacao_1_de_massas_para_folhados
+   ⏰ Horário: 04:44 [26/06/2025] - 04:56 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20041: mistura_de_massas_para_folhados
+   ⏰ Horário: 04:34 [26/06/2025] - 04:44 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20084: armazenamento_sob_temperatura_para_carne_de_sol_refogada_temp_menos_17
+   ⏰ Horário: 06:10 [26/06/2025] - 06:13 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: ALMOXARIFE
+   🎯 Prioridades (FIPs): ALMOXARIFE:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20083: coccao_de_carne_de_sol_cozida_pronta
+   ⏰ Horário: 05:30 [26/06/2025] - 06:10 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20082: preparo_para_armazenamento_de_carne_de_sol_refogada
+   ⏰ Horário: 05:20 [26/06/2025] - 05:30 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 10:36:41
+
+🔸 ATIVIDADE 20081: armazenamento_sob_temperatura_para_carne_de_sol_refogada
+   ⏰ Horário: 05:17 [26/06/2025] - 05:20 [26/06/2025]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 10:36:41
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 30/09/2025 10:36:41
+================================================================================

@@ -6,7 +6,8 @@ from enums.funcionarios.tipo_profissional import TipoProfissional
 from factory import fabrica_equipamentos
 from models.funcionarios.funcionario import Funcionario
 from parser.carregador_json_atividades import buscar_dados_por_id_atividade
-from services.gestor_funcionarios.gestor_funcionarios import GestorFuncionarios
+from services.gestores.funcionarios.gestor_funcionarios import GestorFuncionarios
+from utils.logs.registrador_funcionarios import registrador_funcionarios
 from services.mapas.mapa_gestor_equipamento import MAPA_GESTOR
 from services.rollback.rollback import rollback_equipamentos, rollback_funcionarios
 from typing import List, Tuple, Optional
@@ -24,7 +25,7 @@ logger = setup_logger('Atividade_Modular')
 
 # Configurações globais
 TIPOS_SEM_QUANTIDADE = {TipoEquipamento.BANCADAS}
-FUNCIONARIOS_ATIVOS = False  # Flag para ativar/desativar alocação de funcionários
+# Configuração: Sistema apenas registra tipos de funcionários necessários (sem alocação real)
 
 
 class AtividadeModular:
@@ -51,7 +52,6 @@ class AtividadeModular:
         self.quantidade = quantidade
         self.peso_unitario = kwargs.get("peso_unitario")
         self.alocada = False
-        self.bypass_capacidade = None  # Set de TipoEquipamento para ignorar validação de capacidade
         
         # Log inicial mais informativo
         logger.info(
@@ -158,19 +158,6 @@ class AtividadeModular:
             logger.error(f"❌ Erro ao configurar funcionários para atividade {self.id_atividade}: {e}")
             raise
     
-    def configurar_bypass_capacidade(self, tipos_bypass):
-        """
-        Configura quais tipos de equipamentos devem ignorar validação de capacidade.
-        
-        Args:
-            tipos_bypass: Set de TipoEquipamento para ignorar, ou None para validar todos
-        """
-        self.bypass_capacidade = tipos_bypass
-        if tipos_bypass:
-            logger.info(f"🔧 BYPASS: Atividade {self.id_atividade} ({self.nome_atividade}) configurada para ignorar validação de capacidade")
-            logger.info(f"📋 Tipos com bypass: {[tipo.name for tipo in tipos_bypass]}")
-        else:
-            logger.info(f"✅ VALIDAÇÃO: Atividade {self.id_atividade} ({self.nome_atividade}) configurada para validar capacidade normalmente")
 
     def _configurar_equipamentos(self):
         """Configura todos os parâmetros relacionados aos equipamentos"""
@@ -499,13 +486,8 @@ class AtividadeModular:
                 f"{inicio_atividade.strftime('%H:%M')} - {fim_atividade.strftime('%H:%M')}"
             )
 
-            if FUNCIONARIOS_ATIVOS:
-                sucesso_funcionarios = self._alocar_funcionarios(inicio_atividade, fim_atividade)
-                if not sucesso_funcionarios:
-                    raise RuntimeError(
-                        f"❌ Não foi possível alocar os funcionários necessários "
-                        f"para a atividade {self.id_atividade}"
-                    )
+            # Apenas registrar requisito de funcionário (sem alocação real)
+            self._registrar_requisito_funcionario(inicio_atividade, fim_atividade)
 
             return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera, []
             
@@ -887,13 +869,8 @@ class AtividadeModular:
             
             self._registrar_sucesso_equipamentos(equipamentos_alocados, inicio_atividade, fim_atividade)
 
-            if FUNCIONARIOS_ATIVOS:
-                sucesso_funcionarios = self._alocar_funcionarios(inicio_atividade, fim_atividade)
-                if not sucesso_funcionarios:
-                    raise RuntimeError(
-                        f"❌ Não foi possível alocar os funcionários necessários "
-                        f"para a atividade {self.id_atividade}"
-                    )
+            # Registrar requisito de funcionário (apenas registro, sem alocação)
+            self._registrar_requisito_funcionario(inicio_atividade, fim_atividade)
 
             return True, inicio_atividade, fim_atividade, self.tempo_maximo_de_espera, equipamentos_alocados
             
@@ -997,83 +974,56 @@ class AtividadeModular:
     # Métodos específicos de alocação por tipo de equipamento
     def _alocar_camara(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.REFRIGERACAO_CONGELAMENTO)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_bancada(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.BANCADAS)
         return gestor.alocar(inicio, fim, self)
     
     def _alocar_fogao(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.FOGOES)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_batedeira(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.BATEDEIRAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_balanca(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.BALANCAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_forno(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.FORNOS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_fritadeira(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.FRITADEIRAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_misturadora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.MISTURADORAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_misturadora_com_coccao(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.MISTURADORAS_COM_COCCAO)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_armario_fermentacao(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.ARMARIOS_PARA_FERMENTACAO)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_modeladora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.MODELADORAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_divisora_boleadora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.DIVISORAS_BOLEADORAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
     def _alocar_embaladora(self, gestor, inicio, fim, **kwargs): 
         from enums.equipamentos.tipo_equipamento import TipoEquipamento
-        bypass = self._deve_ignorar_tipo(TipoEquipamento.EMBALADORAS)
         return gestor.alocar(inicio, fim, self, self.quantidade)
     
-    def _deve_ignorar_tipo(self, tipo_equipamento):
-        """
-        Verifica se deve ignorar validação de capacidade para um tipo específico de equipamento.
-        
-        Args:
-            tipo_equipamento: TipoEquipamento a ser verificado
-            
-        Returns:
-            bool: True se deve ignorar, False caso contrário
-        """
-        if self.bypass_capacidade and tipo_equipamento in self.bypass_capacidade:
-            logger.info(f"🔧 BYPASS ativo para {tipo_equipamento.name} na atividade {self.id_atividade}")
-            return True
-        return False
 
     # =============================================================================
     #                           UTILITÁRIOS
@@ -1091,6 +1041,38 @@ class AtividadeModular:
                     logger.warning(f"⚠️ Gestor {tipo.name} não possui método mostrar_agenda")
         except Exception as e:
             logger.warning(f"⚠️ Não foi possível mostrar agendas dos gestores: {e}")
+
+    def _registrar_requisito_funcionario(self, inicio: datetime, fim: datetime):
+        """
+        Registra requisito de funcionário diretamente no registrador.
+
+        Args:
+            inicio: Horário de início da atividade
+            fim: Horário de fim da atividade
+        """
+        try:
+            logger.info(f"🔍 CHAMADA: _registrar_requisito_funcionario para atividade {self.id_atividade}")
+            logger.info(f"🔍 CHECK: tipos_necessarios={self.tipos_necessarios}, qtd={self.qtd_profissionais_requeridos}")
+            # Só registrar se há funcionários necessários
+            if self.tipos_necessarios and self.qtd_profissionais_requeridos > 0:
+                # Registrar diretamente no registrador_funcionarios
+                registrador_funcionarios.registrar_requisito_funcionario(
+                    id_ordem=self.id_ordem,
+                    id_pedido=self.id_pedido,
+                    id_atividade=self.id_atividade,
+                    nome_atividade=self.nome_atividade,
+                    tipos_profissionais=self.tipos_necessarios,
+                    inicio=inicio,
+                    fim=fim,
+                    quantidade=self.qtd_profissionais_requeridos,
+                    fips=self.fips_profissionais_permitidos
+                )
+                logger.info(f"✅ Requisito de funcionário registrado para atividade {self.id_atividade}")
+            else:
+                logger.debug(f"ℹ️ Atividade {self.id_atividade} não requer funcionários")
+
+        except Exception as e:
+            logger.error(f"❌ Erro ao registrar requisito de funcionário para atividade {self.id_atividade}: {e}")
 
     def obter_resumo_alocacao(self) -> dict:
         """Retorna um resumo da alocação da atividade"""

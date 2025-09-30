@@ -14,8 +14,7 @@ import sys
 sys.path.append("/Users/jardelrodrigues/Desktop/SIVIRA/src_equip")  # ajuste para o seu caminho
 from models.atividades.pedido_de_producao import PedidoDeProducao
 from models.almoxarifado.almoxarifado import Almoxarifado
-from services.gestor_almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
-from factory.fabrica_funcionarios import funcionarios_disponiveis
+from services.gestores.almoxarifado.gestor_almoxarifado import GestorAlmoxarifado
 from parser.carregador_json_itens_almoxarifado import carregar_itens_almoxarifado
 from enums.producao.tipo_item import TipoItem
 
@@ -62,7 +61,6 @@ def criar_pedidos_teste():
                 quantidade=config['quantidade'],
                 inicio_jornada=inicio_jornada,
                 fim_jornada=fim_jornada,
-                todos_funcionarios=funcionarios_disponiveis,
                 gestor_almoxarifado=gestor_almoxarifado
             )
             
