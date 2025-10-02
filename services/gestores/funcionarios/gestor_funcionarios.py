@@ -485,3 +485,349 @@ class GestorFuncionarios:
         #     f"⚠️ Apenas {len(selecionados)}/{qtd_profissionais_requeridos} profissionais disponíveis para {nome_atividade}"
         # )
         return False, selecionados
+
+    def mostrar_agenda_todos_funcionarios(self) -> str:
+        """
+        Mostra a agenda de todos os funcionários organizada por funcionário.
+
+        Returns:
+            str: Agenda formatada de todos os funcionários
+        """
+        agenda = []
+        agenda.append("=" * 80)
+        agenda.append("📅 AGENDA COMPLETA DE FUNCIONÁRIOS (ORGANIZADA POR FUNCIONÁRIO)")
+        agenda.append("=" * 80)
+        agenda.append("")
+
+        total_ocupacoes = 0
+        funcionarios_ocupados = 0
+
+        # Organizar por funcionário
+        for funcionario in self.funcionarios_disponiveis:
+            if not funcionario.ocupacoes:
+                continue
+
+            funcionarios_ocupados += 1
+            tipos_str = ", ".join([t.name for t in funcionario.tipo_profissional])
+
+            agenda.append(f"👤 {funcionario.nome} ({tipos_str}) - FIP: {funcionario.fip}")
+            agenda.append("-" * 60)
+
+            # Ordenar ocupações do funcionário por horário de início
+            ocupacoes_ordenadas = sorted(funcionario.ocupacoes, key=lambda x: x[4])  # x[4] é o início
+
+            # Agrupar ocupações por dia
+            ocupacoes_por_dia = {}
+            total_segundos_funcionario = 0
+
+            for ocupacao in ocupacoes_ordenadas:
+                id_ordem, id_pedido, id_atividade, nome_atividade, inicio, fim = ocupacao
+                data_str = inicio.strftime('%d/%m/%Y')
+
+                if data_str not in ocupacoes_por_dia:
+                    ocupacoes_por_dia[data_str] = []
+
+                ocupacoes_por_dia[data_str].append(ocupacao)
+
+                # Acumular tempo total
+                duracao = fim - inicio
+                total_segundos_funcionario += duracao.total_seconds()
+                total_ocupacoes += 1
+
+            # Exibir ocupações agrupadas por dia
+            for data in sorted(ocupacoes_por_dia.keys(), key=lambda x: tuple(map(int, x.split('/')[::-1]))):
+                agenda.append(f"   📅 {data}")
+                agenda.append("   " + "-" * 40)
+
+                total_segundos_dia = 0
+
+                for ocupacao in ocupacoes_por_dia[data]:
+                    id_ordem, id_pedido, id_atividade, nome_atividade, inicio, fim = ocupacao
+
+                    # Formatear informações da ocupação
+                    horario = f"{inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')}"
+                    duracao = fim - inicio
+                    duracao_segundos = duracao.total_seconds()
+                    total_segundos_dia += duracao_segundos
+
+                    # Converter duração para hh:mm:ss
+                    horas = int(duracao_segundos // 3600)
+                    minutos = int((duracao_segundos % 3600) // 60)
+                    segundos = int(duracao_segundos % 60)
+                    duracao_str = f"{horas:02d}:{minutos:02d}:{segundos:02d}"
+
+                    objeto = f"Ordem {id_ordem} | Pedido {id_pedido}"
+
+                    agenda.append(f"      ⏰ {horario} ({duracao_str})")
+                    agenda.append(f"      🎯 {objeto}")
+                    agenda.append(f"      📋 {nome_atividade} (ID: {id_atividade})")
+                    agenda.append("")
+
+                # Total do dia em hh:mm:ss
+                horas_dia = int(total_segundos_dia // 3600)
+                minutos_dia = int((total_segundos_dia % 3600) // 60)
+                segundos_dia = int(total_segundos_dia % 60)
+                total_dia_str = f"{horas_dia:02d}:{minutos_dia:02d}:{segundos_dia:02d}"
+
+                agenda.append(f"   ⏱️ Total do dia: {total_dia_str}")
+                agenda.append("")
+
+            # Resumo geral do funcionário
+            horas_total = int(total_segundos_funcionario // 3600)
+            minutos_total = int((total_segundos_funcionario % 3600) // 60)
+            segundos_total = int(total_segundos_funcionario % 60)
+            total_funcionario_str = f"{horas_total:02d}:{minutos_total:02d}:{segundos_total:02d}"
+
+            datas_trabalhadas = list(ocupacoes_por_dia.keys())
+            agenda.append(f"   📊 RESUMO GERAL:")
+            agenda.append(f"   📅 Datas trabalhadas: {', '.join(sorted(datas_trabalhadas, key=lambda x: tuple(map(int, x.split('/')[::-1]))))}")
+            agenda.append(f"   ⏱️ Total geral: {total_funcionario_str}")
+            agenda.append("")
+
+        # Mostrar funcionários sem ocupações
+        funcionarios_livres = [f for f in self.funcionarios_disponiveis if not f.ocupacoes]
+        if funcionarios_livres:
+            agenda.append("🆓 FUNCIONÁRIOS SEM OCUPAÇÕES:")
+            agenda.append("-" * 40)
+            for funcionario in funcionarios_livres:
+                tipos_str = ", ".join([t.name for t in funcionario.tipo_profissional])
+                agenda.append(f"   👤 {funcionario.nome} ({tipos_str}) - FIP: {funcionario.fip}")
+            agenda.append("")
+
+        # Estatísticas finais
+        agenda.append("📊 ESTATÍSTICAS GERAIS:")
+        agenda.append(f"👥 Total de funcionários: {len(self.funcionarios_disponiveis)}")
+        agenda.append(f"🏃 Funcionários com ocupações: {funcionarios_ocupados}")
+        agenda.append(f"🆓 Funcionários livres: {len(funcionarios_livres)}")
+        agenda.append(f"📝 Total de ocupações: {total_ocupacoes}")
+        agenda.append("=" * 80)
+
+        return "\n".join(agenda)
+
+    def carregar_alocacoes_dos_logs(self) -> bool:
+        """
+        Carrega as alocações de funcionários dos arquivos .log em logs/funcionarios/
+        e popula as ocupações dos funcionários.
+
+        Returns:
+            bool: True se carregou com sucesso
+        """
+        diretorio_logs = "logs/funcionarios"
+
+        if not os.path.exists(diretorio_logs):
+            logger.warning(f"📁 Diretório não encontrado: {diretorio_logs}")
+            return False
+
+        # Limpar ocupações existentes
+        self._limpar_ocupacoes_funcionarios()
+
+        total_alocacoes = 0
+        arquivos_processados = 0
+
+        try:
+            for arquivo in os.listdir(diretorio_logs):
+                if not arquivo.endswith('.log'):
+                    continue
+
+                caminho_arquivo = os.path.join(diretorio_logs, arquivo)
+                logger.debug(f"📄 Processando arquivo: {arquivo}")
+
+                with open(caminho_arquivo, 'r', encoding='utf-8') as f:
+                    for linha in f:
+                        linha = linha.strip()
+                        if not linha or not linha[0].isdigit():
+                            continue
+
+                        partes = linha.split(' | ')
+                        if len(partes) < 7:
+                            continue
+
+                        try:
+                            id_ordem = int(partes[0])
+                            id_pedido = int(partes[1])
+                            id_atividade = int(partes[2])
+                            nome_item = partes[3].strip()
+                            nome_atividade = partes[4].strip()
+                            funcionario_info = partes[5].strip()
+                            horario_inicio_str = partes[6].strip()
+                            horario_fim_str = partes[7].strip()
+
+                            # Verificar se a alocação foi bem-sucedida (tem ✅)
+                            if '✅' not in funcionario_info:
+                                continue
+
+                            # Extrair nome do funcionário
+                            nome_funcionario = funcionario_info.replace(' ✅', '').strip()
+
+                            # Encontrar o funcionário
+                            funcionario = None
+                            for f in self.funcionarios_disponiveis:
+                                if f.nome == nome_funcionario:
+                                    funcionario = f
+                                    break
+
+                            if not funcionario:
+                                logger.warning(f"⚠️ Funcionário não encontrado: {nome_funcionario}")
+                                continue
+
+                            # Parsear horários - formato: HH:MM [DD/MM]
+                            inicio_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_inicio_str)
+                            fim_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_fim_str)
+
+                            if not inicio_match or not fim_match:
+                                logger.warning(f"⚠️ Formato de horário inválido: {horario_inicio_str} - {horario_fim_str}")
+                                continue
+
+                            hora_inicio = inicio_match.group(1)
+                            data_inicio = inicio_match.group(2)
+                            hora_fim = fim_match.group(1)
+                            data_fim = fim_match.group(2)
+
+                            # Assumir ano atual se não fornecido
+                            ano_atual = datetime.now().year
+                            data_inicio_completa = f"{data_inicio}/{ano_atual}"
+                            data_fim_completa = f"{data_fim}/{ano_atual}"
+
+                            # Converter para datetime
+                            inicio = datetime.strptime(f"{data_inicio_completa} {hora_inicio}", "%d/%m/%Y %H:%M")
+                            fim = datetime.strptime(f"{data_fim_completa} {hora_fim}", "%d/%m/%Y %H:%M")
+
+                            # Registrar ocupação no funcionário
+                            funcionario.registrar_ocupacao(
+                                id_ordem=id_ordem,
+                                id_pedido=id_pedido,
+                                id_atividade_json=id_atividade,
+                                nome_atividade=nome_atividade,
+                                inicio=inicio,
+                                fim=fim
+                            )
+
+                            total_alocacoes += 1
+
+                        except (ValueError, IndexError) as e:
+                            logger.warning(f"⚠️ Erro ao processar linha: {linha[:50]}... Erro: {e}")
+                            continue
+
+                arquivos_processados += 1
+
+            logger.info(f"📋 Carregadas {total_alocacoes} alocações de {arquivos_processados} arquivos")
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Erro ao carregar alocações dos logs: {e}")
+            return False
+
+    def extrair_conflitos_dos_logs(self) -> List[Dict]:
+        """
+        Extrai automaticamente os conflitos (alocações falhadas) dos arquivos .log.
+
+        Returns:
+            List[Dict]: Lista de conflitos encontrados nos logs
+        """
+        diretorio_logs = "logs/funcionarios"
+        conflitos = []
+
+        if not os.path.exists(diretorio_logs):
+            logger.warning(f"📁 Diretório não encontrado: {diretorio_logs}")
+            return conflitos
+
+        try:
+            for arquivo in os.listdir(diretorio_logs):
+                if not arquivo.endswith('.log'):
+                    continue
+
+                # Extrair ordem e pedido do nome do arquivo
+                match_arquivo = re.match(r'ordem: (\d+) \| pedido: (\d+)\.log', arquivo)
+                if not match_arquivo:
+                    continue
+
+                id_ordem = int(match_arquivo.group(1))
+                id_pedido = int(match_arquivo.group(2))
+
+                caminho_arquivo = os.path.join(diretorio_logs, arquivo)
+
+                with open(caminho_arquivo, 'r', encoding='utf-8') as f:
+                    for linha in f:
+                        linha = linha.strip()
+                        if not linha or not linha[0].isdigit():
+                            continue
+
+                        # Procurar linhas com "❌" (alocações falhadas)
+                        if '❌' not in linha:
+                            continue
+
+                        partes = linha.split(' | ')
+                        if len(partes) < 7:
+                            continue
+
+                        try:
+                            id_atividade = int(partes[2])
+                            nome_atividade = partes[4].strip()
+                            funcionario_info = partes[5].strip()
+                            horario_inicio_str = partes[6].strip()
+                            horario_fim_str = partes[7].strip()
+
+                            # Extrair tipos necessários da mensagem de erro
+                            tipos_necessarios = []
+                            match_tipos = re.search(r'Tipos necessários: ([^)]+)\)', funcionario_info)
+                            if match_tipos:
+                                tipos_str = match_tipos.group(1)
+                                for tipo_str in tipos_str.split(','):
+                                    tipo_str = tipo_str.strip()
+                                    try:
+                                        tipo_enum = TipoProfissional[tipo_str]
+                                        tipos_necessarios.append(tipo_enum)
+                                    except KeyError:
+                                        logger.warning(f"⚠️ Tipo profissional desconhecido: {tipo_str}")
+
+                            if not tipos_necessarios:
+                                continue
+
+                            # Parsear horários - formato: HH:MM [DD/MM]
+                            inicio_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_inicio_str)
+                            fim_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_fim_str)
+
+                            if not inicio_match or not fim_match:
+                                continue
+
+                            hora_inicio = inicio_match.group(1)
+                            data_inicio = inicio_match.group(2)
+                            hora_fim = fim_match.group(1)
+                            data_fim = fim_match.group(2)
+
+                            # Assumir ano atual
+                            ano_atual = datetime.now().year
+                            data_inicio_completa = f"{data_inicio}/{ano_atual}"
+                            data_fim_completa = f"{data_fim}/{ano_atual}"
+
+                            # Converter para datetime
+                            inicio = datetime.strptime(f"{data_inicio_completa} {hora_inicio}", "%d/%m/%Y %H:%M")
+                            fim = datetime.strptime(f"{data_fim_completa} {hora_fim}", "%d/%m/%Y %H:%M")
+
+                            # Assumir quantidade 1 se não especificado
+                            quantidade = 1
+
+                            conflito = {
+                                'id_ordem': id_ordem,
+                                'id_pedido': id_pedido,
+                                'id_atividade': id_atividade,
+                                'nome_atividade': nome_atividade,
+                                'inicio': inicio,
+                                'fim': fim,
+                                'tipos_necessarios': tipos_necessarios,
+                                'quantidade': quantidade,
+                                'arquivo_origem': arquivo
+                            }
+
+                            conflitos.append(conflito)
+
+                        except (ValueError, IndexError) as e:
+                            logger.warning(f"⚠️ Erro ao processar linha de conflito: {linha[:50]}... Erro: {e}")
+                            continue
+
+            logger.info(f"🔍 Extraídos {len(conflitos)} conflitos dos logs")
+            return conflitos
+
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair conflitos dos logs: {e}")
+            return conflitos

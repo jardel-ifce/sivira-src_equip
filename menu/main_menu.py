@@ -165,6 +165,9 @@ class MenuPrincipal:
         print("📅 AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
         print("D️⃣  Ver Agenda de Equipamentos")
         print()
+        print("👥 FUNCIONÁRIOS:")
+        print("F️⃣  Gestão de Funcionários")
+        print()
         print("📦 ALMOXARIFADO:")
         print("G️⃣  Gestão de Almoxarifado")
         print()
@@ -214,7 +217,10 @@ class MenuPrincipal:
         
         elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
             self.mostrar_submenu_agenda()
-        
+
+        elif opcao.lower() == "f":  # 🆕 NOVA OPÇÃO - FUNCIONÁRIOS
+            self.mostrar_submenu_funcionarios()
+
         elif opcao.lower() == "g":  # 🆕 NOVA OPÇÃO - ALMOXARIFADO
             self.mostrar_submenu_almoxarifado()
         
@@ -2007,6 +2013,154 @@ class MenuPrincipal:
         print("Sistema salvo automaticamente.")
         print("Ate a proxima!")
         self.rodando = False
+
+    # =========================================================================
+    #                       🆕 SUBMENU GESTÃO DE FUNCIONÁRIOS
+    # =========================================================================
+
+    def mostrar_submenu_funcionarios(self):
+        """Submenu para gestão de funcionários"""
+        try:
+            rodando_funcionarios = True
+
+            while rodando_funcionarios:
+                try:
+                    self.utils.limpar_tela()
+                    print("👥 SISTEMA DE PRODUÇÃO - GESTÃO DE FUNCIONÁRIOS")
+                    print("=" * 60)
+                    print()
+
+                    # Status do sistema de funcionários
+                    print("📊 STATUS DO SISTEMA:")
+                    print("✅ GestorFuncionarios: ATIVO")
+                    print("✅ AnalisadorConflitos: ATIVO")
+                    print("✅ Logs de funcionários: DISPONÍVEL")
+                    print()
+
+                    # Menu de opções
+                    print("OPÇÕES DISPONÍVEIS:")
+                    print()
+                    print("🚀 EXECUÇÃO E ALOCAÇÃO:")
+                    print("1️⃣  Alocar Funcionários para Pedidos")
+                    print()
+                    print("🔍 ANÁLISE E MONITORAMENTO:")
+                    print("2️⃣  Analisar Conflitos de Funcionários")
+                    print("3️⃣  Mostrar Agenda de Funcionários")
+                    print()
+                    print("🔧 NAVEGAÇÃO:")
+                    print("V️⃣  Voltar ao Menu Principal")
+                    print()
+                    print("─" * 60)
+
+                    opcao = input("🎯 Escolha uma opção: ").strip()
+
+                    if opcao == "1":
+                        self.executar_alocacao_funcionarios()
+
+                    elif opcao == "2":
+                        self.executar_analise_conflitos()
+
+                    elif opcao == "3":
+                        self.executar_agenda_funcionarios()
+
+                    elif opcao.lower() == "v":
+                        rodando_funcionarios = False
+
+                    else:
+                        print(f"\n⚡ Opção '{opcao}' inválida!")
+                        input("Pressione Enter para continuar...")
+
+                except KeyboardInterrupt:
+                    print("\n🔄 Voltando ao menu de funcionários...")
+                    input("Pressione Enter para continuar...")
+
+        except Exception as e:
+            print(f"\n❌ Erro no submenu de funcionários: {e}")
+            input("Pressione Enter para voltar ao menu principal...")
+
+    def executar_alocacao_funcionarios(self):
+        """Executa o script de alocação de funcionários"""
+        import subprocess
+        import os
+
+        try:
+            print("\n🚀 EXECUTANDO ALOCAÇÃO DE FUNCIONÁRIOS")
+            print("=" * 50)
+            print("📋 Carregando script de alocação...")
+            print()
+
+            # Executar o script de alocação
+            resultado = subprocess.run([
+                "python3", "examples/alocacao_funcionarios.py"
+            ], capture_output=False, text=True, cwd=os.getcwd())
+
+            print()
+            if resultado.returncode == 0:
+                print("✅ Alocação de funcionários executada com sucesso!")
+            else:
+                print("❌ Erro durante a execução da alocação")
+
+        except Exception as e:
+            print(f"❌ Erro ao executar alocação: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def executar_analise_conflitos(self):
+        """Executa o script de análise de conflitos"""
+        import subprocess
+        import os
+
+        try:
+            print("\n🔍 EXECUTANDO ANÁLISE DE CONFLITOS DE FUNCIONÁRIOS")
+            print("=" * 50)
+            print("📋 Carregando análise genérica de conflitos...")
+            print()
+
+            # Executar o script de análise
+            resultado = subprocess.run([
+                "python3", "analise_conflitos_generica.py"
+            ], capture_output=False, text=True, cwd=os.getcwd())
+
+            print()
+            if resultado.returncode == 0:
+                print("✅ Análise de conflitos executada com sucesso!")
+            else:
+                print("❌ Erro durante a análise de conflitos")
+
+        except Exception as e:
+            print(f"❌ Erro ao executar análise: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def executar_agenda_funcionarios(self):
+        """Executa o script de agenda de funcionários"""
+        import subprocess
+        import os
+
+        try:
+            print("\n📅 EXECUTANDO VISUALIZAÇÃO DA AGENDA DE FUNCIONÁRIOS")
+            print("=" * 50)
+            print("📋 Carregando agenda de funcionários...")
+            print()
+
+            # Executar o script de agenda
+            resultado = subprocess.run([
+                "python3", "mostrar_agenda_funcionarios.py"
+            ], capture_output=False, text=True, cwd=os.getcwd())
+
+            print()
+            if resultado.returncode == 0:
+                print("✅ Agenda de funcionários exibida com sucesso!")
+            else:
+                print("❌ Erro durante a exibição da agenda")
+
+        except Exception as e:
+            print(f"❌ Erro ao executar agenda: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
 
 
     def mostrar_submenu_avaliador_pedidos(self):
