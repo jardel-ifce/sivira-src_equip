@@ -1,3 +1,10 @@
+"""
+Script interativo para reagendamento de pedidos com atividades duplicadas.
+
+Fornece interface de linha de comando para seleção de atividades duplicadas
+e cálculo de reagendamentos baseados em backward scheduling.
+"""
+
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
@@ -5,15 +12,24 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from analisador.analisador_pedidos import AnalisadorPedidos
 from analisador.calculador_reagendamento import CalculadorReagendamento
 
+
 def exibir_menu_atividades(duplicatas):
-    """Exibe menu numerado das atividades duplicadas para escolha do usuário"""
+    """
+    Exibe menu numerado das atividades duplicadas para escolha do usuário.
+
+    Args:
+        duplicatas (dict): Dicionário de atividades duplicadas
+
+    Returns:
+        list: Lista de tuplas (id_atividade, ocorrencias)
+    """
     print("\n📋 ATIVIDADES DUPLICADAS DISPONÍVEIS:")
     print("-" * 60)
 
     atividades_lista = list(duplicatas.items())
 
     for i, (id_atividade, ocorrencias) in enumerate(atividades_lista, 1):
-        primeira_ocorrencia = ocorrencias[0][2]  # Pega dados da primeira ocorrência
+        primeira_ocorrencia = ocorrencias[0][2]
         print(f"{i:2d}. ID {id_atividade} - {primeira_ocorrencia['atividade']}")
         print(f"     🔧 Equipamento: {primeira_ocorrencia['equipamento']}")
         print(f"     📦 {len(ocorrencias)} pedidos compartilham esta atividade")
@@ -21,23 +37,25 @@ def exibir_menu_atividades(duplicatas):
     print(f"\n{len(atividades_lista) + 1:2d}. V - Voltar")
     return atividades_lista
 
+
 def executar_reagendamento_interativo():
-    """Execução interativa do reagendamento com escolha de atividades"""
+    """
+    Execução interativa do reagendamento com escolha de atividades.
+
+    Carrega logs, detecta duplicatas e permite ao usuário selecionar
+    interativamente quais atividades reagendar.
+    """
     print("🔍 REAGENDADOR INTERATIVO DE ATIVIDADES")
     print("=" * 60)
 
-    # Definir diretório dos logs
     diretorio_logs = os.path.join(os.path.dirname(__file__), "../logs/equipamentos")
-
     print(f"📂 Analisando logs em: {diretorio_logs}")
 
-    # Verificar se o diretório existe
     if not os.path.exists(diretorio_logs):
         print(f"❌ Diretório de logs não encontrado: {diretorio_logs}")
         print("💡 Execute primeiro um script de produção para gerar logs")
         return
 
-    # Verificar se há arquivos de log
     arquivos_log = [f for f in os.listdir(diretorio_logs) if f.endswith('.log')]
     if not arquivos_log:
         print(f"❌ Nenhum arquivo .log encontrado em: {diretorio_logs}")
@@ -46,7 +64,6 @@ def executar_reagendamento_interativo():
 
     print(f"📋 Encontrados {len(arquivos_log)} arquivos de log")
 
-    # Criar analisador e carregar logs
     print("\n🔄 Carregando logs...")
     analisador = AnalisadorPedidos(diretorio_logs)
     analisador.carregar_logs()
@@ -59,7 +76,6 @@ def executar_reagendamento_interativo():
     total_atividades = sum(len(atividades) for atividades in analisador.pedidos.values())
     print(f"✅ Carregados {total_pedidos} pedidos com {total_atividades} atividades")
 
-    # Detectar atividades duplicadas
     print("\n🔍 Detectando atividades duplicadas...")
     duplicatas = analisador.detectar_atividades_duplicadas()
 
@@ -72,7 +88,6 @@ def executar_reagendamento_interativo():
 
     calculador = CalculadorReagendamento(analisador)
 
-    # Loop interativo
     while True:
         try:
             atividades_lista = exibir_menu_atividades(duplicatas)
@@ -140,10 +155,12 @@ def executar_reagendamento_interativo():
 
 def main():
     """
-    Script para executar análise de reagendamento nos logs de equipamentos.
-    Detecta atividades duplicadas e calcula reagendamentos necessários.
+    Ponto de entrada principal do script.
+
+    Executa o reagendador interativo de atividades.
     """
     executar_reagendamento_interativo()
+
 
 if __name__ == "__main__":
     main()

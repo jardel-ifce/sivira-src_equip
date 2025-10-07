@@ -22,7 +22,9 @@ usando o novo GestorProducao independente dos scripts de teste.
 import os
 import re
 import sys
+import csv
 from typing import Optional
+from datetime import datetime
 
 # Adiciona paths necessários
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,6 +32,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from menu.gerenciador_pedidos import GerenciadorPedidos
 from menu.utils_menu import MenuUtils
 from services.gestores.producao import GestorProducao
+from services.gestores.funcionarios.gestor_funcionarios import GestorFuncionarios
 from utils.logs.gerenciador_logs import limpar_logs_inicializacao
 from analisador.analisador_pedidos import AnalisadorPedidos
 from analisador.calculador_reagendamento import CalculadorReagendamento
@@ -70,11 +73,13 @@ class MenuPrincipal:
         # Inicializa componentes
         self.gerenciador = GerenciadorPedidos()
         self.gestor_producao = GestorProducao()  # ✅ NOVO: Usa GestorProducao independente
+        self.gestor_funcionarios = GestorFuncionarios()  # ✅ SINGLETON: Uma única instância para toda sessão
         self.utils = MenuUtils()
         self.rodando = True
-        
+
         print("✅ Sistema inicializado com arquitetura independente!")
         print(f"📦 Sistema de Ordens ativo - Ordem atual: {self.gerenciador.obter_ordem_atual()}")
+        print(f"👷 GestorFuncionarios: {len(self.gestor_funcionarios.funcionarios_disponiveis)} funcionários disponíveis")
 
     
     def executar(self):
@@ -151,7 +156,7 @@ class MenuPrincipal:
         
         # Opções do menu
         print("📋 GESTÃO DE PEDIDOS:")
-        print("1️⃣  Registrar Novo Pedido")
+        print("1️⃣  Registrar Pedidos")
         print("2️⃣  Listar Pedidos Registrados")
         print("3️⃣  Remover Pedido")
         print("4️⃣  Cancelar Ordem | Pedido (Liberar Equipamentos)")
@@ -164,6 +169,7 @@ class MenuPrincipal:
         print()
         print("📅 AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
         print("D️⃣  Ver Agenda de Equipamentos")
+        print("E️⃣  Visualizar Equipamentos em Memória")
         print()
         print("👥 FUNCIONÁRIOS:")
         print("F️⃣  Gestão de Funcionários")
@@ -192,7 +198,7 @@ class MenuPrincipal:
         """Processa opção escolhida pelo usuário"""
         
         if opcao == "1":
-            self.registrar_pedido()
+            self.mostrar_submenu_registro_pedidos()
         
         elif opcao == "2":
             self.listar_pedidos()
@@ -217,6 +223,9 @@ class MenuPrincipal:
         
         elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
             self.mostrar_submenu_agenda()
+
+        elif opcao.lower() == "e":  # 🆕 NOVA OPÇÃO - VISUALIZAR EQUIPAMENTOS
+            self.visualizar_equipamentos()
 
         elif opcao.lower() == "f":  # 🆕 NOVA OPÇÃO - FUNCIONÁRIOS
             self.mostrar_submenu_funcionarios()
@@ -515,7 +524,207 @@ class MenuPrincipal:
     # =========================================================================
     #                           GESTÃO DE PEDIDOS
     # =========================================================================
-    
+
+    def mostrar_submenu_registro_pedidos(self):
+        """Submenu para escolha entre registro manual ou por CSV"""
+        rodando_submenu = True
+
+        while rodando_submenu:
+            try:
+                self.utils.limpar_tela()
+                print("📋 REGISTRO DE PEDIDOS")
+                print("=" * 40)
+                print()
+                print("🔹 Como deseja registrar o pedido?")
+                print()
+                print("1️⃣ Registro Manual (Terminal)")
+                print("2️⃣ Registro por CSV (Arquivo)")
+                print()
+                print("V - Voltar ao menu principal")
+                print()
+
+                opcao = input("🎯 Escolha uma opção: ").strip().upper()
+
+                if opcao == "1":
+                    self.registrar_pedido_manual()
+                elif opcao == "2":
+                    self.registrar_pedido_csv()
+                elif opcao == "V":
+                    rodando_submenu = False
+                else:
+                    print("\n❌ Opção inválida!")
+                    input("Pressione Enter para continuar...")
+
+            except KeyboardInterrupt:
+                print("\n\n📋 Voltando ao menu principal...")
+                rodando_submenu = False
+            except Exception as e:
+                print(f"\n⚠️ Erro no submenu de registro: {e}")
+                input("Pressione Enter para continuar...")
+
+    def registrar_pedido_manual(self):
+        """Interface para registrar novo pedido manualmente"""
+        self.utils.limpar_tela()
+        ordem_atual = self.gerenciador.obter_ordem_atual()
+        proximo_pedido = len(self.gerenciador.obter_pedidos_ordem_atual()) + 1
+
+        print("📋 REGISTRAR PEDIDO MANUAL")
+        print("=" * 40)
+        print(f"📦 Ordem: {ordem_atual}")
+        print(f"🎯 Próximo Pedido: {proximo_pedido}")
+        print(f"🏷️ Será registrado como: Ordem {ordem_atual} | Pedido {proximo_pedido}")
+        print()
+
+        try:
+            dados_pedido = self.utils.coletar_dados_pedido()
+
+            if dados_pedido:
+                sucesso, mensagem = self.gerenciador.registrar_pedido(**dados_pedido)
+
+                if sucesso:
+                    print(f"\n✅ {mensagem}")
+                    self.gerenciador.salvar_pedidos()
+                else:
+                    print(f"\n⚡ {mensagem}")
+            else:
+                print("\nℹ️ Registro cancelado.")
+
+        except Exception as e:
+            print(f"\n⚡ Erro ao registrar pedido: {e}")
+
+        input("\nPressione Enter para continuar...")
+
+    def registrar_pedido_csv(self):
+        """Interface para registrar pedidos a partir de arquivo CSV"""
+        self.utils.limpar_tela()
+        print("📋 REGISTRAR PEDIDOS POR CSV")
+        print("=" * 40)
+        print()
+        print("📁 Pasta CSV: data/csv/")
+        print("📋 Formato esperado: id, tipo_produto, quantidade, fim_jornada")
+        print("📅 Data formato: YYYY-MM-DD HH:MM:SS")
+        print()
+
+        # Lista arquivos CSV disponíveis
+        csv_dir = "data/csv"
+        if not os.path.exists(csv_dir):
+            print("❌ Pasta 'data/csv' não encontrada!")
+            input("Pressione Enter para continuar...")
+            return
+
+        csv_files = [f for f in os.listdir(csv_dir) if f.endswith('.csv')]
+
+        if not csv_files:
+            print("❌ Nenhum arquivo CSV encontrado na pasta 'data/csv'!")
+            print("💡 Coloque seu arquivo CSV na pasta 'data/csv' e tente novamente.")
+            input("Pressione Enter para continuar...")
+            return
+
+        print("📂 Arquivos CSV disponíveis:")
+        for i, arquivo in enumerate(csv_files, 1):
+            print(f"   {i}. {arquivo}")
+        print()
+
+        try:
+            escolha = input("🎯 Digite o número do arquivo ou 'V' para voltar: ").strip()
+
+            if escolha.upper() == 'V':
+                return
+
+            indice = int(escolha) - 1
+            if 0 <= indice < len(csv_files):
+                arquivo_escolhido = csv_files[indice]
+                self.processar_arquivo_csv(os.path.join(csv_dir, arquivo_escolhido))
+            else:
+                print("❌ Número inválido!")
+                input("Pressione Enter para continuar...")
+
+        except ValueError:
+            print("❌ Entrada inválida!")
+            input("Pressione Enter para continuar...")
+        except Exception as e:
+            print(f"⚡ Erro: {e}")
+            input("Pressione Enter para continuar...")
+
+    def processar_arquivo_csv(self, caminho_arquivo):
+        """Processa arquivo CSV e registra pedidos"""
+        try:
+            pedidos_registrados = 0
+            erros = []
+
+            print(f"\n📂 Processando: {os.path.basename(caminho_arquivo)}")
+            print("=" * 50)
+
+            with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
+                reader = csv.DictReader(arquivo)
+
+                # Valida cabeçalhos
+                colunas_esperadas = {'id', 'tipo_produto', 'quantidade', 'fim_jornada'}
+                if not colunas_esperadas.issubset(set(reader.fieldnames)):
+                    print(f"❌ Colunas inválidas!")
+                    print(f"📋 Esperado: {', '.join(colunas_esperadas)}")
+                    print(f"📋 Encontrado: {', '.join(reader.fieldnames)}")
+                    input("Pressione Enter para continuar...")
+                    return
+
+                for linha_num, linha in enumerate(reader, 2):  # +2 pois linha 1 é cabeçalho
+                    try:
+                        # Converte dados
+                        id_item = int(linha['id'].strip())
+                        tipo_item = linha['tipo_produto'].strip().upper()
+                        quantidade = int(linha['quantidade'].strip())
+                        fim_jornada_str = linha['fim_jornada'].strip()
+
+                        # Converte data
+                        fim_jornada = datetime.strptime(fim_jornada_str, '%Y-%m-%d %H:%M:%S')
+
+                        # Valida tipo
+                        if tipo_item not in ['PRODUTO', 'SUBPRODUTO']:
+                            raise ValueError(f"Tipo inválido: {tipo_item}")
+
+                        # Registra pedido
+                        sucesso, mensagem = self.gerenciador.registrar_pedido(
+                            id_item=id_item,
+                            tipo_item=tipo_item,
+                            quantidade=quantidade,
+                            fim_jornada=fim_jornada
+                        )
+
+                        if sucesso:
+                            pedidos_registrados += 1
+                            print(f"✅ Linha {linha_num}: Pedido {id_item} registrado")
+                        else:
+                            erros.append(f"Linha {linha_num}: {mensagem}")
+                            print(f"❌ Linha {linha_num}: {mensagem}")
+
+                    except Exception as e:
+                        erro_msg = f"Linha {linha_num}: {str(e)}"
+                        erros.append(erro_msg)
+                        print(f"❌ {erro_msg}")
+
+            # Salva pedidos se houve registros bem-sucedidos
+            if pedidos_registrados > 0:
+                self.gerenciador.salvar_pedidos()
+
+            # Relatório final
+            print("\n" + "=" * 50)
+            print("📊 RELATÓRIO DE IMPORTAÇÃO")
+            print("=" * 50)
+            print(f"✅ Pedidos registrados: {pedidos_registrados}")
+            print(f"❌ Erros encontrados: {len(erros)}")
+
+            if erros:
+                print("\n📝 DETALHES DOS ERROS:")
+                for erro in erros:
+                    print(f"   • {erro}")
+
+        except FileNotFoundError:
+            print(f"❌ Arquivo não encontrado: {caminho_arquivo}")
+        except Exception as e:
+            print(f"⚡ Erro ao processar CSV: {e}")
+
+        input("\nPressione Enter para continuar...")
+
     def registrar_pedido(self):
         """Interface para registrar novo pedido"""
         self.utils.limpar_tela()
@@ -686,23 +895,68 @@ class MenuPrincipal:
                 # Tenta liberar equipamentos através do novo módulo
                 try:
                     equipamentos_liberados = self._liberar_equipamentos_pedido(id_ordem, id_pedido)
-                    
-                    # Apaga o log do pedido cancelado
+
+                    # Apaga os arquivos relacionados ao pedido cancelado
                     import os
+                    import glob
+                    arquivos_removidos = 0
+
+                    # 1. Remove log de equipamentos
                     log_path = f"logs/equipamentos/ordem: {id_ordem} | pedido: {id_pedido}.log"
                     if os.path.exists(log_path):
                         os.remove(log_path)
-                        print(f"\n📄 Log do pedido removido: {log_path}")
-                    
+                        arquivos_removidos += 1
+                        print(f"\n📄 Log de equipamentos removido: {log_path}")
+
+                    # 2. Remove comanda
+                    comanda_path = f"data/comandas/comanda_ordem_{id_ordem}_pedido_{id_pedido}.json"
+                    if os.path.exists(comanda_path):
+                        os.remove(comanda_path)
+                        arquivos_removidos += 1
+                        print(f"📋 Comanda removida: {comanda_path}")
+
+                    # 3. Remove logs de erro (ambos os formatos possíveis)
+                    erro_log_path = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+                    if os.path.exists(erro_log_path):
+                        os.remove(erro_log_path)
+                        arquivos_removidos += 1
+                        print(f"⚠️ Log de erro removido: {erro_log_path}")
+
+                    erro_json_path = f"logs/erros/ordem_{id_ordem}_pedido_{id_pedido}_temporal_errors.json"
+                    if os.path.exists(erro_json_path):
+                        os.remove(erro_json_path)
+                        arquivos_removidos += 1
+                        print(f"⚠️ Arquivo de erros temporais removido: {erro_json_path}")
+
+                    # 4. Remove logs detalhados de equipamentos que contenham este pedido
+                    # Padrão: ocupacoes_detalhadas_ordem_X_pedidos_..._Y_...*.log
+                    pattern = f"logs/equipamentos_detalhados/ocupacoes_detalhadas_ordem_{id_ordem}_pedidos_*{id_pedido}*.log"
+                    logs_detalhados = glob.glob(pattern)
+                    for log_detalhado in logs_detalhados:
+                        os.remove(log_detalhado)
+                        arquivos_removidos += 1
+                        print(f"📊 Log detalhado removido: {log_detalhado}")
+
+                    # 5. Remove logs de tipos de funcionários requeridos
+                    func_req_path = f"logs/tipos_funcionarios_requeridos/ordem: {id_ordem} | pedido: {id_pedido}.log"
+                    if os.path.exists(func_req_path):
+                        os.remove(func_req_path)
+                        arquivos_removidos += 1
+                        print(f"👥 Log de funcionários requeridos removido: {func_req_path}")
+
+                    # 6. Remove o pedido da lista de pedidos registrados
+                    sucesso, mensagem = self.gerenciador.remover_pedido(id_ordem, id_pedido)
+                    if sucesso:
+                        print(f"📋 Pedido removido da lista de pedidos registrados")
+
                     print(f"\n✅ Ordem {id_ordem} | Pedido {id_pedido} cancelado com sucesso!")
-                    
+                    print(f"🗑️ {arquivos_removidos} arquivo(s) removido(s)")
+
                     if equipamentos_liberados > 0:
                         print(f"🔧 {equipamentos_liberados} equipamento(s) liberado(s)")
                     else:
                         print("ℹ️ Nenhum equipamento estava alocado ou já havia sido liberado")
-                    
-                    print("💡 NOTA: O pedido permanece registrado. Use 'Remover Pedido' para removê-lo completamente.")
-                    
+
                 except Exception as e:
                     print(f"\n⚠️ Erro ao liberar equipamentos: {e}")
                     print("ℹ️ O pedido pode não ter equipamentos alocados ou já foi processado")
@@ -1142,7 +1396,8 @@ class MenuPrincipal:
         print("3 - Limpar apenas logs de equipamentos")
         print("4 - Limpar apenas logs de erros")
         print("5 - Limpar apenas logs de execuções")
-        print("6 - Limpar apenas arquivo de pedidos salvos")  # 🆕 MODIFICAÇÃO: Nova opção
+        print("6 - Limpar apenas arquivo de pedidos salvos")
+        print("7 - Limpar cache Python (__pycache__ e .pyc)")
         print("0 - Voltar")
         
         opcao = input("\n🎯 Escolha uma opção: ").strip()
@@ -1189,7 +1444,7 @@ class MenuPrincipal:
             except Exception as e:
                 print(f"⚡ Erro ao limpar {pasta}: {e}")
         
-        elif opcao == "6":  # 🆕 MODIFICAÇÃO: Nova opção
+        elif opcao == "6":
             print(f"\n🧹 Limpando arquivo de pedidos salvos...")
             try:
                 from utils.logs.gerenciador_logs import limpar_arquivo_pedidos_salvos
@@ -1199,7 +1454,36 @@ class MenuPrincipal:
                     print("📄 Arquivo de pedidos salvos não existia")
             except Exception as e:
                 print(f"⚡ Erro ao limpar arquivo de pedidos: {e}")
-        
+
+        elif opcao == "7":
+            print(f"\n🧹 Limpando cache Python...")
+            try:
+                import shutil
+                arquivos_removidos = 0
+                pastas_removidas = 0
+
+                # Remove __pycache__ directories
+                for root, dirs, files in os.walk('.'):
+                    if '__pycache__' in dirs:
+                        pycache_path = os.path.join(root, '__pycache__')
+                        shutil.rmtree(pycache_path)
+                        pastas_removidas += 1
+                        print(f"   🗑️ Removido: {pycache_path}")
+
+                    # Remove .pyc files
+                    for file in files:
+                        if file.endswith('.pyc'):
+                            pyc_path = os.path.join(root, file)
+                            os.remove(pyc_path)
+                            arquivos_removidos += 1
+
+                print(f"\n✅ Cache limpo!")
+                print(f"   📁 {pastas_removidas} pasta(s) __pycache__ removida(s)")
+                print(f"   📄 {arquivos_removidos} arquivo(s) .pyc removido(s)")
+
+            except Exception as e:
+                print(f"⚡ Erro ao limpar cache: {e}")
+
         elif opcao == "0":
             return
         else:
@@ -2006,7 +2290,35 @@ class MenuPrincipal:
         print("• Cancelar pedido libera equipamentos automaticamente")
         
         input("\nPressione Enter para continuar...")
-    
+
+    def visualizar_equipamentos(self):
+        """🆕 Visualiza todos os equipamentos carregados em memória"""
+        self.utils.limpar_tela()
+        print("🔧 VISUALIZAR EQUIPAMENTOS EM MEMÓRIA")
+        print("=" * 60)
+
+        try:
+            # Inicializa o sistema se necessário
+            if not self.gestor_producao.sistema_inicializado:
+                print("⏳ Inicializando sistema...")
+                if not self.gestor_producao._inicializar_sistema():
+                    print("❌ Erro ao inicializar sistema")
+                    input("\nPressione Enter para continuar...")
+                    return
+
+            # Usa o visualizador de equipamentos
+            from menu.visualizador_equipamentos import VisualizadorEquipamentos
+
+            visualizador = VisualizadorEquipamentos()
+            visualizador.visualizar()
+
+        except Exception as e:
+            print(f"\n❌ Erro ao visualizar equipamentos: {e}")
+            import traceback
+            traceback.print_exc()
+
+        input("\nPressione Enter para continuar...")
+
     def sair(self):
         """Encerra o sistema"""
         print("\nEncerrando Sistema de Producao...")
@@ -2037,6 +2349,12 @@ class MenuPrincipal:
                     print("✅ Logs de funcionários: DISPONÍVEL")
                     print()
 
+                    # Mostrar pedidos alocados
+                    pedidos_alocados = self.gestor_funcionarios.listar_pedidos_alocados()
+                    if pedidos_alocados:
+                        print(f"📋 Pedidos com funcionários alocados: {len(pedidos_alocados)}")
+                    print()
+
                     # Menu de opções
                     print("OPÇÕES DISPONÍVEIS:")
                     print()
@@ -2046,6 +2364,11 @@ class MenuPrincipal:
                     print("🔍 ANÁLISE E MONITORAMENTO:")
                     print("2️⃣  Analisar Conflitos de Funcionários")
                     print("3️⃣  Mostrar Agenda de Funcionários")
+                    print()
+                    print("🧹 GERENCIAMENTO:")
+                    print("4️⃣  Listar Pedidos Alocados")
+                    print("5️⃣  Limpar Alocação de Pedido Específico")
+                    print("6️⃣  Limpar Todas as Alocações")
                     print()
                     print("🔧 NAVEGAÇÃO:")
                     print("V️⃣  Voltar ao Menu Principal")
@@ -2063,6 +2386,15 @@ class MenuPrincipal:
                     elif opcao == "3":
                         self.executar_agenda_funcionarios()
 
+                    elif opcao == "4":
+                        self.listar_pedidos_alocados_funcionarios()
+
+                    elif opcao == "5":
+                        self.limpar_alocacao_pedido_especifico()
+
+                    elif opcao == "6":
+                        self.limpar_todas_alocacoes_funcionarios()
+
                     elif opcao.lower() == "v":
                         rodando_funcionarios = False
 
@@ -2079,29 +2411,147 @@ class MenuPrincipal:
             input("Pressione Enter para voltar ao menu principal...")
 
     def executar_alocacao_funcionarios(self):
-        """Executa o script de alocação de funcionários"""
-        import subprocess
+        """Executa alocação de funcionários usando o gestor integrado (singleton)"""
         import os
+        import re
 
         try:
-            print("\n🚀 EXECUTANDO ALOCAÇÃO DE FUNCIONÁRIOS")
+            print("\n🚀 ALOCAÇÃO DE FUNCIONÁRIOS")
             print("=" * 50)
-            print("📋 Carregando script de alocação...")
             print()
 
-            # Executar o script de alocação
-            resultado = subprocess.run([
-                "python3", "examples/alocacao_funcionarios.py"
-            ], capture_output=False, text=True, cwd=os.getcwd())
+            # Listar arquivos disponíveis
+            diretorio = "logs/tipos_funcionarios_requeridos"
 
+            if not os.path.exists(diretorio):
+                print(f"❌ Diretório não encontrado: {diretorio}")
+                input("Pressione Enter para continuar...")
+                return
+
+            arquivos = [f for f in os.listdir(diretorio) if f.endswith('.log')]
+
+            if not arquivos:
+                print(f"❌ Nenhum arquivo de requisitos encontrado em {diretorio}")
+                print("💡 Execute primeiro um pedido para gerar os requisitos de funcionários")
+                input("Pressione Enter para continuar...")
+                return
+
+            # Extrair ordem|pedido dos arquivos
+            requisitos = []
+            padrao = r'ordem: (\d+) \| pedido: (\d+)\.log'
+
+            for arquivo in arquivos:
+                match = re.match(padrao, arquivo)
+                if match:
+                    id_ordem = int(match.group(1))
+                    id_pedido = int(match.group(2))
+                    requisitos.append((id_ordem, id_pedido, arquivo))
+
+            if not requisitos:
+                print("❌ Nenhum requisito válido encontrado")
+                input("Pressione Enter para continuar...")
+                return
+
+            print(f"📋 {len(requisitos)} ordem|pedido disponível(is) para alocação:")
             print()
-            if resultado.returncode == 0:
-                print("✅ Alocação de funcionários executada com sucesso!")
+            for i, (id_ordem, id_pedido, arquivo) in enumerate(requisitos, 1):
+                # Verificar se já foi alocado
+                ja_alocado = self.gestor_funcionarios.pedido_ja_alocado(id_ordem, id_pedido)
+                status = "✅ JÁ ALOCADO" if ja_alocado else "⏳ Pendente"
+                print(f"{i}. Ordem {id_ordem} | Pedido {id_pedido} - {status}")
+            print()
+            print("0. Alocar TODOS (apenas pendentes)")
+            print()
+
+            # Mostrar resumo
+            total_alocados = sum(1 for o, p, _ in requisitos if self.gestor_funcionarios.pedido_ja_alocado(o, p))
+            total_pendentes = len(requisitos) - total_alocados
+            print(f"📊 Resumo: {total_pendentes} pendente(s) | {total_alocados} já alocado(s)")
+            print()
+
+            escolha = input("🎯 Escolha uma opção (0 para todos, Enter para voltar): ").strip()
+
+            if not escolha:
+                return
+
+            if escolha == "0":
+                # Alocar todos (apenas pendentes)
+                sucessos = 0
+                falhas = 0
+                pulados = 0
+
+                print()
+                print("🚀 Alocando todos os pedidos pendentes...")
+                print("=" * 50)
+
+                for id_ordem, id_pedido, _ in requisitos:
+                    # Pular se já foi alocado
+                    if self.gestor_funcionarios.pedido_ja_alocado(id_ordem, id_pedido):
+                        pulados += 1
+                        print(f"⏭️ Ordem {id_ordem} | Pedido {id_pedido}: Pulado (já alocado)")
+                        continue
+
+                    print(f"\n📦 Processando Ordem {id_ordem} | Pedido {id_pedido}...")
+                    sucesso = self.gestor_funcionarios.alocar_funcionarios_para_ordem_pedido(id_ordem, id_pedido)
+
+                    if sucesso:
+                        sucessos += 1
+                        print(f"✅ Ordem {id_ordem} | Pedido {id_pedido}: Alocação bem-sucedida")
+                    else:
+                        falhas += 1
+                        print(f"⚠️ Ordem {id_ordem} | Pedido {id_pedido}: Alocação com falhas (verifique logs)")
+
+                print()
+                print("=" * 50)
+                print(f"📊 RESULTADO: {sucessos} sucesso(s) | {falhas} falha(s) | {pulados} pulado(s)")
+
+                if pulados > 0:
+                    print(f"💡 Use a opção de gestão para limpar alocações se quiser realocar")
+
             else:
-                print("❌ Erro durante a execução da alocação")
+                # Alocar específico
+                try:
+                    indice = int(escolha) - 1
+                    if 0 <= indice < len(requisitos):
+                        id_ordem, id_pedido, _ = requisitos[indice]
+
+                        # Verificar se já está alocado
+                        if self.gestor_funcionarios.pedido_ja_alocado(id_ordem, id_pedido):
+                            print()
+                            print(f"🚫 Ordem {id_ordem} | Pedido {id_pedido} já teve funcionários alocados!")
+                            print()
+                            resposta = input("Deseja limpar e realocar? (s/N): ").strip().lower()
+
+                            if resposta == 's':
+                                self.gestor_funcionarios.limpar_alocacao_pedido(id_ordem, id_pedido)
+                                print("🧹 Alocação anterior limpa")
+                            else:
+                                print("❌ Operação cancelada")
+                                input("Pressione Enter para continuar...")
+                                return
+
+                        print()
+                        print(f"🚀 Alocando Ordem {id_ordem} | Pedido {id_pedido}...")
+                        print("=" * 50)
+
+                        sucesso = self.gestor_funcionarios.alocar_funcionarios_para_ordem_pedido(id_ordem, id_pedido)
+
+                        print()
+                        if sucesso:
+                            print("✅ Alocação concluída com sucesso!")
+                            print(f"📄 Log salvo em: logs/funcionarios/ordem: {id_ordem} | pedido: {id_pedido}.log")
+                        else:
+                            print("⚠️ Alocação concluída com algumas falhas")
+                            print("🔍 Verifique os logs para mais detalhes")
+                    else:
+                        print("❌ Opção inválida")
+                except ValueError:
+                    print("❌ Entrada inválida")
 
         except Exception as e:
             print(f"❌ Erro ao executar alocação: {e}")
+            import traceback
+            traceback.print_exc()
 
         print()
         input("Pressione Enter para continuar...")
@@ -2158,6 +2608,113 @@ class MenuPrincipal:
 
         except Exception as e:
             print(f"❌ Erro ao executar agenda: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def listar_pedidos_alocados_funcionarios(self):
+        """Lista todos os pedidos que já tiveram funcionários alocados"""
+        try:
+            print("\n📋 PEDIDOS COM FUNCIONÁRIOS ALOCADOS")
+            print("=" * 50)
+
+            pedidos = self.gestor_funcionarios.listar_pedidos_alocados()
+
+            if not pedidos:
+                print("📭 Nenhum pedido com funcionários alocados")
+            else:
+                print(f"Total: {len(pedidos)} pedido(s)")
+                print()
+                for i, (id_ordem, id_pedido) in enumerate(pedidos, 1):
+                    print(f"{i}. Ordem {id_ordem} | Pedido {id_pedido}")
+
+        except Exception as e:
+            print(f"❌ Erro: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def limpar_alocacao_pedido_especifico(self):
+        """Limpa a alocação de um pedido específico"""
+        try:
+            print("\n🧹 LIMPAR ALOCAÇÃO DE PEDIDO ESPECÍFICO")
+            print("=" * 50)
+
+            pedidos = self.gestor_funcionarios.listar_pedidos_alocados()
+
+            if not pedidos:
+                print("📭 Nenhum pedido com funcionários alocados")
+                input("Pressione Enter para continuar...")
+                return
+
+            print(f"Pedidos disponíveis: {len(pedidos)}")
+            print()
+            for i, (id_ordem, id_pedido) in enumerate(pedidos, 1):
+                print(f"{i}. Ordem {id_ordem} | Pedido {id_pedido}")
+            print()
+
+            escolha = input("🎯 Escolha o pedido para limpar (Enter para cancelar): ").strip()
+
+            if not escolha:
+                print("❌ Operação cancelada")
+                input("Pressione Enter para continuar...")
+                return
+
+            try:
+                indice = int(escolha) - 1
+                if 0 <= indice < len(pedidos):
+                    id_ordem, id_pedido = pedidos[indice]
+
+                    print()
+                    print(f"⚠️ Isso irá limpar a alocação de funcionários para Ordem {id_ordem} | Pedido {id_pedido}")
+                    confirma = input("Confirma? (s/N): ").strip().lower()
+
+                    if confirma == 's':
+                        self.gestor_funcionarios.limpar_alocacao_pedido(id_ordem, id_pedido)
+                        print(f"✅ Alocação de Ordem {id_ordem} | Pedido {id_pedido} limpa com sucesso!")
+                    else:
+                        print("❌ Operação cancelada")
+                else:
+                    print("❌ Opção inválida")
+            except ValueError:
+                print("❌ Entrada inválida")
+
+        except Exception as e:
+            print(f"❌ Erro: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def limpar_todas_alocacoes_funcionarios(self):
+        """Limpa todas as alocações de funcionários"""
+        try:
+            print("\n🧹 LIMPAR TODAS AS ALOCAÇÕES")
+            print("=" * 50)
+
+            pedidos = self.gestor_funcionarios.listar_pedidos_alocados()
+
+            if not pedidos:
+                print("📭 Nenhum pedido com funcionários alocados")
+                input("Pressione Enter para continuar...")
+                return
+
+            print(f"⚠️ Isso irá limpar a alocação de {len(pedidos)} pedido(s):")
+            print()
+            for id_ordem, id_pedido in pedidos:
+                print(f"  • Ordem {id_ordem} | Pedido {id_pedido}")
+            print()
+
+            confirma = input("Confirma a limpeza de TODAS as alocações? (s/N): ").strip().lower()
+
+            if confirma == 's':
+                self.gestor_funcionarios.limpar_todas_alocacoes()
+                print(f"✅ Todas as alocações foram limpas com sucesso!")
+                print("💡 Agora você pode realocar os funcionários")
+            else:
+                print("❌ Operação cancelada")
+
+        except Exception as e:
+            print(f"❌ Erro: {e}")
 
         print()
         input("Pressione Enter para continuar...")

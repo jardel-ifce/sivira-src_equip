@@ -361,6 +361,45 @@ def log_temporal_scheduling_error(id_ordem: int, id_pedido: int, id_atividade: i
 
 
 
+def log_configuration_range_error(id_ordem: int, id_pedido: int, id_atividade: int, nome_atividade: str,
+                                  id_item: int, nome_item: str, quantidade_solicitada: int,
+                                  faixas_disponiveis: List[Dict], arquivo_configuracao: str,
+                                  contexto_adicional: Optional[Dict] = None):
+    """Registra erro específico de configuração de faixas de quantidade."""
+
+    erro_detalhes = {
+        "id_item": id_item,
+        "nome_item": nome_item,
+        "quantidade_solicitada": quantidade_solicitada,
+        "unidade": "unidades/gramas",
+        "arquivo_configuracao": arquivo_configuracao,
+        "faixas_disponiveis": faixas_disponiveis,
+        "motivo": "Quantidade solicitada não está coberta por nenhuma faixa configurada",
+        "sugestoes": [
+            f"Adicionar faixa que inclua a quantidade {quantidade_solicitada}",
+            f"Verificar se a quantidade {quantidade_solicitada} está correta",
+            "Revisar configuração de faixas no arquivo de atividade",
+            "Considerar ajustar a quantidade do pedido para uma faixa existente"
+        ],
+        "exemplo_faixa": {
+            "quantidade_min": max(0, quantidade_solicitada - 10),
+            "quantidade_max": quantidade_solicitada + 10,
+            "duracao": "01:30:00"
+        }
+    }
+
+    return error_logger.log_structured_error(
+        id_ordem=id_ordem,
+        id_pedido=id_pedido,
+        id_atividade=id_atividade,
+        nome_atividade=nome_atividade,
+        tipo_erro="CONFIGURACAO_FAIXA_QUANTIDADE",
+        erro_detalhes=erro_detalhes,
+        nivel_impacto="ALTO",
+        contexto_adicional=contexto_adicional
+    )
+
+
 def log_generic_error(id_ordem: int, id_pedido: int, id_atividade: int, nome_atividade: str,
                      tipo_erro: str, descricao: str, detalhes: Dict[str, Any],
                      nivel_impacto: str = "MÉDIO", contexto_adicional: Optional[Dict] = None):

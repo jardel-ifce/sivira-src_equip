@@ -565,8 +565,8 @@ def registrar_log_funcionarios(id_ordem: int, id_pedido: int, id_atividade: int,
         os.makedirs("logs/funcionarios", exist_ok=True)
         caminho = f"logs/funcionarios/ordem: {id_ordem} | pedido: {id_pedido}.log"
         with open(caminho, "a", encoding="utf-8") as arq:
-            str_inicio = inicio.strftime('%H:%M') + f" [{inicio.strftime('%d/%m')}]"
-            str_fim = fim.strftime('%H:%M') + f" [{fim.strftime('%d/%m')}]"
+            str_inicio = inicio.strftime('%H:%M') + f" [{inicio.strftime('%d/%m/%Y')}]"
+            str_fim = fim.strftime('%H:%M') + f" [{fim.strftime('%d/%m/%Y')}]"
 
             if funcionarios_alocados:
                 # Funcionários foram alocados com sucesso

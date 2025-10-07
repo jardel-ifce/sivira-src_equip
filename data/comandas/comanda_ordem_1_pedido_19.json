@@ -1,24 +1,24 @@
 {
   "id_ordem": 1,
-  "id_pedido": 9,
+  "id_pedido": 19,
   "data_reserva": "2024-12-31",
   "itens": [
     {
-      "id_item": 1071,
-      "nome": "Coxinha de Queijos finos",
+      "id_item": 1055,
+      "nome": "Coxinha de Frango",
       "politica_producao": "SOB_DEMANDA",
-      "quantidade_necessaria": 12,
+      "quantidade_necessaria": 15,
       "itens_necessarios": [
         {
           "id_item": 2003,
           "nome": "Massa para Frituras",
           "politica_producao": "SOB_DEMANDA",
-          "quantidade_necessaria": 720.04,
+          "quantidade_necessaria": 900.05,
           "itens_necessarios": [
             {
               "id_item": 3,
               "nome": "Farinha de trigo para pães",
-              "quantidade_necessaria": 351.24,
+              "quantidade_necessaria": 439.05,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -26,7 +26,7 @@
             {
               "id_item": 10,
               "nome": "Água mineral",
-              "quantidade_necessaria": 333.68,
+              "quantidade_necessaria": 417.1,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -34,7 +34,7 @@
             {
               "id_item": 11,
               "nome": "Tempero pronto sabor frango",
-              "quantidade_necessaria": 17.56,
+              "quantidade_necessaria": 21.95,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -42,7 +42,7 @@
             {
               "id_item": 12,
               "nome": "Leite em pó integral",
-              "quantidade_necessaria": 17.56,
+              "quantidade_necessaria": 21.95,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
@@ -50,15 +50,15 @@
           ]
         },
         {
-          "id_item": 2010,
-          "nome": "Creme de Queijo",
+          "id_item": 2009,
+          "nome": "Frango Refogado",
           "politica_producao": "ESTOCADO",
-          "quantidade_necessaria": 600.01
+          "quantidade_necessaria": 750.01
         },
         {
           "id_item": 15,
           "nome": "Farinha de Rosca",
-          "quantidade_necessaria": 59.98,
+          "quantidade_necessaria": 74.97,
           "unidade_medida": "GRAMAS",
           "tipo_item": "INSUMO",
           "politica_producao": "ESTOCADO"
@@ -66,7 +66,7 @@
         {
           "id_item": 33,
           "nome": "Ovo de Galinha",
-          "quantidade_necessaria": 59.98,
+          "quantidade_necessaria": 74.97,
           "unidade_medida": "GRAMAS",
           "tipo_item": "INSUMO",
           "politica_producao": "ESTOCADO"

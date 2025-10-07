@@ -1,11 +1,11 @@
 {
   "id_ordem": 1,
-  "id_pedido": 11,
+  "id_pedido": 25,
   "data_reserva": "2024-12-31",
   "itens": [
     {
-      "id_item": 1059,
-      "nome": "Folhado de carne de sol",
+      "id_item": 1073,
+      "nome": "Folhado de camarão",
       "politica_producao": "SOB_DEMANDA",
       "quantidade_necessaria": 10,
       "itens_necessarios": [
@@ -66,47 +66,63 @@
           ]
         },
         {
-          "id_item": 2008,
-          "nome": "Carne de sol refogada",
+          "id_item": 2011,
+          "nome": "Creme de Camarão",
           "politica_producao": "SOB_DEMANDA",
           "quantidade_necessaria": 450.0,
           "itens_necessarios": [
             {
-              "id_item": 27,
-              "nome": "Carne de sol cozida pronta",
-              "quantidade_necessaria": 300.0,
+              "id_item": 39,
+              "nome": "Camarão médio descascado",
+              "quantidade_necessaria": 297.03,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 28,
-              "nome": "Cebola roxa",
-              "quantidade_necessaria": 60.0,
+              "id_item": 40,
+              "nome": "Molho de tomate",
+              "quantidade_necessaria": 59.41,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 29,
-              "nome": "Manteiga da terra",
-              "quantidade_necessaria": 60.0,
+              "id_item": 37,
+              "nome": "Requeijão cremoso",
+              "quantidade_necessaria": 59.41,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 30,
-              "nome": "Cheiro verde",
-              "quantidade_necessaria": 15.0,
+              "id_item": 41,
+              "nome": "Azeite de oliva extra virgem",
+              "quantidade_necessaria": 23.76,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"
             },
             {
-              "id_item": 31,
-              "nome": "Pimenta de cheiro",
-              "quantidade_necessaria": 15.0,
+              "id_item": 5,
+              "nome": "Sal refinado",
+              "quantidade_necessaria": 2.97,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 42,
+              "nome": "Salsa crespa",
+              "quantidade_necessaria": 5.94,
+              "unidade_medida": "GRAMAS",
+              "tipo_item": "INSUMO",
+              "politica_producao": "ESTOCADO"
+            },
+            {
+              "id_item": 33,
+              "nome": "Pimenta do reino",
+              "quantidade_necessaria": 1.49,
               "unidade_medida": "GRAMAS",
               "tipo_item": "INSUMO",
               "politica_producao": "ESTOCADO"

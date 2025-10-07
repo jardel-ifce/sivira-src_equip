@@ -18,6 +18,7 @@ from utils.commons.normalizador_de_nomes import normalizar_nome
 from utils.logs.gerenciador_logs import registrar_log_equipamentos, registrar_log_funcionarios, remover_log_funcionarios, remover_log_equipamentos
 from utils.logs.quantity_exceptions import QuantityError
 from utils.logs.timing_exceptions import IntraActivityTimingError
+from utils.logs.error_logger_utils import log_configuration_range_error
 from utils.logs.timing_logger import log_intra_activity_timing_error
 import traceback
 
@@ -214,16 +215,50 @@ class AtividadeModular:
         try:
             # Duração da atividade
             self.duracao: timedelta = consultar_duracao_por_faixas(self.dados_atividade, self.quantidade)
-            
+
             # Tempo máximo de espera entre atividades
             tempo_espera_raw = self.dados_atividade.get("tempo_maximo_de_espera")
             self.tempo_maximo_de_espera = converter_para_timedelta(tempo_espera_raw)
-            
+
             logger.debug(
                 f"⏱️ Tempo configurado: duração {self.duracao}, "
                 f"espera máxima {self.tempo_maximo_de_espera}"
             )
-            
+
+        except ValueError as e:
+            if "Nenhuma faixa compatível" in str(e):
+                # Erro específico de faixa de quantidade - logar estruturadamente
+                faixas_disponiveis = self.dados_atividade.get("faixas", [])
+
+                # Tentar extrair informações do pedido
+                id_ordem = getattr(self, 'id_ordem', 1)  # fallback para 1 se não disponível
+                id_pedido = getattr(self, 'id_pedido', 1)  # fallback para 1 se não disponível
+                nome_item = self.dados_atividade.get("nome", "item_desconhecido")
+                id_item = self.dados_atividade.get("id_item", 0)
+
+                # Determinar arquivo de configuração baseado no nome/id
+                arquivo_configuracao = f"data/produtos/atividades/{id_item}_{nome_item}.json"
+
+                # Logar erro estruturado
+                log_configuration_range_error(
+                    id_ordem=id_ordem,
+                    id_pedido=id_pedido,
+                    id_atividade=self.id_atividade,
+                    nome_atividade=self.nome_atividade,
+                    id_item=id_item,
+                    nome_item=nome_item,
+                    quantidade_solicitada=self.quantidade,
+                    faixas_disponiveis=faixas_disponiveis,
+                    arquivo_configuracao=arquivo_configuracao,
+                    contexto_adicional={
+                        "metodo_origem": "_configurar_tempo",
+                        "classe": "AtividadeModular",
+                        "erro_original": str(e)
+                    }
+                )
+
+            logger.error(f"❌ Erro ao configurar tempo para atividade {self.id_atividade}: {e}")
+            raise
         except Exception as e:
             logger.error(f"❌ Erro ao configurar tempo para atividade {self.id_atividade}: {e}")
             raise

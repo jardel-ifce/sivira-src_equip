@@ -35,14 +35,40 @@ class GestorFuncionarios:
     """
     Gestor expandido para alocação automática de funcionários.
     Lê requisitos de tipos_funcionarios_requeridos e aloca usando Factory.
+
+    ⚠️ SINGLETON: Garante que apenas uma instância do gestor existe,
+    mantendo as mesmas referências dos funcionários em memória.
     """
 
+    _instance = None
+
+    def __new__(cls):
+        """
+        Implementa o padrão Singleton.
+        Garante que apenas uma instância do gestor existe.
+        """
+        if cls._instance is None:
+            cls._instance = super(GestorFuncionarios, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        # Evita reinicialização se já foi inicializado
+        if self._initialized:
+            return
+
         self.funcionarios_disponiveis = [
             funcionario_1, funcionario_2, funcionario_3, funcionario_4, funcionario_5,
             funcionario_6, funcionario_7, funcionario_8, funcionario_9
         ]
+
+        # ⚠️ NOVO: Controle de pedidos já alocados
+        # Set de tuplas (id_ordem, id_pedido) que já tiveram funcionários alocados
+        self.pedidos_alocados = set()
+
         logger.info(f"🏭 GestorFuncionarios inicializado com {len(self.funcionarios_disponiveis)} funcionários")
+
+        self._initialized = True
 
     def ler_requisitos_de_arquivo(self, id_ordem: int, id_pedido: int) -> List[RequisitoFuncionario]:
         """
@@ -118,6 +144,8 @@ class GestorFuncionarios:
         Aloca funcionários para todas as atividades de uma ordem|pedido.
         Implementa prioridade: funcionários já alocados no pedido têm preferência.
 
+        ⚠️ NOVO: Bloqueia alocação se o pedido já foi alocado anteriormente.
+
         Args:
             id_ordem: ID da ordem
             id_pedido: ID do pedido
@@ -125,6 +153,13 @@ class GestorFuncionarios:
         Returns:
             bool: True se todas as alocações foram bem-sucedidas
         """
+        # ⚠️ NOVO: Verificar se o pedido já foi alocado
+        pedido_key = (id_ordem, id_pedido)
+        if pedido_key in self.pedidos_alocados:
+            logger.warning(f"🚫 Ordem {id_ordem} | Pedido {id_pedido} já teve funcionários alocados anteriormente!")
+            logger.warning(f"💡 Use o método limpar_alocacao_pedido({id_ordem}, {id_pedido}) para permitir nova alocação")
+            return False
+
         logger.info(f"🎯 Iniciando alocação para Ordem {id_ordem} | Pedido {id_pedido}")
 
         # Limpar ocupações anteriores dos funcionários (opcional - comentar se não quiser)
@@ -238,6 +273,11 @@ class GestorFuncionarios:
         if alocacoes_realizadas or alocacoes_falhadas:
             self._salvar_logs_alocacoes(id_ordem, id_pedido, alocacoes_realizadas + alocacoes_falhadas)
 
+        # ⚠️ NOVO: Marcar pedido como alocado (mesmo se houver falhas parciais)
+        # Isso impede tentativas futuras de realocar
+        self.pedidos_alocados.add(pedido_key)
+        logger.info(f"📝 Pedido {id_ordem}|{id_pedido} marcado como alocado")
+
         logger.info(f"🏁 Alocação finalizada para Ordem {id_ordem} | Pedido {id_pedido}. Sucesso: {sucesso_total}")
         return sucesso_total
 
@@ -283,6 +323,64 @@ class GestorFuncionarios:
         for funcionario in self.funcionarios_disponiveis:
             funcionario.ocupacoes.clear()
         logger.info(f"🧹 Ocupações limpas de {len(self.funcionarios_disponiveis)} funcionários")
+
+    def limpar_alocacao_pedido(self, id_ordem: int, id_pedido: int):
+        """
+        Remove o pedido do histórico de alocações, permitindo que seja alocado novamente.
+        Também libera as ocupações dos funcionários para este pedido.
+
+        Args:
+            id_ordem: ID da ordem
+            id_pedido: ID do pedido
+        """
+        pedido_key = (id_ordem, id_pedido)
+
+        # Remove do set de pedidos alocados
+        if pedido_key in self.pedidos_alocados:
+            self.pedidos_alocados.remove(pedido_key)
+            logger.info(f"🧹 Pedido {id_ordem}|{id_pedido} removido do histórico de alocações")
+
+        # Libera ocupações dos funcionários
+        for funcionario in self.funcionarios_disponiveis:
+            funcionario.liberar_por_pedido(id_ordem, id_pedido)
+
+        logger.info(f"✅ Alocação do pedido {id_ordem}|{id_pedido} limpa - pronto para realocar")
+
+    def limpar_todas_alocacoes(self):
+        """
+        Limpa todas as alocações e ocupações.
+        Útil para resetar completamente o sistema de funcionários.
+        """
+        # Limpar histórico de pedidos alocados
+        qtd_pedidos = len(self.pedidos_alocados)
+        self.pedidos_alocados.clear()
+
+        # Limpar ocupações de todos os funcionários
+        self._limpar_ocupacoes_funcionarios()
+
+        logger.info(f"🧹 Sistema resetado: {qtd_pedidos} pedido(s) e todas as ocupações foram limpos")
+
+    def listar_pedidos_alocados(self) -> List[tuple]:
+        """
+        Retorna lista de pedidos que já tiveram funcionários alocados.
+
+        Returns:
+            List[tuple]: Lista de tuplas (id_ordem, id_pedido)
+        """
+        return sorted(list(self.pedidos_alocados))
+
+    def pedido_ja_alocado(self, id_ordem: int, id_pedido: int) -> bool:
+        """
+        Verifica se um pedido já teve funcionários alocados.
+
+        Args:
+            id_ordem: ID da ordem
+            id_pedido: ID do pedido
+
+        Returns:
+            bool: True se já foi alocado, False caso contrário
+        """
+        return (id_ordem, id_pedido) in self.pedidos_alocados
 
     def analisar_conflito_alocacao(
         self,
