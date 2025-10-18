@@ -1,0 +1,193 @@
+{
+  "funcionarios": [
+    {
+      "id": 1,
+      "nome": "Funcionário 1",
+      "setores": ["PANIFICACAO", "CONFEITARIA"],
+      "tipos_profissionais": ["PADEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        },
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "DOMINGO"
+        }
+      ],
+      "ch_semanal": 40,
+      "horario_inicio": "00:00",
+      "horario_final": "08:00",
+      "horario_intervalo": {
+        "inicio": "04:00",
+        "duracao_minutos": 30
+      },
+      "fip": 2.0
+    },
+    {
+      "id": 2,
+      "nome": "Funcionário 2",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 40,
+      "horario_inicio": "02:00",
+      "horario_final": "10:00",
+      "horario_intervalo": {
+        "inicio": "06:00",
+        "duracao_minutos": 30
+      },
+      "fip": 1.0
+    },
+    {
+      "id": 3,
+      "nome": "Funcionário 3",
+      "setores": ["PANIFICACAO", "CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 40,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": {
+        "inicio": "08:00",
+        "duracao_minutos": 60
+      },
+      "fip": 3.0
+    },
+    {
+      "id": 4,
+      "nome": "Funcionário 4",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "08:00",
+      "horario_final": "18:00",
+      "horario_intervalo": {
+        "inicio": "11:00",
+        "duracao_minutos": 60
+      },
+      "fip": 2.0
+    },
+    {
+      "id": 5,
+      "nome": "Funcionário 5",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        },
+        {
+          "tipo": "N_DIA_SEMANA_DO_MES",
+          "dia_semana": "DOMINGO",
+          "n_ocorrencia": 2
+        }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "08:00",
+      "horario_final": "18:00",
+      "horario_intervalo": {
+        "inicio": "11:00",
+        "duracao_minutos": 60
+      },
+      "fip": 2.0
+    },
+    {
+      "id": 6,
+      "nome": "Funcionário 6",
+      "setores": ["CONFEITARIA", "PANIFICACAO"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO", "AUXILIAR_DE_PADEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 40,
+      "horario_inicio": "06:00",
+      "horario_final": "14:00",
+      "horario_intervalo": {
+        "inicio": "10:00",
+        "duracao_minutos": 60
+      },
+      "fip": 1.0
+    },
+    {
+      "id": 7,
+      "nome": "Funcionário 7",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "08:00",
+      "horario_final": "18:00",
+      "horario_intervalo": {
+        "inicio": "11:00",
+        "duracao_minutos": 60
+      },
+      "fip": 1.0
+    },
+    {
+      "id": 8,
+      "nome": "Funcionário 8",
+      "setores": ["ALMOXARIFADO"],
+      "tipos_profissionais": ["ALMOXARIFE"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "08:00",
+      "horario_final": "18:00",
+      "horario_intervalo": {
+        "inicio": "11:00",
+        "duracao_minutos": 60
+      },
+      "fip": 1.0
+    },
+    {
+      "id": 9,
+      "nome": "Funcionário 9",
+      "setores": ["ALMOXARIFADO"],
+      "tipos_profissionais": ["ALMOXARIFE"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SABADO"
+        }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "08:00",
+      "horario_final": "18:00",
+      "horario_intervalo": {
+        "inicio": "11:00",
+        "duracao_minutos": 60
+      },
+      "fip": 1.0
+    }
+  ]
+}

@@ -1,0 +1,815 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{longtable}
+
+\geometry{margin=2.5cm}
+
+% Cores
+\definecolor{headerblue}{RGB}{0,102,204}
+\definecolor{sectiongray}{RGB}{100,100,100}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{loggreen}{RGB}{46,125,50}
+\definecolor{logred}{RGB}{198,40,40}
+
+% Estilo de seções
+\titleformat{\section}{\Large\bfseries\color{headerblue}}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\color{sectiongray}}{}{0em}{}
+
+% Cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{SIVIRA - Sistema de Logs}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+\begin{document}
+
+% Capa
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+
+    {\Huge\bfseries Sistema Inteligente para Visualização\par}
+    {\Huge\bfseries e Replanejamento de Atividades\par}
+    \vspace{0.5cm}
+    {\Large\bfseries (SIVIRA)\par}
+
+    \vspace{2cm}
+    {\LARGE\bfseries Documentação do Sistema de Logs\par}
+
+    \vspace{2cm}
+    {\large Módulo: \texttt{logs/}\par}
+
+    \vspace{1cm}
+    {\large Rastreamento Completo de Execução\par}
+
+    \vfill
+
+    {\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% Introdução
+\section{Introdução}
+
+O sistema de logs do SIVIRA é uma infraestrutura completa e hierárquica de rastreamento de execução que registra todos os aspectos da operação do sistema de produção. Os logs são organizados em 10 categorias principais, cada uma com propósito específico e formato padronizado.
+
+\subsection{Objetivos do Sistema de Logs}
+
+\begin{itemize}
+    \item \textbf{Rastreabilidade}: Registro completo de todas as operações executadas
+    \item \textbf{Auditoria}: Histórico detalhado para análise posterior
+    \item \textbf{Depuração}: Identificação rápida de problemas e erros
+    \item \textbf{Otimização}: Análise de desempenho e gargalos
+    \item \textbf{Validação}: Verificação de conformidade com requisitos
+\end{itemize}
+
+\subsection{Estrutura de Diretórios}
+
+\begin{tcolorbox}[colback=codebg,colframe=headerblue,title=Hierarquia de Pastas de Logs]
+\begin{verbatim}
+logs/
+├── agendas/                 📅 Agendas de equipamentos
+├── equipamentos/            🔧 Alocações de equipamentos
+├── equipamentos_detalhados/ 📊 Ocupações detalhadas
+├── equipamentos_reservados/ 🔒 Reservas de equipamentos
+├── erros/                   ❌ Erros e falhas
+├── execucoes/              🚀 Histórico de execuções
+├── funcionarios/           👷 Alocações de funcionários
+├── restricoes/             ⚖️ Restrições aplicadas
+├── temp/                   📝 Arquivos temporários
+└── tipos_funcionarios_requeridos/ 👥 Requisitos profissionais
+\end{verbatim}
+\end{tcolorbox}
+
+\newpage
+
+\section{Pastas de Logs}
+
+\subsection{logs/agendas/ - Agendas de Equipamentos}
+
+\subsubsection{Propósito}
+
+Armazena visualizações completas das agendas de equipamentos após execução de pedidos, incluindo todas as ocupações, configurações e detalhes técnicos.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{agenda\_equipamentos\_completa\_YYYYMMDD\_HHMMSS.log}
+
+\subsubsection{Conteúdo}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Cabeçalho}: Data/hora de geração, identificação do sistema
+    \item \textbf{Por equipamento}:
+    \begin{itemize}
+        \item Nome e tipo do equipamento
+        \item Configurações específicas (temperatura, velocidade, etc.)
+        \item Todas as ocupações com horários
+        \item Detalhes técnicos (bocas de fogão, níveis de forno, etc.)
+    \end{itemize}
+    \item \textbf{Estatísticas}: Número total de equipamentos, taxas de utilização
+\end{itemize}
+
+\subsubsection{Módulo Gerador}
+
+\begin{itemize}
+    \item \texttt{examples/producao/*\_com\_agenda.py}
+    \item Método: \texttt{\_salvar\_agenda\_completa\_em\_arquivo()}
+\end{itemize}
+
+\subsubsection{Quando é Criado}
+
+Ao final da execução de pedidos em scripts que incluem funcionalidade de agenda (coxinhas, folhados, múltiplos produtos).
+
+\subsection{logs/equipamentos/ - Alocações de Equipamentos}
+
+\subsubsection{Propósito}
+
+Registra todas as alocações de equipamentos para atividades de produção, permitindo rastrear qual equipamento foi usado em cada atividade.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{ordem: [ID\_ORDEM] | pedido: [ID\_PEDIDO].log}
+
+\subsubsection{Conteúdo}
+
+Formato de linha (separado por \texttt{|}):
+\begin{verbatim}
+ID_ORDEM | ID_PEDIDO | ID_ATIVIDADE | NOME_ITEM |
+NOME_ATIVIDADE | NOME_EQUIPAMENTO | HORA_INICIO | HORA_FIM
+\end{verbatim}
+
+\textbf{Exemplo}:
+\begin{verbatim}
+1 | 1 | 10011 | Pão Francês | pesagem_de_massas |
+Balança Digital 1 | 02:12 | 02:24
+\end{verbatim}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/logger\_de\_atividades.py}
+    \item \texttt{utils/logs/gerenciador\_logs.py}
+    \item Função: \texttt{registrar\_log\_equipamentos()}
+\end{itemize}
+
+\subsubsection{Quando é Criado}
+
+Durante a execução de cada atividade que requer equipamento, em modo append para construir histórico completo do pedido.
+
+\subsection{logs/equipamentos\_detalhados/ - Ocupações Detalhadas}
+
+\subsubsection{Propósito}
+
+Fornece visão extremamente detalhada das ocupações de equipamentos, incluindo informações granulares como bocas específicas de fogão, níveis de forno, frações de bancada, etc.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{ocupacoes\_detalhadas\_ordem\_[ID\_ORDEM]\_pedidos\_[LISTA\_PEDIDOS]\_YYYYMMDD\_HHMMSS.log}
+
+\subsubsection{Conteúdo}
+
+Para cada equipamento:
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Identificação}: Nome, tipo, ID
+    \item \textbf{Ocupações simples}: Lista cronológica de usos
+    \item \textbf{Ocupações por nível/boca/fração}:
+    \begin{itemize}
+        \item Fornos: ocupações por nível (1-5)
+        \item Fogões: ocupações por boca (1-6)
+        \item Bancadas: ocupações por fração
+        \item Fritadeiras: ocupações por fração
+    \end{itemize}
+    \item \textbf{Detalhes técnicos}: Configurações, capacidades, restrições
+\end{itemize}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/logger\_ocupacao\_detalhada.py}
+    \item \texttt{utils/logs/capturador\_ocupacoes\_equipamentos.py}
+    \item Classes: \texttt{LoggerOcupacaoDetalhada}, \texttt{CapturadorOcupacoesEquipamentos}
+\end{itemize}
+
+\subsubsection{Quando é Criado}
+
+Ao final da execução de pedidos, capturando estado completo de todos os equipamentos utilizados.
+
+\subsection{logs/equipamentos\_reservados/ - Reservas de Equipamentos}
+
+\subsubsection{Propósito}
+
+Registra reservas temporárias de equipamentos durante o processo de alocação, útil para debug de algoritmos de scheduling.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{*.log} (formato variado conforme necessidade)
+
+\subsubsection{Conteúdo}
+
+Informações sobre:
+\begin{itemize}
+    \item Equipamentos marcados como reservados
+    \item Período de reserva
+    \item Atividade que solicitou a reserva
+    \item Status da reserva (confirmada, liberada, expirada)
+\end{itemize}
+
+\subsubsection{Quando é Criado}
+
+Durante processos de otimização e alocação que utilizam sistema de reservas.
+
+\subsection{logs/erros/ - Erros e Falhas}
+
+\subsubsection{Propósito}
+
+Sistema centralizado e estruturado para registro de todos os erros, falhas e exceções do sistema, com contexto completo para análise.
+
+\subsubsection{Formato de Arquivo}
+
+\begin{itemize}
+    \item \textbf{JSON estruturado}: \texttt{[TIPO\_ERRO]\_[ORDEM]\_[PEDIDO]\_[ATIVIDADE]\_[TIMESTAMP].json}
+    \item \textbf{Log de compatibilidade}: \texttt{ordem: [ID] | pedido: [ID].log}
+\end{itemize}
+
+\subsubsection{Conteúdo do JSON}
+
+\begin{tcolorbox}[colback=codebg,colframe=logred,title=Estrutura de Erro JSON]
+\begin{lstlisting}[language=json]
+{
+  "timestamp": "2025-10-06T18:00:00",
+  "identificacao": {
+    "id_ordem": 1,
+    "id_pedido": 1,
+    "id_atividade": 10011,
+    "nome_atividade": "pesagem_de_massas"
+  },
+  "erro": {
+    "tipo": "TEMPORAL_ALLOCATION_ERROR",
+    "detalhes": {...},
+    "nivel_impacto": "ALTO"
+  },
+  "contexto": {...},
+  "sistema": {
+    "versao_log": "2.0",
+    "gerado_por": "ErrorLogger"
+  }
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsubsection{Tipos de Erro Registrados}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{TEMPORAL\_ALLOCATION\_ERROR}: Falhas em alocação temporal
+    \item \textbf{DEADLINE\_ALLOCATION\_ERROR}: Violações de prazo
+    \item \textbf{QUANTITY\_ALLOCATION\_ERROR}: Problemas de quantidade
+    \item \textbf{CONFIGURATION\_ERROR}: Erros de configuração
+    \item \textbf{TIMING\_ERROR}: Problemas de timing
+    \item \textbf{RESOURCE\_ERROR}: Falta de recursos
+\end{itemize}
+
+\subsubsection{Níveis de Impacto}
+
+\begin{itemize}
+    \item \textbf{CRÍTICO}: Sistema não pode continuar
+    \item \textbf{ALTO}: Pedido/atividade falharam
+    \item \textbf{MÉDIO}: Degradação de performance
+    \item \textbf{BAIXO}: Avisos informativos
+\end{itemize}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/error\_logger\_utils.py}
+    \item \texttt{utils/logs/temporal\_allocation\_logger.py}
+    \item \texttt{utils/logs/deadline\_allocation\_logger.py}
+    \item \texttt{utils/logs/timing\_exceptions.py}
+    \item \texttt{utils/logs/quantity\_exceptions.py}
+    \item Classe principal: \texttt{ErrorLogger}
+\end{itemize}
+
+\subsection{logs/execucoes/ - Histórico de Execuções}
+
+\subsubsection{Propósito}
+
+Mantém histórico de alto nível de todas as execuções de pedidos, servindo como índice para navegação nos demais logs.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{execucao\_[TIPO]\_[TIMESTAMP].log}
+
+\textbf{Exemplos}:
+\begin{itemize}
+    \item \texttt{execucao\_pedidos\_20251006\_180000.log}
+    \item \texttt{execucao\_coxinhas\_20251006\_180000.log}
+\end{itemize}
+
+\subsubsection{Conteúdo}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Cabeçalho}: Data/hora, versão do sistema
+    \item \textbf{Configuração}: Parâmetros de execução
+    \item \textbf{Pedidos processados}: Lista com status
+    \item \textbf{Estatísticas}:
+    \begin{itemize}
+        \item Tempo total de execução
+        \item Número de atividades processadas
+        \item Taxa de sucesso
+        \item Recursos utilizados
+    \end{itemize}
+    \item \textbf{Referências}: Links para outros logs relacionados
+\end{itemize}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/gerenciador\_logs.py}
+    \item \texttt{utils/logs/gerenciador\_logs\_fases.py}
+\end{itemize}
+
+\subsection{logs/funcionarios/ - Alocações de Funcionários}
+
+\subsubsection{Propósito}
+
+Registra todas as alocações de funcionários para atividades de produção, rastreando quem fez o quê e quando.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{ordem: [ID\_ORDEM] | pedido: [ID\_PEDIDO].log}
+
+\subsubsection{Conteúdo}
+
+Formato de linha (separado por \texttt{|}):
+\begin{verbatim}
+ID_ORDEM | ID_PEDIDO | ID_ATIVIDADE | NOME_ITEM |
+NOME_ATIVIDADE | NOME_FUNCIONARIO [STATUS] |
+HORA_INICIO [DATA] | HORA_FIM [DATA]
+\end{verbatim}
+
+\textbf{Status possíveis}:
+\begin{itemize}
+    \item \texttt{✅} - Funcionário alocado com sucesso
+    \item \texttt{❌} - Funcionário indisponível (com tipos necessários)
+\end{itemize}
+
+\textbf{Exemplo}:
+\begin{verbatim}
+1 | 1 | 10011 | Pão Francês | pesagem_de_massas |
+Funcionário 1 ✅ | 02:12 [11/10/2025] | 02:24 [11/10/2025]
+\end{verbatim}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/gerenciador\_logs.py}
+    \item \texttt{services/gestores/funcionarios/gestor\_funcionarios.py}
+    \item Função: \texttt{registrar\_log\_funcionarios()}
+\end{itemize}
+
+\subsubsection{Quando é Criado}
+
+Durante a alocação automática de funcionários para atividades de pedidos, registrando tanto sucessos quanto falhas.
+
+\subsection{logs/restricoes/ - Restrições Aplicadas}
+
+\subsubsection{Propósito}
+
+Documenta todas as restrições aplicadas durante o processo de scheduling, permitindo entender decisões de alocação.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{ordem\_[ID\_ORDEM]\_restricoes.json}
+
+\subsubsection{Conteúdo do JSON}
+
+\begin{tcolorbox}[colback=codebg,colframe=headerblue,title=Estrutura de Restrições]
+\begin{lstlisting}[language=json]
+{
+  "ordem": 1,
+  "pedidos": [1, 2, 3],
+  "restricoes": [
+    {
+      "id_pedido": 1,
+      "id_atividade": 10011,
+      "tipo_restricao": "TEMPORAL",
+      "detalhes": {
+        "inicio_minimo": "2025-10-11T02:00:00",
+        "inicio_maximo": "2025-10-11T03:00:00"
+      },
+      "aplicada": true,
+      "impacto": "Limitou janela de execucao"
+    }
+  ],
+  "timestamp": "2025-10-06T18:00:00"
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsubsection{Tipos de Restrição}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{TEMPORAL}: Restrições de horário/prazo
+    \item \textbf{PRECEDENCIA}: Ordem de execução entre atividades
+    \item \textbf{RECURSO}: Disponibilidade de equipamentos/funcionários
+    \item \textbf{CAPACIDADE}: Limites de produção
+    \item \textbf{QUALIDADE}: Requisitos de processo
+\end{itemize}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/registrador\_restricoes.py}
+    \item Classe: \texttt{RegistradorRestricoes}
+\end{itemize}
+
+\subsection{logs/temp/ - Arquivos Temporários}
+
+\subsubsection{Propósito}
+
+Armazena logs temporários durante execução, úteis para debug em tempo real mas que podem ser descartados após processamento.
+
+\subsubsection{Conteúdo}
+
+\begin{itemize}
+    \item Logs intermediários de processos longos
+    \item Dumps de estado para recuperação
+    \item Snapshots de dados em processamento
+    \item Caches temporários
+\end{itemize}
+
+\subsubsection{Ciclo de Vida}
+
+Arquivos nesta pasta podem ser automaticamente limpos:
+\begin{itemize}
+    \item No início de nova execução
+    \item Após conclusão bem-sucedida
+    \item Por rotinas de manutenção
+\end{itemize}
+
+\subsection{logs/tipos\_funcionarios\_requeridos/ - Requisitos Profissionais}
+
+\subsubsection{Propósito}
+
+Documenta os tipos profissionais e funcionários necessários para cada atividade de cada pedido, servindo como base para alocação de mão de obra.
+
+\subsubsection{Formato de Arquivo}
+
+\texttt{ordem: [ID\_ORDEM] | pedido: [ID\_PEDIDO].log}
+
+\subsubsection{Conteúdo}
+
+Para cada atividade do pedido:
+
+\begin{tcolorbox}[colback=codebg,colframe=loggreen,title=Formato de Requisito]
+\begin{verbatim}
+🔸 ATIVIDADE 10011: pesagem_de_massas_para_pao_frances
+⏰ Horário: 02:12 [11/10/2025] - 02:24 [11/10/2025]
+👥 Funcionários necessários: 2
+👨‍💼 Tipos permitidos: PADEIRO, AUXILIAR_DE_PADEIRO
+🎯 Prioridades (FIPs): PADEIRO: 2, AUXILIAR_DE_PADEIRO: 1
+────────────────────────────────────────────────────
+\end{verbatim}
+\end{tcolorbox}
+
+\textbf{Informações detalhadas}:
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{ID e nome da atividade}
+    \item \textbf{Janela temporal}: Horário de início e fim com data completa
+    \item \textbf{Quantidade}: Número de funcionários necessários
+    \item \textbf{Tipos profissionais}: Lista de profissões aceitas
+    \item \textbf{FIP}: Fator de Importância do Profissional para cada tipo
+\end{itemize}
+
+\subsubsection{Módulos Geradores}
+
+\begin{itemize}
+    \item \texttt{utils/logs/registrador\_funcionarios.py}
+    \item Classe: \texttt{RegistradorFuncionarios}
+    \item Chamado por: \texttt{models/atividades/atividade\_modular.py}
+\end{itemize}
+
+\subsubsection{Quando é Criado}
+
+Durante a execução de atividades que requerem mão de obra, antes da alocação efetiva de funcionários.
+
+\subsubsection{Uso}
+
+Este log serve como entrada para o \texttt{GestorFuncionarios} que:
+\begin{enumerate}
+    \item Lê os requisitos deste arquivo
+    \item Identifica funcionários disponíveis e compatíveis
+    \item Aplica algoritmo de priorização baseado em FIP
+    \item Aloca funcionários e registra em \texttt{logs/funcionarios/}
+\end{enumerate}
+
+\newpage
+
+\section{Módulos Responsáveis}
+
+\subsection{utils/logs/gerenciador\_logs.py}
+
+Módulo principal de gerenciamento de logs.
+
+\textbf{Responsabilidades}:
+\begin{itemize}
+    \item Limpeza automática de logs na inicialização
+    \item Funções para registro em equipamentos e funcionários
+    \item Gerenciamento de pastas e arquivos
+    \item Utilitários de formatação
+\end{itemize}
+
+\textbf{Funções principais}:
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{limpar\_logs\_inicializacao()}: Limpa pastas de log
+    \item \texttt{registrar\_log\_equipamentos()}: Registra uso de equipamento
+    \item \texttt{registrar\_log\_funcionarios()}: Registra alocação de funcionário
+    \item \texttt{apagar\_logs\_por\_pedido\_e\_ordem()}: Remove logs específicos
+\end{itemize}
+
+\subsection{utils/logs/error\_logger\_utils.py}
+
+Sistema centralizado de logging de erros.
+
+\textbf{Classe principal}: \texttt{ErrorLogger}
+
+\textbf{Características}:
+\begin{itemize}
+    \item Formato JSON estruturado
+    \item Níveis de impacto (CRÍTICO, ALTO, MÉDIO, BAIXO)
+    \item Contexto completo do erro
+    \item Compatibilidade com sistema legado
+\end{itemize}
+
+\subsection{utils/logs/logger\_ocupacao\_detalhada.py}
+
+Gerador de logs extremamente detalhados de ocupações.
+
+\textbf{Classe principal}: \texttt{LoggerOcupacaoDetalhada}
+
+\textbf{Suporta}:
+\begin{itemize}
+    \item Equipamentos com níveis (fornos)
+    \item Equipamentos com bocas (fogões)
+    \item Equipamentos com frações (bancadas, fritadeiras)
+    \item Equipamentos simples
+\end{itemize}
+
+\subsection{utils/logs/registrador\_funcionarios.py}
+
+Registra requisitos de funcionários para atividades.
+
+\textbf{Classe principal}: \texttt{RegistradorFuncionarios}
+
+\textbf{Características}:
+\begin{itemize}
+    \item Extrai tipos profissionais necessários
+    \item Calcula FIP para priorização
+    \item Formata requisitos de forma legível
+    \item Integra com sistema de alocação
+\end{itemize}
+
+\subsection{utils/logs/registrador\_restricoes.py}
+
+Documenta restrições aplicadas durante scheduling.
+
+\textbf{Classe principal}: \texttt{RegistradorRestricoes}
+
+\textbf{Tipos de restrição}:
+\begin{itemize}
+    \item Temporais
+    \item De precedência
+    \item De recurso
+    \item De capacidade
+\end{itemize}
+
+\newpage
+
+\section{Fluxo de Logging}
+
+\subsection{Durante Execução de Pedido}
+
+\begin{enumerate}
+    \item \textbf{Início}: \texttt{logs/execucoes/} recebe cabeçalho
+    \item \textbf{Por atividade}:
+    \begin{itemize}
+        \item Restrições → \texttt{logs/restricoes/}
+        \item Requisitos funcionários → \texttt{logs/tipos\_funcionarios\_requeridos/}
+        \item Alocação equipamentos → \texttt{logs/equipamentos/}
+    \end{itemize}
+    \item \textbf{Alocação de RH}:
+    \begin{itemize}
+        \item GestorFuncionarios lê \texttt{logs/tipos\_funcionarios\_requeridos/}
+        \item Aloca funcionários
+        \item Registra em \texttt{logs/funcionarios/}
+    \end{itemize}
+    \item \textbf{Erros}: Qualquer falha → \texttt{logs/erros/}
+    \item \textbf{Finalização}:
+    \begin{itemize}
+        \item Ocupações detalhadas → \texttt{logs/equipamentos\_detalhados/}
+        \item Agenda completa → \texttt{logs/agendas/}
+        \item Estatísticas → \texttt{logs/execucoes/}
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Limpeza Automática}
+
+No início de cada execução do menu principal:
+
+\begin{enumerate}
+    \item Limpa \texttt{logs/funcionarios/}
+    \item Limpa \texttt{logs/equipamentos/}
+    \item Limpa \texttt{logs/erros/}
+    \item Limpa \texttt{logs/execucoes/}
+    \item Limpa \texttt{logs/restricoes/}
+    \item Limpa \texttt{logs/equipamentos\_detalhados/}
+    \item Remove \texttt{data/pedidos/pedidos\_salvos.json}
+\end{enumerate}
+
+\textbf{Pastas preservadas}:
+\begin{itemize}
+    \item \texttt{logs/agendas/} - Histórico valioso
+    \item \texttt{logs/tipos\_funcionarios\_requeridos/} - Gerado sob demanda
+\end{itemize}
+
+\newpage
+
+\section{Formatos e Convenções}
+
+\subsection{Timestamps}
+
+\textbf{Em nomes de arquivo}:
+\begin{verbatim}
+YYYYMMDD_HHMMSS
+Exemplo: 20251006_180000
+\end{verbatim}
+
+\textbf{Em conteúdo (JSON)}:
+\begin{verbatim}
+ISO 8601: YYYY-MM-DDTHH:MM:SS
+Exemplo: 2025-10-06T18:00:00
+\end{verbatim}
+
+\textbf{Em logs texto}:
+\begin{verbatim}
+HH:MM [DD/MM/YYYY]
+Exemplo: 18:00 [06/10/2025]
+\end{verbatim}
+
+\subsection{Separadores}
+
+\textbf{Logs estruturados}:
+\begin{itemize}
+    \item Campo: \texttt{|} (pipe)
+    \item Espaçamento: \texttt{ | } (pipe com espaços)
+\end{itemize}
+
+\textbf{Nomes de arquivo}:
+\begin{itemize}
+    \item Palavras: \texttt{\_} (underscore)
+    \item Componentes: \texttt{ordem\_1\_pedido\_1}
+\end{itemize}
+
+\subsection{Encoding}
+
+Todos os arquivos utilizam:
+\begin{itemize}
+    \item \textbf{Encoding}: UTF-8
+    \item \textbf{Line ending}: Unix (LF)
+    \item \textbf{BOM}: Não utilizado
+\end{itemize}
+
+\newpage
+
+\section{Estatísticas}
+
+\subsection{Resumo Geral}
+
+\begin{tabular}{lr}
+\textbf{Métrica} & \textbf{Valor} \\
+\hline
+Total de pastas de logs & 10 \\
+Módulos geradores de logs & 17 \\
+Formatos de arquivo & 2 (LOG, JSON) \\
+Tipos de erro categorizados & 6+ \\
+Níveis de impacto & 4 \\
+\hline
+\end{tabular}
+
+\subsection{Pastas por Categoria}
+
+\begin{tabular}{lll}
+\textbf{Categoria} & \textbf{Pastas} & \textbf{Propósito} \\
+\hline
+Recursos & 2 & equipamentos, funcionarios \\
+Detalhamento & 3 & equipamentos\_detalhados, agendas, tipos\_funcionarios\_requeridos \\
+Controle & 2 & restricoes, execucoes \\
+Erros & 1 & erros \\
+Temporário & 2 & temp, equipamentos\_reservados \\
+\hline
+\textbf{Total} & \textbf{10} & \\
+\end{tabular}
+
+\subsection{Módulos de Logging}
+
+\begin{longtable}{lp{8cm}}
+\textbf{Módulo} & \textbf{Responsabilidade} \\
+\hline
+\endfirsthead
+\textbf{Módulo} & \textbf{Responsabilidade} \\
+\hline
+\endhead
+
+gerenciador\_logs.py & Coordenação geral, limpeza, equipamentos, funcionários \\
+error\_logger\_utils.py & Sistema centralizado de erros \\
+logger\_ocupacao\_detalhada.py & Ocupações detalhadas de equipamentos \\
+capturador\_ocupacoes\_equipamentos.py & Captura estado de equipamentos \\
+registrador\_funcionarios.py & Requisitos profissionais \\
+registrador\_restricoes.py & Restrições de scheduling \\
+temporal\_allocation\_logger.py & Erros temporais \\
+deadline\_allocation\_logger.py & Erros de prazo \\
+timing\_exceptions.py & Exceções de timing \\
+quantity\_exceptions.py & Exceções de quantidade \\
+logger\_de\_atividades.py & Logs de atividades \\
+gerenciador\_logs\_fases.py & Logs por fase \\
+log\_subprodutos\_agrupados.py & Agrupamento de subprodutos \\
+formatador\_logs\_limpo.py & Formatação de logs \\
+formatador\_timing\_limpo.py & Formatação de timing \\
+timing\_logger.py & Logs de timing \\
+quantity\_logger.py & Logs de quantidade \\
+\hline
+\end{longtable}
+
+\newpage
+
+\section{Boas Práticas}
+
+\subsection{Para Desenvolvedores}
+
+\begin{enumerate}
+    \item \textbf{Sempre use encoding UTF-8} ao abrir arquivos de log
+    \item \textbf{Adicione timestamps} em todas as entradas de log
+    \item \textbf{Use ErrorLogger} para erros estruturados
+    \item \textbf{Documente formato} de novos tipos de log
+    \item \textbf{Mantenha compatibilidade} com ferramentas de análise
+\end{enumerate}
+
+\subsection{Para Análise}
+
+\begin{enumerate}
+    \item \textbf{Comece por logs/execucoes/} para visão geral
+    \item \textbf{Use logs/erros/} para investigar problemas
+    \item \textbf{Cruze dados} entre equipamentos e funcionários
+    \item \textbf{Valide restrições} com logs/restricoes/
+    \item \textbf{Analise ocupações} com logs/equipamentos\_detalhados/
+\end{enumerate}
+
+\subsection{Manutenção}
+
+\begin{enumerate}
+    \item \textbf{Limpe logs antigos} periodicamente
+    \item \textbf{Arquive históricos} importantes
+    \item \textbf{Monitore tamanho} das pastas de log
+    \item \textbf{Verifique permissões} de escrita
+    \item \textbf{Faça backup} antes de limpezas massivas
+\end{enumerate}
+
+\newpage
+
+\section{Conclusão}
+
+O sistema de logs do SIVIRA fornece rastreabilidade completa e estruturada de todas as operações do sistema de produção. Com 10 categorias de logs, 17 módulos geradores e suporte a múltiplos formatos, o sistema permite:
+
+\begin{itemize}
+    \item \textbf{Auditoria completa}: Cada operação é rastreável
+    \item \textbf{Debug eficiente}: Erros contextualizados e categorizados
+    \item \textbf{Análise de desempenho}: Logs detalhados de ocupações
+    \item \textbf{Otimização}: Identificação de gargalos e oportunidades
+    \item \textbf{Conformidade}: Histórico para validação de processos
+\end{itemize}
+
+\subsection{Próximos Passos}
+
+Possíveis melhorias futuras:
+
+\begin{enumerate}
+    \item Visualização gráfica de logs
+    \item Sistema de alertas baseado em logs
+    \item Análise automática de padrões
+    \item Compressão de logs antigos
+    \item Dashboard de monitoramento em tempo real
+    \item Exportação para formatos analíticos (CSV, Parquet)
+\end{enumerate}
+
+\end{document}

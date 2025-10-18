@@ -266,8 +266,8 @@ def registrar_erro_execucao_pedido_limpo(id_ordem: int, id_pedido: int, erro: Ex
     
     # Salvar em arquivo com formato limpo
     try:
-        os.makedirs("logs/erros", exist_ok=True)
-        nome_arquivo = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+        os.makedirs("logs/equipamentos/erros", exist_ok=True)
+        nome_arquivo = f"logs/equipamentos/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
         
         with open(nome_arquivo, "w", encoding="utf-8") as f:
             f.write(log_limpo)

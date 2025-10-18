@@ -23,7 +23,7 @@ class TemporalAllocationLogger:
     - Análise de disponibilidade e horários ideais
     """
     
-    def __init__(self, base_dir: str = "logs/erros"):
+    def __init__(self, base_dir: str = "logs/equipamentos/erros"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
 

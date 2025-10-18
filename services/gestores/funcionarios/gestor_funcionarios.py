@@ -171,8 +171,9 @@ class GestorFuncionarios:
             logger.warning(f"⚠️ Nenhum requisito encontrado para Ordem {id_ordem} | Pedido {id_pedido}")
             return False
 
-        # Ordenar por horário para alocar sequencialmente
-        requisitos_ordenados = sorted(requisitos, key=lambda r: r.horario_inicio)
+        # ⚠️ CORREÇÃO: Manter ordem reversa do arquivo (última atividade → primeira atividade)
+        # Não reordenar - manter a ordem em que aparece no log de equipamentos
+        requisitos_ordenados = requisitos
 
         alocacoes_realizadas = []
         alocacoes_falhadas = []
@@ -269,14 +270,33 @@ class GestorFuncionarios:
                     'tipos_necessarios': tipos_enum
                 })
 
-        # Salvar logs das alocações (sucessos e falhas)
-        if alocacoes_realizadas or alocacoes_falhadas:
-            self._salvar_logs_alocacoes(id_ordem, id_pedido, alocacoes_realizadas + alocacoes_falhadas)
+                # 🔥 ROLLBACK: Liberar TODAS as alocações feitas anteriormente
+                logger.warning(f"🔄 ROLLBACK: Liberando {len(alocacoes_realizadas)} alocação(ões) anterior(es) devido à falha")
+                for alocacao in alocacoes_realizadas:
+                    for funcionario in alocacao['funcionarios']:
+                        # Liberar ocupação específica desta atividade
+                        requisito_anterior = alocacao['requisito']
+                        funcionario.liberar_por_atividade(id_ordem, id_pedido, requisito_anterior.id_atividade)
+                        logger.debug(f"   ↩️ Liberado: {funcionario.nome} da atividade {requisito_anterior.nome_atividade}")
 
-        # ⚠️ NOVO: Marcar pedido como alocado (mesmo se houver falhas parciais)
-        # Isso impede tentativas futuras de realocar
-        self.pedidos_alocados.add(pedido_key)
-        logger.info(f"📝 Pedido {id_ordem}|{id_pedido} marcado como alocado")
+                logger.error(f"❌ FALHA CRÍTICA: Pedido {id_ordem}|{id_pedido} NÃO será alocado (rollback completo)")
+                break  # Interrompe o loop - não processa mais atividades
+
+        # ⚠️ DECISÃO CRÍTICA: Só salvar logs e marcar como alocado se TUDO foi bem-sucedido
+        if sucesso_total:
+            # Salvar logs das alocações (apenas sucessos)
+            if alocacoes_realizadas:
+                self._salvar_logs_alocacoes(id_ordem, id_pedido, alocacoes_realizadas)
+
+            # Marcar pedido como alocado
+            self.pedidos_alocados.add(pedido_key)
+            logger.info(f"✅ Pedido {id_ordem}|{id_pedido} marcado como alocado com sucesso")
+        else:
+            # Salvar log de erro apenas
+            if alocacoes_falhadas:
+                self._salvar_logs_alocacoes(id_ordem, id_pedido, alocacoes_falhadas)
+
+            logger.warning(f"⚠️ Pedido {id_ordem}|{id_pedido} NÃO foi marcado como alocado (falha na alocação)")
 
         logger.info(f"🏁 Alocação finalizada para Ordem {id_ordem} | Pedido {id_pedido}. Sucesso: {sucesso_total}")
         return sucesso_total
@@ -568,13 +588,14 @@ class GestorFuncionarios:
 
         selecionados = []
         for f in candidatos_ordenados:
-            disponivel, motivo = f.verificar_disponibilidade_no_intervalo(inicio, fim)
+            # ✅ CORREÇÃO: Usar validação completa (folga + turno + intervalo + conflitos)
+            disponivel, motivo = f.validar_disponibilidade_completa(inicio, fim)
             if disponivel:
                 selecionados.append(f)
-            # else:
-            #     logger.warning(
-            #         f"⚠️ {f.nome} não pôde ser selecionado para {nome_atividade}. Motivo: {motivo}"
-            #     )
+            else:
+                logger.debug(
+                    f"⚠️ {f.nome} não pôde ser selecionado para {nome_atividade}. Motivo: {motivo}"
+                )
 
             if len(selecionados) == qtd_profissionais_requeridos:
                 return True, selecionados            
@@ -768,9 +789,9 @@ class GestorFuncionarios:
                                 logger.warning(f"⚠️ Funcionário não encontrado: {nome_funcionario}")
                                 continue
 
-                            # Parsear horários - formato: HH:MM [DD/MM]
-                            inicio_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_inicio_str)
-                            fim_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_fim_str)
+                            # Parsear horários - formato: HH:MM [DD/MM/YYYY]
+                            inicio_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2}/\d{4})\]', horario_inicio_str)
+                            fim_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2}/\d{4})\]', horario_fim_str)
 
                             if not inicio_match or not fim_match:
                                 logger.warning(f"⚠️ Formato de horário inválido: {horario_inicio_str} - {horario_fim_str}")
@@ -781,14 +802,9 @@ class GestorFuncionarios:
                             hora_fim = fim_match.group(1)
                             data_fim = fim_match.group(2)
 
-                            # Assumir ano atual se não fornecido
-                            ano_atual = datetime.now().year
-                            data_inicio_completa = f"{data_inicio}/{ano_atual}"
-                            data_fim_completa = f"{data_fim}/{ano_atual}"
-
                             # Converter para datetime
-                            inicio = datetime.strptime(f"{data_inicio_completa} {hora_inicio}", "%d/%m/%Y %H:%M")
-                            fim = datetime.strptime(f"{data_fim_completa} {hora_fim}", "%d/%m/%Y %H:%M")
+                            inicio = datetime.strptime(f"{data_inicio} {hora_inicio}", "%d/%m/%Y %H:%M")
+                            fim = datetime.strptime(f"{data_fim} {hora_fim}", "%d/%m/%Y %H:%M")
 
                             # Registrar ocupação no funcionário
                             funcionario.registrar_ocupacao(
@@ -881,9 +897,9 @@ class GestorFuncionarios:
                             if not tipos_necessarios:
                                 continue
 
-                            # Parsear horários - formato: HH:MM [DD/MM]
-                            inicio_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_inicio_str)
-                            fim_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2})\]', horario_fim_str)
+                            # Parsear horários - formato: HH:MM [DD/MM/YYYY]
+                            inicio_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2}/\d{4})\]', horario_inicio_str)
+                            fim_match = re.match(r'(\d{2}:\d{2}) \[(\d{2}/\d{2}/\d{4})\]', horario_fim_str)
 
                             if not inicio_match or not fim_match:
                                 continue
@@ -893,14 +909,9 @@ class GestorFuncionarios:
                             hora_fim = fim_match.group(1)
                             data_fim = fim_match.group(2)
 
-                            # Assumir ano atual
-                            ano_atual = datetime.now().year
-                            data_inicio_completa = f"{data_inicio}/{ano_atual}"
-                            data_fim_completa = f"{data_fim}/{ano_atual}"
-
                             # Converter para datetime
-                            inicio = datetime.strptime(f"{data_inicio_completa} {hora_inicio}", "%d/%m/%Y %H:%M")
-                            fim = datetime.strptime(f"{data_fim_completa} {hora_fim}", "%d/%m/%Y %H:%M")
+                            inicio = datetime.strptime(f"{data_inicio} {hora_inicio}", "%d/%m/%Y %H:%M")
+                            fim = datetime.strptime(f"{data_fim} {hora_fim}", "%d/%m/%Y %H:%M")
 
                             # Assumir quantidade 1 se não especificado
                             quantidade = 1

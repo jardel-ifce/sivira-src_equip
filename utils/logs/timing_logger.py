@@ -20,7 +20,7 @@ class TimingLogger:
     Integra com o sistema de logs existente.
     """
     
-    def __init__(self, base_dir: str = "logs/erros"):
+    def __init__(self, base_dir: str = "logs/equipamentos/erros"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
     
@@ -107,7 +107,7 @@ class TimingLogger:
             
             # Salvar em arquivo específico do formato limpo
             self.base_dir.mkdir(parents=True, exist_ok=True)
-            nome_arquivo_limpo = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+            nome_arquivo_limpo = f"logs/equipamentos/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
             
             with open(nome_arquivo_limpo, "w", encoding="utf-8") as f:
                 f.write(log_limpo)

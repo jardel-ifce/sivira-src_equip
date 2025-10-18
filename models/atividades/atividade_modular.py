@@ -230,19 +230,26 @@ class AtividadeModular:
                 # Erro específico de faixa de quantidade - logar estruturadamente
                 faixas_disponiveis = self.dados_atividade.get("faixas", [])
 
-                # Tentar extrair informações do pedido
-                id_ordem = getattr(self, 'id_ordem', 1)  # fallback para 1 se não disponível
-                id_pedido = getattr(self, 'id_pedido', 1)  # fallback para 1 se não disponível
-                nome_item = self.dados_atividade.get("nome", "item_desconhecido")
-                id_item = self.dados_atividade.get("id_item", 0)
+                # ✅ CORREÇÃO: Usar self.id_item (já disponível) em vez de buscar em dados_atividade
+                id_item = self.id_item if hasattr(self, 'id_item') and self.id_item else 0
+                nome_item = self.nome_item if hasattr(self, 'nome_item') else "item_desconhecido"
 
-                # Determinar arquivo de configuração baseado no nome/id
-                arquivo_configuracao = f"data/produtos/atividades/{id_item}_{nome_item}.json"
+                # Determinar o tipo de item para construir caminho correto
+                tipo_item_str = self.tipo_item.name.lower() if hasattr(self, 'tipo_item') else "produtos"
+                if tipo_item_str == "produto":
+                    pasta = "produtos"
+                elif tipo_item_str == "subproduto":
+                    pasta = "subprodutos"
+                else:
+                    pasta = "produtos"
+
+                # Determinar arquivo de configuração baseado no tipo e ID real
+                arquivo_configuracao = f"data/{pasta}/atividades/{id_item}_{nome_item}.json"
 
                 # Logar erro estruturado
                 log_configuration_range_error(
-                    id_ordem=id_ordem,
-                    id_pedido=id_pedido,
+                    id_ordem=self.id_ordem,
+                    id_pedido=self.id_pedido,
                     id_atividade=self.id_atividade,
                     nome_atividade=self.nome_atividade,
                     id_item=id_item,
@@ -253,6 +260,7 @@ class AtividadeModular:
                     contexto_adicional={
                         "metodo_origem": "_configurar_tempo",
                         "classe": "AtividadeModular",
+                        "tipo_item": self.tipo_item.name if hasattr(self, 'tipo_item') else "DESCONHECIDO",
                         "erro_original": str(e)
                     }
                 )

@@ -1,7 +1,7 @@
 from typing import List, Any, Optional, Union, Tuple
 from models.funcionarios.funcionario import Funcionario
 from utils.logs.logger_factory import setup_logger
-from utils.logs.gerenciador_logs import remover_logs_pedido
+from utils.logs.gerenciador_logs import apagar_logs_por_pedido_e_ordem
 from utils.logs.logger_ocupacao_detalhada import logger_ocupacao_detalhada
 
 logger = setup_logger("Rollback")
@@ -10,6 +10,11 @@ logger = setup_logger("Rollback")
 def rollback_pedido(id_ordem: int, id_pedido: int, atividades_modulares: List[Any], funcionarios: List[Funcionario]):
     """
     🔄 Executa rollback completo do pedido: libera equipamentos, funcionários e remove logs.
+
+    ✅ ATUALIZADO: Agora usa apagar_logs_por_pedido_e_ordem() para remover logs de:
+       - logs/equipamentos/sucesso/
+       - logs/funcionarios/sucesso/
+       - logs/funcionarios/erro/
     """
     logger.info(f"🔄 Iniciando rollback do pedido {id_pedido} da ordem {id_ordem}.")
     for atividade in atividades_modulares:
@@ -25,8 +30,8 @@ def rollback_pedido(id_ordem: int, id_pedido: int, atividades_modulares: List[An
         id_pedido=id_pedido,
     )
 
-    # Remove logs tradicionais
-    remover_logs_pedido(id_pedido)
+    # ✅ Remove logs (equipamentos/sucesso + funcionarios/sucesso + funcionarios/erro)
+    apagar_logs_por_pedido_e_ordem(id_ordem, id_pedido)
 
     # 🆕 Remove logs detalhados de equipamentos
     logger_ocupacao_detalhada.rollback_ordem_pedido(id_ordem, id_pedido)

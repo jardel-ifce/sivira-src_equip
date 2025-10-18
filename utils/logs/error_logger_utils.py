@@ -15,7 +15,7 @@ class ErrorLogger:
     Integra com a estrutura existente de logs e permite expansão para novos tipos de erro.
     """
     
-    def __init__(self, base_dir: str = "logs/erros"):
+    def __init__(self, base_dir: str = "logs/equipamentos/erros"):
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
         
@@ -107,24 +107,93 @@ class ErrorLogger:
         return filepath
         
     def _salvar_erro_compatibilidade(self, erro_data: Dict[str, Any]):
-        """Mantém compatibilidade com sistema de logs existente."""
+        """Mantém compatibilidade com sistema de logs existente - formato legível."""
         try:
-            from utils.logs.gerenciador_logs import salvar_erro_em_log
-            
-            # Criar exceção sintética para compatibilidade
-            class ErroEstruturado(Exception):
-                def __init__(self, erro_data):
-                    self.erro_data = erro_data
-                    msg = f"{erro_data['erro']['tipo']}: {erro_data['erro']['detalhes']}"
-                    super().__init__(msg)
-            
             id_ordem = erro_data['identificacao']['id_ordem']
             id_pedido = erro_data['identificacao']['id_pedido']
-            
-            salvar_erro_em_log(id_ordem, id_pedido, ErroEstruturado(erro_data))
-            
+            id_atividade = erro_data['identificacao']['id_atividade']
+            nome_atividade = erro_data['identificacao']['nome_atividade']
+
+            tipo_erro = erro_data['erro']['tipo']
+            detalhes = erro_data['erro']['detalhes']
+            nivel_impacto = erro_data['erro']['nivel_impacto']
+            timestamp = erro_data['timestamp']
+
+            # Criar log formatado e legível
+            log_path = self.base_dir / f"ordem: {id_ordem} | pedido: {id_pedido}.log"
+
+            # Formatar detalhes de forma legível
+            detalhes_formatados = self._formatar_detalhes_legiveis(detalhes, tipo_erro)
+
+            conteudo = f"""==============================================
+📅 Data/Hora: {timestamp[:19].replace('T', ' ')}
+🧾 Ordem: {id_ordem} | Pedido: {id_pedido}
+🔧 Atividade: {nome_atividade} (ID: {id_atividade})
+⚠️ Tipo de Erro: {tipo_erro}
+🎯 Nível de Impacto: {nivel_impacto}
+--------------------------------------------------
+📋 DETALHES DO ERRO:
+{detalhes_formatados}
+==============================================
+
+"""
+
+            # Anexar ao arquivo existente ou criar novo
+            with open(log_path, 'a', encoding='utf-8') as f:
+                f.write(conteudo)
+
+            logger.debug(f"💾 Erro legível salvo em: {log_path}")
+
         except Exception as e:
-            logger.warning(f"⚠️ Falha ao manter compatibilidade com logs existentes: {e}")
+            logger.warning(f"⚠️ Falha ao salvar log legível: {e}")
+
+    def _formatar_detalhes_legiveis(self, detalhes: Dict[str, Any], tipo_erro: str) -> str:
+        """Formata detalhes do erro de forma legível e estruturada."""
+        linhas = []
+
+        if tipo_erro == "CONFIGURACAO_FAIXA_QUANTIDADE":
+            linhas.append(f"  • Item: {detalhes.get('nome_item', 'N/A')} (ID: {detalhes.get('id_item', 'N/A')})")
+            linhas.append(f"  • Quantidade solicitada: {detalhes.get('quantidade_solicitada', 0)} {detalhes.get('unidade', 'unidades')}")
+            linhas.append(f"  • Arquivo de configuração: {detalhes.get('arquivo_configuracao', 'N/A')}")
+            linhas.append(f"  • Motivo: {detalhes.get('motivo', 'N/A')}")
+
+            # Faixas disponíveis
+            faixas = detalhes.get('faixas_disponiveis', [])
+            if faixas:
+                linhas.append(f"\n  📊 Faixas configuradas ({len(faixas)}):")
+                for i, faixa in enumerate(faixas, 1):
+                    linhas.append(
+                        f"     {i}. Min: {faixa.get('quantidade_min', 0):>6} | "
+                        f"Max: {faixa.get('quantidade_max', 0):>6} | "
+                        f"Duração: {faixa.get('duracao', 'N/A')}"
+                    )
+
+            # Sugestões
+            sugestoes = detalhes.get('sugestoes', [])
+            if sugestoes:
+                linhas.append(f"\n  💡 Sugestões de correção:")
+                for i, sugestao in enumerate(sugestoes, 1):
+                    linhas.append(f"     {i}. {sugestao}")
+
+            # Exemplo de faixa
+            exemplo = detalhes.get('exemplo_faixa', {})
+            if exemplo:
+                linhas.append(f"\n  📝 Exemplo de faixa para corrigir:")
+                linhas.append(
+                    f"     Min: {exemplo.get('quantidade_min', 0)} | "
+                    f"Max: {exemplo.get('quantidade_max', 0)} | "
+                    f"Duração: {exemplo.get('duracao', 'N/A')}"
+                )
+
+        else:
+            # Formato genérico para outros tipos de erro
+            for chave, valor in detalhes.items():
+                if isinstance(valor, (list, dict)):
+                    linhas.append(f"  • {chave}: {json.dumps(valor, indent=4, ensure_ascii=False)}")
+                else:
+                    linhas.append(f"  • {chave}: {valor}")
+
+        return "\n".join(linhas)
     
     def listar_erros_por_pedido(self, id_ordem: int, id_pedido: int) -> List[Dict[str, Any]]:
         """Lista todos os erros estruturados de um pedido específico."""

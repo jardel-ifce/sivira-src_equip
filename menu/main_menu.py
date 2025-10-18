@@ -33,6 +33,8 @@ from menu.gerenciador_pedidos import GerenciadorPedidos
 from menu.utils_menu import MenuUtils
 from services.gestores.producao import GestorProducao
 from services.gestores.funcionarios.gestor_funcionarios import GestorFuncionarios
+from services.validacao.validador_pedidos import ValidadorPedidos
+from services.exportacao.exportador_banco import ExportadorBanco
 from utils.logs.gerenciador_logs import limpar_logs_inicializacao
 from analisador.analisador_pedidos import AnalisadorPedidos
 from analisador.calculador_reagendamento import CalculadorReagendamento
@@ -74,6 +76,8 @@ class MenuPrincipal:
         self.gerenciador = GerenciadorPedidos()
         self.gestor_producao = GestorProducao()  # ✅ NOVO: Usa GestorProducao independente
         self.gestor_funcionarios = GestorFuncionarios()  # ✅ SINGLETON: Uma única instância para toda sessão
+        self.validador_pedidos = ValidadorPedidos()  # ✅ NOVO: Validador de pedidos
+        self.exportador_banco = ExportadorBanco()  # ✅ NOVO: Exportador para banco
         self.utils = MenuUtils()
         self.rodando = True
 
@@ -177,6 +181,9 @@ class MenuPrincipal:
         print("📦 ALMOXARIFADO:")
         print("G️⃣  Gestão de Almoxarifado")
         print()
+        print("✅ VALIDAÇÃO E EXPORTAÇÃO:")  # 🆕 NOVA SEÇÃO
+        print("I️⃣  Validação e Exportação para Banco")
+        print()
         print("🔍 AVALIADOR DE PEDIDOS:")
         print("H️⃣  Analisar Pedidos (Atividades e Reagendamento)")
         print()
@@ -232,10 +239,13 @@ class MenuPrincipal:
 
         elif opcao.lower() == "g":  # 🆕 NOVA OPÇÃO - ALMOXARIFADO
             self.mostrar_submenu_almoxarifado()
-        
+
+        elif opcao.lower() == "i":  # 🆕 NOVA OPÇÃO - VALIDAÇÃO E EXPORTAÇÃO
+            self.mostrar_submenu_validacao_exportacao()
+
         elif opcao.lower() == "h":  # 🆕 NOVA OPÇÃO - AVALIADOR DE PEDIDOS
             self.mostrar_submenu_avaliador_pedidos()
-        
+
         elif opcao == "9":
             self.testar_sistema()
         
@@ -300,40 +310,44 @@ class MenuPrincipal:
                     print("2️⃣  Agenda por Tipo de Equipamento")
                     print("3️⃣  Agenda de Equipamento Específico")
                     print("4️⃣  Buscar Atividades por Item")
-                    print("5️⃣  Timeline por Ordem/Pedido")
-                    print("6️⃣  Verificar Conflitos de Horário")
+                    print("5️⃣  Estatísticas de Utilização")
+                    print("6️⃣  Timeline por Ordem/Pedido")
+                    print("7️⃣  Verificar Conflitos de Horário")
+                    print("8️⃣  Exportar Agenda para Arquivo TXT")
+                    print("9️⃣  Gerar Relatório PDF de Escala e Pedidos")
+                    print("R️⃣  Recarregar Dados dos Logs")
                     print()
                     print("🔧 SISTEMA REAL DE EQUIPAMENTOS:")
                     if integrador.sistema_disponivel():
-                        print("7️⃣  Agenda de Equipamento Real (mostrar_agenda)")
-                        print("8️⃣  Agenda de Gestor por Tipo")
-                        print("9️⃣  Listar Todos os Equipamentos Disponíveis")
-                        print("A️⃣  Verificar Status de Equipamento")
+                        print("T️⃣  Agenda de Equipamento Real (mostrar_agenda)")
+                        print("U️⃣  Agenda de Gestor por Tipo")
+                        print("W️⃣  Listar Todos os Equipamentos Disponíveis")
+                        print("X️⃣  Verificar Status de Equipamento")
                     else:
-                        print("7️⃣  [INDISPONÍVEL] Sistema de equipamentos não carregado")
-                        print("8️⃣  [INDISPONÍVEL] Gestores não acessíveis")
+                        print("T️⃣  [INDISPONÍVEL] Sistema de equipamentos não carregado")
+                        print("U️⃣  [INDISPONÍVEL] Gestores não acessíveis")
                     print()
                     print("[V]  Voltar ao Menu Principal")
                     print("─" * 60)
-                    
+
                     opcao_agenda = input("🎯 Escolha uma opção: ").strip().lower()
-                    
-                    # Processa opções tradicionais (baseadas em logs) 
-                    if opcao_agenda in ['1', '2', '3', '4', '5', '6']:
+
+                    # Processa opções tradicionais (baseadas em logs)
+                    if opcao_agenda in ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'r']:
                         visualizador.processar_opcao_agenda(opcao_agenda)
                         input("\nPressione Enter para continuar...")
-                    
+
                     # Processa opções do sistema real
-                    elif opcao_agenda == '7':
+                    elif opcao_agenda == 't':
                         self._agenda_equipamento_real(integrador)
                         input("\nPressione Enter para continuar...")
-                    elif opcao_agenda == '8':
+                    elif opcao_agenda == 'u':
                         self._agenda_gestor_tipo(integrador)
                         input("\nPressione Enter para continuar...")
-                    elif opcao_agenda == '9':
+                    elif opcao_agenda == 'w':
                         self._listar_equipamentos_reais(integrador)
                         input("\nPressione Enter para continuar...")
-                    elif opcao_agenda == 'a':
+                    elif opcao_agenda == 'x':
                         self._verificar_status_equipamento(integrador)
                         input("\nPressione Enter para continuar...")
                     elif opcao_agenda == 'v':
@@ -916,13 +930,13 @@ class MenuPrincipal:
                         print(f"📋 Comanda removida: {comanda_path}")
 
                     # 3. Remove logs de erro (ambos os formatos possíveis)
-                    erro_log_path = f"logs/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
+                    erro_log_path = f"logs/equipamentos/erros/ordem: {id_ordem} | pedido: {id_pedido}.log"
                     if os.path.exists(erro_log_path):
                         os.remove(erro_log_path)
                         arquivos_removidos += 1
                         print(f"⚠️ Log de erro removido: {erro_log_path}")
 
-                    erro_json_path = f"logs/erros/ordem_{id_ordem}_pedido_{id_pedido}_temporal_errors.json"
+                    erro_json_path = f"logs/equipamentos/erros/ordem_{id_ordem}_pedido_{id_pedido}_temporal_errors.json"
                     if os.path.exists(erro_json_path):
                         os.remove(erro_json_path)
                         arquivos_removidos += 1
@@ -1278,6 +1292,7 @@ class MenuPrincipal:
         print("Executando diagnóstico completo do sistema...\n")
         
         try:
+            
             resultados = self.gestor_producao.testar_sistema()
             
             # Resumo final
@@ -1421,7 +1436,7 @@ class MenuPrincipal:
             pastas_opcoes = {
                 "2": "logs/funcionarios",
                 "3": "logs/equipamentos", 
-                "4": "logs/erros",
+                "4": "logs/equipamentos/erros",
                 "5": "logs/execucoes"
             }
             
@@ -2363,12 +2378,13 @@ class MenuPrincipal:
                     print()
                     print("🔍 ANÁLISE E MONITORAMENTO:")
                     print("2️⃣  Analisar Conflitos de Funcionários")
-                    print("3️⃣  Mostrar Agenda de Funcionários")
+                    print("3️⃣  Mostrar Agenda de Funcionários (dos Logs)")
+                    print("4️⃣  Mostrar Agenda de Funcionários (da Memória)")
                     print()
                     print("🧹 GERENCIAMENTO:")
-                    print("4️⃣  Listar Pedidos Alocados")
-                    print("5️⃣  Limpar Alocação de Pedido Específico")
-                    print("6️⃣  Limpar Todas as Alocações")
+                    print("5️⃣  Listar Pedidos Alocados")
+                    print("6️⃣  Limpar Alocação de Pedido Específico")
+                    print("7️⃣  Limpar Todas as Alocações")
                     print()
                     print("🔧 NAVEGAÇÃO:")
                     print("V️⃣  Voltar ao Menu Principal")
@@ -2387,12 +2403,15 @@ class MenuPrincipal:
                         self.executar_agenda_funcionarios()
 
                     elif opcao == "4":
-                        self.listar_pedidos_alocados_funcionarios()
+                        self.executar_agenda_funcionarios_memoria()
 
                     elif opcao == "5":
-                        self.limpar_alocacao_pedido_especifico()
+                        self.listar_pedidos_alocados_funcionarios()
 
                     elif opcao == "6":
+                        self.limpar_alocacao_pedido_especifico()
+
+                    elif opcao == "7":
                         self.limpar_todas_alocacoes_funcionarios()
 
                     elif opcao.lower() == "v":
@@ -2585,14 +2604,14 @@ class MenuPrincipal:
         input("Pressione Enter para continuar...")
 
     def executar_agenda_funcionarios(self):
-        """Executa o script de agenda de funcionários"""
+        """Executa o script de agenda de funcionários (carrega dos logs)"""
         import subprocess
         import os
 
         try:
-            print("\n📅 EXECUTANDO VISUALIZAÇÃO DA AGENDA DE FUNCIONÁRIOS")
+            print("\n📅 EXECUTANDO VISUALIZAÇÃO DA AGENDA DE FUNCIONÁRIOS (DOS LOGS)")
             print("=" * 50)
-            print("📋 Carregando agenda de funcionários...")
+            print("📋 Carregando agenda de funcionários dos arquivos .log...")
             print()
 
             # Executar o script de agenda
@@ -2608,6 +2627,39 @@ class MenuPrincipal:
 
         except Exception as e:
             print(f"❌ Erro ao executar agenda: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def executar_agenda_funcionarios_memoria(self):
+        """Executa o script de agenda de funcionários (usa dados em memória)"""
+        try:
+            print("\n📅 EXECUTANDO VISUALIZAÇÃO DA AGENDA DE FUNCIONÁRIOS (DA MEMÓRIA)")
+            print("=" * 50)
+            print("📋 Exibindo ocupações atuais em memória (sem recarregar logs)...")
+            print()
+
+            # Verificar quantas ocupações existem em memória
+            total_ocupacoes_memoria = sum(len(f.ocupacoes) for f in self.gestor_funcionarios.funcionarios_disponiveis)
+
+            print(f"📊 Total de ocupações em memória: {total_ocupacoes_memoria}")
+            print()
+
+            if total_ocupacoes_memoria == 0:
+                print("⚠️ Nenhuma ocupação encontrada em memória.")
+                print("💡 Dica: Execute a opção 1 (Alocar Funcionários) primeiro ou use a opção 3 para carregar dos logs.")
+                print()
+
+            # Obter e exibir a agenda (baseada no atributo ocupacoes em memória)
+            agenda = self.gestor_funcionarios.mostrar_agenda_todos_funcionarios()
+            print(agenda)
+
+            print("\n✅ Agenda de funcionários exibida com sucesso!")
+
+        except Exception as e:
+            print(f"❌ Erro ao executar agenda: {e}")
+            import traceback
+            traceback.print_exc()
 
         print()
         input("Pressione Enter para continuar...")
@@ -2715,6 +2767,310 @@ class MenuPrincipal:
 
         except Exception as e:
             print(f"❌ Erro: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    # =========================================================================
+    #                   ✅ SUBMENU VALIDAÇÃO E EXPORTAÇÃO
+    # =========================================================================
+
+    def mostrar_submenu_validacao_exportacao(self):
+        """Submenu para validação e exportação de pedidos"""
+        try:
+            rodando_validacao = True
+
+            while rodando_validacao:
+                try:
+                    self.utils.limpar_tela()
+                    print("✅ SISTEMA DE PRODUÇÃO - VALIDAÇÃO E EXPORTAÇÃO")
+                    print("=" * 60)
+                    print()
+
+                    # Status do sistema
+                    print("📊 STATUS DO SISTEMA:")
+                    aprovados = self.validador_pedidos.listar_pedidos_aprovados()
+                    cancelados = self.validador_pedidos.listar_pedidos_cancelados()
+                    pendentes = self.exportador_banco.listar_pedidos_pendentes_exportacao()
+
+                    print(f"   ✅ Pedidos aprovados: {len(aprovados)}")
+                    print(f"   ❌ Pedidos cancelados: {len(cancelados)}")
+                    print(f"   ⏳ Pendentes de exportação: {len(pendentes)}")
+                    print()
+
+                    # Menu de opções
+                    print("OPÇÕES DISPONÍVEIS:")
+                    print()
+                    print("🔍 VALIDAÇÃO:")
+                    print("1️⃣  Validar Pedido Específico")
+                    print("2️⃣  Validar Todos os Pedidos Disponíveis")
+                    print()
+                    print("📋 RELATÓRIOS:")
+                    print("3️⃣  Relatório de Validação")
+                    print("4️⃣  Dashboard de Exportação")
+                    print()
+                    print("💾 EXPORTAÇÃO:")
+                    print("5️⃣  Exportar Pedidos Aprovados para Banco")
+                    print("6️⃣  Histórico de Exportações")
+                    print()
+                    print("🔧 NAVEGAÇÃO:")
+                    print("V️⃣  Voltar ao Menu Principal")
+                    print()
+                    print("─" * 60)
+
+                    opcao = input("🎯 Escolha uma opção: ").strip()
+
+                    if opcao == "1":
+                        self.validar_pedido_especifico()
+
+                    elif opcao == "2":
+                        self.validar_todos_pedidos()
+
+                    elif opcao == "3":
+                        self.mostrar_relatorio_validacao()
+
+                    elif opcao == "4":
+                        self.mostrar_dashboard_exportacao()
+
+                    elif opcao == "5":
+                        self.exportar_pedidos_aprovados()
+
+                    elif opcao == "6":
+                        self.mostrar_historico_exportacoes()
+
+                    elif opcao.lower() == "v":
+                        rodando_validacao = False
+
+                    else:
+                        print(f"\n⚡ Opção '{opcao}' inválida!")
+                        input("Pressione Enter para continuar...")
+
+                except KeyboardInterrupt:
+                    print("\n🔄 Voltando ao menu de validação...")
+                    input("Pressione Enter para continuar...")
+
+        except Exception as e:
+            print(f"\n❌ Erro no submenu de validação: {e}")
+            input("Pressione Enter para voltar ao menu principal...")
+
+    def validar_pedido_especifico(self):
+        """Valida um pedido específico"""
+        try:
+            print("\n🔍 VALIDAR PEDIDO ESPECÍFICO")
+            print("=" * 50)
+            print()
+
+            id_ordem = input("ID da Ordem: ").strip()
+            id_pedido = input("ID do Pedido: ").strip()
+
+            if not id_ordem or not id_pedido:
+                print("❌ IDs não fornecidos")
+                input("Pressione Enter para continuar...")
+                return
+
+            id_ordem = int(id_ordem)
+            id_pedido = int(id_pedido)
+
+            print()
+            print(f"🔍 Validando Ordem {id_ordem} | Pedido {id_pedido}...")
+            print()
+
+            resultado = self.validador_pedidos.validar_pedido(id_ordem, id_pedido, cancelar_se_invalido=True)
+
+            print(f"📊 RESULTADO DA VALIDAÇÃO:")
+            print(f"   Status: {resultado['status'].upper()}")
+            print(f"   Válido: {'✅ SIM' if resultado['valido'] else '❌ NÃO'}")
+            print()
+            print(f"   Equipamentos: {'✅' if resultado['equipamentos_ok'] else '❌'} {resultado['detalhes']['equipamentos']['atividades_sucesso']}/{resultado['detalhes']['equipamentos']['total_atividades']}")
+            print(f"   Funcionários: {'✅' if resultado['funcionarios_ok'] else '❌'} {resultado['detalhes']['funcionarios']['atividades_sucesso']}/{resultado['detalhes']['funcionarios']['total_atividades']}")
+
+            if not resultado['valido']:
+                print()
+                print(f"❌ Motivo do cancelamento:")
+                print(f"   {resultado.get('motivo_cancelamento', 'N/A')}")
+
+        except ValueError:
+            print("❌ IDs inválidos. Use números inteiros.")
+        except Exception as e:
+            print(f"❌ Erro ao validar pedido: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def validar_todos_pedidos(self):
+        """Valida todos os pedidos disponíveis nos logs"""
+        try:
+            print("\n🔍 VALIDAR TODOS OS PEDIDOS")
+            print("=" * 50)
+            print()
+
+            # Listar pedidos disponíveis dos logs
+            import os
+            import re
+
+            pedidos_disponiveis = set()
+
+            # Verificar logs de equipamentos
+            if os.path.exists("logs/equipamentos"):
+                for arquivo in os.listdir("logs/equipamentos"):
+                    match = re.match(r'ordem: (\d+) \| pedido: (\d+)\.log', arquivo)
+                    if match:
+                        pedidos_disponiveis.add((int(match.group(1)), int(match.group(2))))
+
+            # Verificar logs de funcionários
+            if os.path.exists("logs/funcionarios"):
+                for arquivo in os.listdir("logs/funcionarios"):
+                    match = re.match(r'ordem: (\d+) \| pedido: (\d+)\.log', arquivo)
+                    if match:
+                        pedidos_disponiveis.add((int(match.group(1)), int(match.group(2))))
+
+            if not pedidos_disponiveis:
+                print("📭 Nenhum pedido encontrado nos logs")
+                input("Pressione Enter para continuar...")
+                return
+
+            pedidos_ordenados = sorted(list(pedidos_disponiveis))
+            print(f"📋 Encontrados {len(pedidos_ordenados)} pedido(s) para validar:")
+            for ordem, pedido in pedidos_ordenados:
+                print(f"   • Ordem {ordem} | Pedido {pedido}")
+            print()
+
+            confirmacao = input("Deseja validar todos? (S/N): ").strip().upper()
+            if confirmacao != 'S':
+                print("❌ Operação cancelada")
+                input("Pressione Enter para continuar...")
+                return
+
+            print()
+            print("🔄 Validando pedidos...")
+            print("-" * 50)
+
+            aprovados = 0
+            cancelados = 0
+
+            for ordem, pedido in pedidos_ordenados:
+                resultado = self.validador_pedidos.validar_pedido(ordem, pedido, cancelar_se_invalido=True)
+                if resultado['valido']:
+                    print(f"✅ Ordem {ordem} | Pedido {pedido} - APROVADO")
+                    aprovados += 1
+                else:
+                    print(f"❌ Ordem {ordem} | Pedido {pedido} - CANCELADO")
+                    cancelados += 1
+
+            print()
+            print("📊 RESUMO:")
+            print(f"   ✅ Aprovados: {aprovados}")
+            print(f"   ❌ Cancelados: {cancelados}")
+
+        except Exception as e:
+            print(f"❌ Erro ao validar pedidos: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def mostrar_relatorio_validacao(self):
+        """Exibe relatório de validação"""
+        try:
+            print("\n📊 RELATÓRIO DE VALIDAÇÃO")
+            print("=" * 50)
+            print()
+
+            relatorio = self.validador_pedidos.gerar_relatorio_validacao()
+            print(relatorio)
+
+        except Exception as e:
+            print(f"❌ Erro ao gerar relatório: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def mostrar_dashboard_exportacao(self):
+        """Exibe dashboard de exportação"""
+        try:
+            print("\n📊 DASHBOARD DE EXPORTAÇÃO")
+            print("=" * 50)
+            print()
+
+            dashboard = self.exportador_banco.gerar_dashboard()
+            print(dashboard)
+
+        except Exception as e:
+            print(f"❌ Erro ao gerar dashboard: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def exportar_pedidos_aprovados(self):
+        """Exporta pedidos aprovados para o banco"""
+        try:
+            print("\n💾 EXPORTAR PEDIDOS PARA BANCO")
+            print("=" * 50)
+            print()
+
+            pendentes = self.exportador_banco.listar_pedidos_pendentes_exportacao()
+
+            if not pendentes:
+                print("✅ Nenhum pedido pendente de exportação")
+                print("💡 Todos os pedidos aprovados já foram exportados")
+                input("Pressione Enter para continuar...")
+                return
+
+            print(f"📋 {len(pendentes)} pedido(s) pendente(s) de exportação:")
+            for pedido in pendentes:
+                print(f"   • Ordem {pedido['id_ordem']} | Pedido {pedido['id_pedido']}")
+            print()
+
+            confirmacao = input("Deseja exportar todos? (S/N): ").strip().upper()
+            if confirmacao != 'S':
+                print("❌ Operação cancelada")
+                input("Pressione Enter para continuar...")
+                return
+
+            print()
+            print("🔄 Exportando pedidos...")
+            resultado = self.exportador_banco.exportar_lote(pendentes, executar_sql=False)
+
+            if resultado['sucesso']:
+                print(f"✅ Exportação concluída com sucesso!")
+                print()
+                print(f"📦 Lote ID: {resultado['lote_id']}")
+                print(f"📄 Script SQL: {resultado['arquivo_sql']}")
+                print(f"📊 Relatório: {resultado['arquivo_relatorio']}")
+                print()
+                print("⚠️ NOTA: SQL não foi executado (executar_sql=False)")
+                print("   Os scripts foram gerados e estão prontos para uso futuro")
+            else:
+                print(f"❌ Erro na exportação: {resultado.get('erro', 'Desconhecido')}")
+
+        except Exception as e:
+            print(f"❌ Erro ao exportar pedidos: {e}")
+
+        print()
+        input("Pressione Enter para continuar...")
+
+    def mostrar_historico_exportacoes(self):
+        """Exibe histórico de exportações"""
+        try:
+            print("\n📜 HISTÓRICO DE EXPORTAÇÕES")
+            print("=" * 50)
+            print()
+
+            historico = self.exportador_banco.listar_historico_exportacoes()
+
+            if not historico:
+                print("📭 Nenhuma exportação realizada ainda")
+            else:
+                print(f"Total de exportações: {len(historico)}")
+                print()
+                for lote in historico:
+                    print(f"📦 Lote {lote['lote_id']}")
+                    print(f"   Data: {lote['data_preparacao']}")
+                    print(f"   Pedidos: {lote['total_pedidos']}")
+                    print(f"   Status: {lote['status']}")
+                    print()
+
+        except Exception as e:
+            print(f"❌ Erro ao listar histórico: {e}")
 
         print()
         input("Pressione Enter para continuar...")

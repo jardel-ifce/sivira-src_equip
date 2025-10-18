@@ -91,7 +91,125 @@ class Funcionario:
             if pid == id_pedido and oid == id_ordem:
                 return True
         return False
-    
+
+    # ==========================================================
+    # 🔍 Validações Detalhadas (Retornam Tuple[bool, str])
+    # ==========================================================
+
+    def validar_folga(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        Valida se o funcionário NÃO está de folga no período.
+
+        Returns:
+            (True, "Disponível") se NÃO está de folga
+            (False, "Motivo") se ESTÁ de folga
+        """
+        if self.esta_de_folga(inicio):
+            return False, f"Funcionário de folga em {inicio.strftime('%d/%m/%Y')}"
+
+        if self.esta_de_folga(fim):
+            return False, f"Funcionário de folga em {fim.strftime('%d/%m/%Y')}"
+
+        return True, "Disponível (não está de folga)"
+
+    def validar_horario_turno(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        Valida se o período está dentro do horário de turno do funcionário.
+
+        Returns:
+            (True, "Disponível") se está dentro do turno
+            (False, "Motivo") se está fora do turno
+        """
+        inicio_turno = datetime.combine(inicio.date(), self.horario_inicio_turno)
+        fim_turno = datetime.combine(inicio.date(), self.horario_final_turno)
+
+        if inicio < inicio_turno:
+            return False, (
+                f"Início {inicio.strftime('%H:%M')} antes do turno "
+                f"({self.horario_inicio_turno.strftime('%H:%M')})"
+            )
+
+        if fim > fim_turno:
+            return False, (
+                f"Fim {fim.strftime('%H:%M')} depois do turno "
+                f"({self.horario_final_turno.strftime('%H:%M')})"
+            )
+
+        return True, "Disponível (dentro do turno)"
+
+    def validar_intervalo(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        Valida se o período NÃO sobrepõe com o intervalo de almoço.
+
+        Returns:
+            (True, "Disponível") se NÃO sobrepõe
+            (False, "Motivo") se sobrepõe
+        """
+        inicio_intv, duracao_intv = self.horario_intervalo
+        inicio_intervalo = datetime.combine(inicio.date(), inicio_intv)
+        fim_intervalo = inicio_intervalo + duracao_intv
+
+        # Verifica se NÃO há sobreposição
+        if not (fim <= inicio_intervalo or inicio >= fim_intervalo):
+            return False, (
+                f"Sobrepõe intervalo "
+                f"({inicio_intervalo.strftime('%H:%M')} - {fim_intervalo.strftime('%H:%M')})"
+            )
+
+        return True, "Disponível (não sobrepõe intervalo)"
+
+    def validar_conflitos_ocupacao(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        Valida se NÃO há conflitos com outras ocupações já registradas.
+
+        Returns:
+            (True, "Disponível") se NÃO há conflitos
+            (False, "Motivo") se há conflitos
+        """
+        for i, (_, _, _, _, ocup_inicio, ocup_fim) in enumerate(self.ocupacoes):
+            if not (fim <= ocup_inicio or inicio >= ocup_fim):
+                return False, (
+                    f"Conflito com ocupação de {ocup_inicio.strftime('%H:%M')} "
+                    f"a {ocup_fim.strftime('%H:%M')}"
+                )
+
+        return True, "Disponível (sem conflitos)"
+
+    def validar_disponibilidade_completa(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
+        """
+        Valida TODAS as restrições de disponibilidade do funcionário.
+        Executa validações em ordem e retorna no primeiro erro encontrado.
+
+        Returns:
+            (True, "Disponível") se passou em todas as validações
+            (False, "Motivo") com o primeiro motivo de falha encontrado
+        """
+        # 1. Validar folga
+        valido, motivo = self.validar_folga(inicio, fim)
+        if not valido:
+            return False, motivo
+
+        # 2. Validar horário de turno
+        valido, motivo = self.validar_horario_turno(inicio, fim)
+        if not valido:
+            return False, motivo
+
+        # 3. Validar intervalo
+        valido, motivo = self.validar_intervalo(inicio, fim)
+        if not valido:
+            return False, motivo
+
+        # 4. Validar conflitos de ocupação
+        valido, motivo = self.validar_conflitos_ocupacao(inicio, fim)
+        if not valido:
+            return False, motivo
+
+        return True, "Disponível (passou em todas as validações)"
+
+    # ==========================================================
+    # 🔄 Métodos Legados (mantidos para compatibilidade)
+    # ==========================================================
+
     def verificar_disponibilidade_no_intervalo(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         for i, (_, _, _, _, ocup_inicio, ocup_fim) in enumerate(self.ocupacoes):
             if not (fim <= ocup_inicio or inicio >= ocup_fim):

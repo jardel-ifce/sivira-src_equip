@@ -450,7 +450,7 @@ class PedidoDeProducao:
             f"Total: {len(self.atividades_modulares)}"
         )
         
-        # VALIDAÇÃO CRÍTICA: Se é um pedido de PRODUTO mas nenhuma atividade foi criada
+        # VALIDAÇÃO CRÍTICA 1: Se é um pedido de PRODUTO mas nenhuma atividade foi criada
         if self.tipo_item == TipoItem.PRODUTO and atividades_produto_criadas == 0:
             erro_msg = (
                 f"FALHA CRÍTICA NA CRIAÇÃO DE ATIVIDADES: "
@@ -460,11 +460,96 @@ class PedidoDeProducao:
                 f"CANCELANDO pedido completo incluindo {atividades_subproduto_criadas} atividade(s) de subproduto."
             )
             logger.error(erro_msg)
-            
+
             # LIMPAR ATIVIDADES DE SUBPRODUTO JÁ CRIADAS
             self.atividades_modulares.clear()
-            
+
             raise RuntimeError(erro_msg)
+
+        # ✅ VALIDAÇÃO CRÍTICA 2: Verificar se algum subproduto crítico teve TODAS as atividades falhando
+        if self.tipo_item == TipoItem.PRODUTO and self.ficha_tecnica_modular:
+            self._validar_subprodutos_criticos(atividades_produto_criadas, atividades_subproduto_criadas)
+
+    def _validar_subprodutos_criticos(self, atividades_produto_criadas: int, atividades_subproduto_criadas: int):
+        """
+        ✅ Valida se todos os subprodutos necessários foram criados com sucesso OU têm estoque disponível.
+
+        ⚠️ IMPORTANTE: Subprodutos com estoque suficiente não criam atividades, o que é NORMAL.
+        Apenas falha se o subproduto não tem atividades E não tem estoque suficiente.
+
+        Raises:
+            RuntimeError: Se algum subproduto crítico falhou completamente
+        """
+        try:
+            # Obter lista de subprodutos esperados da ficha técnica
+            estimativas = self.ficha_tecnica_modular.calcular_quantidade_itens()
+            subprodutos_esperados = {}
+
+            for item_dict, quantidade in estimativas:
+                if item_dict.get("tipo_item") == "SUBPRODUTO":
+                    id_ficha = item_dict.get("id_ficha_tecnica")
+                    nome = item_dict.get("nome", f"subproduto_{id_ficha}")
+                    if id_ficha:
+                        subprodutos_esperados[id_ficha] = {
+                            'nome': nome,
+                            'quantidade': quantidade,
+                            'atividades_criadas': 0
+                        }
+
+            # Contar quantas atividades foram criadas para cada subproduto
+            for atividade in self.atividades_modulares:
+                if atividade.tipo_item == TipoItem.SUBPRODUTO:
+                    # ✅ CORREÇÃO: Usar id_item em vez de id_produto
+                    id_item_atividade = atividade.id_item if hasattr(atividade, 'id_item') else None
+                    if id_item_atividade and id_item_atividade in subprodutos_esperados:
+                        subprodutos_esperados[id_item_atividade]['atividades_criadas'] += 1
+
+            # Verificar se algum subproduto esperado não tem atividades E não tem estoque
+            subprodutos_falhados = []
+            for id_ficha, info in subprodutos_esperados.items():
+                if info['atividades_criadas'] == 0:
+                    # ✅ CORREÇÃO: Verificar se tem estoque antes de considerar falha
+                    tem_estoque = self._verificar_estoque_suficiente(id_ficha, info['quantidade'])
+
+                    if tem_estoque:
+                        logger.info(
+                            f"✅ Subproduto {info['nome']} (ID {id_ficha}): "
+                            f"Não criou atividades porque TEM ESTOQUE SUFICIENTE ({info['quantidade']} unidades)"
+                        )
+                    else:
+                        # Não tem atividades E não tem estoque → FALHA REAL
+                        subprodutos_falhados.append(
+                            f"{info['nome']} (ID {id_ficha}, {info['quantidade']} unidades)"
+                        )
+
+            # Se algum subproduto crítico falhou, cancelar pedido inteiro
+            if subprodutos_falhados:
+                erro_msg = (
+                    f"FALHA CRÍTICA: Pedido {self.id_pedido} do PRODUTO {self.id_produto} "
+                    f"não pode ser executado porque {len(subprodutos_falhados)} subproduto(s) crítico(s) "
+                    f"falharam COMPLETAMENTE na criação de atividades E não têm estoque:\n"
+                    f"  • " + "\n  • ".join(subprodutos_falhados) + "\n"
+                    f"Isso geralmente indica quantidade fora das faixas configuradas.\n"
+                    f"CANCELANDO pedido completo incluindo {atividades_produto_criadas} atividade(s) "
+                    f"de produto já criadas."
+                )
+                logger.error(erro_msg)
+
+                # Limpar TODAS as atividades (produto + subprodutos)
+                self.atividades_modulares.clear()
+
+                raise RuntimeError(erro_msg)
+
+            logger.info(
+                f"✅ Validação de subprodutos OK: {len(subprodutos_esperados)} subproduto(s) "
+                f"validados (com atividades OU estoque disponível)"
+            )
+
+        except RuntimeError:
+            # Re-lançar erro de validação
+            raise
+        except Exception as e:
+            logger.warning(f"Erro ao validar subprodutos críticos: {e}. Continuando execução.")
 
     def _criar_atividades_recursivas(self, ficha_modular: FichaTecnicaModular):
         """
@@ -614,6 +699,52 @@ class PedidoDeProducao:
                     self.atividades_modulares.append(atividade)
                     atividades_criadas += 1
                     
+                except ValueError as e:
+                    # 🚫 SOLUÇÃO 2: Erro de configuração (faixa de quantidade) CANCELA TODO O PEDIDO
+                    if "Nenhuma faixa compatível" in str(e):
+                        erro_msg = (
+                            f"🚫 ERRO CRÍTICO DE CONFIGURAÇÃO: Atividade {dados_atividade.get('id_atividade', 'N/A')} "
+                            f"({dados_atividade.get('nome_atividade', 'N/A')}) não pode ser criada.\n"
+                            f"   Quantidade {ficha_modular.quantidade_requerida} não está em nenhuma faixa configurada.\n"
+                            f"   Item: {nome_item_para_log} (ID: {ficha_modular.id_item})\n"
+                            f"   Tipo: {ficha_modular.tipo_item.name}\n"
+                            f"   CANCELANDO TODO O PEDIDO {self.id_pedido} (Ordem {self.id_ordem})"
+                        )
+
+                        logger.error(erro_msg)
+
+                        debug_atividades.log(
+                            categoria="ERRO_CRITICO_FAIXA_QUANTIDADE",
+                            item_id=ficha_modular.id_item,
+                            item_nome=nome_item_para_log,
+                            dados={
+                                "erro": str(e),
+                                "id_atividade": dados_atividade.get('id_atividade', 'N/A'),
+                                "quantidade_solicitada": ficha_modular.quantidade_requerida,
+                                "tipo_item": ficha_modular.tipo_item.name,
+                                "acao": "CANCELAR_PEDIDO_COMPLETO"
+                            }
+                        )
+
+                        # 🔥 LANÇAR EXCEÇÃO PARA CANCELAR TODO O PEDIDO
+                        raise RuntimeError(erro_msg) from e
+
+                    # Outros erros de ValueError continuam como antes
+                    debug_atividades.log(
+                        categoria="ERRO_CRIAR_ATIVIDADE",
+                        item_id=ficha_modular.id_item,
+                        item_nome=nome_item_para_log,
+                        dados={
+                            "erro": str(e),
+                            "tipo_erro": "ValueError",
+                            "id_atividade": dados_atividade.get('id_atividade', 'N/A')
+                        }
+                    )
+                    logger.error(
+                        f"Erro ValueError ao criar atividade {dados_atividade.get('id_atividade', 'N/A')}: {e}"
+                    )
+                    continue
+
                 except Exception as e:
                     debug_atividades.log(
                         categoria="ERRO_CRIAR_ATIVIDADE",
@@ -621,11 +752,12 @@ class PedidoDeProducao:
                         item_nome=nome_item_para_log,
                         dados={
                             "erro": str(e),
+                            "tipo_erro": type(e).__name__,
                             "id_atividade": dados_atividade.get('id_atividade', 'N/A')
                         }
                     )
                     logger.error(
-                        f"Erro ao criar atividade {dados_atividade.get('id_atividade', 'N/A')}: {e}"
+                        f"Erro {type(e).__name__} ao criar atividade {dados_atividade.get('id_atividade', 'N/A')}: {e}"
                     )
                     continue
 
@@ -644,6 +776,9 @@ class PedidoDeProducao:
                 f"({ficha_modular.tipo_item.name}) - Quantidade total: {ficha_modular.quantidade_requerida}"
             )
 
+        except RuntimeError:
+            # 🔥 Re-lançar RuntimeError (erro crítico de configuração)
+            raise
         except Exception as e:
             debug_atividades.log(
                 categoria="ERRO_GERAL_CRIAR_ATIVIDADES",
@@ -683,6 +818,9 @@ class PedidoDeProducao:
                         self._criar_atividades_recursivas(ficha_sub)
                         subprodutos_processados += 1
                         
+                    except RuntimeError:
+                        # 🔥 Re-lançar RuntimeError (erro crítico de configuração)
+                        raise
                     except Exception as e:
                         debug_atividades.log(
                             categoria="ERRO_PROCESSAR_SUBPRODUTO",
@@ -699,6 +837,9 @@ class PedidoDeProducao:
             if subprodutos_processados > 0:
                 logger.info(f"{subprodutos_processados} subprodutos processados recursivamente")
                 
+        except RuntimeError:
+            # 🔥 Re-lançar RuntimeError (erro crítico de configuração)
+            raise
         except Exception as e:
             debug_atividades.log(
                 categoria="ERRO_PROCESSAR_TODOS_SUBPRODUTOS",
@@ -1255,8 +1396,8 @@ class PedidoDeProducao:
 
                 # Salvar arquivo
                 import os
-                os.makedirs("logs/erros", exist_ok=True)
-                nome_arquivo = f"logs/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
+                os.makedirs("logs/equipamentos/erros", exist_ok=True)
+                nome_arquivo = f"logs/equipamentos/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
 
                 with open(nome_arquivo, "w", encoding="utf-8") as f:
                     f.write(log_formatado)
@@ -1298,7 +1439,7 @@ class PedidoDeProducao:
 
                 # Salvar JSON
                 json_filename = f"ordem_{atividade.id_ordem}_pedido_{atividade.id_pedido}_temporal_errors.json"
-                json_path = os.path.join("logs/erros", json_filename)
+                json_path = os.path.join("logs/equipamentos/erros", json_filename)
 
                 # Se já existe, adicionar ao array existente
                 if os.path.exists(json_path):
@@ -1377,7 +1518,7 @@ class PedidoDeProducao:
 
                             # Salvar JSON
                             json_filename = f"ordem_{atividade.id_ordem}_pedido_{atividade.id_pedido}_temporal_errors.json"
-                            json_path = os.path.join("logs/erros", json_filename)
+                            json_path = os.path.join("logs/equipamentos/erros", json_filename)
 
                             # Se já existe, adicionar ao array existente
                             if os.path.exists(json_path):
@@ -1461,8 +1602,8 @@ class PedidoDeProducao:
 
                             # Salvar arquivo
                             import os
-                            os.makedirs("logs/erros", exist_ok=True)
-                            nome_arquivo = f"logs/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
+                            os.makedirs("logs/equipamentos/erros", exist_ok=True)
+                            nome_arquivo = f"logs/equipamentos/erros/ordem: {atividade.id_ordem} | pedido: {atividade.id_pedido}.log"
 
                             with open(nome_arquivo, "w", encoding="utf-8") as f:
                                 f.write(log_formatado)
@@ -1516,7 +1657,7 @@ class PedidoDeProducao:
 
                             # Salvar JSON
                             json_filename = f"ordem_{atividade.id_ordem}_pedido_{atividade.id_pedido}_temporal_errors.json"
-                            json_path = os.path.join("logs/erros", json_filename)
+                            json_path = os.path.join("logs/equipamentos/erros", json_filename)
 
                             # Se já existe, adicionar ao array existente
                             if os.path.exists(json_path):
@@ -1648,8 +1789,8 @@ class PedidoDeProducao:
                 
                 # Salvar arquivo
                 import os
-                os.makedirs("logs/erros", exist_ok=True)
-                nome_arquivo = f"logs/erros/ordem: {atividade_atual.id_ordem} | pedido: {atividade_atual.id_pedido}.log"
+                os.makedirs("logs/equipamentos/erros", exist_ok=True)
+                nome_arquivo = f"logs/equipamentos/erros/ordem: {atividade_atual.id_ordem} | pedido: {atividade_atual.id_pedido}.log"
                 
                 with open(nome_arquivo, "w", encoding="utf-8") as f:
                     f.write(log_formatado)

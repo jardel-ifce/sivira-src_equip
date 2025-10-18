@@ -1,0 +1,338 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\geometry{margin=2.5cm}
+
+% Cores
+\definecolor{headerblue}{RGB}{0,102,204}
+\definecolor{sectiongray}{RGB}{100,100,100}
+
+% Estilo de seções
+\titleformat{\section}{\Large\bfseries\color{headerblue}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\color{sectiongray}}{\thesubsection}{1em}{}
+
+% Cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{SIVIRA - Enumerações}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+\begin{document}
+
+% Capa
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+
+    {\Huge\bfseries Sistema Inteligente para Visualização\par}
+    {\Huge\bfseries e Replanejamento de Atividades\par}
+    \vspace{0.5cm}
+    {\Large\bfseries (SIVIRA)\par}
+
+    \vspace{2cm}
+    {\LARGE\bfseries Documentação das Enumerações\par}
+
+    \vspace{2cm}
+    {\large Módulo: \texttt{enums/}\par}
+
+    \vfill
+
+    {\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% Introdução
+\section{Introdução}
+
+Este documento apresenta a documentação completa das enumerações (enums) utilizadas no sistema SIVIRA. As enumerações são organizadas em três categorias principais:
+
+\begin{itemize}
+    \item \textbf{Equipamentos}: Tipos, capacidades e características de equipamentos
+    \item \textbf{Funcionários}: Funções, profissões e padrões de folga
+    \item \textbf{Produção}: Itens, setores, status e políticas de produção
+\end{itemize}
+
+As enumerações garantem consistência e type-safety no sistema, definindo valores constantes utilizados em todo o código.
+
+\newpage
+
+% EQUIPAMENTOS
+\section{Enumerações de Equipamentos}
+
+\subsection{Capacidade Unidade (\texttt{capacidade\_unidade.py})}
+
+Define as unidades para especificar capacidade de equipamentos.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{CM2}: Área em centímetros quadrados
+    \item \textbf{CM3}: Volume em centímetros cúbicos
+    \item \textbf{NIVEIS}: Quantidade de níveis (prateleiras, bandejas)
+    \item \textbf{OPERADORES}: Número de operadores simultâneos
+    \item \textbf{GRAMAS}: Capacidade em gramas
+    \item \textbf{LITROS}: Capacidade em litros
+    \item \textbf{QUILOS}: Capacidade em quilogramas
+\end{itemize}
+
+\subsection{Tipo Chama (\texttt{tipo\_chama.py})}
+
+Define os níveis de intensidade de chama para equipamentos a gás.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{BAIXA}: Chama de baixa intensidade
+    \item \textbf{MEDIA}: Chama de média intensidade
+    \item \textbf{ALTA}: Chama de alta intensidade
+\end{itemize}
+
+\subsection{Tipo Cocção (\texttt{tipo\_coccao.py})}
+
+Define os modos de cocção disponíveis em fornos e equipamentos de cozimento.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{TURBO}: Cocção com ventilação forçada
+    \item \textbf{LASTRO}: Cocção por contato direto com superfície aquecida
+    \item \textbf{COMBINADO}: Cocção que combina turbo e lastro
+    \item \textbf{CONTINUO}: Cocção em esteira contínua
+\end{itemize}
+
+\subsection{Tipo Embalagem (\texttt{tipo\_embalagem.py})}
+
+Define os sistemas de embalagem disponíveis para equipamentos.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{SIMPLES}: Embalagem simples sem vedação especial
+    \item \textbf{VACUO}: Embalagem a vácuo para conservação
+    \item \textbf{SELADORA}: Sistema de selagem térmica
+\end{itemize}
+
+\subsection{Tipo Equipamento (\texttt{tipo\_equipamento.py})}
+
+Define os tipos de equipamentos disponíveis no sistema de produção.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{MISTURADORAS}: Equipamentos para mistura de ingredientes
+    \item \textbf{BANCADAS}: Superfícies de trabalho
+    \item \textbf{BALANCAS}: Equipamentos de pesagem
+    \item \textbf{FORNOS}: Equipamentos de cocção por calor
+    \item \textbf{MISTURADORAS\_COM\_COCCAO}: Equipamentos que misturam e cozinham
+    \item \textbf{FOGOES}: Equipamentos com bocas para cocção
+    \item \textbf{REFRIGERACAO\_CONGELAMENTO}: Equipamentos de refrigeração
+    \item \textbf{EMBALADORAS}: Equipamentos para embalagem
+    \item \textbf{MODELADORAS}: Equipamentos para modelagem de massas
+    \item \textbf{DIVISORAS\_BOLEADORAS}: Equipamentos para divisão e boleamento
+    \item \textbf{BATEDEIRAS}: Equipamentos para bater massas
+    \item \textbf{FRITADEIRAS}: Equipamentos para fritura
+    \item \textbf{ARMARIOS\_PARA\_FERMENTACAO}: Equipamentos para fermentação
+\end{itemize}
+
+\subsection{Tipo Mistura (\texttt{tipo\_mistura.py})}
+
+Define os ritmos de execução dos equipamentos de mistura.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{LENTA}: Mistura em velocidade lenta
+    \item \textbf{RAPIDA}: Mistura em velocidade rápida
+    \item \textbf{SEMI\_RAPIDA}: Mistura em velocidade intermediária
+\end{itemize}
+
+\subsection{Tipo Pressão Chama (\texttt{tipo\_pressao\_chama.py})}
+
+Define as configurações de pressão e chama para equipamentos a gás.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{BAIXA\_PRESSAO}: Operação com baixa pressão de gás
+    \item \textbf{ALTA\_PRESSAO}: Operação com alta pressão de gás
+    \item \textbf{CHAMA\_UNICA}: Sistema com queimador único
+    \item \textbf{CHAMA\_DUPLA}: Sistema com duplo queimador
+\end{itemize}
+
+\subsection{Tipo Velocidade (\texttt{tipo\_velocidade.py})}
+
+Define os níveis de velocidade para equipamentos rotativos.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{BAIXA}: Velocidade baixa de rotação
+    \item \textbf{MEDIA}: Velocidade média de rotação
+    \item \textbf{ALTA}: Velocidade alta de rotação
+\end{itemize}
+
+\newpage
+
+% FUNCIONÁRIOS
+\section{Enumerações de Funcionários}
+
+\subsection{Tipo Folga (\texttt{tipo\_folga.py})}
+
+Define os padrões de folga para funcionários.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{DIA\_FIXO\_SEMANA}: Folga em dia fixo da semana (ex: toda segunda-feira)
+    \item \textbf{DIA\_FIXO\_MES}: Folga em dia fixo do mês (ex: todo dia 15)
+    \item \textbf{N\_DIA\_SEMANA\_DO\_MES}: Folga no n-ésimo dia da semana do mês (ex: segunda segunda-feira)
+\end{itemize}
+
+\subsection{Tipo Função (\texttt{tipo\_funcao.py})}
+
+Define as funções hierárquicas disponíveis no sistema de produção.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{CHEFE\_SALGADEIRO}: Responsável pelo setor de salgados
+    \item \textbf{SALGADEIRO}: Profissional de produção de salgados
+    \item \textbf{AJUDANTE\_DE\_COZINHA}: Assistente de cozinha
+    \item \textbf{CHEFE\_CONFEITEIRO}: Responsável pelo setor de confeitaria
+    \item \textbf{CONFEITEIRO}: Profissional de confeitaria
+    \item \textbf{AJUDANTE\_DE\_CONFEITARIA}: Assistente de confeitaria
+    \item \textbf{AJUDANTE\_DE\_SALGADOS}: Assistente do setor de salgados
+\end{itemize}
+
+\subsection{Tipo Profissional (\texttt{tipo\_profissional.py})}
+
+Define os tipos de profissionais disponíveis no sistema.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PADEIRO}: Profissional especializado em panificação
+    \item \textbf{AUXILIAR\_DE\_PADEIRO}: Assistente de padeiro
+    \item \textbf{ALMOXARIFE}: Responsável pelo almoxarifado
+    \item \textbf{COZINHEIRO}: Profissional de cozinha
+    \item \textbf{CONFEITEIRO}: Profissional de confeitaria
+    \item \textbf{AUXILIAR\_DE\_CONFEITEIRO}: Assistente de confeiteiro
+\end{itemize}
+
+\newpage
+
+% PRODUÇÃO
+\section{Enumerações de Produção}
+
+\subsection{Dia Semana (\texttt{dia\_semana.py})}
+
+Define os dias da semana utilizados no sistema.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{SEGUNDA}: Segunda-feira
+    \item \textbf{TERCA}: Terça-feira
+    \item \textbf{QUARTA}: Quarta-feira
+    \item \textbf{QUINTA}: Quinta-feira
+    \item \textbf{SEXTA}: Sexta-feira
+    \item \textbf{SABADO}: Sábado
+    \item \textbf{DOMINGO}: Domingo
+\end{itemize}
+
+\subsection{Política Produção (\texttt{politica\_producao.py})}
+
+Define as políticas de produção de itens.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{SOB\_DEMANDA}: Item produzido apenas sob demanda
+    \item \textbf{ESTOCADO}: Item produzido para estoque
+    \item \textbf{AMBOS}: Item pode ser produzido sob demanda ou para estoque
+\end{itemize}
+
+\subsection{Status Ordem (\texttt{status\_ordem.py})}
+
+Define os status possíveis de uma ordem de produção.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PENDENTE}: Ordem aguardando processamento
+    \item \textbf{EM\_PRODUCAO}: Ordem em execução
+    \item \textbf{FINALIZADO}: Ordem concluída com sucesso
+    \item \textbf{CANCELADO}: Ordem cancelada
+\end{itemize}
+
+\subsection{Status Pedido (\texttt{status\_pedido.py})}
+
+Define os status possíveis de um pedido de produção.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PENDENTE}: Pedido aguardando processamento
+    \item \textbf{EM\_PRODUCAO}: Pedido em execução
+    \item \textbf{FINALIZADO}: Pedido concluído com sucesso
+    \item \textbf{CANCELADO}: Pedido cancelado
+\end{itemize}
+
+\subsection{Tipo Item (\texttt{tipo\_item.py})}
+
+Define os tipos de itens na hierarquia de produção.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PRODUTO}: Item final vendável
+    \item \textbf{SUBPRODUTO}: Componente intermediário de um produto
+    \item \textbf{INSUMO}: Ingrediente básico
+\end{itemize}
+
+\subsection{Tipo Produto Modelado (\texttt{tipo\_produto\_modelado.py})}
+
+Define os tipos de produtos que requerem modelagem.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PAES}: Produtos de panificação
+    \item \textbf{SALGADOS}: Produtos salgados
+\end{itemize}
+
+\subsection{Tipo Setor (\texttt{tipo\_setor.py})}
+
+Define os setores de produção no sistema.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PANIFICACAO}: Setor de panificação
+    \item \textbf{SALGADOS}: Setor de salgados
+    \item \textbf{CONFEITARIA}: Setor de confeitaria
+    \item \textbf{ALMOXARIFADO}: Setor de armazenamento
+    \item \textbf{COZINHA}: Setor de cozinha
+\end{itemize}
+
+\subsection{Unidade Medida (\texttt{unidade\_medida.py})}
+
+Define as unidades de medida utilizadas no sistema.
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{GRAMAS}: Medida de massa em gramas
+    \item \textbf{LITROS}: Medida de volume em litros
+    \item \textbf{METROS}: Medida de comprimento em metros
+    \item \textbf{CENTIMETROS}: Medida de comprimento em centímetros
+    \item \textbf{MILILITROS}: Medida de volume em mililitros
+    \item \textbf{UNIDADE}: Unidade contável
+    \item \textbf{PORCOES}: Medida por porções
+    \item \textbf{FUNCIONARIOS}: Quantidade de funcionários
+    \item \textbf{UNIDADES\_POR\_HORA}: Taxa de produção
+    \item \textbf{COLHERES}: Medida em colheres
+    \item \textbf{XICARAS}: Medida em xícaras
+\end{itemize}
+
+\newpage
+
+% Resumo
+\section{Resumo}
+
+\subsection{Estatísticas}
+
+\begin{tabular}{lr}
+\textbf{Categoria} & \textbf{Quantidade} \\
+\hline
+Enumerações de Equipamentos & 8 \\
+Enumerações de Funcionários & 3 \\
+Enumerações de Produção & 8 \\
+\hline
+\textbf{Total} & \textbf{19} \\
+\end{tabular}
+
+\vspace{1cm}
+
+\subsection{Observações}
+
+\begin{itemize}
+    \item Todas as enumerações seguem o padrão Google Docstrings
+    \item Cada enum possui documentação de módulo e de classe
+    \item Os valores são type-safe e garantem consistência no sistema
+    \item As enumerações são utilizadas em todo o sistema SIVIRA para padronização
+\end{itemize}
+
+\end{document}

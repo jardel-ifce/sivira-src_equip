@@ -369,7 +369,7 @@ class GestorBalancas:
             id_ordem=atividade.id_ordem,
             id_pedido=atividade.id_pedido,
             id_atividade=atividade.id_atividade,
-            id_item=0,  # Adicionado parâmetro id_item obrigatório
+            id_item=atividade.id_item if hasattr(atividade, 'id_item') else 0,
             quantidade=quantidade,
             inicio=inicio,
             fim=fim
@@ -401,7 +401,7 @@ class GestorBalancas:
                 id_ordem=atividade.id_ordem,
                 id_pedido=atividade.id_pedido,
                 id_atividade=atividade.id_atividade,
-                id_item=i,  # Adicionado parâmetro id_item obrigatório (usando índice)
+                id_item=atividade.id_item if hasattr(atividade, 'id_item') else 0,
                 quantidade=quantidade,
                 inicio=inicio,
                 fim=fim

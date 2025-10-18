@@ -373,7 +373,7 @@ class ExecutorPedidos:
             pastas_log = [
                 "logs/equipamentos",
                 "logs/funcionarios", 
-                "logs/erros"
+                "logs/equipamentos/erros"
             ]
             
             resultado = {}

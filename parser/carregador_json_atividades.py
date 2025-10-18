@@ -37,31 +37,15 @@ def encontrar_arquivo_por_id(id_item: int) -> Tuple[str, TipoItem]:
     """
     base_path, tipo_item = determinar_caminho_por_id(id_item)
     pattern = os.path.join(base_path, f"{id_item}_*.json")
-    
-    logger.info(f"🔍 DEBUG: Procurando arquivos com padrão: {pattern}")
-    
+
     arquivos = glob.glob(pattern)
-    
+
     if not arquivos:
-        # Debug adicional para entender a estrutura
-        if not os.path.exists(base_path):
-            logger.error(f"❌ DEBUG: Diretório não existe: {base_path}")
-            # Listar diretórios disponíveis para debug
-            parent_dir = os.path.dirname(base_path)
-            if os.path.exists(parent_dir):
-                dirs_disponiveis = [d for d in os.listdir(parent_dir) if os.path.isdir(os.path.join(parent_dir, d))]
-                logger.info(f"📁 DEBUG: Diretórios disponíveis em {parent_dir}: {dirs_disponiveis}")
-        else:
-            # Listar arquivos no diretório para debug
-            arquivos_no_dir = os.listdir(base_path)
-            logger.info(f"📄 DEBUG: Arquivos disponíveis em {base_path}: {arquivos_no_dir}")
-        
         raise FileNotFoundError(f"❌ Nenhum arquivo encontrado para ID {id_item} em {pattern}")
-    
+
     if len(arquivos) > 1:
         logger.warning(f"⚠️ Múltiplos arquivos encontrados para ID {id_item}: {arquivos}. Usando o primeiro.")
-    
-    logger.info(f"✅ DEBUG: Arquivo encontrado: {arquivos[0]}")
+
     return arquivos[0], tipo_item
 
 # ==========================================================
@@ -76,30 +60,22 @@ def buscar_dados_por_id_atividade(id_atividade: int, tipo_item: TipoItem = None)
     - 10000-19999: Atividades de produtos (ex: 10031 -> item 1003, atividade 1)
     - 20000-29999: Atividades de subprodutos (ex: 20011 -> item 2001, atividade 1)
     """
-    logger.info(f"🚀 DEBUG: Iniciando busca de atividade por ID: {id_atividade}")
-    
     # Determinar o ID do item baseado no ID da atividade
     if 10000 <= id_atividade <= 19999:  # Atividades de produtos
         id_item_base = id_atividade // 10  # Ex: 10031 -> 1003
-        logger.info(f"📋 DEBUG: Atividade de produto. ID do item base: {id_item_base}")
-    elif 20000 <= id_atividade <= 29999:  # Atividades de subprodutos  
+    elif 20000 <= id_atividade <= 29999:  # Atividades de subprodutos
         id_item_base = id_atividade // 10  # Ex: 20011 -> 2001
-        logger.info(f"📋 DEBUG: Atividade de subproduto. ID do item base: {id_item_base}")
     else:
         raise ValueError(f"❌ ID da atividade {id_atividade} fora do padrão esperado (10000-19999 para produtos, 20000-29999 para subprodutos)")
-    
+
     try:
         caminho_arquivo, tipo_determinado = encontrar_arquivo_por_id(id_item_base)
-        
-        logger.info(f"🔍 DEBUG: Carregando arquivo: {caminho_arquivo}")
-        
+
         with open(caminho_arquivo, "r", encoding="utf-8") as f:
             conteudo = f.read()
             if not conteudo.strip():
                 raise ValueError(f"❌ Arquivo {caminho_arquivo} está vazio.")
             dados = json.loads(conteudo)
-        
-        logger.info(f"📊 DEBUG: Arquivo carregado. Item: '{dados.get('nome')}', {len(dados.get('atividades', []))} atividades")
         
         # Buscar a atividade específica
         atividades = dados.get("atividades", [])
@@ -134,22 +110,17 @@ def buscar_dados_por_id_produto_ou_subproduto(id_produto_ou_subproduto: int, tip
     Busca dados completos de um produto ou subproduto pelo ID.
     O tipo_item é opcional - será determinado automaticamente pelo ID.
     """
-    logger.info(f"🚀 DEBUG: Iniciando busca de item por ID: {id_produto_ou_subproduto}")
-    
     try:
         caminho_arquivo, tipo_determinado = encontrar_arquivo_por_id(id_produto_ou_subproduto)
-        
-        logger.info(f"🔍 DEBUG: Carregando arquivo: {caminho_arquivo}")
-        
+
         with open(caminho_arquivo, "r", encoding="utf-8") as f:
             conteudo = f.read()
             if not conteudo.strip():
                 raise ValueError(f"❌ Arquivo {caminho_arquivo} está vazio.")
             dados = json.loads(conteudo)
-        
+
         # Verificar se o ID corresponde (flexível)
         id_no_arquivo = dados.get("id_item")
-        logger.info(f"📊 DEBUG: ID no arquivo: {id_no_arquivo}, ID solicitado: {id_produto_ou_subproduto}")
         
         nome_item = dados.get('nome', 'sem nome')
         logger.info(f"✅ Item {id_produto_ou_subproduto} encontrado: '{nome_item}' (Tipo: {tipo_determinado.name})")
@@ -175,21 +146,15 @@ def buscar_atividades_por_id_item(id_item: int, tipo_item: TipoItem = None) -> L
     Returns:
         List[Tuple[Dict, Dict]]: Lista de tuplas (dados_do_item, dados_da_atividade)
     """
-    logger.info(f"🚀 DEBUG: Iniciando busca de atividades por ID do item: {id_item}")
-    
     try:
         caminho_arquivo, tipo_determinado = encontrar_arquivo_por_id(id_item)
-        
-        logger.info(f"📂 DEBUG: Buscando atividades em: {caminho_arquivo}")
-        
+
         with open(caminho_arquivo, "r", encoding="utf-8") as f:
             dados = json.loads(f.read())
-        
+
         # Verificar se o ID corresponde (flexível)
         id_no_arquivo = dados.get("id_item")
         nome_item = dados.get('nome', 'sem nome')
-        
-        logger.info(f"📊 DEBUG: Item carregado: '{nome_item}' (ID arquivo: {id_no_arquivo}, ID solicitado: {id_item})")
         
         atividades = dados.get("atividades", [])
         logger.info(f"✅ {len(atividades)} atividades encontradas para item '{nome_item}' (ID: {id_item}):")
@@ -223,7 +188,6 @@ def listar_todas_atividades() -> Dict[str, list]:
     caminho_produtos = os.path.join(base_dir, "data/produtos/atividades/*.json")
     arquivos_produtos = glob.glob(caminho_produtos)
     
-    logger.info(f"📂 DEBUG: Encontrados {len(arquivos_produtos)} arquivos de produtos")
     
     for arquivo in arquivos_produtos:
         try:
@@ -245,7 +209,6 @@ def listar_todas_atividades() -> Dict[str, list]:
     caminho_subprodutos = os.path.join(base_dir, "data/subprodutos/atividades/*.json")
     arquivos_subprodutos = glob.glob(caminho_subprodutos)
     
-    logger.info(f"📂 DEBUG: Encontrados {len(arquivos_subprodutos)} arquivos de subprodutos")
     
     for arquivo in arquivos_subprodutos:
         try:
@@ -282,34 +245,31 @@ def obter_faixa_quantidade(id_item: int) -> Tuple[int, int]:
         FileNotFoundError: Se o arquivo não for encontrado
         ValueError: Se as faixas não forem encontradas ou forem inválidas
     """
-    logger.info(f"🔍 DEBUG: Buscando faixa de quantidade para item {id_item}")
-    
     try:
         # Encontra e carrega o arquivo
         caminho_arquivo, tipo_determinado = encontrar_arquivo_por_id(id_item)
-        
+
         with open(caminho_arquivo, "r", encoding="utf-8") as f:
             dados = json.loads(f.read())
-        
+
         # Obtém primeira atividade
         atividades = dados.get("atividades", [])
         if not atividades:
             raise ValueError(f"❌ Nenhuma atividade encontrada no item {id_item}")
-        
+
         primeira_atividade = atividades[0]
         faixas = primeira_atividade.get("faixas", [])
-        
+
         if not faixas:
             raise ValueError(f"❌ Nenhuma faixa encontrada na primeira atividade do item {id_item}")
-        
+
         # Extrai quantidade mínima e máxima de todas as faixas
         quantidade_min = min(faixa.get("quantidade_min", 0) for faixa in faixas)
         quantidade_max = max(faixa.get("quantidade_max", 0) for faixa in faixas)
-        
+
         if quantidade_min <= 0 or quantidade_max <= 0:
             raise ValueError(f"❌ Faixas inválidas encontradas no item {id_item}: min={quantidade_min}, max={quantidade_max}")
-        
-        logger.info(f"✅ Faixa encontrada para item {id_item}: {quantidade_min} a {quantidade_max} unidades")
+
         return quantidade_min, quantidade_max
         
     except Exception as e:

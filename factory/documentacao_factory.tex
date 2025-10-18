@@ -1,0 +1,518 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{tcolorbox}
+
+\geometry{margin=2.5cm}
+
+% Cores
+\definecolor{headerblue}{RGB}{0,102,204}
+\definecolor{sectiongray}{RGB}{100,100,100}
+\definecolor{codebg}{RGB}{245,245,245}
+
+% Estilo de seções
+\titleformat{\section}{\Large\bfseries\color{headerblue}}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\color{sectiongray}}{}{0em}{}
+
+% Cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{SIVIRA - Factory}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+% Configuração de código
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+\begin{document}
+
+% Capa
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+
+    {\Huge\bfseries Sistema Inteligente para Visualização\par}
+    {\Huge\bfseries e Replanejamento de Atividades\par}
+    \vspace{0.5cm}
+    {\Large\bfseries (SIVIRA)\par}
+
+    \vspace{2cm}
+    {\LARGE\bfseries Documentação do Módulo Factory\par}
+
+    \vspace{2cm}
+    {\large Módulo: \texttt{factory/}\par}
+
+    \vspace{1cm}
+    {\large Padrão de Design: Factory Pattern + Singleton\par}
+
+    \vfill
+
+    {\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% Introdução
+\section{Introdução}
+
+O módulo \texttt{factory/} implementa o padrão de design Factory Pattern para criação centralizada de objetos no sistema SIVIRA. Este módulo é responsável por:
+
+\begin{itemize}
+    \item Criar instâncias de equipamentos com configurações padronizadas
+    \item Gerenciar funcionários a partir de arquivos de configuração JSON
+    \item Garantir consistência na criação de objetos através do padrão Singleton
+    \item Facilitar a manutenção e evolução do sistema
+\end{itemize}
+
+\subsection{Arquivos do Módulo}
+
+\begin{itemize}
+    \item \texttt{fabrica\_equipamentos.py} (782 linhas): Factory para criação de equipamentos
+    \item \texttt{fabrica\_funcionarios.py} (342 linhas): Factory para gerenciamento de funcionários
+    \item \texttt{\_\_init\_\_.py}: Módulo de inicialização
+\end{itemize}
+
+\newpage
+
+% Fábrica de Equipamentos
+\section{Fábrica de Equipamentos}
+
+\subsection{Visão Geral}
+
+A classe \texttt{FabricaEquipamentos} é responsável pela criação padronizada de todos os equipamentos do sistema. Utiliza métodos estáticos para instanciar equipamentos com configurações específicas.
+
+\subsection{Estrutura da Classe}
+
+\begin{tcolorbox}[colback=codebg,colframe=headerblue,title=Classe FabricaEquipamentos]
+\begin{lstlisting}[language=Python]
+class FabricaEquipamentos:
+    """
+    Fabrica responsavel pela criacao dos equipamentos.
+    """
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Equipamentos Criados}
+
+A fábrica cria 17 tipos diferentes de equipamentos, organizados por categoria:
+
+\subsubsection{Refrigeração e Congelamento}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_camara\_refrigerada\_1()}: Câmara com temperatura 0-4°C, capacidade 200 caixas
+    \item \textbf{criar\_camara\_refrigerada\_2()}: Câmara com temperatura -18 a -7°C, capacidade 200 caixas
+    \item \textbf{criar\_freezer\_1()}: Freezer com temperatura -25 a -10°C
+\end{itemize}
+
+\subsubsection{Cocção}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_fogao\_1()}: Fogão de cozinha, 6 bocas, alta pressão
+    \item \textbf{criar\_fogao\_2()}: Fogão de confeitaria, 4 bocas, baixa pressão
+    \item \textbf{criar\_forno\_1()}: Forno turbo/lastro, 4 níveis, temperatura até 300°C
+    \item \textbf{criar\_forno\_2()}: Forno combinado, 5 níveis, temperatura até 250°C
+    \item \textbf{criar\_fritadeira\_1()}: Fritadeira de 15L com 2 frações
+\end{itemize}
+
+\subsubsection{Mistura e Preparação}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_batedeira\_industrial\_1()}: Capacidade 5-40kg, velocidade 100-500 RPM
+    \item \textbf{criar\_batedeira\_planetaria\_1()}: Capacidade 1-7kg, 3 velocidades
+    \item \textbf{criar\_masseira\_1()}: Capacidade 15-50kg, mistura rápida/semi-rápida
+    \item \textbf{criar\_hot\_mix\_1()}: Capacidade 5-30kg com cocção integrada
+\end{itemize}
+
+\subsubsection{Modelagem e Divisão}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_divisora\_de\_massas\_1()}: Capacidade 30-3000g, 30 divisões
+    \item \textbf{criar\_modeladora\_de\_paes\_1()}: Modelagem de pães, capacidade 30-300g
+    \item \textbf{criar\_modeladora\_de\_salgados\_1()}: Modelagem de salgados, capacidade 20-200g
+\end{itemize}
+
+\subsubsection{Fermentação e Armazenamento}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_armario\_fermentador\_1()}: Temperatura 30-40°C, 9 níveis
+    \item \textbf{criar\_armario\_esqueleto\_1()}: Armazenamento com 32 níveis
+\end{itemize}
+
+\subsubsection{Pesagem e Embalagem}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_balanca\_digital\_1()}: Pesagem 1-30000g, precisão 1g
+    \item \textbf{criar\_embaladora\_1()}: Embalagem a vácuo, capacidade 100-5000g
+\end{itemize}
+
+\subsubsection{Bancadas}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{criar\_bancada\_1()}: Bancada com 4 frações divisíveis
+\end{itemize}
+
+\subsection{Características Técnicas}
+
+\subsubsection{Capacidades}
+
+Cada equipamento possui capacidades mínimas e máximas bem definidas:
+
+\begin{itemize}
+    \item \textbf{Misturadoras}: 1kg a 50kg dependendo do tipo
+    \item \textbf{Fornos}: 4 a 5 níveis com temperaturas de 150°C a 300°C
+    \item \textbf{Câmaras}: 200 caixas com controle de temperatura
+    \item \textbf{Fritadeiras}: 15L com sistema de frações
+\end{itemize}
+
+\subsubsection{Setores}
+
+Os equipamentos são distribuídos entre os setores:
+
+\begin{itemize}
+    \item \textbf{ALMOXARIFADO}: Câmaras refrigeradas, freezer
+    \item \textbf{COZINHA}: Fogão 1, fritadeira
+    \item \textbf{CONFEITARIA}: Fogão 2, batedeiras, hot mix
+    \item \textbf{PANIFICACAO}: Fornos, masseira, modeladoras, fermentador
+\end{itemize}
+
+\subsection{Correções Implementadas}
+
+Durante o desenvolvimento, foram realizadas as seguintes correções:
+
+\begin{itemize}
+    \item Capacidade de câmaras refrigeradas: 20 → 200 caixas
+    \item Faixa de temperatura: ajustada para valores operacionais reais
+    \item Número de operadores de fogões: ajustado para capacidade real
+    \item Capacidades mínimas de bocas: reduzidas para permitir batches pequenos (2000g → 500g)
+\end{itemize}
+
+\newpage
+
+% Fábrica de Funcionários
+\section{Fábrica de Funcionários}
+
+\subsection{Visão Geral}
+
+A classe \texttt{FabricaFuncionarios} implementa o padrão Factory combinado com Singleton para gerenciar funcionários. Diferente da fábrica de equipamentos, esta carrega dados de um arquivo JSON, permitindo fácil manutenção sem modificar código.
+
+\subsection{Padrão Singleton}
+
+\begin{tcolorbox}[colback=codebg,colframe=headerblue,title=Implementação do Singleton]
+\begin{lstlisting}[language=Python]
+class FabricaFuncionarios:
+    """
+    Factory para criacao de funcionarios a partir de arquivo JSON.
+
+    Singleton: Garante que apenas uma instancia da fabrica existe,
+    mantendo os mesmos objetos Funcionario em memoria durante toda
+    a execucao.
+    """
+
+    _instance = None
+    _funcionarios_carregados = False
+
+    def __new__(cls, caminho_json: str = ...):
+        if cls._instance is None:
+            cls._instance = super(FabricaFuncionarios, cls).__new__(cls)
+        return cls._instance
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Características do Singleton}
+
+\begin{itemize}
+    \item \textbf{Instância única}: Garante apenas um objeto FabricaFuncionarios em memória
+    \item \textbf{Estado preservado}: Funcionários mantêm ocupações entre múltiplas chamadas
+    \item \textbf{Evita recarregamento}: Dados JSON carregados apenas uma vez
+    \item \textbf{Consistência}: Mesmos objetos Funcionario em toda aplicação
+\end{itemize}
+
+\subsection{Métodos Principais}
+
+\subsubsection{carregar\_funcionarios()}
+
+Carrega funcionários do arquivo JSON. Se já foram carregados anteriormente (singleton), retorna a lista existente preservando ocupações.
+
+\begin{tcolorbox}[colback=codebg,colframe=headerblue,title=Método carregar\_funcionarios]
+\begin{lstlisting}[language=Python]
+def carregar_funcionarios(self) -> List[Funcionario]:
+    """
+    Carrega funcionarios do arquivo JSON.
+
+    Singleton: Se ja foi carregado antes, retorna a mesma lista
+    de funcionarios (com ocupacoes preservadas).
+    """
+    if FabricaFuncionarios._funcionarios_carregados:
+        return self.funcionarios_disponiveis
+
+    # Carrega do JSON...
+    FabricaFuncionarios._funcionarios_carregados = True
+    return self.funcionarios_disponiveis
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsubsection{obter\_funcionario\_por\_id(id)}
+
+Busca funcionário específico por ID.
+
+\subsubsection{obter\_funcionarios\_por\_setor(setor)}
+
+Retorna lista de funcionários que trabalham em um setor específico.
+
+\subsubsection{obter\_funcionarios\_por\_profissao(profissao)}
+
+Retorna lista de funcionários com uma profissão específica.
+
+\subsection{Estrutura do JSON}
+
+O arquivo \texttt{data/funcionarios/funcionarios.json} segue esta estrutura:
+
+\begin{tcolorbox}[colback=codebg,colframe=headerblue,title=Estrutura JSON]
+\begin{lstlisting}[language=JSON]
+{
+  "funcionarios": [
+    {
+      "id": 1,
+      "nome": "Funcionario 1",
+      "setores": ["PANIFICACAO", "CONFEITARIA"],
+      "tipos_profissionais": ["PADEIRO"],
+      "regras_folga": [
+        {
+          "tipo": "DIA_FIXO_SEMANA",
+          "dia_semana": "SEXTA"
+        }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "08:00",
+      "horario_final": "18:00",
+      "horario_intervalo": {
+        "inicio": "11:00",
+        "duracao_minutos": 60
+      },
+      "fip": 2.0
+    }
+  ]
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Campos do Funcionário}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{id}: Identificador único
+    \item \textbf{nome}: Nome do funcionário
+    \item \textbf{setores}: Lista de setores onde pode trabalhar
+    \item \textbf{tipos\_profissionais}: Lista de profissões/habilidades
+    \item \textbf{regras\_folga}: Padrões de folga (dia fixo, n-ésimo dia do mês, etc.)
+    \item \textbf{ch\_semanal}: Carga horária semanal
+    \item \textbf{horario\_inicio}: Horário de entrada
+    \item \textbf{horario\_final}: Horário de saída
+    \item \textbf{horario\_intervalo}: Início e duração do intervalo
+    \item \textbf{fip}: Fator de Importância do Profissional
+\end{itemize}
+
+\subsection{Tipos de Folga Suportados}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{DIA\_FIXO\_SEMANA}: Folga em dia fixo da semana (ex: toda segunda-feira)
+    \item \textbf{DIA\_FIXO\_MES}: Folga em dia fixo do mês (ex: todo dia 15)
+    \item \textbf{N\_DIA\_SEMANA\_DO\_MES}: Folga no n-ésimo dia da semana do mês (ex: segunda segunda-feira)
+\end{itemize}
+
+\subsection{Funcionários Cadastrados}
+
+O sistema possui 9 funcionários cadastrados:
+
+\begin{enumerate}
+    \item \textbf{Funcionário 1}: Padeiro (Panificação/Confeitaria) - FIP 2.0
+    \item \textbf{Funcionário 2}: Auxiliar de Padeiro (Panificação) - FIP 1.0
+    \item \textbf{Funcionário 3}: Auxiliar de Padeiro/Confeiteiro (Multi-setores) - FIP 3.0
+    \item \textbf{Funcionário 4}: Confeiteiro (Confeitaria) - FIP 2.0
+    \item \textbf{Funcionário 5}: Auxiliar de Confeiteiro (Confeitaria) - FIP 2.0
+    \item \textbf{Funcionário 6}: Auxiliar Multi-função (Confeitaria/Panificação) - FIP 1.0
+    \item \textbf{Funcionário 7}: Cozinheiro (Cozinha) - FIP 1.0
+    \item \textbf{Funcionário 8}: Almoxarife (Almoxarifado) - FIP 1.0
+    \item \textbf{Funcionário 9}: Almoxarife (Almoxarifado) - FIP 1.0
+\end{enumerate}
+
+\subsection{Compatibilidade com Código Legado}
+
+Para manter compatibilidade com código existente, a fábrica cria variáveis globais individuais:
+
+\begin{lstlisting}[language=Python]
+funcionario_1 = funcionarios_disponiveis[0]
+funcionario_2 = funcionarios_disponiveis[1]
+# ... etc
+\end{lstlisting}
+
+Isso permite que código antigo continue funcionando enquanto novo código pode usar a API da fábrica.
+
+\newpage
+
+\section{Integração com o Sistema}
+
+\subsection{Uso da Fábrica de Equipamentos}
+
+\begin{lstlisting}[language=Python]
+from factory.fabrica_equipamentos import FabricaEquipamentos
+
+# Criar equipamento especifico
+forno = FabricaEquipamentos.criar_forno_1()
+
+# Acessar propriedades
+print(forno.nome)
+print(forno.capacidade_niveis_max)
+\end{lstlisting}
+
+\subsection{Uso da Fábrica de Funcionários}
+
+\begin{lstlisting}[language=Python]
+from factory.fabrica_funcionarios import FabricaFuncionarios
+
+# Criar instancia (singleton)
+fabrica = FabricaFuncionarios()
+
+# Carregar funcionarios
+funcionarios = fabrica.carregar_funcionarios()
+
+# Buscar por setor
+panificacao = fabrica.obter_funcionarios_por_setor(
+    TipoSetor.PANIFICACAO
+)
+
+# Buscar por profissao
+padeiros = fabrica.obter_funcionarios_por_profissao(
+    TipoProfissional.PADEIRO
+)
+\end{lstlisting}
+
+\subsection{Benefícios do Padrão Singleton}
+
+\begin{itemize}
+    \item \textbf{Memória eficiente}: Evita múltiplas instâncias desnecessárias
+    \item \textbf{Estado consistente}: Ocupações de funcionários persistem durante execução
+    \item \textbf{Performance}: JSON carregado apenas uma vez
+    \item \textbf{Simplicidade}: Interface única e centralizada
+\end{itemize}
+
+\newpage
+
+\section{Estatísticas}
+
+\subsection{Resumo do Módulo}
+
+\begin{tabular}{lr}
+\textbf{Métrica} & \textbf{Valor} \\
+\hline
+Total de linhas de código & 1.124 \\
+Arquivos Python & 2 \\
+Equipamentos criáveis & 17 \\
+Funcionários cadastrados & 9 \\
+Setores suportados & 4 \\
+Tipos de folga & 3 \\
+\hline
+\end{tabular}
+
+\subsection{Distribuição por Arquivo}
+
+\begin{tabular}{lrr}
+\textbf{Arquivo} & \textbf{Linhas} & \textbf{\%} \\
+\hline
+fabrica\_equipamentos.py & 782 & 69.6\% \\
+fabrica\_funcionarios.py & 342 & 30.4\% \\
+\hline
+\textbf{Total} & \textbf{1.124} & \textbf{100\%} \\
+\end{tabular}
+
+\subsection{Equipamentos por Setor}
+
+\begin{tabular}{lr}
+\textbf{Setor} & \textbf{Equipamentos} \\
+\hline
+Panificação & 7 \\
+Confeitaria & 5 \\
+Cozinha & 2 \\
+Almoxarifado & 3 \\
+\hline
+\textbf{Total} & \textbf{17} \\
+\end{tabular}
+
+\newpage
+
+\section{Padrões de Design}
+
+\subsection{Factory Pattern}
+
+Ambas as fábricas implementam o padrão Factory, que:
+
+\begin{itemize}
+    \item Centraliza a lógica de criação de objetos
+    \item Encapsula detalhes de implementação
+    \item Facilita manutenção e evolução
+    \item Permite substituição de implementações
+\end{itemize}
+
+\subsection{Singleton Pattern}
+
+A FabricaFuncionarios adiciona o padrão Singleton para:
+
+\begin{itemize}
+    \item Garantir instância única
+    \item Preservar estado durante execução
+    \item Evitar recarregamento desnecessário
+    \item Manter consistência de dados
+\end{itemize}
+
+\subsection{Separation of Concerns}
+
+O módulo separa claramente:
+
+\begin{itemize}
+    \item \textbf{Configuração}: Dados JSON (funcionários)
+    \item \textbf{Criação}: Métodos factory (equipamentos)
+    \item \textbf{Modelo}: Classes de domínio (models/)
+    \item \textbf{Negócio}: Lógica de alocação (services/)
+\end{itemize}
+
+\newpage
+
+\section{Conclusão}
+
+O módulo \texttt{factory/} implementa uma arquitetura robusta e extensível para criação de objetos no sistema SIVIRA. A combinação dos padrões Factory e Singleton garante:
+
+\begin{itemize}
+    \item \textbf{Consistência}: Objetos criados de forma padronizada
+    \item \textbf{Manutenibilidade}: Configurações centralizadas e fáceis de modificar
+    \item \textbf{Performance}: Singleton evita overhead de múltiplas instâncias
+    \item \textbf{Flexibilidade}: JSON permite mudanças sem recompilar
+    \item \textbf{Escalabilidade}: Fácil adicionar novos equipamentos ou funcionários
+\end{itemize}
+
+\subsection{Próximos Passos}
+
+Possíveis melhorias futuras:
+
+\begin{enumerate}
+    \item Migrar equipamentos para configuração JSON
+    \item Adicionar validação de schemas JSON
+    \item Implementar cache persistente entre execuções
+    \item Adicionar suporte a múltiplos perfis de configuração
+    \item Criar interface gráfica para edição de funcionários
+\end{enumerate}
+
+\end{document}

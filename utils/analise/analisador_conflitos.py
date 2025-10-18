@@ -51,7 +51,6 @@ class AnaliseConflito:
     funcionarios_elegiveis: List[Funcionario]
     conflitos: List[ConflitoDeTempo]
     funcionarios_disponiveis: List[Funcionario]
-    sugestoes_reagendamento: List[str]
 
 
 class AnalisadorConflitos:
@@ -99,11 +98,6 @@ class AnalisadorConflitos:
             else:
                 funcionarios_disponiveis.append(funcionario)
 
-        # 3. Gerar sugestões de reagendamento
-        sugestoes = self._gerar_sugestoes_reagendamento(
-            funcionarios_elegiveis, inicio, fim, quantidade_necessaria
-        )
-
         return AnaliseConflito(
             id_atividade=id_atividade,
             nome_atividade=nome_atividade,
@@ -113,8 +107,7 @@ class AnalisadorConflitos:
             horario_fim=fim,
             funcionarios_elegiveis=funcionarios_elegiveis,
             conflitos=conflitos,
-            funcionarios_disponiveis=funcionarios_disponiveis,
-            sugestoes_reagendamento=sugestoes
+            funcionarios_disponiveis=funcionarios_disponiveis
         )
 
     def _filtrar_funcionarios_elegiveis(self, tipos_necessarios: List[TipoProfissional]) -> List[Funcionario]:
@@ -195,84 +188,6 @@ class AnalisadorConflitos:
 
         return None  # Sem conflito
 
-    def _gerar_sugestoes_reagendamento(
-        self,
-        funcionarios_elegiveis: List[Funcionario],
-        inicio: datetime,
-        fim: datetime,
-        quantidade_necessaria: int
-    ) -> List[str]:
-        """Gera sugestões para reagendar a atividade."""
-        sugestoes = []
-        duracao = fim - inicio
-
-        # 1. Verificar slots livres no mesmo dia
-        slots_livres = self._encontrar_slots_livres_mesmo_dia(
-            funcionarios_elegiveis, inicio.date(), duracao, quantidade_necessaria
-        )
-
-        for slot in slots_livres:
-            sugestoes.append(
-                f"📅 Reagendar para {slot['inicio'].strftime('%H:%M')}-{slot['fim'].strftime('%H:%M')} "
-                f"(mesmo dia, {len(slot['funcionarios'])} funcionários disponíveis)"
-            )
-
-        # 2. Verificar próximos dias
-        for dias_adiante in [1, 2, 3]:
-            nova_data = inicio.date() + timedelta(days=dias_adiante)
-            slots_proximos_dias = self._encontrar_slots_livres_mesmo_dia(
-                funcionarios_elegiveis, nova_data, duracao, quantidade_necessaria
-            )
-
-            if slots_proximos_dias:
-                slot = slots_proximos_dias[0]  # Primeiro slot disponível
-                sugestoes.append(
-                    f"📅 Reagendar para {nova_data.strftime('%d/%m')} "
-                    f"{slot['inicio'].strftime('%H:%M')}-{slot['fim'].strftime('%H:%M')} "
-                    f"({len(slot['funcionarios'])} funcionários disponíveis)"
-                )
-                break
-
-        # 3. Sugestões de otimização
-        if not sugestoes:
-            sugestoes.append("⚠️ Considere contratar mais funcionários deste tipo")
-            sugestoes.append("🔄 Revisar sequenciamento de atividades de outros pedidos")
-
-        return sugestoes
-
-    def _encontrar_slots_livres_mesmo_dia(
-        self,
-        funcionarios: List[Funcionario],
-        data: datetime.date,
-        duracao: timedelta,
-        quantidade_necessaria: int
-    ) -> List[Dict]:
-        """Encontra slots livres no mesmo dia para os funcionários."""
-        slots_livres = []
-
-        # Horários de trabalho padrão (6h às 20h em intervalos de 15 min)
-        inicio_busca = datetime.combine(data, datetime.min.time().replace(hour=6))
-        fim_busca = datetime.combine(data, datetime.min.time().replace(hour=20))
-
-        atual = inicio_busca
-        while atual + duracao <= fim_busca:
-            funcionarios_disponiveis = []
-
-            for funcionario in funcionarios:
-                if funcionario.esta_disponivel(atual, duracao):
-                    funcionarios_disponiveis.append(funcionario)
-
-            if len(funcionarios_disponiveis) >= quantidade_necessaria:
-                slots_livres.append({
-                    'inicio': atual,
-                    'fim': atual + duracao,
-                    'funcionarios': funcionarios_disponiveis[:quantidade_necessaria]
-                })
-
-            atual += timedelta(minutes=15)  # Incremento de 15 minutos
-
-        return slots_livres
-
     def gerar_relatorio_conflito(self, analise: AnaliseConflito) -> str:
         """Gera um relatório detalhado do conflito."""
         relatorio = []
@@ -310,13 +225,6 @@ class AnalisadorConflitos:
             relatorio.append("✅ FUNCIONÁRIOS DISPONÍVEIS:")
             for funcionario in analise.funcionarios_disponiveis:
                 relatorio.append(f"   • {funcionario.nome}")
-            relatorio.append("")
-
-        # Sugestões
-        if analise.sugestoes_reagendamento:
-            relatorio.append("💡 SUGESTÕES DE REAGENDAMENTO:")
-            for sugestao in analise.sugestoes_reagendamento:
-                relatorio.append(f"   {sugestao}")
             relatorio.append("")
 
         # Resumo
