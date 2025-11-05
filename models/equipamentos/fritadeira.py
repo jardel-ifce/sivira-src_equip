@@ -224,7 +224,7 @@ class Fritadeira(Equipamento):
         if nova_quantidade > capacidade_restante:
             logger.debug(
                 f"❌ Quantidade {nova_quantidade} unidades > capacidade restante ({capacidade_restante}) "
-                f"no período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+                f"no período {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')}"
             )
             return False
         
@@ -397,7 +397,7 @@ class Fritadeira(Equipamento):
             f"🍟 Ocupação adicionada na {self.nome} - Fração {fracao_index + 1} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
             f"Unidades: {quantidade} | Temp: {temperatura}°C | Setup: {setup_minutos}min | "
-            f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+            f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')} | "
             f"Total após: {quantidade_total_apos} unidades"
         )
         return True
@@ -706,11 +706,11 @@ class Fritadeira(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return total_liberadas
 
@@ -736,11 +736,11 @@ class Fritadeira(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     def liberar_fracao_especifica(self, fracao_index: int, id_ordem: int, id_pedido: int, id_atividade: int):
@@ -789,7 +789,7 @@ class Fritadeira(Equipamento):
                     logger.info(
                         f"   🍟 Ordem {id_o} | Pedido {id_p} | Atividade {id_a} | Item {id_i} | "
                         f"Qtd: {qtd} | Temp: {temp}°C | Setup: {setup}min | "
-                        f"{ini.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+                        f"{ini.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')} | "
                         f"Total equipamento: {qtd_total}/{self.capacidade_gramas_max}"
                     )
 

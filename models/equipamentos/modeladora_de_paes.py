@@ -63,7 +63,7 @@ class ModeladoraDePaes(Equipamento):
         logger.info(
             f"✅ {self.nome} | Atividade {id_atividade} (Item {id_item}) registrada | "
             f"Quantidade {quantidade} unidades | "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}."
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')}."
         )
         return True
 
@@ -141,7 +141,7 @@ class ModeladoraDePaes(Equipamento):
         
         if liberadas > 0:
             logger.info(
-                f"🔓 {self.nome} | Removidos {liberadas} registros finalizados até {horario_atual.strftime('%H:%M')}."
+                f"🔓 {self.nome} | Removidos {liberadas} registros finalizados até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return liberadas
 
@@ -157,7 +157,7 @@ class ModeladoraDePaes(Equipamento):
         if liberadas > 0:
             logger.info(
                 f"🔓 {self.nome} | Removidos {liberadas} registros no intervalo de "
-                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} a {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     # ==========================================================
@@ -181,7 +181,7 @@ class ModeladoraDePaes(Equipamento):
             logger.info(
                 f"🍞 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
                 f"Quantidade: {ocupacao[4]} unidades | "
-                f"{ocupacao[5].strftime('%H:%M')} → {ocupacao[6].strftime('%H:%M')}"
+                f"{ocupacao[5].strftime('%Y-%m-%d %H:%M')} → {ocupacao[6].strftime('%Y-%m-%d %H:%M')}"
             )
 
     def obter_ocupacoes_periodo(self, inicio: datetime, fim: datetime) -> List[Tuple[int, int, int, int, int, datetime, datetime]]:

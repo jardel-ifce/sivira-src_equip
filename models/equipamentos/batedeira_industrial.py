@@ -78,13 +78,13 @@ class BatedeiraIndustrial(Equipamento):
                 if ocupacao_id_item == id_item:
                     logger.warning(
                         f"⚠️ {self.nome}: Item {id_item} só pode ocupar no mesmo horário. "
-                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
-                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                        f"Conflito: {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%Y-%m-%d %H:%M')}-{ocupacao_fim.strftime('%Y-%m-%d %H:%M')}"
                     )
                 else:
                     logger.warning(
                         f"⚠️ {self.nome} ocupada por item diferente (ID: {ocupacao_id_item}) "
-                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
+                        f"entre {ocupacao_inicio.strftime('%Y-%m-%d %H:%M')} e {ocupacao_fim.strftime('%Y-%m-%d %H:%M')}."
                     )
                 return False
         
@@ -159,7 +159,7 @@ class BatedeiraIndustrial(Equipamento):
         # Verifica disponibilidade (só impede se for item diferente ou horário diferente)
         if not self.esta_disponivel_para_item(inicio, fim, id_item):
             logger.warning(
-                f"❌ {self.nome} | Não disponível para item {id_item} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"❌ {self.nome} | Não disponível para item {id_item} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
             return False
 
@@ -181,7 +181,7 @@ class BatedeiraIndustrial(Equipamento):
         # Log informativo com quantidade correta
         logger.info(
             f"🏭 {self.nome} | Item {id_item}: Nova ocupação {quantidade_gramas}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')} "
             f"(Total do item no horário: {quantidade_total_atual}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}), "
             f"velocidade {velocidade}."
@@ -254,7 +254,7 @@ class BatedeiraIndustrial(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         if liberadas > 0:
             logger.info(
-                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return liberadas
 
@@ -279,7 +279,7 @@ class BatedeiraIndustrial(Equipamento):
         for ocupacao in self.ocupacoes:
             logger.info(
                 f"🌀 Ordem: {ocupacao[0]} | Pedido: {ocupacao[1]} | Atividade: {ocupacao[2]} | Item: {ocupacao[3]} | "
-                f"Quantidade: {ocupacao[4]}g | {ocupacao[6].strftime('%H:%M')} → {ocupacao[7].strftime('%H:%M')} | "
+                f"Quantidade: {ocupacao[4]}g | {ocupacao[6].strftime('%Y-%m-%d %H:%M')} → {ocupacao[7].strftime('%Y-%m-%d %H:%M')} | "
                 f"Velocidade: {ocupacao[5]}"
             )
 
@@ -298,15 +298,15 @@ class BatedeiraIndustrial(Equipamento):
             return {
                 'quantidade_total': quantidade_total,
                 'num_ocupacoes': len(ocupacoes_item),
-                'periodo_inicio': periodo_inicio.strftime('%H:%M'),
-                'periodo_fim': periodo_fim.strftime('%H:%M'),
+                'periodo_inicio': periodo_inicio.strftime('%Y-%m-%d %H:%M'),
+                'periodo_fim': periodo_fim.strftime('%Y-%m-%d %H:%M'),
                 'ocupacoes': [
                     {
                         'id_ordem': oc[0],
                         'id_pedido': oc[1],
                         'quantidade': oc[4],
-                        'inicio': oc[6].strftime('%H:%M'),
-                        'fim': oc[7].strftime('%H:%M')
+                        'inicio': oc[6].strftime('%Y-%m-%d %H:%M'),
+                        'fim': oc[7].strftime('%Y-%m-%d %H:%M')
                     }
                     for oc in ocupacoes_item
                 ]
@@ -335,7 +335,7 @@ class BatedeiraIndustrial(Equipamento):
             
             return {
                 'pico_quantidade': pico_quantidade,
-                'horario_pico': f"{horario_pico[0].strftime('%H:%M')}-{horario_pico[1].strftime('%H:%M')}",
+                'horario_pico': f"{horario_pico[0].strftime('%Y-%m-%d %H:%M')}-{horario_pico[1].strftime('%Y-%m-%d %H:%M')}",
                 'percentual_capacidade': (pico_quantidade / self.capacidade_gramas_max) * 100
             }
         

@@ -168,7 +168,7 @@ class HotMix(Equipamento):
         quantidade_maxima_simultanea_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
         logger.info(
             f"🍳 {self.nome} | Item {id_item}: Nova ocupação {quantidade}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')} "
             f"(Pico simultâneo do item: {quantidade_maxima_simultanea_apos}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
             f"Velocidade: {velocidade.name} | Chama: {chama.name} | "
@@ -220,7 +220,7 @@ class HotMix(Equipamento):
                 periodos_distintos = not self._tem_sobreposicao_temporal(inicio, fim, inicio_existente, fim_existente)
 
                 if not (simultaneidade_exata or periodos_distintos):
-                    logger.debug(f"❌ {self.nome}: Sobreposição temporal inválida para item {id_item} - período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} conflita com {inicio_existente.strftime('%H:%M')}-{fim_existente.strftime('%H:%M')}")
+                    logger.debug(f"❌ {self.nome}: Sobreposição temporal inválida para item {id_item} - período {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')} conflita com {inicio_existente.strftime('%Y-%m-%d %H:%M')}-{fim_existente.strftime('%Y-%m-%d %H:%M')}")
                     return False
 
         return True
@@ -280,7 +280,7 @@ class HotMix(Equipamento):
 
         return {
             'id_item': id_item,
-            'periodo': f"{inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')}",
+            'periodo': f"{inicio.strftime('%Y-%m-%d %H:%M')} - {fim.strftime('%Y-%m-%d %H:%M')}",
             'ocupacoes_existentes': len(ocupacoes_item),
             'quantidade_maxima': quantidade_maxima,
             'capacidade_disponivel': capacidade_disponivel,
@@ -289,7 +289,7 @@ class HotMix(Equipamento):
                 {
                     'ordem': oc[0], 'pedido': oc[1], 'atividade': oc[2],
                     'quantidade': oc[4],
-                    'periodo': f"{oc[8].strftime('%H:%M')} - {oc[9].strftime('%H:%M')}",
+                    'periodo': f"{oc[8].strftime('%Y-%m-%d %H:%M')} - {oc[9].strftime('%Y-%m-%d %H:%M')}",
                     'simultaneidade': 'EXATA' if (oc[8] == inicio and oc[9] == fim) else 'DIFERENTE'
                 }
                 for oc in ocupacoes_item
@@ -531,9 +531,9 @@ class HotMix(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         
         if liberadas > 0:
-            logger.info(f"🔓 {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}.")
+            logger.info(f"🔓 {self.nome} liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}.")
         else:
-            logger.warning(f"⚠️ Nenhuma ocupação finalizada encontrada para liberar | Até {horario_atual.strftime('%H:%M')}.")
+            logger.warning(f"⚠️ Nenhuma ocupação finalizada encontrada para liberar | Até {horario_atual.strftime('%Y-%m-%d %H:%M')}.")
         
         return liberadas
 
@@ -555,12 +555,12 @@ class HotMix(Equipamento):
         if liberadas > 0:
             logger.info(
                 f"🔓 {self.nome} liberou {liberadas} ocupações no intervalo de "
-                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} a {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.info(
                 f"ℹ️ Nenhuma ocupação encontrada para liberar no intervalo de "
-                f"{inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} a {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     # ==========================================================
@@ -583,7 +583,7 @@ class HotMix(Equipamento):
         for ocupacao in ocupacoes_ordenadas:
             logger.info(
                 f"🔸 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                f"{ocupacao[4]}g | {ocupacao[8].strftime('%H:%M')} → {ocupacao[9].strftime('%H:%M')} | "
+                f"{ocupacao[4]}g | {ocupacao[8].strftime('%Y-%m-%d %H:%M')} → {ocupacao[9].strftime('%Y-%m-%d %H:%M')} | "
                 f"Velocidade: {ocupacao[5].name} | Chama: {ocupacao[6].name} | "
                 f"Pressões: {[p.name for p in ocupacao[7]]}"
             )

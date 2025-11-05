@@ -563,8 +563,8 @@ class Forno(Equipamento):
         for ocupacao in self.niveis_ocupacoes[nivel]:
             if not (fim <= ocupacao[5] or inicio >= ocupacao[6]):
                 logger.debug(
-                    f"🚫 Nível {nivel} ocupado de {ocupacao[5].strftime('%H:%M')} até {ocupacao[6].strftime('%H:%M')}, "
-                    f"colide com tentativa de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')}"
+                    f"🚫 Nível {nivel} ocupado de {ocupacao[5].strftime('%Y-%m-%d %H:%M')} até {ocupacao[6].strftime('%Y-%m-%d %H:%M')}, "
+                    f"colide com tentativa de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')}"
                 )
                 return True
         return False

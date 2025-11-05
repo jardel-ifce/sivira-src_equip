@@ -206,7 +206,7 @@ class Embaladora(Equipamento):
         # Log informativo
         logger.info(
             f"✅ {self.nome} | Item {id_item}: Ocupação aceita {quantidade}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')} "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
             f"Embalagens: {[emb.name for emb in lista_tipo_embalagem]} | "
             f"Total de ocupações: {len(self.ocupacoes)}"
@@ -282,7 +282,7 @@ class Embaladora(Equipamento):
                 logger.info(
                     f"🔄 Ocupação atualizada na {self.nome} | "
                     f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-                    f"Nova quantidade: {nova_quantidade:.2f}g | {novo_inicio.strftime('%H:%M')} → {novo_fim.strftime('%H:%M')} | "
+                    f"Nova quantidade: {nova_quantidade:.2f}g | {novo_inicio.strftime('%Y-%m-%d %H:%M')} → {novo_fim.strftime('%Y-%m-%d %H:%M')} | "
                     f"Embalagens: {[emb.name for emb in nova_lista_embalagem]}"
                 )
                 return True
@@ -385,11 +385,11 @@ class Embaladora(Equipamento):
         
         if liberadas > 0:
             logger.info(
-                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return liberadas
 
@@ -410,11 +410,11 @@ class Embaladora(Equipamento):
         
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     # ============================================
@@ -437,7 +437,7 @@ class Embaladora(Equipamento):
         # Agrupa ocupações por horário para melhor visualização
         ocupacoes_por_horario = {}
         for ocupacao in self.ocupacoes:
-            chave_horario = f"{ocupacao[6].strftime('%H:%M')} → {ocupacao[7].strftime('%H:%M')}"
+            chave_horario = f"{ocupacao[6].strftime('%Y-%m-%d %H:%M')} → {ocupacao[7].strftime('%Y-%m-%d %H:%M')}"
             if chave_horario not in ocupacoes_por_horario:
                 ocupacoes_por_horario[chave_horario] = []
             ocupacoes_por_horario[chave_horario].append(ocupacao)
@@ -510,15 +510,15 @@ class Embaladora(Equipamento):
             return {
                 'quantidade_total': quantidade_total,
                 'num_ocupacoes': len(ocupacoes_item),
-                'periodo_inicio': periodo_inicio.strftime('%H:%M'),
-                'periodo_fim': periodo_fim.strftime('%H:%M'),
+                'periodo_inicio': periodo_inicio.strftime('%Y-%m-%d %H:%M'),
+                'periodo_fim': periodo_fim.strftime('%Y-%m-%d %H:%M'),
                 'ocupacoes': [
                     {
                         'id_ordem': oc[0],
                         'id_pedido': oc[1],
                         'quantidade': oc[4],
-                        'inicio': oc[6].strftime('%H:%M'),
-                        'fim': oc[7].strftime('%H:%M'),
+                        'inicio': oc[6].strftime('%Y-%m-%d %H:%M'),
+                        'fim': oc[7].strftime('%Y-%m-%d %H:%M'),
                         'tipos_embalagem': [emb.name for emb in oc[5]]
                     }
                     for oc in ocupacoes_item

@@ -48,25 +48,27 @@ class VisualizadorEquipamentos:
         from models.equipamentos.fritadeira import Fritadeira
         from models.equipamentos.camara_refrigerada import CamaraRefrigerada
         from models.equipamentos.freezer import Freezer
+        from models.equipamentos.balanca_digital import BalancaDigital
 
         # Define tipos de equipamentos
         tipos_equipamentos = [
-            ('Fornos', Forno),
+            ('Câmaras Refrigeradas', CamaraRefrigerada),
             ('Fogões', Fogao),
-            ('Batedeiras Industriais', BatedeiraIndustrial),
+            ('Balanças Digitais', BalancaDigital),
+            ('Bancadas', Bancada),
             ('Batedeiras Planetárias', BatedeiraPlanetaria),
+            ('Batedeiras Industriais', BatedeiraIndustrial),
             ('Masseiras', Masseira),
             ('HotMix', HotMix),
+            ('Freezers', Freezer),
+            ('Fritadeiras', Fritadeira),
+            ('Armários Esqueleto', ArmarioEsqueleto),
+            ('Armários Fermentadores', ArmarioFermentador),
+            ('Divisoras de Massas', DivisoraDeMassas),
             ('Modeladoras de Pães', ModeladoraDePaes),
             ('Modeladoras de Salgados', ModeladoraDeSalgados),
-            ('Divisoras de Massas', DivisoraDeMassas),
-            ('Armários Fermentadores', ArmarioFermentador),
-            ('Armários Esqueleto', ArmarioEsqueleto),
-            ('Bancadas', Bancada),
             ('Embaladoras', Embaladora),
-            ('Fritadeiras', Fritadeira),
-            ('Câmaras Refrigeradas', CamaraRefrigerada),
-            ('Freezers', Freezer)
+            ('Fornos', Forno)
         ]
 
         self.equipamentos_por_tipo = {}
@@ -128,8 +130,130 @@ class VisualizadorEquipamentos:
                 # Exibe com ou sem ocupações
                 if num_ocupacoes > 0:
                     print(f"  • ID: {equip.id:3d} | Nome: {equip.nome} | 📅 {num_ocupacoes} ocupação(ões)")
+                    self._exibir_detalhes_ocupacoes(equip)
                 else:
                     print(f"  • ID: {equip.id:3d} | Nome: {equip.nome}")
+
+    def _exibir_detalhes_ocupacoes(self, equip: Any) -> None:
+        """
+        Exibe detalhes de todas as ocupações de um equipamento.
+
+        Args:
+            equip: Equipamento com ocupações
+        """
+        ocupacoes_formatadas = []
+
+        # Formato 1: lista de ocupações simples
+        if hasattr(equip, 'ocupacoes') and equip.ocupacoes:
+            for ocupacao in equip.ocupacoes:
+                ocupacoes_formatadas.append(self._formatar_ocupacao_simples(ocupacao))
+
+        # Formato 2: lista de listas por níveis (Forno, Câmara, Armário)
+        elif hasattr(equip, 'niveis_ocupacoes') and equip.niveis_ocupacoes:
+            for nivel_idx, nivel in enumerate(equip.niveis_ocupacoes):
+                for ocupacao in nivel:
+                    ocupacoes_formatadas.append(self._formatar_ocupacao_nivel(ocupacao, nivel_idx, equip))
+
+        # Formato 3: lista de listas por frações (Bancada)
+        elif hasattr(equip, 'fracoes_ocupacoes') and equip.fracoes_ocupacoes:
+            for fracao_idx, fracao in enumerate(equip.fracoes_ocupacoes):
+                for ocupacao in fracao:
+                    ocupacoes_formatadas.append(self._formatar_ocupacao_fracao(ocupacao, fracao_idx))
+
+        # Formato 4: lista de listas por boca (Fogão)
+        elif hasattr(equip, 'ocupacoes_por_boca') and equip.ocupacoes_por_boca:
+            for boca_idx, boca in enumerate(equip.ocupacoes_por_boca):
+                for ocupacao in boca:
+                    ocupacoes_formatadas.append(self._formatar_ocupacao_boca(ocupacao, boca_idx))
+
+        # Formato 5: lista de listas por fração (Fritadeira)
+        elif hasattr(equip, 'ocupacoes_por_fracao') and equip.ocupacoes_por_fracao:
+            for fracao_idx, fracao in enumerate(equip.ocupacoes_por_fracao):
+                for ocupacao in fracao:
+                    ocupacoes_formatadas.append(self._formatar_ocupacao_simples(ocupacao))
+
+        # Exibe todas as ocupações
+        for ocupacao_str in ocupacoes_formatadas:
+            print(f"    {ocupacao_str}")
+
+    def _formatar_ocupacao_simples(self, ocupacao: tuple) -> str:
+        """Formata ocupação no formato simples."""
+        try:
+            # Formato com 9 campos (Masseira): (id_ordem, id_pedido, id_atividade, id_item, quantidade, velocidades, tipo_mistura, inicio, fim)
+            if len(ocupacao) >= 9 and isinstance(ocupacao[5], list):
+                id_ordem, id_pedido, id_atividade, id_item, quantidade, velocidades, tipo_mistura, inicio, fim = ocupacao[:9]
+                vel_str = ", ".join([v.name for v in velocidades]) if velocidades else "Nenhuma"
+                return (
+                    f"🗂️ Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
+                    f"Item {id_item} | {quantidade:.2f}g | Velocidades: {vel_str} | Tipo: {tipo_mistura.value if hasattr(tipo_mistura, 'value') else tipo_mistura} | "
+                    f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
+                )
+            # Formato com 8 campos (Divisora): (id_ordem, id_pedido, id_atividade, id_item, quantidade, usa_boleadora, inicio, fim)
+            elif len(ocupacao) >= 8 and isinstance(ocupacao[5], bool):
+                id_ordem, id_pedido, id_atividade, id_item, quantidade, usa_boleadora, inicio, fim = ocupacao[:8]
+                return (
+                    f"🗂️ Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
+                    f"Item {id_item} | {quantidade:.2f}g | Boleadora: {'Sim' if usa_boleadora else 'Não'} | "
+                    f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
+                )
+            # Formato padrão com 7 campos: (id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim)
+            else:
+                id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim = ocupacao[:7]
+                return (
+                    f"🗂️ Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
+                    f"Item {id_item} | {quantidade:.2f} unidades | "
+                    f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
+                )
+        except (IndexError, AttributeError, ValueError) as e:
+            return f"⚠️ Ocupação com formato inválido: {e}"
+
+    def _formatar_ocupacao_nivel(self, ocupacao: tuple, nivel_idx: int, equip: Any) -> str:
+        """Formata ocupação com indicação de nível."""
+        try:
+            id_ordem, id_pedido, id_atividade, id_item, quantidade, inicio, fim = ocupacao[:7]
+
+            # Tentar obter informação específica do nível
+            nivel_info = f"Nível {nivel_idx + 1}"
+            if hasattr(equip, 'obter_andar_e_nivel_por_indice'):
+                try:
+                    andar, nivel = equip.obter_andar_e_nivel_por_indice(nivel_idx)
+                    nivel_info = f"Andar {andar}, Nível {nivel}"
+                except:
+                    pass
+
+            return (
+                f"🗂️ {nivel_info} | Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
+                f"Item {id_item} | {quantidade:.2f} unidades | "
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
+            )
+        except (IndexError, AttributeError, ValueError):
+            return "⚠️ Ocupação com formato inválido"
+
+    def _formatar_ocupacao_fracao(self, ocupacao: tuple, fracao_idx: int) -> str:
+        """Formata ocupação com indicação de fração."""
+        try:
+            id_ordem, id_pedido, id_atividade, id_item, inicio, fim = ocupacao[:6]
+            return (
+                f"🗂️ Fração {fracao_idx + 1} | Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
+                f"Item {id_item} | "
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
+            )
+        except (IndexError, AttributeError, ValueError):
+            return "⚠️ Ocupação com formato inválido"
+
+    def _formatar_ocupacao_boca(self, ocupacao: tuple, boca_idx: int) -> str:
+        """Formata ocupação com indicação de boca (Fogão tem 9 campos)."""
+        try:
+            # Fogão: (id_ordem, id_pedido, id_atividade, id_item, quantidade, tipo_chama, pressoes_chama, inicio, fim)
+            id_ordem, id_pedido, id_atividade, id_item, quantidade, tipo_chama, pressoes_chama, inicio, fim = ocupacao[:9]
+            pressoes_str = ", ".join([p.value for p in pressoes_chama]) if pressoes_chama else "Nenhuma"
+            return (
+                f"🗂️ Boca {boca_idx + 1} | Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
+                f"Item {id_item} | {quantidade:.2f}g | Chama: {tipo_chama.value if hasattr(tipo_chama, 'value') else tipo_chama} | Pressões: {pressoes_str} | "
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
+            )
+        except (IndexError, AttributeError, ValueError) as e:
+            return f"⚠️ Ocupação com formato inválido: {e}"
 
     def visualizar(self) -> None:
         """

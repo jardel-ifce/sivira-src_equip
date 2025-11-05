@@ -177,7 +177,7 @@ class ArmarioEsqueleto(Equipamento):
         logger.info(
             f"📥 Ocupação adicionada no {self.nome} - Andar {andar}, Nível {nivel_tela} (índice {nivel_index}) | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"{quantidade:.2f} unidades/gramas | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"{quantidade:.2f} unidades/gramas | {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -251,7 +251,7 @@ class ArmarioEsqueleto(Equipamento):
                 f"📥 Ocupação múltipla registrada no {self.nome} | "
                 f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
                 f"{len(niveis)} níveis ({quantidade_total:.2f} total) | "
-                f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+                f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')} | "
                 f"Níveis: {niveis}"
             )
         return sucesso
@@ -272,7 +272,7 @@ class ArmarioEsqueleto(Equipamento):
         
         if niveis_para_ocupar is None:
             logger.warning(
-                f"❌ Níveis insuficientes no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
+                f"❌ Níveis insuficientes no {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}. "
                 f"Necessários: {quantidade}, Disponíveis: {self.quantidade_niveis_disponiveis(inicio, fim)}"
             )
             return False
@@ -372,11 +372,11 @@ class ArmarioEsqueleto(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações do {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações do {self.nome} finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return total_liberadas
 
@@ -402,11 +402,11 @@ class ArmarioEsqueleto(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações do {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações do {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     def liberar_nivel_especifico(self, nivel_index: int, id_ordem: int, id_pedido: int, id_atividade: int):
@@ -448,7 +448,7 @@ class ArmarioEsqueleto(Equipamento):
                 for ocupacao in self.niveis_ocupacoes[nivel_index]:
                     logger.info(
                         f"   🗂️ Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                        f"{ocupacao[4]:.2f} unidades/gramas | {ocupacao[5].strftime('%H:%M')} → {ocupacao[6].strftime('%H:%M')}"
+                        f"{ocupacao[4]:.2f} unidades/gramas | {ocupacao[5].strftime('%Y-%m-%d %H:%M')} → {ocupacao[6].strftime('%Y-%m-%d %H:%M')}"
                     )
 
         if not tem_ocupacao:

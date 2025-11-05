@@ -74,7 +74,7 @@ class BalancaDigital(Equipamento):
         logger.info(
             f"⚖️ Ocupação registrada na {self.nome}: "
             f"Ordem {id_ordem}, pedido {id_pedido}, atividade {id_atividade}, item {id_item}, quantidade {quantidade}g, "
-            f"início {inicio.strftime('%H:%M')}, fim {fim.strftime('%H:%M')}."
+            f"início {inicio.strftime('%Y-%m-%d %H:%M')}, fim {fim.strftime('%Y-%m-%d %H:%M')}."
         )
         return True
 
@@ -145,7 +145,7 @@ class BalancaDigital(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         logger.info(
             f"🔓 Liberadas {liberadas} ocupações da {self.nome} "
-            f"no intervalo de {inicio.strftime('%H:%M')} a {fim.strftime('%H:%M')}."
+            f"no intervalo de {inicio.strftime('%Y-%m-%d %H:%M')} a {fim.strftime('%Y-%m-%d %H:%M')}."
         )
 
     # ==========================================================
@@ -161,7 +161,7 @@ class BalancaDigital(Equipamento):
         for i, ocupacao in enumerate(self.ocupacoes, start=1):
             logger.info(
                 f"⚖️ Ordem: {ocupacao[0]} | Pedido: {ocupacao[1]} | Atividade: {ocupacao[2]} | Item: {ocupacao[3]} | "
-                f"Quantidade: {ocupacao[4]}g | Início: {ocupacao[5].strftime('%H:%M')} | Fim: {ocupacao[6].strftime('%H:%M')}"
+                f"Quantidade: {ocupacao[4]}g | Início: {ocupacao[5].strftime('%Y-%m-%d %H:%M')} | Fim: {ocupacao[6].strftime('%Y-%m-%d %H:%M')}"
             )
 
     # ==========================================================

@@ -190,6 +190,7 @@ class MenuPrincipal:
         print("⚙️ SISTEMA:")
         print("9️⃣  Testar Sistema")
         print("0️⃣  Configurações")
+        print("R️⃣  Recuperar Estado (via Logs Detalhados)")
         print("A️⃣  Limpar Logs Manualmente")
         print("B️⃣  Histórico de Ordens")
         print("C️⃣  Debug Sistema Ordens")
@@ -252,6 +253,9 @@ class MenuPrincipal:
         elif opcao == "0":
             self.mostrar_configuracoes()
         
+
+        elif opcao.lower() == "r":
+            self.recuperar_estado_logs()
         elif opcao.lower() == "a":
             self.limpar_logs_manualmente()
         
@@ -1638,11 +1642,12 @@ class MenuPrincipal:
                     print("2️⃣  Despachar Reservas (Consumir Almoxarifado)")
                     print("3️⃣  Verificar Estoque (Itens Abaixo do Mínimo)")
                     print("4️⃣  Listar Todos os Itens")
+                    print("5️⃣  🔄 Executar Ordem de Reabastecimento")
                     print("\nV️⃣  Voltar ao Menu Principal")
                     print("=" * 50)
-                    
+
                     opcao_almox = input("\n🎯 Escolha uma opção: ").strip().upper()
-                    
+
                     if opcao_almox == '1':
                         self.processar_comandas()
                     elif opcao_almox == '2':
@@ -1651,6 +1656,8 @@ class MenuPrincipal:
                         self.verificar_estoque_minimo()
                     elif opcao_almox == '4':
                         self.listar_todos_os_itens_almoxarifado()
+                    elif opcao_almox == '5':
+                        self.executar_ordem_reabastecimento()
                     elif opcao_almox == 'V':
                         rodando_almoxarifado = False
                     else:
@@ -1737,13 +1744,15 @@ class MenuPrincipal:
                         print(f"   ... e mais {len(criticos) - 5} itens")
                 
                 print("\n💡 DICAS:")
-                print("   • Programe reabastecimento para itens críticos")
                 print("   • Verifique fornecedores para itens em falta")
                 print("   • Considere ajustar quantidades mínimas se necessário")
-            
+
+                # Oferecer geração de CSV de reabastecimento
+                self._oferecer_geracao_csv_reabastecimento()
+
         except Exception as e:
             print(f"⚠️ Erro ao verificar estoque: {e}")
-        
+
         input("\nPressione Enter para continuar...")
     
     def listar_todos_os_itens_almoxarifado(self):
@@ -1825,7 +1834,7 @@ class MenuPrincipal:
             print(f"⚠️ Erro ao listar itens: {e}")
         
         input("\nPressione Enter para continuar...")
-    
+
     def processar_comandas(self):
         """Processa comandas e reserva itens do almoxarifado"""
         self.utils.limpar_tela()
@@ -3264,6 +3273,562 @@ class MenuPrincipal:
             traceback.print_exc()
         
         input("\nPressione Enter para continuar...")
+
+    def executar_ordem_reabastecimento(self):
+        """Executa ordem de reabastecimento a partir de CSV"""
+        self.utils.limpar_tela()
+        print("🔄 EXECUTAR ORDEM DE REABASTECIMENTO")
+        print("=" * 80)
+        print()
+        print("📁 Pasta: data/csv/reabastecimento/")
+        print("📋 Os pedidos de reabastecimento serão processados e executados")
+        print()
+
+        # Diretório de reabastecimento
+        csv_dir = "data/csv/reabastecimento"
+
+        if not os.path.exists(csv_dir):
+            print("❌ Pasta 'data/csv/reabastecimento' não encontrada!")
+            print("💡 Gere primeiro um CSV de reabastecimento na opção 3")
+            input("\nPressione Enter para continuar...")
+            return
+
+        # Listar arquivos CSV disponíveis
+        csv_files = [f for f in os.listdir(csv_dir) if f.endswith('.csv')]
+
+        if not csv_files:
+            print("❌ Nenhum arquivo CSV de reabastecimento encontrado!")
+            print("💡 Gere primeiro um CSV de reabastecimento:")
+            print("   1. Vá em 'Verificar Estoque (Opção 3)'")
+            print("   2. Responda 'S' para gerar o CSV")
+            input("\nPressione Enter para continuar...")
+            return
+
+        # Ordenar por data (mais recente primeiro)
+        csv_files.sort(reverse=True)
+
+        print("📂 Arquivos CSV de reabastecimento disponíveis:")
+        print()
+        for i, arquivo in enumerate(csv_files, 1):
+            caminho = os.path.join(csv_dir, arquivo)
+
+            # Contar itens no CSV
+            try:
+                with open(caminho, 'r', encoding='utf-8') as f:
+                    total_itens = sum(1 for _ in f) - 1  # -1 para excluir cabeçalho
+
+                # Extrair data do nome do arquivo (pedidos_YYYY_MM_DD.csv)
+                if arquivo.startswith('pedidos_'):
+                    data_str = arquivo.replace('pedidos_', '').replace('.csv', '')
+                    try:
+                        data_obj = datetime.strptime(data_str, '%Y_%m_%d')
+                        data_formatada = data_obj.strftime('%d/%m/%Y')
+                        print(f"   {i}. {arquivo}")
+                        print(f"      📅 Data: {data_formatada} | 📦 Itens: {total_itens}")
+                    except:
+                        print(f"   {i}. {arquivo} ({total_itens} itens)")
+                else:
+                    print(f"   {i}. {arquivo} ({total_itens} itens)")
+            except Exception as e:
+                print(f"   {i}. {arquivo} (erro ao ler)")
+
+        print()
+
+        try:
+            escolha = input("🎯 Digite o número do arquivo ou 'V' para voltar: ").strip()
+
+            if escolha.upper() == 'V':
+                return
+
+            indice = int(escolha) - 1
+            if 0 <= indice < len(csv_files):
+                arquivo_escolhido = csv_files[indice]
+                caminho_completo = os.path.join(csv_dir, arquivo_escolhido)
+
+                print(f"\n📂 Arquivo selecionado: {arquivo_escolhido}")
+
+                # Confirmar execução
+                confirmar = input("\n⚠️ Deseja executar esta ordem de reabastecimento? (S/N): ").strip().upper()
+
+                if confirmar != 'S':
+                    print("❌ Execução cancelada")
+                    input("\nPressione Enter para continuar...")
+                    return
+
+                # Processar o CSV de reabastecimento
+                self._processar_csv_reabastecimento(caminho_completo)
+            else:
+                print("❌ Número inválido!")
+                input("\nPressione Enter para continuar...")
+
+        except ValueError:
+            print("❌ Entrada inválida!")
+            input("\nPressione Enter para continuar...")
+        except Exception as e:
+            print(f"❌ Erro: {e}")
+            import traceback
+            traceback.print_exc()
+            input("\nPressione Enter para continuar...")
+
+    def _processar_csv_reabastecimento(self, caminho_arquivo):
+        """Processa arquivo CSV de reabastecimento e executa pedidos"""
+        try:
+            pedidos_registrados = []
+            erros = []
+
+            print(f"\n{'=' * 80}")
+            print(f"📂 PROCESSANDO: {os.path.basename(caminho_arquivo)}")
+            print(f"{'=' * 80}")
+            print()
+
+            # Ler CSV
+            with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
+                reader = csv.DictReader(arquivo)
+
+                # Validar cabeçalhos
+                colunas_esperadas = {'id', 'tipo_produto', 'quantidade', 'fim_jornada'}
+                if not colunas_esperadas.issubset(set(reader.fieldnames)):
+                    print(f"❌ Colunas inválidas no CSV!")
+                    print(f"📋 Esperado: {', '.join(colunas_esperadas)}")
+                    print(f"📋 Encontrado: {', '.join(reader.fieldnames)}")
+                    input("\nPressione Enter para continuar...")
+                    return
+
+                for linha_num, linha in enumerate(reader, 2):  # +2 pois linha 1 é cabeçalho
+                    try:
+                        # Converter dados
+                        id_item = int(linha['id'].strip())
+                        tipo_item = linha['tipo_produto'].strip().upper()
+                        quantidade = int(linha['quantidade'].strip())
+                        fim_jornada_str = linha['fim_jornada'].strip()
+
+                        # Converter data
+                        fim_jornada = datetime.strptime(fim_jornada_str, '%Y-%m-%d %H:%M:%S')
+
+                        # Validar tipo (deve ser SUBPRODUTO)
+                        if tipo_item != 'SUBPRODUTO':
+                            raise ValueError(f"Tipo inválido: {tipo_item} (esperado: SUBPRODUTO)")
+
+                        # Registrar pedido
+                        sucesso, mensagem = self.gerenciador.registrar_pedido(
+                            id_item=id_item,
+                            tipo_item=tipo_item,
+                            quantidade=quantidade,
+                            fim_jornada=fim_jornada
+                        )
+
+                        if sucesso:
+                            pedidos_registrados.append({
+                                'id': id_item,
+                                'quantidade': quantidade,
+                                'fim_jornada': fim_jornada
+                            })
+                            print(f"✅ Linha {linha_num}: Pedido {id_item} registrado (Qtd: {quantidade})")
+                        else:
+                            erros.append(f"Linha {linha_num}: {mensagem}")
+                            print(f"❌ Linha {linha_num}: {mensagem}")
+
+                    except Exception as e:
+                        erros.append(f"Linha {linha_num}: {str(e)}")
+                        print(f"❌ Linha {linha_num}: Erro - {e}")
+
+            # Resumo do processamento
+            print(f"\n{'=' * 80}")
+            print(f"📊 RESUMO DO PROCESSAMENTO")
+            print(f"{'=' * 80}")
+            print(f"✅ Pedidos registrados: {len(pedidos_registrados)}")
+            print(f"❌ Erros: {len(erros)}")
+
+            if not pedidos_registrados:
+                print("\n⚠️ Nenhum pedido foi registrado com sucesso!")
+                input("\nPressione Enter para continuar...")
+                return
+
+            # Perguntar se deseja executar agora
+            print(f"\n{'=' * 80}")
+            executar = input(f"\n🚀 Deseja executar os {len(pedidos_registrados)} pedidos agora? (S/N): ").strip().upper()
+
+            if executar != 'S':
+                print("\n💡 Os pedidos foram registrados mas não executados")
+                print("   Você pode executá-los depois no Menu Principal > Opção 7 ou 8")
+                input("\nPressione Enter para continuar...")
+                return
+
+            # Escolher modo de execução
+            print(f"\n{'=' * 80}")
+            print("📋 ESCOLHA O MODO DE EXECUÇÃO:")
+            print(f"{'=' * 80}")
+            print("1️⃣  SEQUENCIAL - Execução otimizada sem dependências externas")
+            print("2️⃣  OTIMIZADO (PL) - Programação Linear para melhor resultado")
+            print()
+
+            modo = input("🎯 Escolha o modo (1 ou 2): ").strip()
+
+            if modo not in ['1', '2']:
+                print("\n❌ Opção inválida! Execução cancelada.")
+                print("💡 Use o Menu Principal > Opção 7 ou 8 para executar depois")
+                input("\nPressione Enter para continuar...")
+                return
+
+            # Obter pedidos da ordem atual (que acabamos de registrar)
+            ordem_atual = self.gerenciador.obter_ordem_atual()
+            pedidos_ordem = self.gerenciador.obter_pedidos_ordem_atual()
+
+            if not pedidos_ordem:
+                print("\n⚠️ Erro: Nenhum pedido encontrado na ordem atual!")
+                input("\nPressione Enter para continuar...")
+                return
+
+            # Executar pedidos
+            print(f"\n{'=' * 80}")
+            print(f"🚀 EXECUTANDO PEDIDOS DE REABASTECIMENTO - ORDEM {ordem_atual}")
+            print(f"{'=' * 80}")
+            print(f"📦 Total de pedidos: {len(pedidos_ordem)}")
+            print(f"⚙️ Modo: {'SEQUENCIAL' if modo == '1' else 'OTIMIZADO (PL)'}")
+            print()
+
+            try:
+                if modo == '1':
+                    # Execução SEQUENCIAL
+                    sucesso = self.gestor_producao.executar_sequencial(pedidos_ordem)
+                else:
+                    # Execução OTIMIZADA
+                    sucesso = self.gestor_producao.executar_otimizado(pedidos_ordem)
+
+                # Incrementar ordem após execução
+                nova_ordem = self.gerenciador.incrementar_ordem()
+                self.gerenciador.salvar_pedidos()
+
+                if sucesso:
+                    print(f"\n{'=' * 80}")
+                    print("✅ EXECUÇÃO CONCLUÍDA COM SUCESSO!")
+                    print(f"{'=' * 80}")
+                    print(f"📈 Ordem {ordem_atual} executada")
+                    print(f"🔄 Sistema avançou para Ordem {nova_ordem}")
+                    print("\n💡 Verifique os logs em:")
+                    print("   📁 logs/equipamentos/sucesso/")
+                    print(f"   📄 ordem: {ordem_atual} | pedido: X.log")
+                else:
+                    print(f"\n{'=' * 80}")
+                    print("⚠️ EXECUÇÃO CONCLUÍDA COM ERROS")
+                    print(f"{'=' * 80}")
+                    print("\n💡 Verifique os logs de erro em:")
+                    print("   📁 logs/equipamentos/erros/")
+
+            except Exception as e:
+                print(f"\n❌ Erro durante a execução: {e}")
+                import traceback
+                traceback.print_exc()
+
+        except Exception as e:
+            print(f"\n❌ Erro ao processar CSV: {e}")
+            import traceback
+            traceback.print_exc()
+
+        input("\nPressione Enter para continuar...")
+
+    def _oferecer_geracao_csv_reabastecimento(self):
+        """Oferece opção de gerar CSV de reabastecimento após verificar estoque"""
+        from datetime import datetime
+        from services.gestores.reabastecimento.detector_itens_criticos import DetectorItensCriticos
+        from services.gestores.reabastecimento.gerador_csv_reabastecimento import GeradorCSVReabastecimento
+
+        print("\n" + "=" * 80)
+        print("🔄 GERAÇÃO DE CSV DE REABASTECIMENTO")
+        print("=" * 80)
+
+        # Perguntar se deseja gerar CSV
+        resposta = input("\n📝 Deseja gerar o CSV com a ordem de reabastecimento de estoque? (S/N): ").strip().upper()
+
+        if resposta != 'S':
+            print("❌ Geração de CSV cancelada")
+            return
+
+        try:
+            # Obter almoxarifado
+            almoxarifado = self.gestor_producao.configurador_ambiente.gestor_almoxarifado.almoxarifado
+
+            # Detectar itens críticos (SUBPRODUTO + ESTOCADO + abaixo do mínimo)
+            print("\n🔍 Detectando subprodutos críticos...")
+            detector = DetectorItensCriticos(almoxarifado)
+            itens_criticos = detector.detectar_itens_criticos()
+
+            if not itens_criticos:
+                print("\n✅ Nenhum subproduto estocado abaixo do mínimo!")
+                print("💡 Somente SUBPRODUTOS com política ESTOCADO são incluídos no CSV")
+                return
+
+            # Mostrar itens que serão incluídos
+            print(f"\n📋 {len(itens_criticos)} subproduto(s) será(ão) incluído(s) no CSV:")
+            print("\n" + "=" * 80)
+            print(f"{'ID':<6} {'NOME':<30} {'ATUAL':<12} {'REABASTECER':<15}")
+            print("=" * 80)
+
+            for item in itens_criticos[:10]:  # Mostrar até 10 itens
+                print(f"{item['id']:<6} {item['nome'][:29]:<30} {item['estoque_atual']:<12.1f} {item['quantidade_reabastecer']:<15.0f}")
+
+            if len(itens_criticos) > 10:
+                print(f"... e mais {len(itens_criticos) - 10} item(ns)")
+
+            print("=" * 80)
+
+            # Gerar e mostrar resumo
+            resumo = detector.obter_resumo_criticos(itens_criticos)
+            print(f"\n📊 RESUMO:")
+            print(f"   • Total de itens: {resumo['total_itens']}")
+            print(f"   • Quantidade total a reabastecer: {resumo['quantidade_total_reabastecer']:.0f}")
+
+            # Escolher modo de geração do CSV
+            gerador = GeradorCSVReabastecimento()
+
+            print("\n" + "=" * 80)
+            print("⚙️  MODO DE GERAÇÃO DO CSV")
+            print("=" * 80)
+            print("\n1️⃣  Data única para todos os pedidos")
+            print("    → Todos os pedidos terão a mesma data de conclusão")
+            print("\n2️⃣  Datas individuais calculadas por duração")
+            print("    → Cada pedido terá sua data calculada: hora atual + buffer + duração")
+
+            modo = input("\n📝 Escolha o modo (1 ou 2): ").strip()
+
+            if modo == '1':
+                # Modo 1: Data única
+                self._gerar_csv_data_unica(gerador, itens_criticos)
+            elif modo == '2':
+                # Modo 2: Datas individuais
+                self._gerar_csv_datas_individuais(gerador, itens_criticos)
+            else:
+                print("❌ Opção inválida. Cancelando geração do CSV.")
+
+        except Exception as e:
+            print(f"\n❌ Erro ao gerar CSV: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _gerar_csv_data_unica(self, gerador, itens_criticos):
+        """Gera CSV com data única para todos os pedidos"""
+        data_sugerida = gerador.obter_data_sugerida()
+
+        print(f"\n📅 Data sugerida para conclusão: {gerador.formatar_data_para_exibicao(data_sugerida)}")
+        alterar_data = input("   Deseja alterar a data? (S/N): ").strip().upper()
+
+        data_entrega = data_sugerida
+        if alterar_data == 'S':
+            data_entrega = self._solicitar_data_hora_entrega(data_sugerida)
+
+        # Gerar CSV
+        print("\n🔄 Gerando arquivo CSV...")
+        sucesso, caminho, mensagem = gerador.gerar_csv_reabastecimento(itens_criticos, data_entrega)
+
+        print(f"\n{mensagem}")
+
+        if sucesso:
+            print(f"\n📁 Arquivo gerado em:")
+            print(f"   {caminho}")
+            print(f"\n✅ O arquivo pode ser usado para importar pedidos de reabastecimento")
+
+    def _gerar_csv_datas_individuais(self, gerador, itens_criticos):
+        """Gera CSV com datas individuais calculadas por duração"""
+        print("\n⏱️  CONFIGURAÇÃO DO BUFFER DE TEMPO")
+        print("=" * 80)
+        print("O buffer é o tempo adicional antes do início da produção.")
+        print("Fórmula: Data de conclusão = hora atual + buffer + duração do pedido")
+
+        buffer_padrao = 2.0
+        buffer_str = input(f"📝 Digite o buffer em horas [{buffer_padrao:.1f}h]: ").strip()
+
+        try:
+            if buffer_str:
+                buffer_horas = float(buffer_str)
+                if buffer_horas < 0:
+                    print("⚠️ Buffer não pode ser negativo. Usando padrão.")
+                    buffer_horas = buffer_padrao
+            else:
+                buffer_horas = buffer_padrao
+        except ValueError:
+            print("⚠️ Valor inválido. Usando buffer padrão.")
+            buffer_horas = buffer_padrao
+
+        print(f"\n✅ Buffer configurado: {buffer_horas:.1f}h")
+
+        # Gerar CSV com datas individuais
+        print("\n🔄 Calculando durações e gerando arquivo CSV...")
+        sucesso, caminho, mensagem = gerador.gerar_csv_com_datas_individuais(itens_criticos, buffer_horas)
+
+        print(f"\n{mensagem}")
+
+        if sucesso:
+            print(f"\n📁 Arquivo gerado em:")
+            print(f"   {caminho}")
+            print(f"\n✅ O arquivo pode ser usado para importar pedidos de reabastecimento")
+            print(f"💡 Cada pedido possui sua data de conclusão individual calculada")
+
+    def _solicitar_data_hora_entrega(self, data_padrao: datetime) -> datetime:
+        """Solicita data e hora de entrega ao usuário"""
+        from datetime import datetime
+
+        print("\n📅 CONFIGURAR DATA/HORA DE ENTREGA")
+        print("=" * 50)
+
+        try:
+            # Solicitar data
+            data_str = input(f"Digite a data (DD/MM/YYYY) [{data_padrao.strftime('%d/%m/%Y')}]: ").strip()
+
+            if not data_str:
+                data_str = data_padrao.strftime('%d/%m/%Y')
+
+            # Solicitar hora
+            hora_str = input(f"Digite a hora (HH:MM) [{data_padrao.strftime('%H:%M')}]: ").strip()
+
+            if not hora_str:
+                hora_str = data_padrao.strftime('%H:%M')
+
+            # Parsear data e hora
+            datetime_str = f"{data_str} {hora_str}"
+            data_entrega = datetime.strptime(datetime_str, '%d/%m/%Y %H:%M')
+
+            print(f"✅ Data configurada: {data_entrega.strftime('%d/%m/%Y %H:%M')}")
+            return data_entrega
+
+        except Exception as e:
+            print(f"⚠️ Erro ao processar data: {e}")
+            print(f"💡 Usando data padrão: {data_padrao.strftime('%d/%m/%Y %H:%M')}")
+            return data_padrao
+
+
+    def recuperar_estado_logs(self):
+        """Recupera estado do sistema a partir dos logs detalhados"""
+        from utils.recuperacao.detector_logs import DetectorLogs
+        from utils.recuperacao.recuperador_estado import RecuperadorEstado
+
+        self.utils.limpar_tela()
+        print("=" * 80)
+        print("📸 RECUPERAR ESTADO DO SISTEMA")
+        print("=" * 80)
+
+        try:
+            # Detectar logs disponíveis
+            detector = DetectorLogs()
+            logs_disponiveis = detector.detectar_logs()
+
+            if not logs_disponiveis:
+                print("\nℹ️  Nenhum log detalhado encontrado.")
+                print("💡 Execute pelo menos uma ordem para gerar logs de equipamentos.")
+                input("\nPressione Enter para continuar...")
+                return
+
+            print(f"\n📋 Logs detalhados encontrados: {len(logs_disponiveis)}")
+            print("=" * 80)
+
+            # Mostrar os 5 logs mais recentes
+            for idx, log_info in enumerate(logs_disponiveis[:5], 1):
+                print(f"\n{idx}. {log_info['nome']}")
+                print(f"   📅 Data: {log_info['data_modificacao'].strftime('%d/%m/%Y %H:%M:%S')}")
+                print(f"   📦 Tamanho: {log_info['tamanho'] / 1024:.1f} KB")
+                if log_info.get('ordem'):
+                    print(f"   📋 Ordem: {log_info['ordem']} | Pedidos: {', '.join(map(str, log_info.get('pedidos', [])))}")
+
+            if len(logs_disponiveis) > 5:
+                print(f"\n... e mais {len(logs_disponiveis) - 5} log(s)")
+
+            # Perguntar qual log usar
+            print("\n" + "=" * 80)
+            print("🔍 SELECIONAR LOG PARA RECUPERAÇÃO")
+            print("=" * 80)
+
+            escolha = input("\nDeseja usar o log mais recente? (S/n): ").strip().lower()
+
+            if escolha in ['n', 'nao', 'não']:
+                print("\n📋 Logs disponíveis:")
+                for idx, log_info in enumerate(logs_disponiveis, 1):
+                    print(f"{idx}. {log_info['nome']}")
+
+                try:
+                    num = int(input(f"\nEscolha um log (1-{len(logs_disponiveis)}): "))
+                    if 1 <= num <= len(logs_disponiveis):
+                        log_selecionado = logs_disponiveis[num - 1]
+                    else:
+                        print("❌ Opção inválida. Usando log mais recente.")
+                        log_selecionado = logs_disponiveis[0]
+                except ValueError:
+                    print("❌ Entrada inválida. Usando log mais recente.")
+                    log_selecionado = logs_disponiveis[0]
+            else:
+                log_selecionado = logs_disponiveis[0]
+
+            print("\n" + "=" * 80)
+            print("🔄 RECUPERANDO ESTADO DOS EQUIPAMENTOS")
+            print("=" * 80)
+            print(f"\n📁 Arquivo: {log_selecionado['nome']}")
+
+            # Confirmar aplicação
+            aplicar = input("\n⚠️  Aplicar restauração aos equipamentos? (s/N): ").strip().lower()
+            aplicar_restauracao = aplicar in ['s', 'sim', 'yes']
+
+            if not aplicar_restauracao:
+                print("\nℹ️  Modo SOMENTE LEITURA - Nenhuma alteração será feita nos equipamentos")
+
+            # Executar recuperação
+            recuperador = RecuperadorEstado(self.gestor_producao)
+            relatorio = recuperador.recuperar_de_log(
+                log_selecionado['caminho'],
+                aplicar_restauracao=aplicar_restauracao
+            )
+
+            # Mostrar relatório
+            print("\n" + "=" * 80)
+            print("📊 RELATÓRIO DE RECUPERAÇÃO")
+            print("=" * 80)
+            print(relatorio.gerar_resumo())
+
+            # Estatísticas por tipo
+            stats_tipo = relatorio.estatisticas_por_tipo()
+            if stats_tipo:
+                print("\n📈 Ocupações por tipo de equipamento:")
+                for tipo, count in sorted(stats_tipo.items(), key=lambda x: x[1], reverse=True):
+                    print(f"   • {tipo}: {count}")
+
+            # Mostrar erros se houver
+            if relatorio.tem_erros:
+                print(f"\n⚠️  Erros encontrados ({relatorio.total_erros}):")
+
+                # Mostrar erros globais
+                if relatorio.erros_globais:
+                    print("\n   📋 Erros globais:")
+                    for erro in relatorio.erros_globais[:5]:
+                        print(f"      • {erro}")
+                    if len(relatorio.erros_globais) > 5:
+                        print(f"      ... e mais {len(relatorio.erros_globais) - 5} erro(s)")
+
+                # Mostrar equipamentos com erros
+                equipamentos_com_erro = [e for e in relatorio.equipamentos if e.erros]
+                if equipamentos_com_erro:
+                    print(f"\n   🔧 Equipamentos com erros ({len(equipamentos_com_erro)}):")
+                    for equip in equipamentos_com_erro[:3]:
+                        print(f"      • {equip.nome_equipamento}: {len(equip.erros)} erro(s)")
+                    if len(equipamentos_com_erro) > 3:
+                        print(f"      ... e mais {len(equipamentos_com_erro) - 3} equipamento(s)")
+
+            # Status final
+            print("\n" + "=" * 80)
+            if relatorio.sucesso:
+                print("✅ RECUPERAÇÃO CONCLUÍDA COM SUCESSO!")
+                if aplicar_restauracao:
+                    print("✅ Estado dos equipamentos foi restaurado")
+                else:
+                    print("ℹ️  Nenhuma alteração foi feita (modo leitura)")
+            else:
+                print("❌ RECUPERAÇÃO FALHOU")
+                print("💡 Verifique os erros acima para mais detalhes")
+            print("=" * 80)
+
+        except Exception as e:
+            print(f"\n❌ Erro ao recuperar estado: {e}")
+            import traceback
+            traceback.print_exc()
+
+        input("\nPressione Enter para continuar...")
+
 
 # =====================================================================
 #                           PONTO DE ENTRADA

@@ -112,7 +112,8 @@
       "configuracoes_equipamentos": {
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,
-          "tipo_de_armazenamento": "CAIXAS"
+          "tipo_de_armazenamento": "CAIXAS",
+          "gramas_por_caixa": 2000
         }
       },
       "tipos_profissionais_permitidos": ["ALMOXARIFE"],

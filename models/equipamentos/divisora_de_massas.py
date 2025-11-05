@@ -88,8 +88,8 @@ class DivisoraDeMassas(Equipamento):
                     # A validação de capacidade será feita pelos métodos específicos
                     logger.debug(
                         f"✅ {self.nome}: Item {id_item} pode tentar sobrepor. "
-                        f"Novo: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
-                        f"Existente: {ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')} "
+                        f"Novo: {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')} vs "
+                        f"Existente: {ocupacao_inicio.strftime('%Y-%m-%d %H:%M')}-{ocupacao_fim.strftime('%Y-%m-%d %H:%M')} "
                         f"(validação de capacidade será feita pelo gestor)"
                     )
                     continue  # Permite, mas continua verificando outras ocupações
@@ -97,8 +97,8 @@ class DivisoraDeMassas(Equipamento):
                     # ❌ ITEM DIFERENTE: Bloqueia sobreposição
                     logger.warning(
                         f"❌ {self.nome}: Item {id_item} bloqueado por item diferente ({ocupacao_id_item}). "
-                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
-                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                        f"Conflito: {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%Y-%m-%d %H:%M')}-{ocupacao_fim.strftime('%Y-%m-%d %H:%M')}"
                     )
                     return False
         
@@ -124,14 +124,14 @@ class DivisoraDeMassas(Equipamento):
             logger.debug(
                 f"❌ {self.nome}: Item {id_item} pode sobrepor temporalmente, "
                 f"mas capacidade insuficiente para {quantidade}g no período "
-                f"{inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+                f"{inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')}"
             )
             return False
         
         # ✅ Ambas validações passaram
         logger.debug(
             f"✅ {self.nome}: Item {id_item} aprovado para {quantidade}g "
-            f"no período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+            f"no período {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -235,7 +235,7 @@ class DivisoraDeMassas(Equipamento):
             # Verifica se excede capacidade
             if not self.validar_capacidade(quantidade_total):
                 logger.debug(
-                    f"❌ {self.nome} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
+                    f"❌ {self.nome} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%Y-%m-%d %H:%M')} "
                     f"({quantidade_total}g > {self.capacidade_gramas_max}g)"
                 )
                 return False
@@ -301,7 +301,7 @@ class DivisoraDeMassas(Equipamento):
         # Verifica disponibilidade (só impede se for item diferente com sobreposição)  
         if not self.esta_disponivel_para_item(inicio, fim, id_item):
             logger.warning(
-                f"❌ {self.nome} | Ocupada por item diferente entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"❌ {self.nome} | Ocupada por item diferente entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
             return False
 
@@ -330,7 +330,7 @@ class DivisoraDeMassas(Equipamento):
         quantidade_maxima_apos = self.obter_quantidade_maxima_item_periodo(id_item, inicio, fim)
         logger.info(
             f"🔪 {self.nome} | Item {id_item}: Nova ocupação {quantidade}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')} "
             f"(Pico máximo do item: {quantidade_maxima_apos}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
             f"Boleadora: {'Sim' if usa_boleadora else 'Não'}"
@@ -408,7 +408,7 @@ class DivisoraDeMassas(Equipamento):
                 logger.info(
                     f"🔄 Ocupação atualizada na {self.nome} | "
                     f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-                    f"Nova quantidade: {nova_quantidade:.2f}g | {novo_inicio.strftime('%H:%M')} → {novo_fim.strftime('%H:%M')} | "
+                    f"Nova quantidade: {nova_quantidade:.2f}g | {novo_inicio.strftime('%Y-%m-%d %H:%M')} → {novo_fim.strftime('%Y-%m-%d %H:%M')} | "
                     f"Boleadora: {'Sim' if nova_usa_boleadora else 'Não'}"
                 )
                 return True
@@ -511,11 +511,11 @@ class DivisoraDeMassas(Equipamento):
         
         if liberadas > 0:
             logger.info(
-                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🟩 {self.nome} | Liberou {liberadas} ocupações finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return liberadas
 
@@ -536,11 +536,11 @@ class DivisoraDeMassas(Equipamento):
         
         if liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     # ==========================================================
@@ -560,7 +560,7 @@ class DivisoraDeMassas(Equipamento):
             logger.info(
                 f"🔪 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
                 f"{ocupacao[4]:.2f}g | Boleadora: {'Sim' if ocupacao[5] else 'Não'} | "
-                f"{ocupacao[6].strftime('%H:%M')} → {ocupacao[7].strftime('%H:%M')}"
+                f"{ocupacao[6].strftime('%Y-%m-%d %H:%M')} → {ocupacao[7].strftime('%Y-%m-%d %H:%M')}"
             )
 
     def obter_estatisticas_uso(self, inicio: datetime, fim: datetime) -> Dict[str, float]:
@@ -613,15 +613,15 @@ class DivisoraDeMassas(Equipamento):
             return {
                 'quantidade_total': quantidade_total,
                 'num_ocupacoes': len(ocupacoes_item),
-                'periodo_inicio': periodo_inicio.strftime('%H:%M'),
-                'periodo_fim': periodo_fim.strftime('%H:%M'),
+                'periodo_inicio': periodo_inicio.strftime('%Y-%m-%d %H:%M'),
+                'periodo_fim': periodo_fim.strftime('%Y-%m-%d %H:%M'),
                 'ocupacoes': [
                     {
                         'id_ordem': oc[0],
                         'id_pedido': oc[1],
                         'quantidade': oc[4],
-                        'inicio': oc[6].strftime('%H:%M'),
-                        'fim': oc[7].strftime('%H:%M'),
+                        'inicio': oc[6].strftime('%Y-%m-%d %H:%M'),
+                        'fim': oc[7].strftime('%Y-%m-%d %H:%M'),
                         'usa_boleadora': oc[5]
                     }
                     for oc in ocupacoes_item
@@ -668,7 +668,7 @@ class DivisoraDeMassas(Equipamento):
         if momento_pico:
             return {
                 'pico_quantidade': pico_quantidade,
-                'momento_pico': momento_pico.strftime('%H:%M'),
+                'momento_pico': momento_pico.strftime('%Y-%m-%d %H:%M'),
                 'percentual_capacidade': (pico_quantidade / self.capacidade_gramas_max) * 100
             }
         

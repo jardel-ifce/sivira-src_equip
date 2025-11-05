@@ -107,13 +107,13 @@ class Masseira(Equipamento):
                 if ocupacao_id_atividade == id_atividade:
                     logger.warning(
                         f"⚠️ {self.nome}: Atividade {id_atividade} só pode ocupar no mesmo horário. "
-                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
-                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                        f"Conflito: {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%Y-%m-%d %H:%M')}-{ocupacao_fim.strftime('%Y-%m-%d %H:%M')}"
                     )
                 else:
                     logger.warning(
                         f"⚠️ {self.nome} ocupada por atividade diferente (ID: {ocupacao_id_atividade}) "
-                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
+                        f"entre {ocupacao_inicio.strftime('%Y-%m-%d %H:%M')} e {ocupacao_fim.strftime('%Y-%m-%d %H:%M')}."
                     )
                 return False
 
@@ -189,13 +189,13 @@ class Masseira(Equipamento):
                 if ocupacao_id_item == id_item:
                     logger.warning(
                         f"⚠️ {self.nome}: Item {id_item} só pode ocupar no mesmo horário. "
-                        f"Conflito: {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')} vs "
-                        f"{ocupacao_inicio.strftime('%H:%M')}-{ocupacao_fim.strftime('%H:%M')}"
+                        f"Conflito: {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')} vs "
+                        f"{ocupacao_inicio.strftime('%Y-%m-%d %H:%M')}-{ocupacao_fim.strftime('%Y-%m-%d %H:%M')}"
                     )
                 else:
                     logger.warning(
                         f"⚠️ {self.nome} ocupada por item diferente (ID: {ocupacao_id_item}) "
-                        f"entre {ocupacao_inicio.strftime('%H:%M')} e {ocupacao_fim.strftime('%H:%M')}."
+                        f"entre {ocupacao_inicio.strftime('%Y-%m-%d %H:%M')} e {ocupacao_fim.strftime('%Y-%m-%d %H:%M')}."
                     )
                 return False
 
@@ -228,7 +228,7 @@ class Masseira(Equipamento):
         for ocupacao in self.ocupacoes:
             if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
                 logger.warning(
-                    f"⚠️ {self.nome} não disponível entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} "
+                    f"⚠️ {self.nome} não disponível entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')} "
                     f"devido à atividade {ocupacao[2]} do item {ocupacao[3]}."
                 )
                 return False
@@ -319,7 +319,7 @@ class Masseira(Equipamento):
         # Verifica disponibilidade (só impede se for atividade diferente com sobreposição)
         if not self.esta_disponivel_para_atividade(inicio, fim, id_atividade):
             logger.warning(
-                f"⛔ {self.nome} | Ocupada por atividade diferente entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"⛔ {self.nome} | Ocupada por atividade diferente entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
             return False
 
@@ -351,7 +351,7 @@ class Masseira(Equipamento):
 
         logger.info(
             f"🥣 {self.nome} | Atividade {id_atividade}: Nova ocupação {quantidade_alocada}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')} "
             f"(Pico máximo da atividade: {quantidade_maxima_apos}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Item {id_item}) | "
             f"Velocidades: {velocidades_str} | Mistura: {tipo_mistura.name if tipo_mistura else 'Nenhuma'}"
@@ -405,7 +405,7 @@ class Masseira(Equipamento):
                 
                 detalhes_economia.append({
                     'id_atividade': grupo['id_atividade'],
-                    'periodo': f"{grupo['inicio'].strftime('%H:%M')} - {grupo['fim'].strftime('%H:%M')}",
+                    'periodo': f"{grupo['inicio'].strftime('%Y-%m-%d %H:%M')} - {grupo['fim'].strftime('%Y-%m-%d %H:%M')}",
                     'pedidos_consolidados': pedidos_beneficiados,
                     'quantidade_total': quantidade_total,
                     'ocupacoes_simultâneas': num_ocupacoes,
@@ -479,7 +479,7 @@ class Masseira(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         
         if liberadas > 0:
-            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}.")
+            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}.")
         return liberadas
 
     def liberar_todas_ocupacoes(self):
@@ -498,7 +498,7 @@ class Masseira(Equipamento):
         liberadas = antes - len(self.ocupacoes)
         
         if liberadas > 0:
-            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}.")
+            logger.info(f"🔓 Liberadas {liberadas} ocupações da {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}.")
 
     # ==========================================================
     # 🔓 Método de Compatibilidade
@@ -570,7 +570,7 @@ class Masseira(Equipamento):
                 logger.info(
                     f"🔄 Ocupação atualizada na {self.nome} | "
                     f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | "
-                    f"Nova quantidade: {nova_quantidade:.2f}g | {novo_inicio.strftime('%H:%M')} → {novo_fim.strftime('%H:%M')} | "
+                    f"Nova quantidade: {nova_quantidade:.2f}g | {novo_inicio.strftime('%Y-%m-%d %H:%M')} → {novo_fim.strftime('%Y-%m-%d %H:%M')} | "
                     f"Velocidades: {velocidades_str} | Mistura: {novo_tipo_mistura.name if novo_tipo_mistura else 'Nenhuma'}"
                 )
                 return True
@@ -599,7 +599,7 @@ class Masseira(Equipamento):
             
             logger.info(
                 f"🥣 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                f"{ocupacao[4]:.2f}g | {ocupacao[7].strftime('%H:%M')} → {ocupacao[8].strftime('%H:%M')} | "
+                f"{ocupacao[4]:.2f}g | {ocupacao[7].strftime('%Y-%m-%d %H:%M')} → {ocupacao[8].strftime('%Y-%m-%d %H:%M')} | "
                 f"Velocidades: {velocidades_str} | Mistura: {ocupacao[6].name if ocupacao[6] else 'Nenhuma'}"
             )
         

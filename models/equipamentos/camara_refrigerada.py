@@ -192,7 +192,7 @@ class CamaraRefrigerada(Equipamento):
         
         if temperatura_atual != temperatura_desejada:
             logger.warning(
-                f"❌ Temperatura incompatível na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
+                f"❌ Temperatura incompatível na {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}. "
                 f"Desejada: {temperatura_desejada}°C | Configurada: {temperatura_atual}°C"
             )
             return False
@@ -217,7 +217,7 @@ class CamaraRefrigerada(Equipamento):
             temperatura_atual = self.obter_temperatura_periodo(inicio, fim)
             if temperatura_atual is not None and temperatura_atual != temperatura:
                 logger.warning(
-                    f"❌ Não é possível alterar temperatura na {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
+                    f"❌ Não é possível alterar temperatura na {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}. "
                     f"Há ocupações no período com temperatura {temperatura_atual}°C."
                 )
                 return False
@@ -225,7 +225,7 @@ class CamaraRefrigerada(Equipamento):
         self.intervalos_temperatura.append((temperatura, inicio, fim))
         logger.info(
             f"🌡️ Temperatura configurada na {self.nome}: {temperatura}°C "
-            f"para {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"para {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -419,7 +419,7 @@ class CamaraRefrigerada(Equipamento):
         logger.info(
             f"📥 Ocupação nível de tela adicionada na {self.nome} - Nível {numero_nivel_fisico}, Tela {numero_tela} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"{quantidade:.2f} unidades | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"{quantidade:.2f} unidades | {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -481,7 +481,7 @@ class CamaraRefrigerada(Equipamento):
         logger.info(
             f"📦 Ocupação caixa adicionada na {self.nome} - Caixa {numero_caixa} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"{quantidade:.2f} unidades | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"{quantidade:.2f} unidades | {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -639,11 +639,11 @@ class CamaraRefrigerada(Equipamento):
         if total_liberadas > 0 or liberadas_temp > 0:
             logger.info(
                 f"🔓 Liberadas {total_liberadas} ocupações e {liberadas_temp} configurações de temperatura "
-                f"da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"da {self.nome} finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return total_liberadas
 
@@ -697,12 +697,12 @@ class CamaraRefrigerada(Equipamento):
         if total_liberadas > 0 or liberadas_temp > 0:
             logger.info(
                 f"🔓 Liberadas {total_liberadas} ocupações e {liberadas_temp} configurações de temperatura "
-                f"da {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"da {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
                 f"🔓 Nenhuma ocupação encontrada para liberar na {self.nome} "
-                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     # ============================================
@@ -732,7 +732,7 @@ class CamaraRefrigerada(Equipamento):
                     temp_info = f"Temp: {temp}°C" if temp else "Temp: N/A"
                     logger.info(
                         f"   🗂️ Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                        f"{ocupacao[4]:.2f} unidades | {ocupacao[5].strftime('%H:%M')} → {ocupacao[6].strftime('%H:%M')} | {temp_info}"
+                        f"{ocupacao[4]:.2f} unidades | {ocupacao[5].strftime('%Y-%m-%d %H:%M')} → {ocupacao[6].strftime('%Y-%m-%d %H:%M')} | {temp_info}"
                     )
 
         # Mostrar ocupações de caixas
@@ -746,7 +746,7 @@ class CamaraRefrigerada(Equipamento):
                     temp_info = f"Temp: {temp}°C" if temp else "Temp: N/A"
                     logger.info(
                         f"   🗂️ Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                        f"{ocupacao[4]:.2f} unidades | {ocupacao[5].strftime('%H:%M')} → {ocupacao[6].strftime('%H:%M')} | {temp_info}"
+                        f"{ocupacao[4]:.2f} unidades | {ocupacao[5].strftime('%Y-%m-%d %H:%M')} → {ocupacao[6].strftime('%Y-%m-%d %H:%M')} | {temp_info}"
                     )
 
         # Mostrar configurações de temperatura
@@ -754,7 +754,7 @@ class CamaraRefrigerada(Equipamento):
             logger.info("🌡️ Configurações de Temperatura:")
             for temp, ini, fim in self.intervalos_temperatura:
                 logger.info(
-                    f"   {temp}°C | {ini.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+                    f"   {temp}°C | {ini.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
                 )
 
         if not tem_ocupacao and not self.intervalos_temperatura:

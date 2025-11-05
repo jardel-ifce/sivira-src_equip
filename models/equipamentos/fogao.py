@@ -98,7 +98,7 @@ class Fogao(Equipamento):
             if not (fim <= ocupacao[7] or inicio >= ocupacao[8]):
                 logger.warning(
                     f"⚠️ {self.nome} Boca {boca_index + 1} ocupada por item diferente (ID: {ocupacao[3]}) "
-                    f"entre {ocupacao[7].strftime('%H:%M')} e {ocupacao[8].strftime('%H:%M')}."
+                    f"entre {ocupacao[7].strftime('%Y-%m-%d %H:%M')} e {ocupacao[8].strftime('%Y-%m-%d %H:%M')}."
                 )
                 return False
         
@@ -166,7 +166,7 @@ class Fogao(Equipamento):
         logger.warning(
             f"🚨 RESTRIÇÃO REGISTRADA - {self.nome} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"Quantidade {quantidade}g | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')} | "
+            f"Quantidade {quantidade}g | {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')} | "
             f"Motivo: {motivo}"
         )
 
@@ -262,7 +262,7 @@ class Fogao(Equipamento):
             # Verifica se excede capacidade
             if not self.validar_capacidade_boca(quantidade_total):
                 logger.debug(
-                    f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%H:%M')} "
+                    f"❌ {self.nome} Boca {boca_index + 1} | Item {id_item}: Capacidade excedida no momento {momento_meio.strftime('%Y-%m-%d %H:%M')} "
                     f"({quantidade_total}g > {self.capacidade_por_boca_gramas_max}g)"
                 )
                 return False
@@ -506,7 +506,7 @@ class Fogao(Equipamento):
         if boca_index is None:
             boca_index = self.encontrar_boca_para_ocupacao_item(inicio, fim, id_item)
             if boca_index is None:
-                logger.warning(f"❌ Nenhuma boca disponível no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')} para item {id_item}")
+                logger.warning(f"❌ Nenhuma boca disponível no {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')} para item {id_item}")
                 return False
 
         return self.adicionar_ocupacao_boca(
@@ -559,7 +559,7 @@ class Fogao(Equipamento):
         pressoes_formatadas = ", ".join([p.value for p in pressoes_chama])
         logger.info(
             f"🔥 {self.nome} Boca {boca_index + 1} | Item {id_item}: Nova ocupação {quantidade_alocada}g "
-            f"de {inicio.strftime('%H:%M')} até {fim.strftime('%H:%M')} "
+            f"de {inicio.strftime('%Y-%m-%d %H:%M')} até {fim.strftime('%Y-%m-%d %H:%M')} "
             f"(Pico máximo do item: {quantidade_maxima_apos}g) "
             f"(Ordem {id_ordem}, Pedido {id_pedido}, Atividade {id_atividade}) | "
             f"Chama: {tipo_chama.value} | Pressão: {pressoes_formatadas}"
@@ -635,7 +635,7 @@ class Fogao(Equipamento):
                     f"🔄 Ocupação atualizada no {self.nome} - Boca {boca_index + 1} | "
                     f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
                     f"Nova quantidade: {nova_quantidade:.2f}g | Chama: {novo_tipo_chama.value} | "
-                    f"Pressão: {pressoes_formatadas} | {novo_inicio.strftime('%H:%M')} → {novo_fim.strftime('%H:%M')}"
+                    f"Pressão: {pressoes_formatadas} | {novo_inicio.strftime('%Y-%m-%d %H:%M')} → {novo_fim.strftime('%Y-%m-%d %H:%M')}"
                 )
                 return True
 
@@ -757,11 +757,11 @@ class Fogao(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🟩 {self.nome} | Liberou {total_liberadas} ocupações finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🟩 {self.nome} | Liberou {total_liberadas} ocupações finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return total_liberadas
 
@@ -787,11 +787,11 @@ class Fogao(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações do {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações do {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     def liberar_boca_especifica(self, boca_index: int, id_ordem: int, id_pedido: int, id_atividade: int):
@@ -832,7 +832,7 @@ class Fogao(Equipamento):
                     logger.info(
                         f"   🔥 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
                         f"{ocupacao[4]:.2f}g | Chama: {ocupacao[5].value} | Pressão: {pressoes_formatadas} | "
-                        f"{ocupacao[7].strftime('%H:%M')} → {ocupacao[8].strftime('%H:%M')}"
+                        f"{ocupacao[7].strftime('%Y-%m-%d %H:%M')} → {ocupacao[8].strftime('%Y-%m-%d %H:%M')}"
                     )
 
         if not tem_ocupacao:
@@ -950,16 +950,16 @@ class Fogao(Equipamento):
                 'quantidade_total': quantidade_total,
                 'num_ocupacoes': len(ocupacoes_item),
                 'bocas_utilizadas': len(bocas_utilizadas),
-                'periodo_inicio': periodo_inicio.strftime('%H:%M'),
-                'periodo_fim': periodo_fim.strftime('%H:%M'),
+                'periodo_inicio': periodo_inicio.strftime('%Y-%m-%d %H:%M'),
+                'periodo_fim': periodo_fim.strftime('%Y-%m-%d %H:%M'),
                 'ocupacoes': [
                     {
                         'id_ordem': oc[0],
                         'id_pedido': oc[1],
                         'quantidade': oc[4],
                         'boca': oc[9] + 1,  # +1 para mostrar boca 1-indexed
-                        'inicio': oc[7].strftime('%H:%M'),
-                        'fim': oc[8].strftime('%H:%M'),
+                        'inicio': oc[7].strftime('%Y-%m-%d %H:%M'),
+                        'fim': oc[8].strftime('%Y-%m-%d %H:%M'),
                         'tipo_chama': oc[5].value,
                         'pressoes': [p.value for p in oc[6]]
                     }
@@ -1076,7 +1076,7 @@ class Fogao(Equipamento):
                 logger.debug(
                     f"🔗 {self.nome} - Boca {boca_index + 1}: Pode consolidar item {id_item} "
                     f"({ocupacao[4]}g + {quantidade}g = {quantidade_total}g) "
-                    f"no período {inicio.strftime('%H:%M')}-{fim.strftime('%H:%M')}"
+                    f"no período {inicio.strftime('%Y-%m-%d %H:%M')}-{fim.strftime('%Y-%m-%d %H:%M')}"
                 )
 
                 return boca_index
@@ -1126,7 +1126,7 @@ class Fogao(Equipamento):
                     f"🔗 {self.nome} - Boca {boca_index + 1}: CONSOLIDAÇÃO AUTOMÁTICA | "
                     f"Item {id_item} | Quantidade {quantidade_original}g → {quantidade_total}g | "
                     f"Atividades: {ocupacao[2]} + {id_atividade} | "
-                    f"{inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')}"
+                    f"{inicio.strftime('%Y-%m-%d %H:%M')} - {fim.strftime('%Y-%m-%d %H:%M')}"
                 )
 
                 return True
@@ -1214,7 +1214,7 @@ class Fogao(Equipamento):
             capacidade_total_fogao = self.numero_bocas * self.capacidade_por_boca_gramas_max
             return {
                 'pico_quantidade': pico_quantidade,
-                'momento_pico': momento_pico.strftime('%H:%M'),
+                'momento_pico': momento_pico.strftime('%Y-%m-%d %H:%M'),
                 'percentual_capacidade_total': (pico_quantidade / capacidade_total_fogao) * 100
             }
         

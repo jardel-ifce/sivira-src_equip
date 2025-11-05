@@ -96,7 +96,7 @@ class Freezer(Equipamento):
         
         if temperatura_atual != temperatura_desejada:
             logger.warning(
-                f"❌ Temperatura incompatível no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
+                f"❌ Temperatura incompatível no {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}. "
                 f"Desejada: {temperatura_desejada}°C | Configurada: {temperatura_atual}°C"
             )
             return False
@@ -121,7 +121,7 @@ class Freezer(Equipamento):
             temperatura_atual = self.obter_temperatura_periodo(inicio, fim)
             if temperatura_atual is not None and temperatura_atual != temperatura:
                 logger.warning(
-                    f"❌ Não é possível alterar temperatura no {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}. "
+                    f"❌ Não é possível alterar temperatura no {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}. "
                     f"Há ocupações no período com temperatura {temperatura_atual}°C."
                 )
                 return False
@@ -129,7 +129,7 @@ class Freezer(Equipamento):
         self.intervalos_temperatura.append((temperatura, inicio, fim))
         logger.info(
             f"🌡️ Temperatura configurada no {self.nome}: {temperatura}°C "
-            f"para {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"para {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -307,7 +307,7 @@ class Freezer(Equipamento):
 
         # Verificar se a caixa está disponível no período
         if not self.caixa_disponivel(numero_caixa, inicio, fim):
-            logger.warning(f"❌ Caixa {numero_caixa} não está disponível no período {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}")
+            logger.warning(f"❌ Caixa {numero_caixa} não está disponível no período {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}")
             return False
 
         # Verificar temperatura se fornecida
@@ -327,7 +327,7 @@ class Freezer(Equipamento):
         logger.info(
             f"📦 Ocupação caixa adicionada no {self.nome} - Caixa {numero_caixa} | "
             f"Ordem {id_ordem} | Pedido {id_pedido} | Atividade {id_atividade} | Item {id_item} | "
-            f"{quantidade:.2f} unidades | {inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+            f"{quantidade:.2f} unidades | {inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
         )
         return True
 
@@ -445,11 +445,11 @@ class Freezer(Equipamento):
         if total_liberadas > 0 or liberadas_temp > 0:
             logger.info(
                 f"🔓 Liberadas {total_liberadas} ocupações e {liberadas_temp} configurações de temperatura "
-                f"do {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"do {self.nome} finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar no {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return total_liberadas
 
@@ -490,12 +490,12 @@ class Freezer(Equipamento):
         if total_liberadas > 0 or liberadas_temp > 0:
             logger.info(
                 f"🔓 Liberadas {total_liberadas} ocupações e {liberadas_temp} configurações de temperatura "
-                f"do {self.nome} entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"do {self.nome} entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
                 f"🔓 Nenhuma ocupação encontrada para liberar no {self.nome} "
-                f"entre {inicio.strftime('%H:%M')} e {fim.strftime('%H:%M')}."
+                f"entre {inicio.strftime('%Y-%m-%d %H:%M')} e {fim.strftime('%Y-%m-%d %H:%M')}."
             )
 
     # ============================================
@@ -523,7 +523,7 @@ class Freezer(Equipamento):
                     temp_info = f"Temp: {temp}°C" if temp else "Temp: N/A"
                     logger.info(
                         f"   🗂️ Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                        f"{ocupacao[4]:.2f} unidades | {ocupacao[5].strftime('%H:%M')} → {ocupacao[6].strftime('%H:%M')} | {temp_info}"
+                        f"{ocupacao[4]:.2f} unidades | {ocupacao[5].strftime('%Y-%m-%d %H:%M')} → {ocupacao[6].strftime('%Y-%m-%d %H:%M')} | {temp_info}"
                     )
 
         # Mostrar configurações de temperatura
@@ -531,7 +531,7 @@ class Freezer(Equipamento):
             logger.info("🌡️ Configurações de Temperatura:")
             for temp, ini, fim in self.intervalos_temperatura:
                 logger.info(
-                    f"   {temp}°C | {ini.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+                    f"   {temp}°C | {ini.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
                 )
 
         if not tem_ocupacao and not self.intervalos_temperatura:

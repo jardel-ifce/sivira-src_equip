@@ -79,7 +79,7 @@ class Bancada(Equipamento):
 
     def _formatar_periodo(self, inicio: datetime, fim: datetime) -> str:
         """Formata período de tempo de forma consistente."""
-        return f"{inicio.strftime('%H:%M')} → {fim.strftime('%H:%M')}"
+        return f"{inicio.strftime('%Y-%m-%d %H:%M')} → {fim.strftime('%Y-%m-%d %H:%M')}"
 
     # ==========================================================
     # 🔍 Consulta de Ocupação (para o Gestor)
@@ -311,11 +311,11 @@ class Bancada(Equipamento):
 
         if total_liberadas > 0:
             logger.info(
-                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Liberadas {total_liberadas} ocupações da {self.nome} finalizadas até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         else:
             logger.warning(
-                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%H:%M')}."
+                f"🔓 Nenhuma ocupação finalizada encontrada para liberar na {self.nome} até {horario_atual.strftime('%Y-%m-%d %H:%M')}."
             )
         return total_liberadas
 
@@ -359,7 +359,7 @@ class Bancada(Equipamento):
                 for ocupacao in self.fracoes_ocupacoes[fracao_index]:
                     logger.info(
                         f"   🪵 Ordem {ocupacao[0]} | Pedido {ocupacao[1]} | Atividade {ocupacao[2]} | Item {ocupacao[3]} | "
-                        f"{ocupacao[4].strftime('%H:%M')} → {ocupacao[5].strftime('%H:%M')}"
+                        f"{ocupacao[4].strftime('%Y-%m-%d %H:%M')} → {ocupacao[5].strftime('%Y-%m-%d %H:%M')}"
                     )
 
         if not tem_ocupacao:
