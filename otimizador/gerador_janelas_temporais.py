@@ -32,9 +32,9 @@ class GeradorJanelasTemporais:
         self.pedidos_com_fim_obrigatorio = {}
         self.configuracao_tempo = None
         
-        # ✅ LIMITES DE SEGURANÇA
-        self.max_janelas_por_pedido = 8  # Máximo 8 janelas por pedido
-        self.resolucao_minima = 30       # Mínimo 30 minutos de resolução
+        # ✅ LIMITES DE SEGURANÇA (OTIMIZADOS para maximizar pedidos atendidos)
+        self.max_janelas_por_pedido = 15  # Máximo 15 janelas por pedido (aumentado de 8)
+        self.resolucao_minima = 30        # Mínimo 30 minutos de resolução
         
         print(f"⏰ GeradorJanelasTemporais inicializado (VERSÃO SIMPLIFICADA):")
         print(f"   Resolução: {resolucao_minutos} minutos")
@@ -139,7 +139,8 @@ class GeradorJanelasTemporais:
                 janelas.append(janela_unica)
         else:
             # ✅ Gerar janelas em pontos percentuais da janela disponível
-            pontos_estrategicos = [0.0, 0.25, 0.5, 0.75, 1.0]  # 0%, 25%, 50%, 75%, 100%
+            # OTIMIZADO: Mais pontos estratégicos para maior flexibilidade
+            pontos_estrategicos = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0]  # 9 pontos (0% a 100% em incrementos de 12.5%)
             
             for ponto in pontos_estrategicos:
                 inicio_ponto = inicio_mais_cedo + timedelta(

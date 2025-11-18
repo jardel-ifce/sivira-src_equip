@@ -32,8 +32,8 @@ class GestorProducao:
         """
         # Configurações padrão
         self.configuracoes = {
-            'resolucao_minutos': 30,
-            'timeout_pl': 300,
+            'resolucao_minutos': 60,  # Aumentado de 30 para 60 (melhor granularidade PL)
+            'timeout_pl': 600,  # Aumentado de 300 para 600 segundos (10 minutos)
             'limpar_logs_automatico': True,
             'limpar_pedidos_automatico': True,
             'usar_otimizacao_default': False

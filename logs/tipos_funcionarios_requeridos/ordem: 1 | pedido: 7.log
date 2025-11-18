@@ -1,0 +1,50 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 7
+Iniciado em: 14/11/2025 13:13:49
+================================================================================
+
+🔸 ATIVIDADE 10691: modelagem_e_recheio_de_coxinhas_de_carne_de_sol
+   ⏰ Horário: 18:17 [29/12/2024] - 19:37 [29/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10692: empanamento_de_coxinhas_de_carne_de_sol
+   ⏰ Horário: 19:37 [29/12/2024] - 19:40 [29/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10693: preparacao_para_refrigeracao_de_coxinha_de_carne_de_sol
+   ⏰ Horário: 19:40 [29/12/2024] - 19:43 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10695: preparacao_para_fritura_de_coxinha_de_carne_de_sol
+   ⏰ Horário: 20:43 [29/12/2024] - 20:46 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10696: fritura_de_coxinhas_de_carne_de_sol
+   ⏰ Horário: 20:46 [29/12/2024] - 20:50 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
+   ⏰ Horário: 20:50 [29/12/2024] - 21:02 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+

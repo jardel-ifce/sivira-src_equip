@@ -1,0 +1,78 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 6
+Iniciado em: 14/11/2025 13:13:49
+================================================================================
+
+🔸 ATIVIDADE 10551: modelagem_e_recheio_de_coxinhas_de_frango
+   ⏰ Horário: 09:10 [29/12/2024] - 10:30 [29/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10552: empanamento_de_coxinhas_de_frango
+   ⏰ Horário: 10:30 [29/12/2024] - 10:33 [29/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10553: preparacao_para_refrigeracao_de_coxinha_de_frango
+   ⏰ Horário: 10:33 [29/12/2024] - 10:36 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10555: preparacao_para_fritura_de_coxinha_de_frango
+   ⏰ Horário: 11:36 [29/12/2024] - 11:39 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10556: fritura_de_coxinhas_de_frango
+   ⏰ Horário: 11:39 [29/12/2024] - 11:43 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
+   ⏰ Horário: 11:43 [29/12/2024] - 11:55 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20091: preparo_para_coccao_de_frango_cozido_pronto
+   ⏰ Horário: 11:55 [29/12/2024] - 12:03 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20092: coccao_de_frango_cozido_pronto
+   ⏰ Horário: 12:03 [29/12/2024] - 12:13 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20093: preparo_para_armazenamento_de_frango_refogado
+   ⏰ Horário: 11:33 [29/12/2024] - 12:53 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20094: armazenamento_sob_temperatura_para_frango_refogado
+   ⏰ Horário: 12:53 [29/12/2024] - 12:56 [29/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: ALMOXARIFE
+   🎯 Prioridades (FIPs): ALMOXARIFE:1
+   📅 Registrado: 13:13:49
+

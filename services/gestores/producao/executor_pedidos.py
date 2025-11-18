@@ -167,130 +167,113 @@ class ExecutorPedidos:
     
     def executar_otimizado(self, pedidos_convertidos: List) -> bool:
         """
-        Executa pedidos com otimização PL REAL.
-        
+        Executa pedidos com otimização PL REAL usando OR-Tools.
+
+        Utiliza o OtimizadorIntegrado para resolver o problema JSSP com Programação Linear,
+        executando os pedidos selecionados pelo modelo PL e os restantes sequencialmente.
+
         Args:
             pedidos_convertidos: Lista de PedidoDeProducao convertidos
-            
+
         Returns:
             bool: True se sucesso
         """
         try:
-            print(f"🚀 Executando {len(pedidos_convertidos)} pedidos com otimização PL...")
-            
-            # ✅ VERIFICA OR-TOOLS
+            print(f"🚀 Executando {len(pedidos_convertidos)} pedidos com OTIMIZAÇÃO PL REAL...")
+
+            # Verifica disponibilidade do OR-Tools
             try:
                 from ortools.linear_solver import pywraplp
                 print("   ✅ OR-Tools disponível")
             except ImportError:
                 print("   ❌ OR-Tools não encontrado!")
+                print("   💡 Instale com: pip install ortools")
                 return False
-            
-            # ✅ CORREÇÃO: Importa geração de comandas
+
+            # Importa otimizador e adaptador
             try:
-                from services.gestores.comandas.gestor_comandas import gerar_comanda_reserva
-                print("   📋 Módulo de comandas carregado")
+                from otimizador.otimizador_integrado import OtimizadorIntegrado
+                from services.gestores.producao.adaptador_otimizador import AdaptadorSistemaProducao
+                print("   ✅ Módulos de otimização carregados")
             except ImportError as e:
-                print(f"   ❌ Erro ao importar geração de comandas: {e}")
-                print("   ⚠️ Continuando sem geração de comandas...")
-                gerar_comanda_reserva = None
-            
+                print(f"   ❌ Erro ao importar otimizador: {e}")
+                return False
+
             inicio_execucao = datetime.now()
-            
-            # ✅ CONFIGURA OTIMIZADOR
-            resolucao_minutos = self.configuracoes.get('resolucao_minutos', 30)
-            timeout_pl = self.configuracoes.get('timeout_pl', 300)
-            
-            print(f"   ⚙️ Configuração PL: {resolucao_minutos}min, timeout: {timeout_pl}s")
-            
-            # ✅ EXECUÇÃO SIMPLIFICADA COM COMANDAS
-            pedidos_executados = 0
-            pedidos_com_erro = 0
-            comandas_geradas = 0
-            
-            for idx, pedido in enumerate(pedidos_convertidos, 1):
-                print(f"\n📋 Executando pedido otimizado {idx}/{len(pedidos_convertidos)}: {pedido.id_pedido}")
-                
-                
-                try:
-                    # ✅ CORREÇÃO: PASSO 1 - Gerar comanda ANTES da execução
-                    if gerar_comanda_reserva:
-                        print(f"   📋 Gerando comanda para pedido {pedido.id_pedido}...")
-                        
-                        try:
-                            gerar_comanda_reserva(
-                                id_ordem=pedido.id_ordem,
-                                id_pedido=pedido.id_pedido,
-                                ficha=pedido.ficha_tecnica_modular,
-                                gestor=pedido.gestor_almoxarifado,
-                                data_execucao=pedido.fim_jornada
-                            )
-                            print(f"   ✅ Comanda gerada: data/comandas/comanda_ordem_{pedido.id_ordem}_pedido_{pedido.id_pedido}.json")
-                            comandas_geradas += 1
-                        except Exception as e_comanda:
-                            print(f"   ⚠️ Erro ao gerar comanda: {e_comanda}")
-                            print(f"   💡 Continuando com execução mesmo sem comanda...")
-                    
-                    # ✅ CRIAR ATIVIDADES
-                    print(f"   🏗️ Criando atividades modulares...")
-                    pedido.criar_atividades_modulares_necessarias()
-                    print(f"   ✅ {len(pedido.atividades_modulares)} atividades criadas")
-                    
-                    # ✅ EXECUTAR ATIVIDADES (GERA LOGS!)
-                    print(f"   ⚡ Executando atividades em ordem...")
-                    print(f"   📝 LOG SENDO GERADO: logs/equipamentos/ordem: {pedido.id_ordem} | pedido: {pedido.id_pedido}.log")
-                    
-                    pedido.executar_atividades_em_ordem()
-                    
-                    print(f"   ✅ Pedido {pedido.id_pedido} executado com sucesso!")
-                    print(f"   📝 Log salvo em: logs/equipamentos/ordem: {pedido.id_ordem} | pedido: {pedido.id_pedido}.log")
-                    pedidos_executados += 1
-                    
-                except RuntimeError as e:
-                    print(f"   ❌ Falha no pedido {pedido.id_pedido}: {e}")
-                    pedidos_com_erro += 1
-                    continue
-                    
-                except Exception as e:
-                    print(f"   ❌ Erro inesperado no pedido {pedido.id_pedido}: {e}")
-                    pedidos_com_erro += 1
-                    continue
-            
+
+            # Obtém configurações
+            resolucao_minutos = self.configuracoes.get('resolucao_minutos', 60)
+            timeout_pl = self.configuracoes.get('timeout_pl', 600)
+
+            print(f"   ⚙️ Configuração PL: resolução={resolucao_minutos}min, timeout={timeout_pl}s")
+
+            # Cria instâncias do otimizador e adaptador
+            print(f"\n🔧 Inicializando otimizador PL...")
+            otimizador = OtimizadorIntegrado(
+                resolucao_minutos=resolucao_minutos,
+                timeout_segundos=timeout_pl
+            )
+
+            sistema_producao = AdaptadorSistemaProducao()
+
+            # Executa otimização PL
+            print(f"\n🎯 Iniciando otimização com OR-Tools...")
+            print(f"   📊 {len(pedidos_convertidos)} pedidos a otimizar")
+            print(f"   🔍 Modelo JSSP (Job Shop Scheduling Problem)")
+            print(f"   🧮 Solver: OR-Tools SCIP/CBC\n")
+
+            sucesso = otimizador.executar_pedidos_otimizados(
+                pedidos=pedidos_convertidos,
+                sistema_producao=sistema_producao
+            )
+
             fim_execucao = datetime.now()
             tempo_total = (fim_execucao - inicio_execucao).total_seconds()
-            
-            if pedidos_executados > 0:
-                # ✅ SUCESSO
+
+            # Coleta estatísticas do otimizador
+            if sucesso and hasattr(otimizador, 'estatisticas_execucao'):
+                stats_otimizador = otimizador.estatisticas_execucao
+
                 self.estatisticas_execucao = {
-                    'modo': 'otimizado_simplificado',
+                    'modo': 'otimizado_pl',
                     'total_pedidos': len(pedidos_convertidos),
-                    'pedidos_executados': pedidos_executados,
-                    'pedidos_com_erro': pedidos_com_erro,
-                    'comandas_geradas': comandas_geradas,  # ✅ NOVA MÉTRICA
+                    'pedidos_otimizados': stats_otimizador.get('pedidos_otimizados', 0),
+                    'pedidos_sequenciais': stats_otimizador.get('pedidos_sequenciais', 0),
+                    'pedidos_executados': sistema_producao.pedidos_executados,
+                    'pedidos_falhados': sistema_producao.pedidos_falhados,
                     'tempo_execucao': tempo_total,
-                    'tempo_otimizacao': 0,  # Simplificado
-                    'status_solver': 'SIMPLIFIED',
-                    'taxa_atendimento': pedidos_executados / len(pedidos_convertidos)
+                    'tempo_otimizacao': stats_otimizador.get('tempo_otimizacao', 0),
+                    'status_solver': stats_otimizador.get('status_solver', 'UNKNOWN'),
+                    'funcao_objetivo': stats_otimizador.get('funcao_objetivo', None),
+                    'taxa_atendimento': len(sistema_producao.pedidos_executados) / len(pedidos_convertidos) if len(pedidos_convertidos) > 0 else 0
                 }
-                
-                print(f"🎉 Execução otimizada concluída!")
-                print(f"   📊 Executados: {pedidos_executados}/{len(pedidos_convertidos)}")
-                print(f"   ❌ Falhas: {pedidos_com_erro}")
-                print(f"   📋 Comandas geradas: {comandas_geradas}")  # ✅ NOVA INFORMAÇÃO
+
+                print(f"\n🎉 Otimização PL concluída!")
+                print(f"   📊 Solver: {stats_otimizador.get('status_solver', 'N/A')}")
+                print(f"   🎯 Pedidos otimizados via PL: {stats_otimizador.get('pedidos_otimizados', 0)}")
+                print(f"   📝 Pedidos sequenciais (fallback): {stats_otimizador.get('pedidos_sequenciais', 0)}")
+                print(f"   ✅ Total executados: {len(sistema_producao.pedidos_executados)}/{len(pedidos_convertidos)}")
+                print(f"   ❌ Falhas: {len(sistema_producao.pedidos_falhados)}")
                 print(f"   ⏱️ Tempo total: {tempo_total:.2f}s")
-                
-                # ✅ LISTAR ARQUIVOS GERADOS
+                print(f"   ⚡ Tempo otimização PL: {stats_otimizador.get('tempo_otimizacao', 0):.2f}s")
+
+                if stats_otimizador.get('funcao_objetivo'):
+                    print(f"   🎯 Makespan otimizado: {stats_otimizador.get('funcao_objetivo')}min")
+
+                # Lista arquivos gerados
                 self._listar_arquivos_gerados()
-                
+
                 return True
             else:
-                print("❌ Nenhum pedido foi executado com sucesso!")
+                print("❌ Otimização PL não retornou estatísticas!")
                 return False
-            
+
         except ImportError as e:
-            print(f"❌ Erro de importação do otimizador: {e}")
+            print(f"❌ Erro de importação: {e}")
+            import traceback
+            traceback.print_exc()
             return False
-            
+
         except Exception as e:
             print(f"❌ Erro durante execução otimizada: {e}")
             import traceback

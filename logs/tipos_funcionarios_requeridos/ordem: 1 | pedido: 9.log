@@ -1,0 +1,78 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 1
+Pedido: 9
+Iniciado em: 14/11/2025 13:13:49
+================================================================================
+
+🔸 ATIVIDADE 10711: modelagem_e_recheio_de_coxinhas_de_queijos_finos
+   ⏰ Horário: 10:51 [30/12/2024] - 12:11 [30/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10712: empanamento_de_coxinhas_de_queijos_finos
+   ⏰ Horário: 12:11 [30/12/2024] - 12:14 [30/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10713: preparacao_para_refrigeracao_de_coxinha_de_queijos_finos
+   ⏰ Horário: 12:14 [30/12/2024] - 12:17 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10715: preparacao_para_fritura_de_coxinha_de_queijos_finos
+   ⏰ Horário: 13:17 [30/12/2024] - 13:20 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 10716: fritura_de_coxinhas_de_queijos_finos
+   ⏰ Horário: 13:20 [30/12/2024] - 13:24 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
+   ⏰ Horário: 13:24 [30/12/2024] - 13:36 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20101: preparo_para_coccao_de_creme_de_queijo
+   ⏰ Horário: 13:36 [30/12/2024] - 13:44 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20102: coccao_de_creme_de_queijo
+   ⏰ Horário: 13:44 [30/12/2024] - 13:59 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20103: preparo_para_armazenamento_de_creme_de_queijo
+   ⏰ Horário: 13:19 [30/12/2024] - 14:39 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 13:13:49
+
+🔸 ATIVIDADE 20104: armazenamento_sob_temperatura_para_creme_de_queijo
+   ⏰ Horário: 14:39 [30/12/2024] - 14:49 [30/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: ALMOXARIFE
+   🎯 Prioridades (FIPs): ALMOXARIFE:1
+   📅 Registrado: 13:13:49
+
