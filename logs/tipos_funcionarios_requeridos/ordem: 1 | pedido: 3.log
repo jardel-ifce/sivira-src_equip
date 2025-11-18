@@ -2,54 +2,54 @@
 📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
 ================================================================================
 Ordem: 1
-Pedido: 4
+Pedido: 3
 Iniciado em: 18/11/2025 14:56:16
 ================================================================================
 
-🔸 ATIVIDADE 10048: retirada_de_paes_baguete_da_coccao
-   ⏰ Horário: 06:57 [31/12/2024] - 07:00 [31/12/2024]
+🔸 ATIVIDADE 10039: embalamento_de_paes_de_forma
+   ⏰ Horário: 06:55 [31/12/2024] - 07:00 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10046: corte_de_pestana_para_paes_baguete
-   ⏰ Horário: 06:33 [31/12/2024] - 06:37 [31/12/2024]
+🔸 ATIVIDADE 10037: retirada_de_paes_de_forma_da_coccao
+   ⏰ Horário: 06:52 [30/12/2024] - 06:55 [30/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10044: preparo_de_pao_baguete_para_fermentacao
-   ⏰ Horário: 04:00 [31/12/2024] - 04:03 [31/12/2024]
+🔸 ATIVIDADE 10035: preparo_de_paes_de_forma_para_coccao
+   ⏰ Horário: 06:28 [30/12/2024] - 06:32 [30/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10043: modelagem_de_paes_baguete
-   ⏰ Horário: 02:40 [31/12/2024] - 04:00 [31/12/2024]
-   👥 Funcionários necessários: 3
+🔸 ATIVIDADE 10033: preparo_de_paes_de_forma_para_fermentacao
+   ⏰ Horário: 03:55 [30/12/2024] - 03:58 [30/12/2024]
+   👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10042: divisao_de_massas_para_pao_baguete
-   ⏰ Horário: 02:08 [31/12/2024] - 02:40 [31/12/2024]
+🔸 ATIVIDADE 10032: modelagem_de_paes_de_forma
+   ⏰ Horário: 03:23 [30/12/2024] - 03:55 [30/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10041: pesagem_de_massas_para_pao_baguete
-   ⏰ Horário: 01:44 [31/12/2024] - 02:08 [31/12/2024]
+🔸 ATIVIDADE 10031: pesagem_e_divisao_de_massas_para_pao_de_forma
+   ⏰ Horário: 02:59 [30/12/2024] - 03:23 [30/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
    📅 Registrado: 14:56:16
 
 🔸 ATIVIDADE 20021: mistura_de_massas_suaves
-   ⏰ Horário: 01:37 [31/12/2024] - 01:44 [31/12/2024]
+   ⏰ Horário: 02:52 [30/12/2024] - 02:59 [30/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1

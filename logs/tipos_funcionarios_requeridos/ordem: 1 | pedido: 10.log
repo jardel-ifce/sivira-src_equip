@@ -3,55 +3,61 @@
 ================================================================================
 Ordem: 1
 Pedido: 10
-Iniciado em: 14/11/2025 13:13:49
+Iniciado em: 18/11/2025 14:56:16
 ================================================================================
 
-🔸 ATIVIDADE 10721: modelagem_e_recheio_de_folhado_de_frango
-   ⏰ Horário: 19:02 [30/12/2024] - 20:22 [30/12/2024]
-   👥 Funcionários necessários: 2
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+🔸 ATIVIDADE 10724: preparo_de_folhado_de_frango_para_coccao
+   ⏰ Horário: 07:36 [31/12/2024] - 07:40 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
+   📅 Registrado: 14:56:16
 
 🔸 ATIVIDADE 10722: preparacao_para_refrigeracao_de_folhado_de_frango
-   ⏰ Horário: 20:22 [30/12/2024] - 20:25 [30/12/2024]
+   ⏰ Horário: 06:33 [31/12/2024] - 06:36 [31/12/2024]
    👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
+   📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10724: preparo_de_folhado_de_frango_para_coccao
-   ⏰ Horário: 21:25 [30/12/2024] - 21:29 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+🔸 ATIVIDADE 10721: modelagem_e_recheio_de_folhado_de_frango
+   ⏰ Horário: 05:13 [31/12/2024] - 06:33 [31/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:50
-
-🔸 ATIVIDADE 20041: mistura_de_massas_para_folhados
-   ⏰ Horário: 21:49 [30/12/2024] - 21:59 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:50
-
-🔸 ATIVIDADE 20042: laminacao_1_de_massas_para_folhados
-   ⏰ Horário: 21:59 [30/12/2024] - 22:11 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:1
-   📅 Registrado: 13:13:50
-
-🔸 ATIVIDADE 20044: laminacao_2_de_massas_para_folhados
-   ⏰ Horário: 23:11 [30/12/2024] - 23:23 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:1
-   📅 Registrado: 13:13:50
+   📅 Registrado: 14:56:16
 
 🔸 ATIVIDADE 20045: armazenamento_sob_temperatura_para_massas_folhadas
-   ⏰ Horário: 23:23 [30/12/2024] - 23:28 [30/12/2024]
+   ⏰ Horário: 05:08 [31/12/2024] - 05:13 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: ALMOXARIFE
    🎯 Prioridades (FIPs): ALMOXARIFE:1
-   📅 Registrado: 13:13:50
+   📅 Registrado: 14:56:16
 
+🔸 ATIVIDADE 20044: laminacao_2_de_massas_para_folhados
+   ⏰ Horário: 04:56 [31/12/2024] - 05:08 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 20042: laminacao_1_de_massas_para_folhados
+   ⏰ Horário: 03:44 [31/12/2024] - 03:56 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 20041: mistura_de_massas_para_folhados
+   ⏰ Horário: 03:34 [31/12/2024] - 03:44 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 18/11/2025 14:56:16
+================================================================================

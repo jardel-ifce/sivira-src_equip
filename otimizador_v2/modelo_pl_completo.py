@@ -62,7 +62,8 @@ class ModeloPLCompleto:
     def __init__(self, dados_pedidos: List[DadosPedido],
                  janelas_por_pedido: Dict[int, List[JanelaTemporal]],
                  configuracao_tempo,
-                 resolucao_minutos: int = 60):
+                 resolucao_minutos: int = 60,
+                 pedidos_com_fim_obrigatorio: Dict[int, datetime] = None):
 
         if not ORTOOLS_DISPONIVEL:
             raise ImportError("OR-Tools necessário. Instale: pip install ortools")
@@ -71,6 +72,7 @@ class ModeloPLCompleto:
         self.janelas_por_pedido = janelas_por_pedido
         self.configuracao_tempo = configuracao_tempo
         self.resolucao_minutos = resolucao_minutos
+        self.pedidos_com_fim_obrigatorio = pedidos_com_fim_obrigatorio or {}
 
         # Mapeamentos
         self.pedidos_por_id = {p.id_pedido: p for p in dados_pedidos}
@@ -88,7 +90,8 @@ class ModeloPLCompleto:
             'unicidade_pedido': 0,
             'tempo_maximo_espera': 0,
             'equipamentos_capacidade': 0,
-            'conflitos_temporais': 0
+            'conflitos_temporais': 0,
+            'fim_obrigatorio': 0
         }
 
         print(f"🔧 Modelo PL COMPLETO v2.0 inicializado:")
@@ -118,6 +121,7 @@ class ModeloPLCompleto:
             self._adicionar_restricoes_tempo_maximo_espera()
             self._adicionar_restricoes_equipamentos()
             self._adicionar_restricoes_conflitos_temporais()
+            self._adicionar_restricoes_fim_obrigatorio()
 
             # 5. Imprimir estatísticas
             self._imprimir_estatisticas_modelo()
@@ -191,7 +195,7 @@ class ModeloPLCompleto:
         Restrição 1: Cada pedido usa no máximo uma janela
         ∑_j x[p,j] ≤ 1  para cada pedido p
         """
-        print(f"\n📋 [1/4] Restrições de unicidade por pedido...")
+        print(f"\n📋 [1/5] Restrições de unicidade por pedido...")
 
         for pedido_id, janelas in self.janelas_por_pedido.items():
             restricao = self.solver.Constraint(0, 1)
@@ -213,7 +217,7 @@ class ModeloPLCompleto:
 
         Se tempo_maximo_de_espera = 0, então gap = 0 (atividades contíguas)
         """
-        print(f"\n⏰ [2/4] Restrições de tempo_maximo_de_espera (NOVA)...")
+        print(f"\n⏰ [2/5] Restrições de tempo_maximo_de_espera (NOVA)...")
 
         restricoes_adicionadas = 0
         pedidos_com_gap_zero = 0
@@ -252,7 +256,7 @@ class ModeloPLCompleto:
 
         Garante que equipamento não seja usado por múltiplas atividades simultaneamente
         """
-        print(f"\n🔧 [3/4] Restrições de equipamentos (NOVA)...")
+        print(f"\n🔧 [3/5] Restrições de equipamentos (NOVA)...")
 
         # Coletar todos os equipamentos mencionados
         equipamentos_mencionados = set()
@@ -305,7 +309,7 @@ class ModeloPLCompleto:
 
         TODAS as restrições são modeladas (sem limite de 1.000)
         """
-        print(f"\n⚔️ [4/4] Restrições de conflitos temporais (SEM LIMITE)...")
+        print(f"\n⚔️ [4/5] Restrições de conflitos temporais (SEM LIMITE)...")
 
         # Coletar todas as janelas válidas
         todas_janelas = []
@@ -368,6 +372,65 @@ class ModeloPLCompleto:
         restricao.SetCoefficient(var1, 1)
         restricao.SetCoefficient(var2, 1)
 
+    def _adicionar_restricoes_fim_obrigatorio(self):
+        """
+        ✅ NOVO: Restrições de FIM OBRIGATÓRIO
+
+        Para pedidos cuja última atividade tem tempo_maximo_espera = 0,
+        o pedido DEVE terminar EXATAMENTE no deadline (não pode esperar após produção).
+
+        Implementação: Para cada pedido com fim obrigatório, força x[p,j] = 0
+        para todas as janelas j que NÃO terminam no deadline.
+        """
+        print(f"\n🎯 [5/5] Restrições de FIM OBRIGATÓRIO (NOVA)...")
+
+        if not self.pedidos_com_fim_obrigatorio:
+            print(f"   💡 Nenhum pedido com fim obrigatório detectado")
+            self.stats_restricoes['fim_obrigatorio'] = 0
+            return
+
+        restricoes_adicionadas = 0
+        pedidos_processados = 0
+
+        for pedido_id, deadline in self.pedidos_com_fim_obrigatorio.items():
+            if pedido_id not in self.janelas_por_pedido:
+                continue
+
+            pedidos_processados += 1
+            nome_produto = self.pedidos_por_id[pedido_id].nome_produto
+            print(f"   🎯 Pedido {pedido_id} ({nome_produto}): deadline OBRIGATÓRIO às {deadline.strftime('%d/%m %H:%M')}")
+
+            # Para cada janela deste pedido
+            janelas_pedido = self.janelas_por_pedido[pedido_id]
+            janelas_validas = 0
+
+            for janela_index, janela in enumerate(janelas_pedido):
+                if (pedido_id, janela_index) not in self.variaveis_x:
+                    continue
+
+                # Verificar se janela termina no deadline (tolerância de 1 minuto)
+                diferenca_segundos = abs((janela.datetime_fim - deadline).total_seconds())
+
+                if diferenca_segundos > 60:  # Tolerância de 1 minuto
+                    # Janela NÃO termina no deadline → forçar x = 0
+                    var = self.variaveis_x[(pedido_id, janela_index)]
+                    restricao = self.solver.Constraint(0, 0)  # x = 0
+                    restricao.SetCoefficient(var, 1)
+                    restricoes_adicionadas += 1
+                else:
+                    # Janela termina no deadline → válida
+                    janelas_validas += 1
+
+            print(f"      → {janelas_validas}/{len(janelas_pedido)} janelas terminam no deadline")
+
+            if janelas_validas == 0:
+                print(f"      ⚠️ AVISO: Nenhuma janela termina no deadline! Pedido pode ser inviável.")
+
+        self.stats_restricoes['fim_obrigatorio'] = restricoes_adicionadas
+
+        print(f"   ✅ {restricoes_adicionadas} restrições de fim obrigatório adicionadas")
+        print(f"   📊 {pedidos_processados} pedidos com fim obrigatório processados")
+
     def _imprimir_estatisticas_modelo(self):
         """Imprime estatísticas do modelo"""
         print(f"\n{'='*70}")
@@ -380,6 +443,7 @@ class ModeloPLCompleto:
         print(f"   ⏰ Tempo máximo de espera: {self.stats_restricoes['tempo_maximo_espera']:,}")
         print(f"   🔧 Equipamentos/capacidade: {self.stats_restricoes['equipamentos_capacidade']:,}")
         print(f"   ⚔️ Conflitos temporais: {self.stats_restricoes['conflitos_temporais']:,}")
+        print(f"   🎯 Fim obrigatório: {self.stats_restricoes['fim_obrigatorio']:,}")
         print(f"")
         print(f"✅ TODAS as restrições necessárias foram modeladas")
         print(f"✅ SEM orçamento arbitrário (modelo completo)")

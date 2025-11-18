@@ -29,11 +29,11 @@ class EquipmentConflictAnalyzer:
         self._descobrir_equipamentos()
 
     def _descobrir_equipamentos(self):
-        """Descobre equipamentos ativos no sistema via garbage collector."""
+        """Descobre equipamentos ativos no sistema via lista de equipamentos disponíveis."""
         try:
-            from factory.fabrica_equipamentos import FabricaEquipamentos
-            fabrica = FabricaEquipamentos()
-            self.equipamentos_sistema = fabrica.obter_todos_equipamentos()
+            from factory.fabrica_equipamentos import equipamentos_disponiveis
+            # Criar dicionário com nome do equipamento como chave
+            self.equipamentos_sistema = {eq.nome: eq for eq in equipamentos_disponiveis}
             logger.debug(f"✅ {len(self.equipamentos_sistema)} equipamentos descobertos via fábrica")
         except Exception as e:
             logger.warning(f"⚠️ Erro ao descobrir equipamentos via fábrica: {e}")

@@ -1,58 +1,82 @@
 """
-Otimizador v2.0 - Modelo PL Completo
-=====================================
+Otimizador v2.0 - PL Unificado
+===============================
 
-Módulo de otimização corrigido que modela TODAS as restrições:
-- tempo_maximo_de_espera entre atividades
-- Equipamentos como recursos limitados
-- Conflitos temporais SEM orçamento arbitrário
+Sistema de otimização PL que funciona para:
+- Modo DETERMINISTICO: gaps=0 (otimiza ordem de execução)
+- Modo FLEXIVEL: gaps>0 (otimiza ordem e escolha de gaps) - Fase 2
 
-Correções às 3 deficiências identificadas na análise comparativa.
+API Principal:
+    from otimizador_v2 import executar_pl_v2
+    resultado = executar_pl_v2(pedidos, inicio_jornada)
 
-Uso rápido:
-    from otimizador_v2 import executar_otimizacao_rapida
-    solucao = executar_otimizacao_rapida('data/csv/exemplo_pedidos.csv')
-
-Uso avançado:
+Interface compatível com menu:
     from otimizador_v2 import ExecutorV2
     executor = ExecutorV2()
     executor.inicializar()
-    solucao = executor.otimizar_csv('data/csv/exemplo_pedidos.csv')
+    solucao = executor.otimizar_pedidos(pedidos)
+
+Criado em: 18/11/2025
 """
 
-# Modelo PL
-from otimizador_v2.modelo_pl_completo import ModeloPLCompleto, SolucaoPLCompleta
-
-# Otimizador integrado
-from otimizador_v2.otimizador_integrado_v2 import OtimizadorIntegradoV2, criar_otimizador_v2
-
-# Adaptadores e interfaces
-from otimizador_v2.adaptador_dados import (
-    AdaptadorDados,
-    FabricaAdaptador,
-    carregar_pedidos_csv,
-    extrair_dados_pedidos
+# Fase 1 - Modo Determinístico
+from otimizador_v2.detector_modo import (
+    DetectorModo,
+    ModoOtimizacao,
+    detectar_modo_otimizacao
 )
 
-# Executor de alto nível
-from otimizador_v2.executor_v2 import ExecutorV2, executar_otimizacao_rapida
+from otimizador_v2.calculador_horarios_deterministicos import (
+    CalculadorHorariosDeterministicos,
+    calcular_horarios_deterministicos
+)
+
+from otimizador_v2.modelo_pl_ordenacao import (
+    ModeloPLOrdenacao,
+    otimizar_ordem_pedidos
+)
+
+from otimizador_v2.aplicador_ordenacao import (
+    AplicadorOrdenacao,
+    executar_pedidos_ordenados
+)
+
+from otimizador_v2.executor_unificado import (
+    ExecutorUnificadoPL,
+    executar_pl_v2
+)
+
+# Interface de compatibilidade com menu
+from otimizador_v2.executor_v2 import (
+    ExecutorV2,
+    SolucaoPLCompleta,
+    criar_executor_v2
+)
 
 __all__ = [
+    # Detector de modo
+    'DetectorModo',
+    'ModoOtimizacao',
+    'detectar_modo_otimizacao',
+
+    # Calculador de horários
+    'CalculadorHorariosDeterministicos',
+    'calcular_horarios_deterministicos',
+
     # Modelo PL
-    'ModeloPLCompleto',
-    'SolucaoPLCompleta',
+    'ModeloPLOrdenacao',
+    'otimizar_ordem_pedidos',
 
-    # Otimizador
-    'OtimizadorIntegradoV2',
-    'criar_otimizador_v2',
+    # Aplicador
+    'AplicadorOrdenacao',
+    'executar_pedidos_ordenados',
 
-    # Adaptadores
-    'AdaptadorDados',
-    'FabricaAdaptador',
-    'carregar_pedidos_csv',
-    'extrair_dados_pedidos',
+    # Executor principal (API pública)
+    'ExecutorUnificadoPL',
+    'executar_pl_v2',
 
-    # Executor (Interface principal)
+    # Interface de compatibilidade
     'ExecutorV2',
-    'executar_otimizacao_rapida',
+    'SolucaoPLCompleta',
+    'criar_executor_v2',
 ]

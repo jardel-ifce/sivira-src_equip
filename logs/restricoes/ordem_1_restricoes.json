@@ -1,8 +1,8 @@
 {
   "ordem": 1,
-  "timestamp_criacao": "2025-11-14T13:13:49.946877",
+  "timestamp_criacao": "2025-11-18T14:56:16.266803",
   "status_geral": "EM_ANALISE",
-  "total_restricoes": 5,
+  "total_restricoes": 4,
   "atividades_com_restricao": [
     {
       "id_atividade": 20031,
@@ -14,9 +14,9 @@
       "capacidade_atual": 900.05,
       "capacidade_minima": 1000,
       "diferenca": 99.95000000000005,
-      "inicio": "2024-12-29T11:43:15",
-      "fim": "2024-12-29T11:55:15",
-      "timestamp_registro": "2025-11-14T13:13:49.947084",
+      "inicio": "2024-12-31T05:15:00",
+      "fim": "2024-12-31T05:27:00",
+      "timestamp_registro": "2025-11-18T14:56:16.267022",
       "detalhes_extras": {
         "tipo_restricao": "CAPACIDADE_MINIMA",
         "velocidade": "BAIXA",
@@ -37,9 +37,9 @@
       "capacidade_atual": 600.03,
       "capacidade_minima": 1000,
       "diferenca": 399.97,
-      "inicio": "2024-12-29T20:50:30",
-      "fim": "2024-12-29T21:02:30",
-      "timestamp_registro": "2025-11-14T13:13:49.960978",
+      "inicio": "2024-12-31T05:15:00",
+      "fim": "2024-12-31T05:27:00",
+      "timestamp_registro": "2025-11-18T14:56:16.294082",
       "detalhes_extras": {
         "tipo_restricao": "CAPACIDADE_MINIMA",
         "velocidade": "BAIXA",
@@ -55,14 +55,14 @@
       "id_pedido": 8,
       "id_item": 2003,
       "nome_item": "Massa Para Frituras",
-      "equipamento": "HotMix 1",
+      "equipamento": "HotMix 2",
       "status": "PEDIDO_COM_RESTRICAO",
       "capacidade_atual": 720.04,
       "capacidade_minima": 1000,
       "diferenca": 279.96000000000004,
-      "inicio": "2024-12-30T04:53:00",
-      "fim": "2024-12-30T05:05:00",
-      "timestamp_registro": "2025-11-14T13:13:49.970275",
+      "inicio": "2024-12-31T05:11:00",
+      "fim": "2024-12-31T05:23:00",
+      "timestamp_registro": "2025-11-18T14:56:16.317919",
       "detalhes_extras": {
         "tipo_restricao": "CAPACIDADE_MINIMA",
         "velocidade": "BAIXA",
@@ -78,14 +78,14 @@
       "id_pedido": 9,
       "id_item": 2003,
       "nome_item": "Massa Para Frituras",
-      "equipamento": "HotMix 1",
+      "equipamento": "HotMix 2",
       "status": "PEDIDO_COM_RESTRICAO",
       "capacidade_atual": 720.04,
       "capacidade_minima": 1000,
       "diferenca": 279.96000000000004,
-      "inicio": "2024-12-30T13:24:30",
-      "fim": "2024-12-30T13:36:30",
-      "timestamp_registro": "2025-11-14T13:13:49.984544",
+      "inicio": "2024-12-31T05:11:00",
+      "fim": "2024-12-31T05:23:00",
+      "timestamp_registro": "2025-11-18T14:56:16.347506",
       "detalhes_extras": {
         "tipo_restricao": "CAPACIDADE_MINIMA",
         "velocidade": "BAIXA",
@@ -95,26 +95,8 @@
           "CHAMA_DUPLA"
         ]
       }
-    },
-    {
-      "id_atividade": 20112,
-      "id_pedido": 12,
-      "id_item": 2011,
-      "nome_item": "Creme De Camarao",
-      "equipamento": "Fogão 1",
-      "status": "PEDIDO_COM_RESTRICAO",
-      "capacidade_atual": 450.0,
-      "capacidade_minima": 500,
-      "diferenca": 50.0,
-      "inicio": "2024-12-31T07:03:00",
-      "fim": "2024-12-31T07:23:00",
-      "timestamp_registro": "2025-11-14T13:13:50.033075",
-      "detalhes_extras": {
-        "tipo_restricao": "CAPACIDADE_MINIMA",
-        "motivo_especifico": "Quantidade 450.0g abaixo da capacidade mínima 500g"
-      }
     }
   ],
   "atividades_validadas": [],
-  "ultima_atualizacao": "2025-11-14T13:13:50.033084"
+  "ultima_atualizacao": "2025-11-18T14:56:16.347511"
 }

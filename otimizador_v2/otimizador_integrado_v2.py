@@ -85,7 +85,7 @@ class OtimizadorIntegradoV2:
 
         # ETAPA 2: Geração de janelas temporais
         print(f"\n🪟 [2/3] Gerando janelas temporais...")
-        janelas_por_pedido = self._gerar_janelas(dados_pedidos, resolucao_minutos)
+        janelas_por_pedido, pedidos_com_fim_obrigatorio = self._gerar_janelas(dados_pedidos, resolucao_minutos)
 
         total_janelas = sum(len(j) for j in janelas_por_pedido.values())
         janelas_viaveis = sum(len([x for x in j if x.viavel]) for j in janelas_por_pedido.values())
@@ -99,7 +99,8 @@ class OtimizadorIntegradoV2:
         # ETAPA 3: Resolução do modelo PL COMPLETO
         print(f"\n🧮 [3/3] Resolvendo modelo PL COMPLETO...")
         solucao = self._resolver_modelo_pl(dados_pedidos, janelas_por_pedido,
-                                          timeout_segundos, resolucao_minutos)
+                                          timeout_segundos, resolucao_minutos,
+                                          pedidos_com_fim_obrigatorio)
 
         tempo_total = time.time() - inicio_total
 
@@ -125,41 +126,86 @@ class OtimizadorIntegradoV2:
             traceback.print_exc()
             return []
 
-    def _gerar_janelas(self, dados_pedidos: List[DadosPedido], resolucao_minutos: int) -> Dict[int, List[JanelaTemporal]]:
-        """Gera janelas temporais para todos os pedidos"""
+    def _gerar_janelas(self, dados_pedidos: List[DadosPedido], resolucao_minutos: int) -> tuple[Dict[int, List[JanelaTemporal]], Dict[int, datetime]]:
+        """Gera janelas temporais para todos os pedidos
+
+        Returns:
+            tuple: (janelas_por_pedido, pedidos_com_fim_obrigatorio)
+        """
+
+        # ✅ NOVO: Detectar pedidos com fim obrigatório
+        pedidos_com_fim_obrigatorio = {}
+
+        print(f"\n🔍 Analisando fins obrigatórios (última atividade PRODUTO com tempo_maximo_espera = 0)...")
+
+        for dados_pedido in dados_pedidos:
+            if dados_pedido.atividades:
+                # ✅ CORREÇÃO CRÍTICA: Filtrar apenas atividades do tipo PRODUTO
+                # (não incluir atividades de SUBPRODUTO que podem vir depois)
+                atividades_produto = [
+                    a for a in dados_pedido.atividades
+                    if hasattr(a, 'tipo_item') and str(a.tipo_item) == 'TipoItem.PRODUTO'
+                ]
+
+                if not atividades_produto:
+                    print(f"   ⚠️ Pedido {dados_pedido.id_pedido}: sem atividades de PRODUTO encontradas")
+                    continue
+
+                # IMPORTANTE: Sistema usa backward scheduling com ordenação REVERSA por id_atividade
+                # Então MAIOR id_atividade = ÚLTIMA a executar = deve terminar no deadline
+                ultima_atividade_produto = max(atividades_produto, key=lambda a: a.id_atividade)
+
+                # Verificar tempo_maximo_espera
+                if hasattr(ultima_atividade_produto, 'tempo_maximo_espera') and ultima_atividade_produto.tempo_maximo_espera == timedelta(0):
+                    # Marcar como fim obrigatório
+                    pedidos_com_fim_obrigatorio[dados_pedido.id_pedido] = dados_pedido.fim_jornada
+                    print(f"   ⚠️ Pedido {dados_pedido.id_pedido} ({dados_pedido.nome_produto}): FIM OBRIGATÓRIO às {dados_pedido.fim_jornada.strftime('%d/%m %H:%M')}")
+                    print(f"      (última ativ. PRODUTO: ID {ultima_atividade_produto.id_atividade})")
+                else:
+                    espera = ultima_atividade_produto.tempo_maximo_espera if hasattr(ultima_atividade_produto, 'tempo_maximo_espera') else 'N/A'
+                    print(f"   ✅ Pedido {dados_pedido.id_pedido} ({dados_pedido.nome_produto}): flexível (espera: {espera})")
+
+        total_obrigatorios = len(pedidos_com_fim_obrigatorio)
+        total_flexiveis = len(dados_pedidos) - total_obrigatorios
+
+        print(f"\n📊 Resumo de fins obrigatórios:")
+        print(f"   Pedidos com fim obrigatório: {total_obrigatorios}/{len(dados_pedidos)}")
+        print(f"   Pedidos com horário flexível: {total_flexiveis}/{len(dados_pedidos)}")
 
         # Criar gerador de janelas
         self.gerador_janelas = GeradorJanelasTemporais(
             resolucao_minutos=resolucao_minutos
         )
 
-        # ✅ CORRETO: Chamar método que processa todos os pedidos de uma vez
-        # Nota: pedidos_com_fim_obrigatorio pode ser None (opcional)
+        # ✅ CORRETO: Chamar método com fins obrigatórios detectados
         janelas_por_pedido = self.gerador_janelas.gerar_janelas_todos_pedidos(
             dados_pedidos=dados_pedidos,
-            pedidos_com_fim_obrigatorio=None  # v2 não usa fins obrigatórios ainda
+            pedidos_com_fim_obrigatorio=pedidos_com_fim_obrigatorio  # ✅ NOVO: passa dicionário real
         )
 
         # Mostrar resumo de janelas geradas
         for pedido_id, janelas in janelas_por_pedido.items():
             viaveis = len([j for j in janelas if j.viavel])
-            print(f"   Pedido {pedido_id}: {len(janelas)} janelas ({viaveis} viáveis)")
+            fim_obrig = "🎯 FIM OBRIG" if pedido_id in pedidos_com_fim_obrigatorio else ""
+            print(f"   Pedido {pedido_id}: {len(janelas)} janelas ({viaveis} viáveis) {fim_obrig}")
 
-        return janelas_por_pedido
+        return janelas_por_pedido, pedidos_com_fim_obrigatorio
 
     def _resolver_modelo_pl(self,
                            dados_pedidos: List[DadosPedido],
                            janelas_por_pedido: Dict[int, List[JanelaTemporal]],
                            timeout_segundos: int,
-                           resolucao_minutos: int) -> SolucaoPLCompleta:
-        """Resolve modelo PL completo"""
+                           resolucao_minutos: int,
+                           pedidos_com_fim_obrigatorio: Dict[int, datetime]) -> SolucaoPLCompleta:
+        """Resolve modelo PL completo com fins obrigatórios"""
 
         # Criar modelo PL completo
         self.modelo_pl = ModeloPLCompleto(
             dados_pedidos=dados_pedidos,
             janelas_por_pedido=janelas_por_pedido,
             configuracao_tempo=None,  # ✅ CORRETO: ModeloPLCompleto calcula horizonte das janelas
-            resolucao_minutos=resolucao_minutos
+            resolucao_minutos=resolucao_minutos,
+            pedidos_com_fim_obrigatorio=pedidos_com_fim_obrigatorio  # ✅ NOVO
         )
 
         # Resolver

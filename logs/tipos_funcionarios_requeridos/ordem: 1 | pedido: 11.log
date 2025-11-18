@@ -2,47 +2,54 @@
 📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
 ================================================================================
 Ordem: 1
-Pedido: 7
+Pedido: 11
 Iniciado em: 18/11/2025 14:56:16
 ================================================================================
 
-🔸 ATIVIDADE 10696: fritura_de_coxinhas_de_carne_de_sol
-   ⏰ Horário: 07:56 [31/12/2024] - 08:00 [31/12/2024]
+🔸 ATIVIDADE 10594: preparo_de_folhado_de_carne_de_sol_para_coccao
+   ⏰ Horário: 07:36 [31/12/2024] - 07:40 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 10592: preparacao_para_refrigeracao_de_folhado_de_carne_de_sol
+   ⏰ Horário: 06:33 [31/12/2024] - 06:36 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 10591: modelagem_e_recheio_de_folhado_de_carne_de_sol
+   ⏰ Horário: 05:13 [31/12/2024] - 06:33 [31/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 20045: armazenamento_sob_temperatura_para_massas_folhadas
+   ⏰ Horário: 05:08 [31/12/2024] - 05:13 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: ALMOXARIFE
+   🎯 Prioridades (FIPs): ALMOXARIFE:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 20044: laminacao_2_de_massas_para_folhados
+   ⏰ Horário: 04:56 [31/12/2024] - 05:08 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10695: preparacao_para_fritura_de_coxinha_de_carne_de_sol
-   ⏰ Horário: 07:53 [31/12/2024] - 07:56 [31/12/2024]
+🔸 ATIVIDADE 20042: laminacao_1_de_massas_para_folhados
+   ⏰ Horário: 03:44 [31/12/2024] - 03:56 [31/12/2024]
    👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   👨‍💼 Tipos permitidos: CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:1
    📅 Registrado: 14:56:16
 
-🔸 ATIVIDADE 10693: preparacao_para_refrigeracao_de_coxinha_de_carne_de_sol
-   ⏰ Horário: 06:50 [31/12/2024] - 06:53 [31/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 14:56:16
-
-🔸 ATIVIDADE 10692: empanamento_de_coxinhas_de_carne_de_sol
-   ⏰ Horário: 06:47 [31/12/2024] - 06:50 [31/12/2024]
-   👥 Funcionários necessários: 2
-   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 14:56:16
-
-🔸 ATIVIDADE 10691: modelagem_e_recheio_de_coxinhas_de_carne_de_sol
-   ⏰ Horário: 05:27 [31/12/2024] - 06:47 [31/12/2024]
-   👥 Funcionários necessários: 2
-   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 14:56:16
-
-🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
-   ⏰ Horário: 05:15 [31/12/2024] - 05:27 [31/12/2024]
+🔸 ATIVIDADE 20041: mistura_de_massas_para_folhados
+   ⏰ Horário: 03:34 [31/12/2024] - 03:44 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1

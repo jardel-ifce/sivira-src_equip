@@ -3,76 +3,82 @@
 ================================================================================
 Ordem: 1
 Pedido: 8
-Iniciado em: 14/11/2025 13:13:49
+Iniciado em: 18/11/2025 14:56:16
 ================================================================================
 
-🔸 ATIVIDADE 10701: modelagem_e_recheio_de_coxinhas_de_camarao
-   ⏰ Horário: 02:20 [30/12/2024] - 03:40 [30/12/2024]
-   👥 Funcionários necessários: 2
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
-
-🔸 ATIVIDADE 10702: empanamento_de_coxinhas_de_camarao
-   ⏰ Horário: 03:40 [30/12/2024] - 03:43 [30/12/2024]
-   👥 Funcionários necessários: 2
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
-
-🔸 ATIVIDADE 10703: preparacao_para_refrigeracao_de_coxinha_de_camarao
-   ⏰ Horário: 03:43 [30/12/2024] - 03:46 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
-
-🔸 ATIVIDADE 10705: preparacao_para_fritura_de_coxinha_de_camarao
-   ⏰ Horário: 04:46 [30/12/2024] - 04:49 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
-   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
-
 🔸 ATIVIDADE 10706: fritura_de_coxinhas_de_camarao
-   ⏰ Horário: 04:49 [30/12/2024] - 04:53 [30/12/2024]
+   ⏰ Horário: 07:52 [31/12/2024] - 07:56 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:1
-   📅 Registrado: 13:13:49
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 10705: preparacao_para_fritura_de_coxinha_de_camarao
+   ⏰ Horário: 07:49 [31/12/2024] - 07:52 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 10703: preparacao_para_refrigeracao_de_coxinha_de_camarao
+   ⏰ Horário: 06:46 [31/12/2024] - 06:49 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 10702: empanamento_de_coxinhas_de_camarao
+   ⏰ Horário: 06:43 [31/12/2024] - 06:46 [31/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 10701: modelagem_e_recheio_de_coxinhas_de_camarao
+   ⏰ Horário: 05:23 [31/12/2024] - 06:43 [31/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 14:56:16
 
 🔸 ATIVIDADE 20031: mistura_de_massas_para_frituras
-   ⏰ Horário: 04:53 [30/12/2024] - 05:05 [30/12/2024]
+   ⏰ Horário: 05:11 [31/12/2024] - 05:23 [31/12/2024]
    👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: AUXILIAR_DE_CONFEITEIRO, CONFEITEIRO
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
    🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
-   📅 Registrado: 13:13:49
-
-🔸 ATIVIDADE 20111: preparo_para_coccao_de_creme_de_camarao
-   ⏰ Horário: 05:05 [30/12/2024] - 05:15 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: COZINHEIRO
-   🎯 Prioridades (FIPs): COZINHEIRO:1
-   📅 Registrado: 13:13:49
-
-🔸 ATIVIDADE 20112: coccao_de_creme_de_camarao
-   ⏰ Horário: 05:15 [30/12/2024] - 05:35 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: COZINHEIRO
-   🎯 Prioridades (FIPs): COZINHEIRO:1
-   📅 Registrado: 13:13:49
-
-🔸 ATIVIDADE 20113: preparo_para_armazenamento_creme_de_camarao
-   ⏰ Horário: 05:03 [30/12/2024] - 06:07 [30/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: COZINHEIRO
-   🎯 Prioridades (FIPs): COZINHEIRO:1
-   📅 Registrado: 13:13:49
+   📅 Registrado: 14:56:16
 
 🔸 ATIVIDADE 20114: armazenamento_sob_temperatura_para_creme_de_camarao
-   ⏰ Horário: 06:07 [30/12/2024] - 06:12 [30/12/2024]
+   ⏰ Horário: 05:18 [31/12/2024] - 05:23 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: ALMOXARIFE
    🎯 Prioridades (FIPs): ALMOXARIFE:1
-   📅 Registrado: 13:13:49
+   📅 Registrado: 14:56:16
 
+🔸 ATIVIDADE 20113: preparo_para_armazenamento_creme_de_camarao
+   ⏰ Horário: 04:14 [31/12/2024] - 05:18 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 20112: coccao_de_creme_de_camarao
+   ⏰ Horário: 03:54 [31/12/2024] - 04:14 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 14:56:16
+
+🔸 ATIVIDADE 20111: preparo_para_coccao_de_creme_de_camarao
+   ⏰ Horário: 03:44 [31/12/2024] - 03:54 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: COZINHEIRO
+   🎯 Prioridades (FIPs): COZINHEIRO:1
+   📅 Registrado: 14:56:16
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 18/11/2025 14:56:16
+================================================================================
