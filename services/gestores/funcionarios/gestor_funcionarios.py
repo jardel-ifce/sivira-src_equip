@@ -8,10 +8,7 @@ from utils.logs.logger_factory import setup_logger
 from enums.funcionarios.tipo_profissional import TipoProfissional
 from utils.logs.gerenciador_logs import registrar_log_funcionarios
 from utils.analise.analisador_conflitos import AnalisadorConflitos
-from factory.fabrica_funcionarios import (
-    funcionario_1, funcionario_2, funcionario_3, funcionario_4, funcionario_5,
-    funcionario_6, funcionario_7, funcionario_8, funcionario_9
-)
+from factory.fabrica_funcionarios import FabricaFuncionarios
 
 logger = setup_logger("GestorFuncionarios")
 
@@ -57,10 +54,9 @@ class GestorFuncionarios:
         if self._initialized:
             return
 
-        self.funcionarios_disponiveis = [
-            funcionario_1, funcionario_2, funcionario_3, funcionario_4, funcionario_5,
-            funcionario_6, funcionario_7, funcionario_8, funcionario_9
-        ]
+        # Carrega funcionários do JSON via FabricaFuncionarios
+        fabrica = FabricaFuncionarios()
+        self.funcionarios_disponiveis = fabrica.carregar_funcionarios()
 
         # ⚠️ NOVO: Controle de pedidos já alocados
         # Set de tuplas (id_ordem, id_pedido) que já tiveram funcionários alocados
