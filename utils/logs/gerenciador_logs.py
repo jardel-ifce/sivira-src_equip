@@ -33,15 +33,18 @@ PASTAS_INICIALIZACAO = [
     "logs/temp"
 ]
 
+# 🆕 Pasta de escalas para limpeza na inicialização
+PASTA_ESCALAS = "data/escalas"
+
 def limpar_arquivo_pedidos_salvos():
     """
     🆕 Remove arquivo de pedidos salvos na inicialização.
-    
+
     Returns:
         bool: True se arquivo foi removido, False se não existia
     """
     arquivo_pedidos = "data/pedidos/pedidos_salvos.json"
-    
+
     try:
         if os.path.exists(arquivo_pedidos):
             os.remove(arquivo_pedidos)
@@ -53,6 +56,46 @@ def limpar_arquivo_pedidos_salvos():
     except Exception as e:
         print(f"⚠️ Erro ao remover arquivo de pedidos salvos: {e}")
         return False
+
+
+def limpar_escalas_inicializacao():
+    """
+    🆕 Limpa arquivos de escalas Excel na inicialização do sistema.
+
+    Remove todos os arquivos .xlsx da pasta data/escalas/ para garantir
+    que novas escalas sejam geradas a cada sessão.
+
+    Returns:
+        int: Número de arquivos removidos
+    """
+    arquivos_removidos = 0
+
+    try:
+        if not os.path.exists(PASTA_ESCALAS):
+            # Criar pasta se não existir
+            os.makedirs(PASTA_ESCALAS, exist_ok=True)
+            print(f"📁 Pasta de escalas criada: {PASTA_ESCALAS}")
+            return 0
+
+        # Listar e remover arquivos .xlsx
+        for arquivo in os.listdir(PASTA_ESCALAS):
+            if arquivo.endswith('.xlsx'):
+                caminho = os.path.join(PASTA_ESCALAS, arquivo)
+                try:
+                    os.remove(caminho)
+                    arquivos_removidos += 1
+                except Exception as e:
+                    print(f"⚠️ Erro ao remover {arquivo}: {e}")
+
+        if arquivos_removidos > 0:
+            print(f"   ✅ data/escalas/: {arquivos_removidos} arquivo(s) de escala removido(s)")
+        else:
+            print(f"   📭 data/escalas/: nenhum arquivo de escala encontrado")
+
+    except Exception as e:
+        print(f"⚠️ Erro ao limpar escalas: {e}")
+
+    return arquivos_removidos
 
 def limpar_logs_inicializacao():
     """

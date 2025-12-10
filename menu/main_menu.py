@@ -35,7 +35,7 @@ from services.gestores.producao import GestorProducao
 from services.gestores.funcionarios.gestor_funcionarios import GestorFuncionarios
 from services.validacao.validador_pedidos import ValidadorPedidos
 from services.exportacao.exportador_banco import ExportadorBanco
-from utils.logs.gerenciador_logs import limpar_logs_inicializacao
+from utils.logs.gerenciador_logs import limpar_logs_inicializacao, limpar_escalas_inicializacao
 from analisador.analisador_pedidos import AnalisadorPedidos
 from analisador.calculador_reagendamento import CalculadorReagendamento
 
@@ -46,12 +46,13 @@ class MenuPrincipal:
     def __init__(self):
         print("🚀 Inicializando Sistema de Produção...")
         
-        # 🆕 LIMPEZA AUTOMÁTICA DE LOGS E COMANDAS
+        # 🆕 LIMPEZA AUTOMÁTICA DE LOGS, COMANDAS E ESCALAS
         try:
             # 🆕 MODIFICAÇÃO: Agora limpar_logs_inicializacao() já inclui limpeza de comandas
             from utils.comandas.limpador_comandas import apagar_todas_as_comandas
             relatorio_limpeza = limpar_logs_inicializacao()
             apagar_todas_as_comandas()
+            limpar_escalas_inicializacao()  # 🆕 Limpa escalas Excel anteriores
 
             # Como agora retorna string formatada, vamos exibir
             if isinstance(relatorio_limpeza, str):
@@ -60,14 +61,14 @@ class MenuPrincipal:
                 # Compatibilidade com versão antiga
                 if relatorio_limpeza['sucesso']:
                     if relatorio_limpeza['total_arquivos_removidos'] > 0:
-                        print("✅ Ambiente de logs e comandas limpo e pronto!")  # ✅ MODIFICADO
+                        print("✅ Ambiente de logs, comandas e escalas limpo e pronto!")
                     else:
-                        print("🔭 Ambiente de logs e comandas já estava limpo!")  # ✅ MODIFICADO
+                        print("🔭 Ambiente de logs, comandas e escalas já estava limpo!")
                 else:
-                    print("⚠️ Limpeza de logs/comandas concluída com alguns erros (sistema continuará)")  # ✅ MODIFICADO
-                
+                    print("⚠️ Limpeza concluída com alguns erros (sistema continuará)")
+
         except Exception as e:
-            print(f"⚠️ Erro durante limpeza de logs/comandas: {e}")  # ✅ MODIFICADO
+            print(f"⚠️ Erro durante limpeza de logs/comandas/escalas: {e}")
             print("🔄 Sistema continuará normalmente...")
         
         print("🔧 Carregando nova arquitetura desacoplada...")
@@ -185,6 +186,9 @@ class MenuPrincipal:
         print("✅ VALIDAÇÃO E EXPORTAÇÃO:")  # 🆕 NOVA SEÇÃO
         print("I️⃣  Validação e Exportação para Banco")
         print()
+        print("📊 ESCALAS:")
+        print("J️⃣  Gerar Escala de Funcionários (Excel)")
+        print()
         print("🔍 AVALIADOR DE PEDIDOS:")
         print("H️⃣  Analisar Pedidos (Atividades e Reagendamento)")
         print()
@@ -250,6 +254,9 @@ class MenuPrincipal:
 
         elif opcao.lower() == "h":  # 🆕 NOVA OPÇÃO - AVALIADOR DE PEDIDOS
             self.mostrar_submenu_avaliador_pedidos()
+
+        elif opcao.lower() == "j":  # 🆕 NOVA OPÇÃO - GERAR ESCALA
+            self.gerar_escala_funcionarios()
 
         elif opcao.lower() == "t":  # OPÇÃO MOVIDA - TESTAR SISTEMA
             self.testar_sistema()
@@ -2615,19 +2622,42 @@ class MenuPrincipal:
 
             # Extrair ordem|pedido dos arquivos
             requisitos = []
+            requisitos_ignorados = []
             padrao = r'ordem: (\d+) \| pedido: (\d+)\.log'
+
+            # Diretório de sucesso de equipamentos
+            dir_sucesso_equip = "logs/equipamentos/sucesso"
 
             for arquivo in arquivos:
                 match = re.match(padrao, arquivo)
                 if match:
                     id_ordem = int(match.group(1))
                     id_pedido = int(match.group(2))
-                    requisitos.append((id_ordem, id_pedido, arquivo))
+
+                    # Verificar se o pedido teve sucesso na alocação de equipamentos
+                    arquivo_sucesso = f"ordem: {id_ordem} | pedido: {id_pedido}.log"
+                    caminho_sucesso = os.path.join(dir_sucesso_equip, arquivo_sucesso)
+
+                    if os.path.exists(caminho_sucesso):
+                        requisitos.append((id_ordem, id_pedido, arquivo))
+                    else:
+                        requisitos_ignorados.append((id_ordem, id_pedido))
 
             if not requisitos:
                 print("❌ Nenhum requisito válido encontrado")
+                if requisitos_ignorados:
+                    print(f"⚠️ {len(requisitos_ignorados)} pedido(s) ignorado(s) por falha na alocação de equipamentos:")
+                    for id_ordem, id_pedido in requisitos_ignorados:
+                        print(f"   - Ordem {id_ordem} | Pedido {id_pedido}")
                 input("Pressione Enter para continuar...")
                 return
+
+            # Mostrar pedidos ignorados se houver
+            if requisitos_ignorados:
+                print(f"⚠️ {len(requisitos_ignorados)} pedido(s) ignorado(s) (falha em equipamentos):")
+                for id_ordem, id_pedido in requisitos_ignorados:
+                    print(f"   - Ordem {id_ordem} | Pedido {id_pedido}")
+                print()
 
             print(f"📋 {len(requisitos)} ordem|pedido disponível(is) para alocação:")
             print()
@@ -2928,6 +2958,75 @@ class MenuPrincipal:
 
         print()
         input("Pressione Enter para continuar...")
+
+    # =========================================================================
+    #                   📊 GERAÇÃO DE ESCALAS
+    # =========================================================================
+
+    def gerar_escala_funcionarios(self):
+        """Gera planilha Excel com escala de funcionários"""
+        try:
+            self.utils.limpar_tela()
+            print("📊 GERAÇÃO DE ESCALA DE FUNCIONÁRIOS")
+            print("=" * 60)
+            print()
+
+            # Verificar se há logs de funcionários
+            dir_sucesso = "logs/funcionarios/sucesso"
+            if not os.path.exists(dir_sucesso) or not os.listdir(dir_sucesso):
+                print("❌ Nenhum log de alocação de funcionários encontrado!")
+                print("   Execute primeiro a alocação de funcionários.")
+                input("\nPressione Enter para voltar...")
+                return
+
+            # Contar arquivos
+            arquivos = [f for f in os.listdir(dir_sucesso) if f.endswith('.log')]
+            print(f"📁 Logs encontrados: {len(arquivos)} pedido(s) com funcionários alocados")
+            print()
+
+            # Confirmar geração
+            confirma = input("Deseja gerar a planilha de escala? (S/N): ").strip().upper()
+            if confirma != 'S':
+                print("❌ Operação cancelada.")
+                input("\nPressione Enter para voltar...")
+                return
+
+            print()
+            print("⏳ Gerando planilha Excel...")
+            print()
+
+            # Importar e gerar
+            from services.exportacao.escalas import gerar_escala_funcionarios as gerar_escala
+
+            # Limpar diretório de saída
+            dir_saida = "data/escalas"
+            if os.path.exists(dir_saida):
+                for arquivo in os.listdir(dir_saida):
+                    caminho = os.path.join(dir_saida, arquivo)
+                    if os.path.isfile(caminho):
+                        os.remove(caminho)
+                print(f"🧹 Diretório {dir_saida} limpo")
+
+            # Gerar escala
+            caminho = gerar_escala()
+
+            if caminho:
+                print()
+                print("=" * 60)
+                print(f"✅ ESCALA GERADA COM SUCESSO!")
+                print(f"📄 Arquivo: {caminho}")
+                print("=" * 60)
+            else:
+                print()
+                print("❌ Falha ao gerar escala. Verifique os logs.")
+
+        except ImportError as e:
+            print(f"❌ Erro de importação: {e}")
+            print("   Verifique se o módulo openpyxl está instalado: pip install openpyxl")
+        except Exception as e:
+            print(f"❌ Erro ao gerar escala: {e}")
+
+        input("\nPressione Enter para voltar...")
 
     # =========================================================================
     #                   ✅ SUBMENU VALIDAÇÃO E EXPORTAÇÃO
