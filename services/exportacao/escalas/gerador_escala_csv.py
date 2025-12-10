@@ -1,28 +1,18 @@
 #!/usr/bin/env python3
 """
-📊 GERADOR DE ESCALAS EXCEL
-===========================
+📊 GERADOR DE ESCALAS CSV
+=========================
 
-Módulo responsável por gerar planilhas Excel com escalas de funcionários
+Módulo responsável por gerar arquivos CSV com escalas de funcionários
 formatadas, incluindo intervalos de tempo e atividades alocadas.
-
-Dependências:
-    - openpyxl: pip install openpyxl
 """
 
 import os
+import csv
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass
-
-try:
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-    from openpyxl.utils import get_column_letter
-    OPENPYXL_DISPONIVEL = True
-except ImportError:
-    OPENPYXL_DISPONIVEL = False
 
 from services.exportacao.escalas.parser_logs_funcionarios import (
     ParserLogsFuncionarios,
@@ -31,24 +21,19 @@ from services.exportacao.escalas.parser_logs_funcionarios import (
 
 
 @dataclass
-class ConfiguracaoExcel:
-    """Configurações para geração da planilha Excel."""
+class ConfiguracaoCSV:
+    """Configurações para geração do arquivo CSV."""
     intervalo_minutos: int = 30
-    cor_cabecalho: str = "4472C4"
-    cor_atividade: str = "92D050"
-    largura_coluna_intervalo: int = 22
-    largura_coluna_funcionario: int = 18
-    altura_linha: int = 35
-    tamanho_fonte_atividade: int = 8
     exibir_nomes_completos: bool = True
     excluir_linhas_vazias: bool = True
+    separador: str = ";"
 
 
-class GeradorEscalaExcel:
+class GeradorEscalaCSV:
     """
-    Gerador de planilhas Excel com escalas de funcionários.
+    Gerador de arquivos CSV com escalas de funcionários.
 
-    Gera planilhas formatadas com:
+    Gera arquivos CSV formatados com:
     - Intervalos de tempo nas linhas
     - Funcionários nas colunas
     - Atividades alocadas nas células
@@ -66,18 +51,12 @@ class GeradorEscalaExcel:
         Args:
             arquivo_funcionarios: Caminho para o JSON de funcionários
             diretorio_logs: Caminho para logs de alocação
-            diretorio_saida: Diretório para salvar a planilha
+            diretorio_saida: Diretório para salvar o arquivo
         """
-        if not OPENPYXL_DISPONIVEL:
-            raise ImportError(
-                "Módulo openpyxl não encontrado. "
-                "Instale com: pip install openpyxl"
-            )
-
         self.arquivo_funcionarios = arquivo_funcionarios
         self.diretorio_logs = diretorio_logs
         self.diretorio_saida = diretorio_saida
-        self.config = ConfiguracaoExcel()
+        self.config = ConfiguracaoCSV()
 
         self._funcionarios: Dict[int, dict] = {}
         self._parser = ParserLogsFuncionarios(diretorio_logs)
@@ -100,33 +79,6 @@ class GeradorEscalaExcel:
         }
 
         return len(self._funcionarios) > 0
-
-    def _criar_estilos(self) -> dict:
-        """
-        Cria estilos para a planilha.
-
-        Returns:
-            Dicionário com estilos
-        """
-        return {
-            'header_fill': PatternFill(
-                start_color=self.config.cor_cabecalho,
-                end_color=self.config.cor_cabecalho,
-                fill_type="solid"
-            ),
-            'header_font': Font(bold=True, color="FFFFFF"),
-            'atividade_fill': PatternFill(
-                start_color=self.config.cor_atividade,
-                end_color=self.config.cor_atividade,
-                fill_type="solid"
-            ),
-            'border': Border(
-                left=Side(style='thin'),
-                right=Side(style='thin'),
-                top=Side(style='thin'),
-                bottom=Side(style='thin')
-            )
-        }
 
     def _gerar_intervalos(
         self,
@@ -165,10 +117,10 @@ class GeradorEscalaExcel:
             inicio: Datetime do início do intervalo
 
         Returns:
-            String formatada "HH:MM – HH:MM [DD/MM]"
+            String formatada "HH:MM - HH:MM [DD/MM]"
         """
         fim = inicio + timedelta(minutes=self.config.intervalo_minutos)
-        return f"{inicio.strftime('%H:%M')} – {fim.strftime('%H:%M')} [{inicio.strftime('%d/%m')}]"
+        return f"{inicio.strftime('%H:%M')} - {fim.strftime('%H:%M')} [{inicio.strftime('%d/%m')}]"
 
     def _encontrar_intervalos_com_atividades(
         self,
@@ -199,10 +151,10 @@ class GeradorEscalaExcel:
 
     def gerar_escala(
         self,
-        nome_arquivo: str = "escala_funcionarios_atividades.xlsx"
+        nome_arquivo: str = "escala_funcionarios_atividades.csv"
     ) -> Optional[str]:
         """
-        Gera a planilha Excel com a escala de funcionários.
+        Gera o arquivo CSV com a escala de funcionários.
 
         Args:
             nome_arquivo: Nome do arquivo de saída
@@ -241,101 +193,65 @@ class GeradorEscalaExcel:
         else:
             intervalos = list(enumerate(todos_intervalos))
 
-        # Criar workbook
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Escala de Funcionários"
-
-        estilos = self._criar_estilos()
-
-        # Cabeçalho - coluna de intervalo
-        ws['A1'] = 'Intervalo'
-        ws['A1'].fill = estilos['header_fill']
-        ws['A1'].font = estilos['header_font']
-        ws['A1'].border = estilos['border']
-
-        # Cabeçalho - colunas de funcionários
-        col = 2
-        func_cols = {}
-
-        for func_id in sorted(self._funcionarios.keys()):
-            func = self._funcionarios[func_id]
-            cell = ws.cell(row=1, column=col, value=func['nome'])
-            cell.fill = estilos['header_fill']
-            cell.font = estilos['header_font']
-            cell.border = estilos['border']
-            cell.alignment = Alignment(textRotation=90, horizontal='center')
-            func_cols[func['nome']] = col
-            col += 1
-
-        # Preencher intervalos
-        for row_idx, (orig_idx, intervalo) in enumerate(intervalos, start=2):
-            cell = ws.cell(
-                row=row_idx,
-                column=1,
-                value=self._formatar_intervalo(intervalo)
-            )
-            cell.border = estilos['border']
-            cell.alignment = Alignment(horizontal='left')
-
-        # Preencher atividades
-        for nome_func, lista_ativ in atividades.items():
-            if nome_func not in func_cols:
-                continue
-
-            col = func_cols[nome_func]
-
-            for ativ in lista_ativ:
-                for row_idx, (orig_idx, intervalo) in enumerate(intervalos, start=2):
-                    # Verificar se há sobreposição entre atividade e intervalo
-                    fim_intervalo = intervalo + timedelta(minutes=self.config.intervalo_minutos)
-                    if ativ.inicio < fim_intervalo and ativ.fim > intervalo:
-                        cell = ws.cell(row=row_idx, column=col)
-
-                        # Nome da atividade
-                        nome = ativ.nome_atividade
-                        if not self.config.exibir_nomes_completos and len(nome) > 20:
-                            nome = nome[:18] + '..'
-
-                        # Adicionar ordem e pedido na linha seguinte
-                        texto_completo = f"{nome}\n[ordem {ativ.ordem} | pedido {ativ.pedido}]"
-
-                        cell.value = texto_completo
-                        cell.fill = estilos['atividade_fill']
-                        cell.border = estilos['border']
-                        cell.alignment = Alignment(
-                            horizontal='center',
-                            vertical='center',
-                            wrap_text=True
-                        )
-                        cell.font = Font(size=self.config.tamanho_fonte_atividade)
-
-        # Ajustar larguras
-        ws.column_dimensions['A'].width = self.config.largura_coluna_intervalo
-
-        for col in range(2, len(self._funcionarios) + 2):
-            ws.column_dimensions[get_column_letter(col)].width = \
-                self.config.largura_coluna_funcionario
-
-        # Ajustar alturas
-        for row in range(2, len(intervalos) + 2):
-            ws.row_dimensions[row].height = self.config.altura_linha
+        # Lista ordenada de funcionários
+        funcionarios_ordenados = [
+            self._funcionarios[func_id]
+            for func_id in sorted(self._funcionarios.keys())
+        ]
 
         # Criar diretório se não existir
         os.makedirs(self.diretorio_saida, exist_ok=True)
 
-        # Salvar
+        # Caminho do arquivo
         caminho_saida = os.path.join(self.diretorio_saida, nome_arquivo)
-        wb.save(caminho_saida)
 
-        print(f"✅ Planilha salva em: {caminho_saida}")
+        # Escrever CSV
+        with open(caminho_saida, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter=self.config.separador)
+
+            # Cabeçalho
+            cabecalho = ['Intervalo'] + [func['nome'] for func in funcionarios_ordenados]
+            writer.writerow(cabecalho)
+
+            # Criar mapeamento nome -> coluna
+            func_cols = {func['nome']: idx for idx, func in enumerate(funcionarios_ordenados)}
+
+            # Preencher linhas
+            for orig_idx, intervalo in intervalos:
+                # Iniciar linha com intervalo
+                linha = [self._formatar_intervalo(intervalo)]
+
+                # Preencher células de funcionários
+                for func in funcionarios_ordenados:
+                    nome_func = func['nome']
+                    celula = ""
+
+                    # Verificar se funcionário tem atividade neste intervalo
+                    if nome_func in atividades:
+                        for ativ in atividades[nome_func]:
+                            fim_intervalo = intervalo + timedelta(minutes=self.config.intervalo_minutos)
+                            if ativ.inicio < fim_intervalo and ativ.fim > intervalo:
+                                # Nome da atividade
+                                nome = ativ.nome_atividade
+                                if not self.config.exibir_nomes_completos and len(nome) > 20:
+                                    nome = nome[:18] + '..'
+
+                                # Formato: nome_atividade [ordem X | pedido Y]
+                                celula = f"{nome} [ordem {ativ.ordem} | pedido {ativ.pedido}]"
+                                break
+
+                    linha.append(celula)
+
+                writer.writerow(linha)
+
+        print(f"✅ Escala CSV salva em: {caminho_saida}")
         print(f"   Total de funcionários: {len(self._funcionarios)}")
         print(f"   Funcionários com atividades: {len(atividades)}")
         print(f"   Intervalos com atividades: {len(intervalos)}")
 
         return caminho_saida
 
-    def configurar(self, **kwargs) -> 'GeradorEscalaExcel':
+    def configurar(self, **kwargs) -> 'GeradorEscalaCSV':
         """
         Configura opções do gerador.
 
@@ -356,25 +272,25 @@ def gerar_escala_funcionarios(
     arquivo_funcionarios: str = "data/funcionarios/funcionarios.json",
     diretorio_logs: str = "logs/funcionarios/sucesso",
     diretorio_saida: str = "data/escalas",
-    nome_arquivo: str = "escala_funcionarios_atividades.xlsx",
+    nome_arquivo: str = "escala_funcionarios_atividades.csv",
     excluir_linhas_vazias: bool = True,
     nomes_completos: bool = True
 ) -> Optional[str]:
     """
-    Função utilitária para gerar escala de funcionários.
+    Função utilitária para gerar escala de funcionários em CSV.
 
     Args:
         arquivo_funcionarios: Caminho para JSON de funcionários
         diretorio_logs: Caminho para logs de alocação
         diretorio_saida: Diretório de saída
-        nome_arquivo: Nome do arquivo Excel
+        nome_arquivo: Nome do arquivo CSV
         excluir_linhas_vazias: Se True, remove linhas sem atividades
         nomes_completos: Se True, exibe nomes completos das atividades
 
     Returns:
         Caminho do arquivo gerado ou None
     """
-    gerador = GeradorEscalaExcel(
+    gerador = GeradorEscalaCSV(
         arquivo_funcionarios=arquivo_funcionarios,
         diretorio_logs=diretorio_logs,
         diretorio_saida=diretorio_saida
@@ -392,6 +308,6 @@ def gerar_escala_funcionarios(
 if __name__ == "__main__":
     caminho = gerar_escala_funcionarios()
     if caminho:
-        print(f"\n📊 Escala gerada com sucesso: {caminho}")
+        print(f"\n📊 Escala CSV gerada com sucesso: {caminho}")
     else:
-        print("\n❌ Falha ao gerar escala")
+        print("\n❌ Falha ao gerar escala CSV")

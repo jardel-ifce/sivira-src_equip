@@ -60,9 +60,9 @@ def limpar_arquivo_pedidos_salvos():
 
 def limpar_escalas_inicializacao():
     """
-    🆕 Limpa arquivos de escalas Excel na inicialização do sistema.
+    🆕 Limpa arquivos de escalas na inicialização do sistema.
 
-    Remove todos os arquivos .xlsx da pasta data/escalas/ para garantir
+    Remove todos os arquivos .xlsx e .csv da pasta data/escalas/ para garantir
     que novas escalas sejam geradas a cada sessão.
 
     Returns:
@@ -77,9 +77,9 @@ def limpar_escalas_inicializacao():
             print(f"📁 Pasta de escalas criada: {PASTA_ESCALAS}")
             return 0
 
-        # Listar e remover arquivos .xlsx
+        # Listar e remover arquivos .xlsx e .csv
         for arquivo in os.listdir(PASTA_ESCALAS):
-            if arquivo.endswith('.xlsx'):
+            if arquivo.endswith('.xlsx') or arquivo.endswith('.csv'):
                 caminho = os.path.join(PASTA_ESCALAS, arquivo)
                 try:
                     os.remove(caminho)
