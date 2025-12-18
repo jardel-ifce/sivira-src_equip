@@ -1,0 +1,35 @@
+================================================================================
+📋 LOG DE TIPOS DE FUNCIONÁRIOS REQUERIDOS
+================================================================================
+Ordem: 2
+Pedido: 11
+Iniciado em: 11/12/2025 10:58:47
+================================================================================
+
+🔸 ATIVIDADE 10594: preparo_de_folhado_de_carne_de_sol_para_coccao
+   ⏰ Horário: 07:36 [31/12/2024] - 07:40 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:58:47
+
+🔸 ATIVIDADE 10592: preparacao_para_refrigeracao_de_folhado_de_carne_de_sol
+   ⏰ Horário: 06:33 [31/12/2024] - 06:36 [31/12/2024]
+   👥 Funcionários necessários: 1
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:58:47
+
+🔸 ATIVIDADE 10591: modelagem_e_recheio_de_folhado_de_carne_de_sol
+   ⏰ Horário: 04:16 [31/12/2024] - 05:36 [31/12/2024]
+   👥 Funcionários necessários: 2
+   👨‍💼 Tipos permitidos: CONFEITEIRO, AUXILIAR_DE_CONFEITEIRO
+   🎯 Prioridades (FIPs): CONFEITEIRO:2, AUXILIAR_DE_CONFEITEIRO:1
+   📅 Registrado: 10:58:47
+
+--------------------------------------------------------------------------------
+📊 RESUMO FINAL
+--------------------------------------------------------------------------------
+Total de requisitos registrados: 0
+Finalizado em: 11/12/2025 10:58:47
+================================================================================

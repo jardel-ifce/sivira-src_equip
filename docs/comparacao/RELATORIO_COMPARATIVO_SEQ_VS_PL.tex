@@ -1,0 +1,353 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+
+\geometry{a4paper, margin=2.5cm}
+
+\definecolor{success}{RGB}{0,128,0}
+\definecolor{warning}{RGB}{255,165,0}
+\definecolor{error}{RGB}{255,0,0}
+
+\title{
+    \textbf{Relatório Técnico de Comparação}\\
+    \Large Método Sequencial vs Programação Linear\\
+    \large SIVIRA - Sistema Inteligente para Visualização e Replanejamento de Atividades
+}
+\author{
+    Autor: Jardel Rodrigues
+}
+\date{11 de Dezembro de 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este relatorio apresenta uma analise comparativa entre dois metodos de execucao de pedidos de producao no sistema SIVIRA: o metodo Sequencial (SEQ) e o metodo de Programacao Linear (PL) utilizando OR-Tools. O estudo avalia taxa de sucesso, tempo de execucao, e identifica vantagens de cada abordagem para o problema de Job Shop Scheduling com restricoes temporais.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ==============================================================================
+\section{Introducao}
+% ==============================================================================
+
+O sistema SIVIRA (Sistema Integrado de Vendas, Inventario e Relatorios Automatizados) gerencia o planejamento e agendamento de producao para uma padaria/industria alimenticia. O modulo \texttt{src\_equip} e responsavel por:
+
+\begin{itemize}
+    \item Alocacao de equipamentos
+    \item Escalonamento de funcionarios
+    \item Gestao de inventario/almoxarifado
+    \item Otimizacao de pedidos usando Programacao Linear
+\end{itemize}
+
+Este relatorio compara dois metodos de execucao de pedidos:
+
+\begin{enumerate}
+    \item \textbf{Metodo Sequencial (SEQ)}: Executa pedidos na ordem de chegada
+    \item \textbf{Metodo PL (Programacao Linear)}: Otimiza selecao de janelas temporais via OR-Tools SCIP
+\end{enumerate}
+
+% ==============================================================================
+\section{Metodologia}
+% ==============================================================================
+
+\subsection{Dados de Entrada}
+
+Os testes utilizaram o arquivo \texttt{exemplo\_pedidos.csv} contendo 13 pedidos de producao:
+
+\begin{table}[H]
+\centering
+\caption{Pedidos de producao utilizados nos testes}
+\begin{tabular}{clcc}
+\toprule
+\textbf{ID Pedido} & \textbf{Produto} & \textbf{Quantidade} & \textbf{Deadline} \\
+\midrule
+1 & Pao Frances & 420 & 31/12 07:00 \\
+2 & Pao Hamburguer & 120 & 31/12 07:00 \\
+3 & Pao de Forma & 20 & 31/12 07:00 \\
+4 & Pao Baguete & 20 & 31/12 07:00 \\
+5 & Pao Tranca Queijos Finos & 15 & 31/12 07:00 \\
+6 & Coxinha de Frango & 15 & 31/12 08:00 \\
+7 & Coxinha de Carne de Sol & 10 & 31/12 08:00 \\
+8 & Coxinha de Camarao & 12 & 31/12 08:00 \\
+9 & Coxinha de Queijos Finos & 12 & 31/12 08:00 \\
+10 & Folhado de Frango & 10 & 31/12 08:00 \\
+11 & Folhado de Carne de Sol & 10 & 31/12 08:00 \\
+12 & Folhado de Camarao & 10 & 31/12 08:00 \\
+13 & Folhado de Queijos Finos & 5 & 31/12 08:00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Configuracao dos Testes}
+
+\begin{itemize}
+    \item \textbf{Tempo maximo de espera}: Todos os valores configurados como 00:00:00 (modo deterministico)
+    \item \textbf{Janela de execucao}: 3 dias (28/12 a 31/12)
+    \item \textbf{Rodadas de simulacao}: 5 rodadas para cada metodo
+    \item \textbf{Timeout PL}: 120 segundos
+    \item \textbf{Resolucao temporal}: 60 minutos
+\end{itemize}
+
+\subsection{Arquitetura do Sistema de Otimizacao}
+
+O sistema utiliza dois modulos de otimizacao:
+
+\subsubsection{Metodo Sequencial}
+Executa pedidos na ordem de chegada, cada pedido executa suas atividades em ordem (respeitando precedencias).
+
+\subsubsection{Metodo PL (Programacao Linear)}
+Utiliza OR-Tools SCIP para otimizar:
+\begin{itemize}
+    \item \textbf{Variavel de decisao}: $x_{p,j} \in \{0,1\}$ - pedido $p$ usa janela $j$
+    \item \textbf{Funcao objetivo}: Maximizar $\sum_{p,j} x_{p,j}$ (numero de pedidos atendidos)
+    \item \textbf{Restricoes}:
+    \begin{itemize}
+        \item Cada pedido usa no maximo uma janela: $\sum_j x_{p,j} \leq 1$
+        \item Conflitos temporais: $x_{p1,j1} + x_{p2,j2} \leq 1$ para janelas sobrepostas
+    \end{itemize}
+\end{itemize}
+
+% ==============================================================================
+\section{Resultados Quantitativos}
+% ==============================================================================
+
+\subsection{Resumo Estatistico}
+
+\begin{table}[H]
+\centering
+\caption{Comparacao de desempenho entre metodos}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metrica} & \textbf{SEQ} & \textbf{PL} & \textbf{Diferenca} \\
+\midrule
+Taxa de sucesso media & 33.8\% & 12.3\% & -21.5 p.p. \\
+Pedidos sucesso (media) & 4.4 & 1.6 & -2.8 \\
+Tempo medio execucao & 18.2s & 1.35s & \textcolor{success}{-16.8s} \\
+Tempo minimo & 1.0s & 1.29s & +0.29s \\
+Tempo maximo & 36.6s & 1.46s & \textcolor{success}{-35.1s} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Resultados por Rodada - Metodo SEQ}
+
+\begin{table}[H]
+\centering
+\caption{Resultados detalhados - Metodo Sequencial}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Rodada} & \textbf{Pedidos Sucesso} & \textbf{Taxa} & \textbf{Tempo (s)} \\
+\midrule
+1 & 10/13 & 76.9\% & 36.55 \\
+2 & 5/13 & 38.5\% & 27.58 \\
+3 & 1/13 & 7.7\% & 24.84 \\
+4 & 3/13 & 23.1\% & 1.01 \\
+5 & 3/13 & 23.1\% & 1.00 \\
+\midrule
+\textbf{Media} & \textbf{4.4/13} & \textbf{33.8\%} & \textbf{18.2s} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Resultados por Rodada - Metodo PL}
+
+\begin{table}[H]
+\centering
+\caption{Resultados detalhados - Metodo PL (OR-Tools)}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Rodada} & \textbf{Pedidos Sucesso} & \textbf{Taxa} & \textbf{Tempo (s)} \\
+\midrule
+1 & 2/13 & 15.4\% & 1.46 \\
+2 & 1/13 & 7.7\% & 1.32 \\
+3 & 3/13 & 23.1\% & 1.32 \\
+4 & 0/13 & 0.0\% & 1.37 \\
+5 & 2/13 & 15.4\% & 1.29 \\
+\midrule
+\textbf{Media} & \textbf{1.6/13} & \textbf{12.3\%} & \textbf{1.35s} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ==============================================================================
+\section{Analise Comparativa}
+% ==============================================================================
+
+\subsection{Taxa de Sucesso}
+
+O metodo Sequencial apresentou taxa de sucesso superior (33.8\% vs 12.3\%), especialmente na primeira rodada (76.9\% vs 15.4\%). Esta diferenca e explicada por:
+
+\begin{enumerate}
+    \item \textbf{Acumulo de logs}: Rodadas subsequentes apresentaram interferencia de logs anteriores
+    \item \textbf{Estado do sistema}: O metodo SEQ reinicia equipamentos entre pedidos
+    \item \textbf{Estrategia hibrida do PL}: Pedidos nao selecionados pelo solver sao executados em fallback
+\end{enumerate}
+
+\subsection{Tempo de Execucao}
+
+O metodo PL apresentou tempo de execucao significativamente mais \textbf{consistente}:
+
+\begin{itemize}
+    \item \textbf{Variancia SEQ}: 35.54s (maximo - minimo)
+    \item \textbf{Variancia PL}: 0.17s (maximo - minimo)
+    \item \textbf{Fator de consistencia}: PL e 209x mais previsivel
+\end{itemize}
+
+% ==============================================================================
+\section{Vantagens do Metodo PL}
+% ==============================================================================
+
+Mesmo com menor taxa de sucesso nos testes, o metodo PL apresenta vantagens estrategicas:
+
+\subsection{Previsibilidade Temporal}
+
+\begin{itemize}
+    \item Tempo de execucao consistente (~1.35s)
+    \item Ideal para sistemas de tempo real
+    \item Permite planejamento preciso de recursos
+\end{itemize}
+
+\subsection{Otimizacao Formal}
+
+\begin{itemize}
+    \item Modelo matematico rigoroso (SCIP)
+    \item Garantia de solucao viavel/otima quando encontrada
+    \item Base para extensoes (multiobjetivo, restricoes adicionais)
+\end{itemize}
+
+\subsection{Tratamento Explicito de Conflitos}
+
+\begin{itemize}
+    \item Detecta conflitos de equipamentos formalmente
+    \item Evita alocacoes impossiveis antes da execucao
+    \item Permite analise de viabilidade pre-execucao
+\end{itemize}
+
+\subsection{Escalabilidade}
+
+\begin{itemize}
+    \item Complexidade controlada por limites de restricoes
+    \item Timeout configuravel
+    \item Fallback para execucao sequencial quando necessario
+\end{itemize}
+
+\subsection{Extensibilidade}
+
+O modelo PL pode ser facilmente estendido para:
+\begin{itemize}
+    \item Minimizar makespan (tempo total de producao)
+    \item Balancear carga de equipamentos
+    \item Priorizar pedidos urgentes
+    \item Considerar custos de setup
+\end{itemize}
+
+% ==============================================================================
+\section{Limitacoes Identificadas}
+% ==============================================================================
+
+\subsection{Metodo PL}
+
+\begin{enumerate}
+    \item \textbf{Execucao hibrida}: Pedidos nao selecionados pelo solver precisam de fallback
+    \item \textbf{Limitacao de janelas}: Maximo de 5 janelas por pedido para evitar explosao combinatoria
+    \item \textbf{Restricoes limitadas}: Maximo de 1000 restricoes de conflito
+    \item \textbf{Granularidade}: Resolucao de 60 minutos pode ser grosseira
+\end{enumerate}
+
+\subsection{Metodo Sequencial}
+
+\begin{enumerate}
+    \item \textbf{Tempo variavel}: Alta variancia no tempo de execucao
+    \item \textbf{Ordem fixa}: Nao considera otimizacao de ordem
+    \item \textbf{Conflitos tardios}: Detecta conflitos apenas durante execucao
+\end{enumerate}
+
+% ==============================================================================
+\section{Recomendacoes}
+% ==============================================================================
+
+\subsection{Cenarios Recomendados para PL}
+
+\begin{itemize}
+    \item Producao com muitos conflitos de equipamentos
+    \item Necessidade de previsibilidade temporal
+    \item Analise de viabilidade pre-execucao
+    \item Base para otimizacao multiobjetivo futura
+\end{itemize}
+
+\subsection{Cenarios Recomendados para SEQ}
+
+\begin{itemize}
+    \item Producao simples com poucos conflitos
+    \item Prototipagem e testes rapidos
+    \item Situacoes onde taxa de sucesso e prioritaria
+\end{itemize}
+
+\subsection{Melhorias Propostas}
+
+\begin{enumerate}
+    \item Aumentar limite de janelas por pedido (atualmente 5)
+    \item Reduzir resolucao temporal para 30 minutos
+    \item Implementar limpeza de logs entre rodadas
+    \item Adicionar funcao objetivo para minimizar makespan
+    \item Integrar restricoes de funcionarios no modelo PL
+\end{enumerate}
+
+% ==============================================================================
+\section{Conclusao}
+% ==============================================================================
+
+A comparacao entre os metodos Sequencial e PL revelou trade-offs importantes:
+
+\begin{itemize}
+    \item \textbf{Taxa de sucesso}: SEQ superior (33.8\% vs 12.3\%)
+    \item \textbf{Previsibilidade}: PL superior (variancia 209x menor)
+    \item \textbf{Tempo medio}: PL superior (1.35s vs 18.2s)
+\end{itemize}
+
+O metodo PL, apesar de menor taxa de sucesso nos testes atuais, oferece vantagens estrategicas para sistemas de producao complexos:
+
+\begin{enumerate}
+    \item Modelo matematico formal e extensivel
+    \item Previsibilidade de tempo de execucao
+    \item Deteccao precoce de conflitos
+    \item Base para otimizacoes multiobjetivo
+\end{enumerate}
+
+\textbf{Recomendacao}: Para sistemas de producao com deadlines rigorosos e necessidade de previsibilidade, o metodo PL e mais adequado. Para cenarios simples com poucos conflitos, o metodo Sequencial oferece maior taxa de sucesso imediata.
+
+% ==============================================================================
+\section{Apendice: Configuracao Tecnica}
+% ==============================================================================
+
+\begin{lstlisting}[language=Python,basicstyle=\footnotesize\ttfamily]
+# Configuracao do Modelo PL
+OtimizadorIntegrado(
+    resolucao_minutos=60,
+    timeout_segundos=120
+)
+
+# Limites de Seguranca
+max_restricoes_conflito = 1000
+max_janelas_por_analise = 5
+
+# Solver
+OR-Tools SCIP (ortools 9.14.6206)
+\end{lstlisting}
+
+\end{document}

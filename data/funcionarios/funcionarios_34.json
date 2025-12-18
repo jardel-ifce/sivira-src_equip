@@ -1,0 +1,480 @@
+{
+  "funcionarios": [
+    {
+      "id": 1,
+      "nome": "Padeiro Líder",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["PADEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "22:00",
+      "horario_final": "07:00",
+      "horario_intervalo": { "inicio": "18:00", "duracao_minutos": 60 },
+      "fip": 2.0
+    },
+    {
+      "id": 2,
+      "nome": "Padeiro 2",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["PADEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "00:00",
+      "horario_final": "08:00",
+      "horario_intervalo": { "inicio": "12:00", "duracao_minutos": 60 },
+      "fip": 1.8
+    },
+    {
+      "id": 3,
+      "nome": "Padeiro 3",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["PADEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUARTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "01:00",
+      "horario_final": "09:00",
+      "horario_intervalo": { "inicio": "13:00", "duracao_minutos": 60 },
+      "fip": 1.5
+    },
+    {
+      "id": 4,
+      "nome": "Auxiliar de Padeiro 1",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "22:00",
+      "horario_final": "07:00",
+      "horario_intervalo": { "inicio": "18:00", "duracao_minutos": 60 },
+      "fip": 1.5
+    },
+    {
+      "id": 5,
+      "nome": "Auxiliar de Padeiro 2",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "00:00",
+      "horario_final": "08:00",
+      "horario_intervalo": { "inicio": "12:00", "duracao_minutos": 60 },
+      "fip": 1.0
+    },
+    {
+      "id": 6,
+      "nome": "Auxiliar de Padeiro 3",
+      "setores": ["PANIFICACAO"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUARTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "01:00",
+      "horario_final": "09:00",
+      "horario_intervalo": { "inicio": "13:00", "duracao_minutos": 60 },
+      "fip": 1.0
+    },
+    {
+      "id": 7,
+      "nome": "Confeiteiro Líder",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:00",
+      "horario_final": "11:00",
+      "horario_intervalo": { "inicio": "09:00", "duracao_minutos": 60 },
+      "fip": 2.0
+    },
+    {
+      "id": 8,
+      "nome": "Confeiteiro 2",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:30",
+      "horario_final": "11:30",
+      "horario_intervalo": { "inicio": "09:30", "duracao_minutos": 60 },
+      "fip": 1.8
+    },
+    {
+      "id": 9,
+      "nome": "Confeiteiro 3",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUARTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 1.5
+    },
+    {
+      "id": 10,
+      "nome": "Confeiteiro 4",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUINTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:30",
+      "horario_final": "12:30",
+      "horario_intervalo": { "inicio": "10:30", "duracao_minutos": 60 },
+      "fip": 1.2
+    },
+    {
+      "id": 11,
+      "nome": "Confeiteiro 5",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEXTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 1.0
+    },
+    {
+      "id": 12,
+      "nome": "Confeiteiro 6",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SABADO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:30",
+      "horario_final": "12:30",
+      "horario_intervalo": { "inicio": "10:30", "duracao_minutos": 60 },
+      "fip": 0.9
+    },
+    {
+      "id": 13,
+      "nome": "Auxiliar de Confeiteiro 1",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:30",
+      "horario_final": "11:30",
+      "horario_intervalo": { "inicio": "09:30", "duracao_minutos": 60 },
+      "fip": 1.5
+    },
+    {
+      "id": 14,
+      "nome": "Auxiliar de Confeiteiro 2",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 1.2
+    },
+    {
+      "id": 15,
+      "nome": "Auxiliar de Confeiteiro 3",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUARTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:30",
+      "horario_final": "12:30",
+      "horario_intervalo": { "inicio": "10:30", "duracao_minutos": 60 },
+      "fip": 1.0
+    },
+    {
+      "id": 16,
+      "nome": "Auxiliar de Confeiteiro 4",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUINTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "05:00",
+      "horario_final": "13:00",
+      "horario_intervalo": { "inicio": "11:00", "duracao_minutos": 60 },
+      "fip": 0.8
+    },
+    {
+      "id": 17,
+      "nome": "Auxiliar de Confeiteiro 5",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEXTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 0.8
+    },
+    {
+      "id": 18,
+      "nome": "Auxiliar de Confeiteiro 6",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SABADO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:30",
+      "horario_final": "12:30",
+      "horario_intervalo": { "inicio": "10:30", "duracao_minutos": 60 },
+      "fip": 0.7
+    },
+    {
+      "id": 19,
+      "nome": "Auxiliar Polivalente 1",
+      "setores": ["PANIFICACAO", "CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEXTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "01:00",
+      "horario_final": "09:00",
+      "horario_intervalo": { "inicio": "13:00", "duracao_minutos": 60 },
+      "fip": 3.0
+    },
+    {
+      "id": 20,
+      "nome": "Auxiliar Polivalente 2",
+      "setores": ["PANIFICACAO", "CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_PADEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SABADO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "02:00",
+      "horario_final": "10:00",
+      "horario_intervalo": { "inicio": "14:00", "duracao_minutos": 60 },
+      "fip": 2.5
+    },
+    {
+      "id": 21,
+      "nome": "Cozinheiro 1",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "02:00",
+      "horario_final": "10:00",
+      "horario_intervalo": { "inicio": "14:00", "duracao_minutos": 60 },
+      "fip": 1.5
+    },
+    {
+      "id": 22,
+      "nome": "Cozinheiro 2",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:00",
+      "horario_final": "11:00",
+      "horario_intervalo": { "inicio": "15:00", "duracao_minutos": 60 },
+      "fip": 1.0
+    },
+    {
+      "id": 23,
+      "nome": "Cozinheiro 3",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUARTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:30",
+      "horario_final": "11:30",
+      "horario_intervalo": { "inicio": "15:30", "duracao_minutos": 60 },
+      "fip": 0.9
+    },
+    {
+      "id": 24,
+      "nome": "Cozinheiro 4",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUINTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "16:00", "duracao_minutos": 60 },
+      "fip": 0.8
+    },
+    {
+      "id": 25,
+      "nome": "Almoxarife 1",
+      "setores": ["ALMOXARIFADO"],
+      "tipos_profissionais": ["ALMOXARIFE"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:00",
+      "horario_final": "11:00",
+      "horario_intervalo": { "inicio": "09:00", "duracao_minutos": 60 },
+      "fip": 1.5
+    },
+    {
+      "id": 26,
+      "nome": "Almoxarife 2",
+      "setores": ["ALMOXARIFADO"],
+      "tipos_profissionais": ["ALMOXARIFE"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 1.2
+    },
+    {
+      "id": 27,
+      "nome": "Almoxarife 3",
+      "setores": ["ALMOXARIFADO"],
+      "tipos_profissionais": ["ALMOXARIFE"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUARTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:30",
+      "horario_final": "12:30",
+      "horario_intervalo": { "inicio": "10:30", "duracao_minutos": 60 },
+      "fip": 1.0
+    },
+    {
+      "id": 28,
+      "nome": "Almoxarife 4",
+      "setores": ["ALMOXARIFADO"],
+      "tipos_profissionais": ["ALMOXARIFE"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "QUINTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "05:00",
+      "horario_final": "13:00",
+      "horario_intervalo": { "inicio": "11:00", "duracao_minutos": 60 },
+      "fip": 0.8
+    },
+    {
+      "id": 29,
+      "nome": "Cozinheiro 5",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEXTA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:00",
+      "horario_final": "11:00",
+      "horario_intervalo": { "inicio": "15:00", "duracao_minutos": 60 },
+      "fip": 0.7
+    },
+    {
+      "id": 30,
+      "nome": "Cozinheiro 6",
+      "setores": ["COZINHA"],
+      "tipos_profissionais": ["COZINHEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SABADO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "03:30",
+      "horario_final": "11:30",
+      "horario_intervalo": { "inicio": "15:30", "duracao_minutos": 60 },
+      "fip": 0.6
+    },
+    {
+      "id": 31,
+      "nome": "Confeiteiro 7",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 0.7
+    },
+    {
+      "id": 32,
+      "nome": "Auxiliar de Confeiteiro 7",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "DOMINGO" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 0.6
+    },
+    {
+      "id": 33,
+      "nome": "Confeiteiro 8",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 0.5
+    },
+    {
+      "id": 34,
+      "nome": "Auxiliar de Confeiteiro 8",
+      "setores": ["CONFEITARIA"],
+      "tipos_profissionais": ["AUXILIAR_DE_CONFEITEIRO"],
+      "regras_folga": [
+        { "tipo": "DIA_FIXO_SEMANA", "dia_semana": "SEGUNDA" }
+      ],
+      "ch_semanal": 44,
+      "horario_inicio": "04:00",
+      "horario_final": "12:00",
+      "horario_intervalo": { "inicio": "10:00", "duracao_minutos": 60 },
+      "fip": 0.5
+    }
+  ]
+}

@@ -112,28 +112,52 @@ class Funcionario:
 
         return True, "Disponível (não está de folga)"
 
+    def _eh_turno_noturno(self) -> bool:
+        """Verifica se o turno cruza a meia-noite (ex: 22:00-07:00)."""
+        return self.horario_final_turno < self.horario_inicio_turno
+
     def validar_horario_turno(self, inicio: datetime, fim: datetime) -> Tuple[bool, str]:
         """
         Valida se o período está dentro do horário de turno do funcionário.
+        Suporta turnos noturnos que cruzam a meia-noite (ex: 22:00-07:00).
 
         Returns:
             (True, "Disponível") se está dentro do turno
             (False, "Motivo") se está fora do turno
         """
-        inicio_turno = datetime.combine(inicio.date(), self.horario_inicio_turno)
-        fim_turno = datetime.combine(inicio.date(), self.horario_final_turno)
+        hora_inicio = inicio.time()
+        hora_fim = fim.time()
 
-        if inicio < inicio_turno:
-            return False, (
-                f"Início {inicio.strftime('%H:%M')} antes do turno "
-                f"({self.horario_inicio_turno.strftime('%H:%M')})"
-            )
+        if self._eh_turno_noturno():
+            # Turno noturno (ex: 22:00-07:00)
+            # Válido se: hora >= 22:00 OU hora <= 07:00
+            inicio_valido = (hora_inicio >= self.horario_inicio_turno or
+                           hora_inicio <= self.horario_final_turno)
+            fim_valido = (hora_fim >= self.horario_inicio_turno or
+                         hora_fim <= self.horario_final_turno)
 
-        if fim > fim_turno:
-            return False, (
-                f"Fim {fim.strftime('%H:%M')} depois do turno "
-                f"({self.horario_final_turno.strftime('%H:%M')})"
-            )
+            if not inicio_valido:
+                return False, (
+                    f"Fora do turno {self.horario_inicio_turno.strftime('%H:%M')}-"
+                    f"{self.horario_final_turno.strftime('%H:%M')}"
+                )
+            if not fim_valido:
+                return False, (
+                    f"Fora do turno {self.horario_inicio_turno.strftime('%H:%M')}-"
+                    f"{self.horario_final_turno.strftime('%H:%M')}"
+                )
+        else:
+            # Turno diurno normal (ex: 08:00-18:00)
+            if hora_inicio < self.horario_inicio_turno:
+                return False, (
+                    f"Fora do turno {self.horario_inicio_turno.strftime('%H:%M')}-"
+                    f"{self.horario_final_turno.strftime('%H:%M')}"
+                )
+            if hora_fim > self.horario_final_turno:
+                return False, (
+                    f"Fora do turno {self.horario_inicio_turno.strftime('%H:%M')}-"
+                    f"{self.horario_final_turno.strftime('%H:%M')}"
+                )
 
         return True, "Disponível (dentro do turno)"
 
@@ -230,14 +254,28 @@ class Funcionario:
         if self.esta_de_folga(inicio) or self.esta_de_folga(fim):
             return False
 
-        inicio_turno = datetime.combine(inicio.date(), self.horario_inicio_turno)
-        fim_turno = datetime.combine(inicio.date(), self.horario_final_turno)
+        # Validar turno (com suporte a turnos noturnos)
+        hora_inicio = inicio.time()
+        hora_fim = fim.time()
+
+        if self._eh_turno_noturno():
+            # Turno noturno (ex: 22:00-07:00)
+            inicio_valido = (hora_inicio >= self.horario_inicio_turno or
+                           hora_inicio <= self.horario_final_turno)
+            fim_valido = (hora_fim >= self.horario_inicio_turno or
+                         hora_fim <= self.horario_final_turno)
+            if not (inicio_valido and fim_valido):
+                return False
+        else:
+            # Turno diurno normal
+            if hora_inicio < self.horario_inicio_turno or hora_fim > self.horario_final_turno:
+                return False
+
+        # Validar intervalo
         inicio_intv, duracao_intv = self.horario_intervalo
         inicio_intervalo = datetime.combine(inicio.date(), inicio_intv)
         fim_intervalo = inicio_intervalo + duracao_intv
 
-        if inicio < inicio_turno or fim > fim_turno:
-            return False
         if not (fim <= inicio_intervalo or inicio >= fim_intervalo):
             return False
 

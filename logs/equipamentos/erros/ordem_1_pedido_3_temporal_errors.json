@@ -1,0 +1,21 @@
+[
+  {
+    "tipo_erro": "INTER_ACTIVITY_TIMING",
+    "timestamp": "2025-12-11T10:58:47.013261",
+    "current_activity": {
+      "id": 10032,
+      "name": "modelagem_de_paes_de_forma",
+      "end_time": "2024-12-30T03:50:00"
+    },
+    "successor_activity": {
+      "id": 10033,
+      "name": "preparo_de_paes_de_forma_para_fermentacao",
+      "start_time": "2024-12-30T03:55:00"
+    },
+    "timing_violation": {
+      "maximum_wait_time": "0:00:00",
+      "actual_delay": "0:05:00",
+      "excess": "0:05:00"
+    }
+  }
+]

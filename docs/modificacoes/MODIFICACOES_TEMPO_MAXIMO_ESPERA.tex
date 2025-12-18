@@ -1,0 +1,201 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+
+\geometry{margin=2.5cm}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{SIVIRA - Sistema de Planejamento de Produção}
+\lhead{Modificações de Tempo Máximo de Espera}
+\rfoot{Página \thepage}
+
+\title{\textbf{Relatório de Modificações}\\[0.5cm]
+\large Tempo Máximo de Espera nas Atividades}
+\author{SIVIRA - Sistema de Planejamento de Produção}
+\date{11/12/2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+
+Este documento apresenta as modificações realizadas no campo \texttt{tempo\_maximo\_de\_espera}
+dos arquivos JSON de atividades. Aproximadamente 50\% das atividades que possuíam tempo
+igual a \texttt{00:00:00} foram selecionadas aleatoriamente e receberam novos valores
+entre \texttt{00:03:00} e \texttt{00:30:00}.
+
+\section{Resumo das Modificações}
+
+\begin{itemize}
+    \item \textbf{Total de modificações em PRODUTOS:} 37
+    \item \textbf{Total de modificações em SUBPRODUTOS:} 12
+    \item \textbf{Total geral:} 49
+\end{itemize}
+
+\section{Modificações em PRODUTOS}
+
+\begin{longtable}{p{4.5cm}p{5.5cm}cc}
+\toprule
+\textbf{Arquivo} & \textbf{Atividade} & \textbf{Antes} & \textbf{Depois} \\
+\midrule
+\endhead
+
+\multicolumn{4}{l}{\textbf{1001\_pao\_frances.json}} \\
+& pesagem\_de\_massas & 00:00:00 & 00:05:00 \\
+& divisao\_de\_massas & 00:00:00 & 00:05:00 \\
+& modelagem\_de\_pao & 00:00:00 & 00:20:00 \\
+& corte\_de\_pestana & 00:00:00 & 00:05:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1002\_pao\_hamburguer.json}} \\
+& pesagem\_de\_massas & 00:00:00 & 00:03:00 \\
+& divisao\_de\_massas & 00:00:00 & 00:07:00 \\
+& modelagem\_de\_pao & 00:00:00 & 00:15:00 \\
+& preparo\_para\_fermentacao & 00:00:00 & 00:10:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1003\_pao\_de\_forma.json}} \\
+& pesagem\_de\_massas & 00:00:00 & 00:30:00 \\
+& divisao\_de\_massas & 00:00:00 & 00:07:00 \\
+& modelagem\_de\_pao & 00:00:00 & 00:03:00 \\
+& preparo\_para\_fermentacao & 00:00:00 & 00:20:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1004\_pao\_baguete.json}} \\
+& pesagem\_de\_massas & 00:00:00 & 00:10:00 \\
+& divisao\_de\_massas & 00:00:00 & 00:15:00 \\
+& modelagem\_de\_pao & 00:00:00 & 00:05:00 \\
+& corte\_de\_pestana & 00:00:00 & 00:07:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1005\_pao\_tranca\_queijos.json}} \\
+& pesagem\_de\_massas & 00:00:00 & 00:20:00 \\
+& divisao\_de\_massas & 00:00:00 & 00:03:00 \\
+& modelagem\_de\_pao & 00:00:00 & 00:30:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1055\_coxinha\_de\_frango.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:10:00 \\
+& empanamento & 00:00:00 & 00:05:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1059\_folhado\_carne\_sol.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:15:00 \\
+& preparo\_para\_coccao & 00:00:00 & 00:07:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1069\_coxinha\_carne\_sol.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:03:00 \\
+& empanamento & 00:00:00 & 00:20:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1070\_coxinha\_camarao.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:30:00 \\
+& empanamento & 00:00:00 & 00:10:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1071\_coxinha\_queijos.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:05:00 \\
+& empanamento & 00:00:00 & 00:15:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1072\_folhado\_frango.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:07:00 \\
+& preparo\_para\_coccao & 00:00:00 & 00:03:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1073\_folhado\_camarao.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:20:00 \\
+& preparo\_para\_coccao & 00:00:00 & 00:10:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{1074\_folhado\_queijos.json}} \\
+& montagem\_de\_salgado & 00:00:00 & 00:30:00 \\
+& preparo\_para\_coccao & 00:00:00 & 00:05:00 \\
+
+\bottomrule
+\end{longtable}
+
+\section{Modificações em SUBPRODUTOS}
+
+\begin{longtable}{p{4.5cm}p{5.5cm}cc}
+\toprule
+\textbf{Arquivo} & \textbf{Atividade} & \textbf{Antes} & \textbf{Depois} \\
+\midrule
+\endhead
+
+\multicolumn{4}{l}{\textbf{2002\_massa\_suave.json}} \\
+& mistura\_de\_massas & 00:00:00 & 00:10:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2003\_massa\_frituras.json}} \\
+& mistura\_de\_massas & 00:00:00 & 00:15:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2004\_massa\_folhados.json}} \\
+& laminacao\_1 & 00:00:00 & 00:07:00 \\
+& laminacao\_2 & 00:00:00 & 00:20:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2005\_massa\_bolo\_chocolate.json}} \\
+& mistura\_de\_massas & 00:00:00 & 00:05:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2008\_carne\_sol\_refogada.json}} \\
+& preparo\_armazenamento & 00:00:00 & 00:03:00 \\
+& coccao & 00:00:00 & 00:30:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2009\_frango\_refogado.json}} \\
+& preparo\_armazenamento & 00:00:00 & 00:10:00 \\
+& coccao & 00:00:00 & 00:15:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2010\_creme\_queijo.json}} \\
+& preparo\_coccao & 00:00:00 & 00:07:00 \\
+& coccao & 00:00:00 & 00:20:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2011\_creme\_camarao.json}} \\
+& preparo\_coccao & 00:00:00 & 00:03:00 \\
+& coccao & 00:00:00 & 00:30:00 \\
+\midrule
+
+\multicolumn{4}{l}{\textbf{2014\_creme\_limao.json}} \\
+& preparo\_coccao & 00:00:00 & 00:05:00 \\
+
+\bottomrule
+\end{longtable}
+
+\section{Tempos Utilizados}
+
+Os seguintes valores de tempo máximo de espera foram utilizados nas modificações:
+
+\begin{itemize}
+    \item \texttt{00:03:00} - 3 minutos
+    \item \texttt{00:05:00} - 5 minutos
+    \item \texttt{00:07:00} - 7 minutos
+    \item \texttt{00:10:00} - 10 minutos
+    \item \texttt{00:15:00} - 15 minutos
+    \item \texttt{00:20:00} - 20 minutos
+    \item \texttt{00:30:00} - 30 minutos (máximo)
+\end{itemize}
+
+\section{Observações}
+
+\begin{enumerate}
+    \item As atividades foram selecionadas de forma aleatória usando seed 42 para reprodutibilidade.
+    \item Atividades que já possuíam tempo diferente de \texttt{00:00:00} foram preservadas.
+    \item A modificação do tempo máximo de espera permite flexibilidade no agendamento das atividades.
+    \item Os arquivos JSON originais foram modificados diretamente.
+\end{enumerate}
+
+\end{document}

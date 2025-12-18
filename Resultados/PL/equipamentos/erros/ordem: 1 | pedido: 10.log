@@ -1,0 +1,31 @@
+==============================================
+📅 Data/Hora: 2025-12-11 10:40:04
+🧾 Ordem: 1 | Pedido: 10
+⚠️ Motivo do erro:
+--------------------------------------------------
+❌ ERRO DE TEMPO EXCEDIDO
+
+📋 Atividade atual:
+   • Nome: laminacao_1_de_massas_para_folhados
+   • Início: 31/12 03:32:00
+   • Término: 31/12 03:44:00
+📋 Atividade sucessora:
+   • Nome: descanso_de_massas_para_folhados
+   • Início: 31/12 03:56:00
+
+🕐 Análise temporal detalhada:
+   • Tempo máximo permitido: 0:00:00
+   • Excesso de tempo: 0:12:00
+
+🔧 Equipamentos envolvidos:
+   • Bancada 4 (BANCADAS)
+   • Bancada 5 (BANCADAS)
+   • Bancada 6 (BANCADAS)
+
+💡 Sugestões:
+   • Verificar disponibilidade de equipamentos
+   • Ajustar sequenciamento das atividades
+   • Considerar recursos alternativos
+   • Analisar janela temporal para identificar gargalos
+
+==============================================

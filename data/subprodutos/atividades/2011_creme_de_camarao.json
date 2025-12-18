@@ -10,7 +10,9 @@
       "tipo_equipamento": {
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_7"],
+      "equipamentos_elegiveis": [
+        "bancada_7"
+      ],
       "fips_equipamentos": {
         "bancada_7": 1
       },
@@ -21,15 +23,29 @@
           "numero_operadores": 1
         }
       },
-      "tipos_profissionais_permitidos": ["COZINHEIRO"],
+      "tipos_profissionais_permitidos": [
+        "COZINHEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "COZINHEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:10:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:15:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:20:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 15000,
+          "duracao": "00:10:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 30000,
+          "duracao": "00:15:00"
+        },
+        {
+          "quantidade_min": 30001,
+          "quantidade_max": 40000,
+          "duracao": "00:20:00"
+        }
       ]
     },
     {
@@ -39,7 +55,10 @@
       "tipo_equipamento": {
         "FOGOES": 1
       },
-      "equipamentos_elegiveis": ["fogao_1", "fogao_2"],
+      "equipamentos_elegiveis": [
+        "fogao_1",
+        "fogao_2"
+      ],
       "fips_equipamentos": {
         "fogao_1": 1,
         "fogao_2": 2
@@ -47,23 +66,47 @@
       "tempo_maximo_de_espera": "00:00:00",
       "configuracoes_equipamentos": {
         "fogao_1": {
-          "tipo_chama": ["MEDIA"],
-          "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+          "tipo_chama": [
+            "MEDIA"
+          ],
+          "pressao_chama": [
+            "ALTA_PRESSAO",
+            "CHAMA_DUPLA"
+          ]
         },
         "fogao_2": {
-          "tipo_chama": ["ALTA"],
-          "pressao_chama": ["BAIXA_PRESSAO", "CHAMA_UNICA"]
+          "tipo_chama": [
+            "ALTA"
+          ],
+          "pressao_chama": [
+            "BAIXA_PRESSAO",
+            "CHAMA_UNICA"
+          ]
         }
       },
-      "tipos_profissionais_permitidos": ["COZINHEIRO"],
+      "tipos_profissionais_permitidos": [
+        "COZINHEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "COZINHEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:20:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:25:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:30:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 15000,
+          "duracao": "00:20:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 30000,
+          "duracao": "00:25:00"
+        },
+        {
+          "quantidade_min": 30001,
+          "quantidade_max": 40000,
+          "duracao": "00:30:00"
+        }
       ]
     },
     {
@@ -74,7 +117,10 @@
         "BANCADAS": 1,
         "BALANCAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_7", "balanca_digital_4"],
+      "equipamentos_elegiveis": [
+        "bancada_7",
+        "balanca_digital_4"
+      ],
       "fips_equipamentos": {
         "bancada_7": 1,
         "balanca_digital_4": 1
@@ -86,15 +132,29 @@
           "numero_operadores": 1
         }
       },
-      "tipos_profissionais_permitidos": ["COZINHEIRO"],
+      "tipos_profissionais_permitidos": [
+        "COZINHEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "COZINHEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:08:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:12:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:15:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 15000,
+          "duracao": "00:08:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 30000,
+          "duracao": "00:12:00"
+        },
+        {
+          "quantidade_min": 30001,
+          "quantidade_max": 40000,
+          "duracao": "00:15:00"
+        }
       ]
     },
     {
@@ -104,7 +164,9 @@
       "tipo_equipamento": {
         "REFRIGERACAO_CONGELAMENTO": 1
       },
-      "equipamentos_elegiveis": ["camara_refrigerada_2"],
+      "equipamentos_elegiveis": [
+        "camara_refrigerada_2"
+      ],
       "fips_equipamentos": {
         "camara_refrigerada_2": 1
       },
@@ -116,15 +178,29 @@
           "gramas_por_caixa": 1000
         }
       },
-      "tipos_profissionais_permitidos": ["ALMOXARIFE"],
+      "tipos_profissionais_permitidos": [
+        "ALMOXARIFE"
+      ],
       "fips_profissionais_permitidos": {
         "ALMOXARIFE": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 15000, "duracao": "00:05:00" },
-        { "quantidade_min": 15001, "quantidade_max": 30000, "duracao": "00:08:00" },
-        { "quantidade_min": 30001, "quantidade_max": 40000, "duracao": "00:10:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 15000,
+          "duracao": "00:05:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 30000,
+          "duracao": "00:08:00"
+        },
+        {
+          "quantidade_min": 30001,
+          "quantidade_max": 40000,
+          "duracao": "00:10:00"
+        }
       ]
     }
   ]

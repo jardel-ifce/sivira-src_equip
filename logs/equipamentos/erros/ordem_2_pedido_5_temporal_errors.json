@@ -1,0 +1,21 @@
+[
+  {
+    "tipo_erro": "INTER_ACTIVITY_TIMING",
+    "timestamp": "2025-12-11T10:58:47.560315",
+    "current_activity": {
+      "id": 20103,
+      "name": "preparo_para_armazenamento_de_creme_de_queijo",
+      "end_time": "2024-12-31T04:14:00"
+    },
+    "successor_activity": {
+      "id": 20104,
+      "name": "armazenamento_sob_temperatura_para_creme_de_queijo",
+      "start_time": "2024-12-31T04:16:00"
+    },
+    "timing_violation": {
+      "maximum_wait_time": "0:00:00",
+      "actual_delay": "0:02:00",
+      "excess": "0:02:00"
+    }
+  }
+]

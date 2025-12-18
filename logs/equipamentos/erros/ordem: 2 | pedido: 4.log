@@ -1,0 +1,33 @@
+==============================================
+📅 Data/Hora: 2025-12-11 10:58:47
+🧾 Ordem: 2 | Pedido: 4
+⚠️ Motivo do erro:
+--------------------------------------------------
+❌ ERRO DE TEMPO EXCEDIDO
+
+📋 Atividade atual:
+   • Nome: divisao_de_massas_para_pao_baguete
+   • Início: 31/12 02:08:00
+   • Término: 31/12 02:24:00
+📋 Atividade sucessora:
+   • Nome: modelagem_de_paes_baguete
+   • Início: 31/12 02:40:00
+
+🕐 Análise temporal detalhada:
+   • Tempo máximo permitido: 0:00:00
+   • Excesso de tempo: 0:16:00
+
+🔧 Equipamentos envolvidos:
+   • Divisoras de Massas 1 (DIVISORAS_BOLEADORAS)
+   • Divisoras de Massas 2 (DIVISORAS_BOLEADORAS)
+   • Bancada 1 (BANCADAS)
+   • Bancada 2 (BANCADAS)
+   • Bancada 3 (BANCADAS)
+
+💡 Sugestões:
+   • Verificar disponibilidade de equipamentos
+   • Ajustar sequenciamento das atividades
+   • Considerar recursos alternativos
+   • Analisar janela temporal para identificar gargalos
+
+==============================================

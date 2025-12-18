@@ -1,0 +1,328 @@
+{
+  "seq": {
+    "tempo_medio": 18.19676184654236,
+    "tempo_min": 1.0011401176452637,
+    "tempo_max": 36.55001878738403,
+    "taxa_media": 33.846153846153854,
+    "sucesso_medio": 4.4,
+    "rodadas": [
+      {
+        "rodada": 1,
+        "metodo": "SEQ",
+        "tempo_wall": 36.55001878738403,
+        "tempo_cpu": 35.858366000000004,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 10,
+        "total_erro": 11,
+        "taxa_sucesso": 76.92307692307693
+      },
+      {
+        "rodada": 2,
+        "metodo": "SEQ",
+        "tempo_wall": 27.582858085632324,
+        "tempo_cpu": 27.288195,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          2,
+          4,
+          5,
+          6,
+          8
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 5,
+        "total_erro": 13,
+        "taxa_sucesso": 38.46153846153847
+      },
+      {
+        "rodada": 3,
+        "metodo": "SEQ",
+        "tempo_wall": 24.842056035995483,
+        "tempo_cpu": 24.623115999999996,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          9
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 1,
+        "total_erro": 13,
+        "taxa_sucesso": 7.6923076923076925
+      },
+      {
+        "rodada": 4,
+        "metodo": "SEQ",
+        "tempo_wall": 1.0077362060546875,
+        "tempo_cpu": 0.9977099999999979,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          2,
+          4,
+          7
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 3,
+        "total_erro": 13,
+        "taxa_sucesso": 23.076923076923077
+      },
+      {
+        "rodada": 5,
+        "metodo": "SEQ",
+        "tempo_wall": 1.0011401176452637,
+        "tempo_cpu": 0.994181999999995,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          4,
+          5,
+          8
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 3,
+        "total_erro": 13,
+        "taxa_sucesso": 23.076923076923077
+      }
+    ]
+  },
+  "pl": {
+    "tempo_medio": 1.3500800609588623,
+    "tempo_min": 1.293260097503662,
+    "tempo_max": 1.4570858478546143,
+    "taxa_media": 12.307692307692308,
+    "sucesso_medio": 1.6,
+    "rodadas": [
+      {
+        "rodada": 1,
+        "metodo": "PL",
+        "tempo_wall": 1.4570858478546143,
+        "tempo_cpu": 1.3398109999999974,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          2,
+          5
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 2,
+        "total_erro": 13,
+        "taxa_sucesso": 15.384615384615385
+      },
+      {
+        "rodada": 2,
+        "metodo": "PL",
+        "tempo_wall": 1.3163912296295166,
+        "tempo_cpu": 1.302946999999989,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          4
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 1,
+        "total_erro": 13,
+        "taxa_sucesso": 7.6923076923076925
+      },
+      {
+        "rodada": 3,
+        "metodo": "PL",
+        "tempo_wall": 1.3158881664276123,
+        "tempo_cpu": 1.3033420000000007,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          2,
+          4,
+          5
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 3,
+        "total_erro": 13,
+        "taxa_sucesso": 23.076923076923077
+      },
+      {
+        "rodada": 4,
+        "metodo": "PL",
+        "tempo_wall": 1.3677749633789062,
+        "tempo_cpu": 1.2875339999999937,
+        "sucesso_geral": false,
+        "pedidos_sucesso": [],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 0,
+        "total_erro": 13,
+        "taxa_sucesso": 0.0
+      },
+      {
+        "rodada": 5,
+        "metodo": "PL",
+        "tempo_wall": 1.293260097503662,
+        "tempo_cpu": 1.281893999999994,
+        "sucesso_geral": true,
+        "pedidos_sucesso": [
+          2,
+          4
+        ],
+        "pedidos_erro": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "total_sucesso": 2,
+        "total_erro": 13,
+        "taxa_sucesso": 15.384615384615385
+      }
+    ]
+  },
+  "comparacao": {
+    "diferenca_tempo": -16.846681785583495,
+    "diferenca_taxa": -21.538461538461547,
+    "diferenca_sucesso": -2.8000000000000003
+  },
+  "metadata": {
+    "arquivo_csv": "data/csv/exemplo_pedidos.csv",
+    "num_rodadas": 5,
+    "total_pedidos": 13,
+    "timestamp": "2025-12-11T10:58:48.956697"
+  }
+}

@@ -171,16 +171,15 @@ class AplicadorOrdenacao:
             tempo_execucao = (tempo_fim_pedido - tempo_inicio_pedido).total_seconds()
 
             # Verificar se execução foi bem-sucedida
-            # (assume que resultado True ou dict com sucesso indica sucesso)
-            sucesso = False
+            # O método executar_atividades_em_ordem() retorna None quando bem-sucedido
+            # (não levanta exceção), então verificamos se NÃO houve exceção
+            sucesso = True  # Se chegou aqui sem exceção, foi bem-sucedido
 
+            # Verificações adicionais para casos onde há retorno explícito
             if isinstance(resultado_execucao, bool):
                 sucesso = resultado_execucao
             elif isinstance(resultado_execucao, dict):
-                sucesso = resultado_execucao.get('sucesso', False)
-            else:
-                # Se retornou algo (não None), considerar sucesso
-                sucesso = resultado_execucao is not None
+                sucesso = resultado_execucao.get('sucesso', True)
 
             if sucesso:
                 self.pedidos_executados.append(id_pedido)

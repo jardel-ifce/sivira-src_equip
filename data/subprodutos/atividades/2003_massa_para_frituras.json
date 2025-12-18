@@ -10,7 +10,10 @@
       "tipo_equipamento": {
         "MISTURADORAS_COM_COCCAO": 1
       },
-      "equipamentos_elegiveis": ["hotmix_1", "hotmix_2"],
+      "equipamentos_elegiveis": [
+        "hotmix_1",
+        "hotmix_2"
+      ],
       "fips_equipamentos": {
         "hotmix_1": 1,
         "hotmix_2": 1
@@ -20,24 +23,45 @@
         "hotmix_1": {
           "velocidade": "BAIXA",
           "tipo_chama": "ALTA",
-          "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+          "pressao_chama": [
+            "ALTA_PRESSAO",
+            "CHAMA_DUPLA"
+          ]
         },
         "hotmix_2": {
           "velocidade": "BAIXA",
           "tipo_chama": "ALTA",
-          "pressao_chama": ["ALTA_PRESSAO", "CHAMA_DUPLA"]
+          "pressao_chama": [
+            "ALTA_PRESSAO",
+            "CHAMA_DUPLA"
+          ]
         }
       },
-      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "tipos_profissionais_permitidos": [
+        "CONFEITEIRO",
+        "AUXILIAR_DE_CONFEITEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "CONFEITEIRO": 2,
         "AUXILIAR_DE_CONFEITEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 10000, "duracao": "00:12:00" },
-        { "quantidade_min": 10001, "quantidade_max": 20000, "duracao": "00:16:00" },
-        { "quantidade_min": 20001, "quantidade_max": 30000, "duracao": "00:20:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 10000,
+          "duracao": "00:12:00"
+        },
+        {
+          "quantidade_min": 10001,
+          "quantidade_max": 20000,
+          "duracao": "00:16:00"
+        },
+        {
+          "quantidade_min": 20001,
+          "quantidade_max": 30000,
+          "duracao": "00:20:00"
+        }
       ]
     }
   ]

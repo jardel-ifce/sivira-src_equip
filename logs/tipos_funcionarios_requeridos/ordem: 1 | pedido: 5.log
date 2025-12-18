@@ -3,7 +3,7 @@
 ================================================================================
 Ordem: 1
 Pedido: 5
-Iniciado em: 18/11/2025 14:56:16
+Iniciado em: 11/12/2025 10:58:47
 ================================================================================
 
 🔸 ATIVIDADE 10057: retirada_de_paes_tranca_de_queijo_finos_da_coccao
@@ -11,74 +11,60 @@ Iniciado em: 18/11/2025 14:56:16
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 10055: preparo_de_paes_tranca_de_queijo_finos_para_coccao
    ⏰ Horário: 06:33 [31/12/2024] - 06:37 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 10053: preparo_de_pao_tranca_de_queijo_finos_para_fermentacao
    ⏰ Horário: 05:00 [31/12/2024] - 05:03 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 10052: modelagem_e_recheio_de_paes_tranca_de_queijo_finos
    ⏰ Horário: 04:50 [31/12/2024] - 05:00 [31/12/2024]
    👥 Funcionários necessários: 3
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 10051: pesagem_e_divisao_de_massas_para_pao_tranca_de_queijo_finos
    ⏰ Horário: 04:26 [31/12/2024] - 04:50 [31/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 20021: mistura_de_massas_suaves
    ⏰ Horário: 04:19 [31/12/2024] - 04:26 [31/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 20104: armazenamento_sob_temperatura_para_creme_de_queijo
    ⏰ Horário: 04:16 [31/12/2024] - 04:26 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: ALMOXARIFE
    🎯 Prioridades (FIPs): ALMOXARIFE:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 🔸 ATIVIDADE 20103: preparo_para_armazenamento_de_creme_de_queijo
-   ⏰ Horário: 02:56 [31/12/2024] - 04:16 [31/12/2024]
+   ⏰ Horário: 02:54 [31/12/2024] - 04:14 [31/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: COZINHEIRO
    🎯 Prioridades (FIPs): COZINHEIRO:1
-   📅 Registrado: 14:56:16
-
-🔸 ATIVIDADE 20102: coccao_de_creme_de_queijo
-   ⏰ Horário: 02:41 [31/12/2024] - 02:56 [31/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: COZINHEIRO
-   🎯 Prioridades (FIPs): COZINHEIRO:1
-   📅 Registrado: 14:56:16
-
-🔸 ATIVIDADE 20101: preparo_para_coccao_de_creme_de_queijo
-   ⏰ Horário: 02:33 [31/12/2024] - 02:41 [31/12/2024]
-   👥 Funcionários necessários: 1
-   👨‍💼 Tipos permitidos: COZINHEIRO
-   🎯 Prioridades (FIPs): COZINHEIRO:1
-   📅 Registrado: 14:56:16
+   📅 Registrado: 10:58:47
 
 --------------------------------------------------------------------------------
 📊 RESUMO FINAL
 --------------------------------------------------------------------------------
 Total de requisitos registrados: 0
-Finalizado em: 18/11/2025 14:56:16
+Finalizado em: 11/12/2025 10:58:47
 ================================================================================

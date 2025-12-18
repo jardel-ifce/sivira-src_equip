@@ -10,10 +10,15 @@
         "BALANCAS": 1,
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["balanca_digital_1", "bancada_1", "bancada_2", "bancada_3"],
+      "equipamentos_elegiveis": [
+        "balanca_digital_1",
+        "bancada_1",
+        "bancada_2",
+        "bancada_3"
+      ],
       "tempo_maximo_de_espera": "00:00:00",
-      "fips_equipamentos": { 
-        "balanca_digital_1": 1, 
+      "fips_equipamentos": {
+        "balanca_digital_1": 1,
         "bancada_1": 1,
         "bancada_2": 2,
         "bancada_3": 3
@@ -22,29 +27,44 @@
         "balanca_digital_1": {
           "peso_gramas": 250
         },
-        "bancada_1": { 
-          "fracoes_necessarias": 1, 
-          "numero_operadores": 1 
+        "bancada_1": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
         },
-        "bancada_2": { 
-          "fracoes_necessarias": 1, 
-          "numero_operadores": 1 
+        "bancada_2": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
         },
-        "bancada_3": { 
-          "fracoes_necessarias": 1, 
-          "numero_operadores": 1 
+        "bancada_3": {
+          "fracoes_necessarias": 1,
+          "numero_operadores": 1
         }
       },
-      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
-      "fips_profissionais_permitidos": { 
-        "PADEIRO": 2, 
-        "AUXILIAR_DE_PADEIRO": 1 
+      "tipos_profissionais_permitidos": [
+        "PADEIRO",
+        "AUXILIAR_DE_PADEIRO"
+      ],
+      "fips_profissionais_permitidos": {
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1
       },
       "quantidade_funcionarios": 2,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
-        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
-        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 20,
+          "duracao": "00:03:00"
+        },
+        {
+          "quantidade_min": 21,
+          "quantidade_max": 48,
+          "duracao": "00:06:00"
+        },
+        {
+          "quantidade_min": 49,
+          "quantidade_max": 72,
+          "duracao": "00:09:00"
+        }
       ]
     },
     {
@@ -52,39 +72,58 @@
       "nome": "modelagem_e_recheio_de_paes_tranca_de_queijo_finos",
       "tipo_atividade": "MODELAGEM_E_RECHEIO_DE_PAES_TRANCA_DE_QUEIJO_FINOS",
       "tipo_equipamento": {
-        "BANCADAS": 1      
+        "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
+      "equipamentos_elegiveis": [
+        "bancada_1",
+        "bancada_2",
+        "bancada_3"
+      ],
       "tempo_maximo_de_espera": "00:00:00",
-      "fips_equipamentos": { 
+      "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
         "bancada_3": 3
       },
       "configuracoes_equipamentos": {
-        "bancada_1": { 
-          "fracoes_necessarias": 3, 
-          "numero_operadores": 3 
+        "bancada_1": {
+          "fracoes_necessarias": 3,
+          "numero_operadores": 3
         },
-        "bancada_2": { 
-          "fracoes_necessarias": 3, 
-          "numero_operadores": 3 
+        "bancada_2": {
+          "fracoes_necessarias": 3,
+          "numero_operadores": 3
         },
-        "bancada_3": { 
-          "fracoes_necessarias": 3, 
-          "numero_operadores": 3 
+        "bancada_3": {
+          "fracoes_necessarias": 3,
+          "numero_operadores": 3
         }
       },
-      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
-      "fips_profissionais_permitidos": { 
-        "PADEIRO": 2, 
-        "AUXILIAR_DE_PADEIRO": 1 
+      "tipos_profissionais_permitidos": [
+        "PADEIRO",
+        "AUXILIAR_DE_PADEIRO"
+      ],
+      "fips_profissionais_permitidos": {
+        "PADEIRO": 2,
+        "AUXILIAR_DE_PADEIRO": 1
       },
       "quantidade_funcionarios": 3,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:10:00" },
-        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:20:00" },
-        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:30:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 20,
+          "duracao": "00:10:00"
+        },
+        {
+          "quantidade_min": 21,
+          "quantidade_max": 48,
+          "duracao": "00:20:00"
+        },
+        {
+          "quantidade_min": 49,
+          "quantidade_max": 72,
+          "duracao": "00:30:00"
+        }
       ]
     },
     {
@@ -94,37 +133,56 @@
       "tipo_equipamento": {
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_1", "bancada_2", "bancada_3"],
+      "equipamentos_elegiveis": [
+        "bancada_1",
+        "bancada_2",
+        "bancada_3"
+      ],
       "tempo_maximo_de_espera": "00:00:00",
-      "fips_equipamentos": { 
+      "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
         "bancada_3": 3
       },
       "configuracoes_equipamentos": {
-        "bancada_1": { 
-          "fracoes_necessarias": 2, 
-          "numero_operadores": 2 
+        "bancada_1": {
+          "fracoes_necessarias": 2,
+          "numero_operadores": 2
         },
-        "bancada_2": { 
-          "fracoes_necessarias": 2, 
-          "numero_operadores": 2 
+        "bancada_2": {
+          "fracoes_necessarias": 2,
+          "numero_operadores": 2
         },
-        "bancada_3": { 
-          "fracoes_necessarias": 2, 
-          "numero_operadores": 2 
+        "bancada_3": {
+          "fracoes_necessarias": 2,
+          "numero_operadores": 2
         }
       },
-      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
-      "fips_profissionais_permitidos": { 
+      "tipos_profissionais_permitidos": [
+        "PADEIRO",
+        "AUXILIAR_DE_PADEIRO"
+      ],
+      "fips_profissionais_permitidos": {
         "PADEIRO": 2,
         "AUXILIAR_DE_PADEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
-        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
-        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 20,
+          "duracao": "00:03:00"
+        },
+        {
+          "quantidade_min": 21,
+          "quantidade_max": 48,
+          "duracao": "00:06:00"
+        },
+        {
+          "quantidade_min": 49,
+          "quantidade_max": 72,
+          "duracao": "00:09:00"
+        }
       ]
     },
     {
@@ -134,25 +192,30 @@
       "tipo_equipamento": {
         "ARMARIOS_PARA_FERMENTACAO": 1
       },
-      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "equipamentos_elegiveis": [
+        "armario_fermentador_1",
+        "armario_fermentador_2",
+        "armario_fermentador_3",
+        "armario_fermentador_4"
+      ],
       "tempo_maximo_de_espera": "00:00:00",
-      "fips_equipamentos": { 
+      "fips_equipamentos": {
         "armario_fermentador_1": 1,
         "armario_fermentador_2": 1,
         "armario_fermentador_3": 1,
         "armario_fermentador_4": 1
       },
       "configuracoes_equipamentos": {
-        "armario_fermentador_1": { 
+        "armario_fermentador_1": {
           "unidades_por_nivel": 5
         },
-        "armario_fermentador_2": { 
+        "armario_fermentador_2": {
           "unidades_por_nivel": 5
         },
-        "armario_fermentador_3": { 
+        "armario_fermentador_3": {
           "unidades_por_nivel": 5
         },
-        "armario_fermentador_4": { 
+        "armario_fermentador_4": {
           "unidades_por_nivel": 5
         }
       },
@@ -160,7 +223,11 @@
       "fips_profissionais_permitidos": {},
       "quantidade_funcionarios": 0,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "01:30:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 72,
+          "duracao": "01:30:00"
+        }
       ]
     },
     {
@@ -172,16 +239,31 @@
       "tempo_maximo_de_espera": "00:00:00",
       "fips_equipamentos": {},
       "configuracoes_equipamentos": {},
-      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
-      "fips_profissionais_permitidos": { 
-        "PADEIRO": 2, 
+      "tipos_profissionais_permitidos": [
+        "PADEIRO",
+        "AUXILIAR_DE_PADEIRO"
+      ],
+      "fips_profissionais_permitidos": {
+        "PADEIRO": 2,
         "AUXILIAR_DE_PADEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:04:00" },
-        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:08:00" },
-        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:12:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 20,
+          "duracao": "00:04:00"
+        },
+        {
+          "quantidade_min": 21,
+          "quantidade_max": 48,
+          "duracao": "00:08:00"
+        },
+        {
+          "quantidade_min": 49,
+          "quantidade_max": 72,
+          "duracao": "00:12:00"
+        }
       ]
     },
     {
@@ -191,9 +273,12 @@
       "tipo_equipamento": {
         "FORNOS": 1
       },
-      "equipamentos_elegiveis": ["forno_1", "forno_2"],
+      "equipamentos_elegiveis": [
+        "forno_1",
+        "forno_2"
+      ],
       "tempo_maximo_de_espera": "00:00:00",
-      "fips_equipamentos": { 
+      "fips_equipamentos": {
         "forno_1": 1,
         "forno_2": 2
       },
@@ -201,7 +286,9 @@
         "forno_1": {
           "faixa_temperatura": 190,
           "setup_min": 15,
-          "tipo_coccao": ["TURBO"],
+          "tipo_coccao": [
+            "TURBO"
+          ],
           "tem_vaporizacao": "False",
           "vaporizacao": 0,
           "unidades_por_nivel": 20
@@ -209,7 +296,9 @@
         "forno_2": {
           "faixa_temperatura": 210,
           "setup_min": 20,
-          "tipo_coccao": ["LASTRO"],
+          "tipo_coccao": [
+            "LASTRO"
+          ],
           "tem_vaporizacao": "False",
           "vaporizacao": 0,
           "unidades_por_nivel": 20
@@ -219,7 +308,11 @@
       "fips_profissionais_permitidos": {},
       "quantidade_funcionarios": 0,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 72, "duracao": "00:20:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 72,
+          "duracao": "00:20:00"
+        }
       ]
     },
     {
@@ -229,38 +322,58 @@
       "tipo_equipamento": {
         "ARMARIOS_PARA_FERMENTACAO": 1
       },
-      "equipamentos_elegiveis": ["armario_fermentador_1", "armario_fermentador_2", "armario_fermentador_3", "armario_fermentador_4"],
+      "equipamentos_elegiveis": [
+        "armario_fermentador_1",
+        "armario_fermentador_2",
+        "armario_fermentador_3",
+        "armario_fermentador_4"
+      ],
       "tempo_maximo_de_espera": "00:00:00",
-      "fips_equipamentos": { 
+      "fips_equipamentos": {
         "armario_fermentador_1": 2,
         "armario_fermentador_2": 2,
         "armario_fermentador_3": 1,
         "armario_fermentador_4": 1
       },
       "configuracoes_equipamentos": {
-        "armario_fermentador_1": { 
+        "armario_fermentador_1": {
           "unidades_por_nivel": 5
         },
-        "armario_fermentador_2": { 
+        "armario_fermentador_2": {
           "unidades_por_nivel": 5
         },
-        "armario_fermentador_3": { 
+        "armario_fermentador_3": {
           "unidades_por_nivel": 5
         },
-        "armario_fermentador_4": { 
+        "armario_fermentador_4": {
           "unidades_por_nivel": 5
         }
       },
-      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
-      "fips_profissionais_permitidos": { 
+      "tipos_profissionais_permitidos": [
+        "PADEIRO",
+        "AUXILIAR_DE_PADEIRO"
+      ],
+      "fips_profissionais_permitidos": {
         "PADEIRO": 2,
         "AUXILIAR_DE_PADEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 20, "duracao": "00:03:00" },
-        { "quantidade_min": 21, "quantidade_max": 48, "duracao": "00:06:00" },
-        { "quantidade_min": 49, "quantidade_max": 72, "duracao": "00:09:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 20,
+          "duracao": "00:03:00"
+        },
+        {
+          "quantidade_min": 21,
+          "quantidade_max": 48,
+          "duracao": "00:06:00"
+        },
+        {
+          "quantidade_min": 49,
+          "quantidade_max": 72,
+          "duracao": "00:09:00"
+        }
       ]
     }
   ]

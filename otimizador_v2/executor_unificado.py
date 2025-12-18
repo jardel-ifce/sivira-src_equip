@@ -116,9 +116,9 @@ class ExecutorUnificadoPL:
                     "estatisticas_modo": self.estatisticas_modo
                 }
 
-            # FASE 3: Otimização da Ordem de Execução
-            self.logger.info("🎯 FASE 3: Otimizando ordem de execução via PL...")
-            self.resultado_otimizacao = self.modelo_pl.otimizar_ordem_execucao(
+            # FASE 3: Otimização da Ordem de Execução via PL (OR-Tools CP-SAT)
+            self.logger.info("🎯 FASE 3: Otimizando ordem de execução via PL (OR-Tools)...")
+            self.resultado_otimizacao = self.modelo_pl.otimizar_ordem_com_conflitos(
                 pedidos,
                 self.horarios_calculados
             )

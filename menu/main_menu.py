@@ -3016,6 +3016,19 @@ class MenuPrincipal:
                 print(f"✅ ESCALA GERADA COM SUCESSO!")
                 print(f"📄 Arquivo: {caminho}")
                 print("=" * 60)
+
+                # Gerar gráfico de Gantt automaticamente
+                print()
+                print("⏳ Gerando gráfico de Gantt...")
+                try:
+                    from utils.graficos import gerar_gantt_funcionarios
+                    caminho_gantt = gerar_gantt_funcionarios()
+                    if caminho_gantt:
+                        print(f"📊 Gantt: {caminho_gantt}")
+                except ImportError:
+                    print("⚠️  Matplotlib não instalado. Gantt não gerado.")
+                except Exception as e_gantt:
+                    print(f"⚠️  Erro ao gerar Gantt: {e_gantt}")
             else:
                 print()
                 print("❌ Falha ao gerar escala. Verifique os logs.")

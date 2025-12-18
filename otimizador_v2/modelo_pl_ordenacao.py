@@ -167,12 +167,16 @@ class ModeloPLOrdenacao:
             )
             return self.otimizar_ordem_execucao(pedidos, horarios_fixos)
 
-        self.logger.info("🚀 Iniciando otimização com análise de conflitos...")
+        self.logger.info("🚀 Iniciando otimização com OR-Tools CP-SAT...")
+        self.logger.info("=" * 50)
+        self.logger.info("📦 USANDO PROGRAMAÇÃO LINEAR (OR-Tools)")
+        self.logger.info("=" * 50)
 
         inicio_otimizacao = datetime.now()
 
         try:
             # Criar modelo CP-SAT
+            self.logger.info("🔧 Criando modelo CP-SAT...")
             model = cp_model.CpModel()
 
             # Variáveis: posição de execução de cada pedido
@@ -198,10 +202,16 @@ class ModeloPLOrdenacao:
             # Objetivo: maximizar pedidos executados
             model.Maximize(sum(executados.values()))
 
+            self.logger.info(f"📊 Modelo criado: {num_pedidos} pedidos, {num_pedidos} variáveis de posição")
+            self.logger.info(f"🎯 Objetivo: Maximizar pedidos executados")
+
             # Resolver
+            self.logger.info("⏳ Resolvendo modelo CP-SAT...")
             solver = cp_model.CpSolver()
-            solver.parameters.max_time_in_seconds = 10.0  # Timeout de 10s
+            solver.parameters.max_time_in_seconds = 30.0  # Timeout de 30s
             status = solver.Solve(model)
+
+            self.logger.info(f"📋 Status do solver: {solver.StatusName(status)}")
 
             if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
                 # Extrair ordem da solução
@@ -218,18 +228,26 @@ class ModeloPLOrdenacao:
                 pedidos_exec = [id_ped for _, id_ped, exec_st in ordem_solucao if exec_st == 1]
                 pedidos_rej = [id_ped for _, id_ped, exec_st in ordem_solucao if exec_st == 0]
 
+                tempo_otimizacao = (datetime.now() - inicio_otimizacao).total_seconds()
+
                 resultado = {
                     "ordem_execucao": ordem_execucao,
                     "pedidos_executados": pedidos_exec,
                     "pedidos_rejeitados": pedidos_rej,
-                    "tempo_otimizacao": (datetime.now() - inicio_otimizacao).total_seconds(),
+                    "tempo_otimizacao": tempo_otimizacao,
                     "status": "OTIMIZADO_PL" if status == cp_model.OPTIMAL else "SOLUCAO_VIAVEL",
-                    "metodo": "CP_SAT"
+                    "metodo": "OR_TOOLS_CP_SAT",
+                    "solver_status": solver.StatusName(status)
                 }
 
-                self.logger.info(
-                    f"✅ Solução encontrada: {len(pedidos_exec)}/{num_pedidos} pedidos"
-                )
+                self.logger.info("=" * 50)
+                self.logger.info("✅ OTIMIZAÇÃO PL CONCLUÍDA COM SUCESSO")
+                self.logger.info(f"   Método: OR-Tools CP-SAT")
+                self.logger.info(f"   Status: {solver.StatusName(status)}")
+                self.logger.info(f"   Pedidos otimizados: {len(pedidos_exec)}/{num_pedidos}")
+                self.logger.info(f"   Tempo de otimização: {tempo_otimizacao:.3f}s")
+                self.logger.info(f"   Ordem: {ordem_execucao}")
+                self.logger.info("=" * 50)
 
                 return resultado
 

@@ -1,0 +1,32 @@
+==============================================
+📅 Data/Hora: 2025-12-11 10:58:47
+🧾 Ordem: 2 | Pedido: 8
+⚠️ Motivo do erro:
+--------------------------------------------------
+❌ ERRO DE TEMPO EXCEDIDO
+
+📋 Atividade atual:
+   • Nome: modelagem_e_recheio_de_coxinhas_de_camarao
+   • Início: 31/12 04:56:00
+   • Término: 31/12 05:36:00
+📋 Atividade sucessora:
+   • Nome: empanamento_de_coxinhas_de_camarao
+   • Início: 31/12 06:47:00
+
+🕐 Análise temporal detalhada:
+   • Tempo máximo permitido: 0:00:00
+   • Excesso de tempo: 1:11:00
+
+🔧 Equipamentos envolvidos:
+   ❌ Bancada 4 (BANCADAS) - NÃO PÔDE SER ALOCADO
+   • Bancada 5 (BANCADAS)
+   • Bancada 6 (BANCADAS)
+   • Balança Digital 2 (BALANCAS)
+
+💡 Sugestões:
+   • Verificar disponibilidade de equipamentos
+   • Ajustar sequenciamento das atividades
+   • Considerar recursos alternativos
+   • Analisar janela temporal para identificar gargalos
+
+==============================================

@@ -1,0 +1,30 @@
+==============================================
+📅 Data/Hora: 2025-12-11 10:58:47
+🧾 Ordem: 1 | Pedido: 5
+⚠️ Motivo do erro:
+--------------------------------------------------
+❌ ERRO DE TEMPO EXCEDIDO
+
+📋 Atividade atual:
+   • Nome: preparo_para_armazenamento_de_creme_de_queijo
+   • Início: 31/12 03:34:00
+   • Término: 31/12 04:14:00
+📋 Atividade sucessora:
+   • Nome: armazenamento_sob_temperatura_para_creme_de_queijo
+   • Início: 31/12 04:16:00
+
+🕐 Análise temporal detalhada:
+   • Tempo máximo permitido: 0:00:00
+   • Excesso de tempo: 0:02:00
+
+🔧 Equipamentos envolvidos:
+   • Bancada 7 (BANCADAS)
+   • Balança Digital 4 (BALANCAS)
+
+💡 Sugestões:
+   • Verificar disponibilidade de equipamentos
+   • Ajustar sequenciamento das atividades
+   • Considerar recursos alternativos
+   • Analisar janela temporal para identificar gargalos
+
+==============================================

@@ -10,7 +10,10 @@
       "tipo_equipamento": {
         "MISTURADORAS": 1
       },
-      "equipamentos_elegiveis": ["masseira_1", "masseira_2"],
+      "equipamentos_elegiveis": [
+        "masseira_1",
+        "masseira_2"
+      ],
       "fips_equipamentos": {
         "masseira_1": 1,
         "masseira_2": 2
@@ -18,24 +21,48 @@
       "tempo_maximo_de_espera": "00:00:00",
       "configuracoes_equipamentos": {
         "masseira_1": {
-          "velocidade": ["BAIXA", "MEDIA"],
-          "tipo_mistura": ["SEMI_RAPIDA"]
+          "velocidade": [
+            "BAIXA",
+            "MEDIA"
+          ],
+          "tipo_mistura": [
+            "SEMI_RAPIDA"
+          ]
         },
         "masseira_2": {
-          "velocidade": ["ALTA"],
-          "tipo_mistura": ["RAPIDA"]
+          "velocidade": [
+            "ALTA"
+          ],
+          "tipo_mistura": [
+            "RAPIDA"
+          ]
         }
       },
-      "tipos_profissionais_permitidos": ["PADEIRO", "AUXILIAR_DE_PADEIRO"],
+      "tipos_profissionais_permitidos": [
+        "PADEIRO",
+        "AUXILIAR_DE_PADEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "PADEIRO": 2,
         "AUXILIAR_DE_PADEIRO": 1
       },
       "quantidade_funcionarios": 2,
       "faixas": [
-        { "quantidade_min": 1, "quantidade_max": 17000, "duracao": "00:07:00" },
-        { "quantidade_min": 17001, "quantidade_max": 34000, "duracao": "00:11:00" },
-        { "quantidade_min": 34001, "quantidade_max": 50000, "duracao": "00:15:00" }
+        {
+          "quantidade_min": 1,
+          "quantidade_max": 17000,
+          "duracao": "00:07:00"
+        },
+        {
+          "quantidade_min": 17001,
+          "quantidade_max": 34000,
+          "duracao": "00:11:00"
+        },
+        {
+          "quantidade_min": 34001,
+          "quantidade_max": 50000,
+          "duracao": "00:15:00"
+        }
       ]
     }
   ]
