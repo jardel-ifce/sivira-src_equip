@@ -1,0 +1,274 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+
+\geometry{margin=2.5cm}
+
+\title{\textbf{Algoritmo de Alocacao via Otimizador PL v2.0}\\
+\large Sistema SIVIRA - Otimizacao de Producao}
+\author{Documentacao Tecnica}
+\date{Dezembro 2025}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introducao}
+
+O Otimizador PL v2.0 e um sistema de otimizacao de producao que utiliza \textbf{Programacao Linear Inteira Mista (MILP)} para determinar a ordem otima de execucao de pedidos em uma linha de producao.
+
+O sistema foi desenvolvido utilizando o solver \textbf{OR-Tools CP-SAT} do Google, que oferece alta performance para problemas de satisfacao de restricoes e otimizacao combinatoria.
+
+\subsection{Objetivos do Sistema}
+
+\begin{itemize}
+    \item Maximizar o numero de pedidos atendidos dentro dos prazos (deadlines)
+    \item Respeitar restricoes de equipamentos (capacidade finita)
+    \item Garantir sequenciamento correto de atividades (gaps temporais)
+    \item Otimizar a ordem de execucao considerando urgencia dos pedidos
+\end{itemize}
+
+\section{Arquitetura do Sistema}
+
+O sistema e composto por 4 fases principais:
+
+\begin{center}
+\begin{tikzpicture}[node distance=2cm, auto]
+    \node[draw, rectangle, rounded corners, fill=blue!20, minimum width=3cm, minimum height=1cm] (f1) {Fase 1: Deteccao de Modo};
+    \node[draw, rectangle, rounded corners, fill=green!20, minimum width=3cm, minimum height=1cm, right=of f1] (f2) {Fase 2: Calculo Backward};
+    \node[draw, rectangle, rounded corners, fill=orange!20, minimum width=3cm, minimum height=1cm, right=of f2] (f3) {Fase 3: Otimizacao PL};
+    \node[draw, rectangle, rounded corners, fill=red!20, minimum width=3cm, minimum height=1cm, right=of f3] (f4) {Fase 4: Execucao};
+
+    \draw[->, thick] (f1) -- (f2);
+    \draw[->, thick] (f2) -- (f3);
+    \draw[->, thick] (f3) -- (f4);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Componentes}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Modulo} & \textbf{Funcao} \\
+\midrule
+\texttt{detector\_modo.py} & Detecta modo de otimizacao \\
+\texttt{calculador\_horarios\_deterministicos.py} & Calculo backward scheduling \\
+\texttt{modelo\_pl\_ordenacao.py} & Modelo PL com OR-Tools CP-SAT \\
+\texttt{aplicador\_ordenacao.py} & Executa pedidos na ordem otimizada \\
+\texttt{executor\_unificado.py} & Orquestrador principal \\
+\texttt{executor\_v2.py} & Adaptador de compatibilidade \\
+\bottomrule
+\end{tabular}
+\caption{Modulos do sistema PL v2.0}
+\end{table}
+
+\section{Formulacao Matematica}
+
+\subsection{Variaveis de Decisao}
+
+O modelo utiliza variaveis binarias para representar a selecao de pedidos e suas posicoes:
+
+\begin{equation}
+x_{p,j} \in \{0, 1\}
+\end{equation}
+
+Onde:
+\begin{itemize}
+    \item $p$ = indice do pedido ($p \in P$)
+    \item $j$ = indice da janela temporal candidata ($j \in J_p$)
+    \item $x_{p,j} = 1$ significa que o pedido $p$ sera executado na janela $j$
+\end{itemize}
+
+Para o modelo de ordenacao, tambem sao utilizadas:
+
+\begin{equation}
+pos_i \in \{0, 1, \ldots, n-1\}
+\end{equation}
+
+Onde $pos_i$ representa a posicao do pedido $i$ na ordem de execucao.
+
+\subsection{Funcao Objetivo}
+
+O objetivo e maximizar o numero total de pedidos atendidos:
+
+\begin{equation}
+\max \sum_{p \in P} \sum_{j \in J_p} x_{p,j}
+\end{equation}
+
+\subsection{Restricoes}
+
+\subsubsection{Restricao 1: Unicidade por Pedido}
+
+Cada pedido utiliza no maximo uma janela temporal:
+
+\begin{equation}
+\sum_{j \in J_p} x_{p,j} \leq 1, \quad \forall p \in P
+\end{equation}
+
+\subsubsection{Restricao 2: Permutacao Unica (Ordenacao)}
+
+Para o modelo de ordenacao, todas as posicoes devem ser diferentes:
+
+\begin{equation}
+pos_i \neq pos_j, \quad \forall i \neq j
+\end{equation}
+
+Esta restricao e implementada usando a constraint \texttt{AddAllDifferent} do OR-Tools.
+
+\subsubsection{Restricao 3: Tempo Maximo de Espera (Gap Zero)}
+
+Para atividades consecutivas com tempo maximo de espera igual a zero:
+
+\begin{equation}
+t_{fim}^{(a)} = t_{inicio}^{(a+1)}
+\end{equation}
+
+Isso garante que as atividades sejam contiguas, sem intervalo entre elas.
+
+\subsubsection{Restricao 4: Conflitos Temporais (Equipamentos)}
+
+Se duas janelas se sobrepoem no tempo, nao podem ser selecionadas simultaneamente:
+
+\begin{equation}
+x_{p_1,j_1} + x_{p_2,j_2} \leq 1
+\end{equation}
+
+Para todo par $(p_1,j_1), (p_2,j_2)$ onde:
+\begin{equation}
+[t_1^{ini}, t_1^{fim}] \cap [t_2^{ini}, t_2^{fim}] \neq \emptyset
+\end{equation}
+
+\subsubsection{Restricao 5: Fim Obrigatorio (Deadline Rigido)}
+
+Para pedidos com deadline obrigatorio:
+
+\begin{equation}
+x_{p,j} = 0, \quad \forall j : |t_j^{fim} - d_p| > \epsilon
+\end{equation}
+
+Onde $d_p$ e o deadline do pedido $p$ e $\epsilon = 1$ minuto (tolerancia).
+
+\section{Backward Scheduling}
+
+Para o cenario deterministico ($\tau_{max} = 0$), o sistema utiliza \textbf{backward scheduling} para calcular horarios fixos:
+
+\subsection{Algoritmo}
+
+\begin{algorithm}
+\caption{Backward Scheduling}
+\begin{algorithmic}[1]
+\State $t_{atual} \gets deadline$
+\For{cada atividade $a$ em ordem reversa}
+    \State $t_{fim}^{(a)} \gets t_{atual}$
+    \State $t_{inicio}^{(a)} \gets t_{fim}^{(a)} - duracao_a$
+    \State $t_{atual} \gets t_{inicio}^{(a)}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Representacao Visual}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.5cm]
+    \node[draw, rectangle, fill=gray!30, minimum width=2cm, minimum height=0.8cm] (a1) {Ativ 1};
+    \node[draw, rectangle, fill=gray!30, minimum width=2cm, minimum height=0.8cm, right=of a1] (a2) {Ativ 2};
+    \node[draw, rectangle, fill=gray!30, minimum width=2cm, minimum height=0.8cm, right=of a2] (a3) {...};
+    \node[draw, rectangle, fill=blue!30, minimum width=2cm, minimum height=0.8cm, right=of a3] (an) {Ativ n};
+    \node[right=0.3cm of an] (dl) {\textbf{Deadline}};
+
+    \draw[->, thick] (an) -- (a3);
+    \draw[->, thick] (a3) -- (a2);
+    \draw[->, thick] (a2) -- (a1);
+
+    \node[below=0.5cm of a1] {Inicio};
+    \node[below=0.5cm of an] {Fim};
+\end{tikzpicture}
+\end{center}
+
+A ultima atividade termina exatamente no deadline, e as anteriores sao calculadas retroativamente.
+
+\section{Complexidade Computacional}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Componente} & \textbf{Complexidade} \\
+\midrule
+Variaveis de decisao & $O(n \cdot k)$ \\
+Restricoes de unicidade & $O(n)$ \\
+Restricoes de conflito & $O(n^2 \cdot k^2)$ (pior caso) \\
+\bottomrule
+\end{tabular}
+\caption{Complexidade por componente ($n$ = pedidos, $k$ = janelas/pedido)}
+\end{table}
+
+O solver OR-Tools CP-SAT utiliza tecnicas avancadas de propagacao de restricoes e busca para encontrar solucoes otimas ou viaveis dentro do timeout configurado (padrao: 30 segundos para ordenacao, 600 segundos para modelo completo).
+
+\section{Comparacao: Sistema Sequencial vs PL v2.0}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Aspecto} & \textbf{Sequencial} & \textbf{PL v2.0} \\
+\midrule
+Ordem de execucao & Fixa (1, 2, 3...) & Otimizada por deadline \\
+Conflitos de equipamentos & Ignora & Modela explicitamente \\
+Gaps temporais & Nao verifica & Restricao $\tau_{max}=0$ \\
+Funcao objetivo & Nenhuma & Maximizar pedidos \\
+Metodo de solucao & Greedy & MILP (CP-SAT) \\
+\bottomrule
+\end{tabular}
+\caption{Comparacao entre metodos}
+\end{table}
+
+\section{Implementacao}
+
+\subsection{Exemplo de Uso}
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+from otimizador_v2 import ExecutorV2
+
+# Criar executor
+executor = ExecutorV2()
+executor.inicializar()
+
+# Otimizar pedidos
+solucao = executor.otimizar_pedidos(pedidos)
+
+# Verificar resultados
+print(f"Pedidos atendidos: {solucao.pedidos_atendidos}")
+print(f"Taxa de sucesso: {solucao.taxa_sucesso}%")
+\end{lstlisting}
+
+\subsection{Parametros de Configuracao}
+
+\begin{itemize}
+    \item \textbf{timeout\_segundos}: Tempo maximo para resolucao (padrao: 600s)
+    \item \textbf{inicio\_jornada}: Horario de inicio da jornada de trabalho
+\end{itemize}
+
+\section{Conclusao}
+
+O Otimizador PL v2.0 oferece uma abordagem matematicamente fundamentada para o problema de scheduling de producao, utilizando tecnicas de otimizacao combinatoria para maximizar o atendimento de pedidos respeitando restricoes de recursos e prazos.
+
+A arquitetura modular permite facil extensao para novos modos de operacao (como o modo FLEXIVEL planejado para fases futuras) e integracao com o sistema de menu existente.
+
+\end{document}
