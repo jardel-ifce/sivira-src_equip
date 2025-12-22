@@ -47,11 +47,13 @@ O sistema foi desenvolvido utilizando o solver \textbf{OR-Tools CP-SAT} do Googl
 O sistema e composto por 4 fases principais:
 
 \begin{center}
-\begin{tikzpicture}[node distance=2cm, auto]
-    \node[draw, rectangle, rounded corners, fill=blue!20, minimum width=3cm, minimum height=1cm] (f1) {Fase 1: Deteccao de Modo};
-    \node[draw, rectangle, rounded corners, fill=green!20, minimum width=3cm, minimum height=1cm, right=of f1] (f2) {Fase 2: Calculo Backward};
-    \node[draw, rectangle, rounded corners, fill=orange!20, minimum width=3cm, minimum height=1cm, right=of f2] (f3) {Fase 3: Otimizacao PL};
-    \node[draw, rectangle, rounded corners, fill=red!20, minimum width=3cm, minimum height=1cm, right=of f3] (f4) {Fase 4: Execucao};
+\begin{tikzpicture}[node distance=1.2cm, auto,
+    fase/.style={draw, rectangle, rounded corners, minimum width=5cm, minimum height=0.9cm, font=\small}]
+
+    \node[fase, fill=blue!20] (f1) {Fase 1: Deteccao de Modo};
+    \node[fase, fill=green!20, below=of f1] (f2) {Fase 2: Calculo Backward};
+    \node[fase, fill=orange!20, below=of f2] (f3) {Fase 3: Otimizacao PL};
+    \node[fase, fill=red!20, below=of f3] (f4) {Fase 4: Execucao};
 
     \draw[->, thick] (f1) -- (f2);
     \draw[->, thick] (f2) -- (f3);
