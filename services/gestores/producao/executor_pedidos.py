@@ -167,10 +167,13 @@ class ExecutorPedidos:
     
     def executar_otimizado(self, pedidos_convertidos: List) -> bool:
         """
-        Executa pedidos com otimização PL REAL usando OR-Tools.
+        Executa pedidos com otimização PL v2.0 usando OR-Tools CP-SAT.
 
-        Utiliza o OtimizadorIntegrado para resolver o problema JSSP com Programação Linear,
-        executando os pedidos selecionados pelo modelo PL e os restantes sequencialmente.
+        Utiliza o ExecutorUnificadoPL do otimizador_v2 para:
+        - Detectar modo (DETERMINISTICO/FLEXIVEL)
+        - Calcular horários via backward scheduling
+        - Otimizar ordem de execução
+        - Executar pedidos na ordem otimizada
 
         Args:
             pedidos_convertidos: Lista de PedidoDeProducao convertidos
@@ -179,93 +182,78 @@ class ExecutorPedidos:
             bool: True se sucesso
         """
         try:
-            print(f"🚀 Executando {len(pedidos_convertidos)} pedidos com OTIMIZAÇÃO PL REAL...")
+            print(f"🚀 Executando {len(pedidos_convertidos)} pedidos com OTIMIZAÇÃO PL v2.0...")
 
             # Verifica disponibilidade do OR-Tools
             try:
-                from ortools.linear_solver import pywraplp
-                print("   ✅ OR-Tools disponível")
+                from ortools.sat.python import cp_model
+                print("   ✅ OR-Tools CP-SAT disponível")
             except ImportError:
                 print("   ❌ OR-Tools não encontrado!")
                 print("   💡 Instale com: pip install ortools")
                 return False
 
-            # Importa otimizador e adaptador
+            # Importa otimizador v2
             try:
-                from otimizador.otimizador_integrado import OtimizadorIntegrado
-                from services.gestores.producao.adaptador_otimizador import AdaptadorSistemaProducao
-                print("   ✅ Módulos de otimização carregados")
+                from otimizador_v2 import ExecutorUnificadoPL
+                print("   ✅ Módulos de otimização v2.0 carregados")
             except ImportError as e:
-                print(f"   ❌ Erro ao importar otimizador: {e}")
+                print(f"   ❌ Erro ao importar otimizador_v2: {e}")
                 return False
 
             inicio_execucao = datetime.now()
 
-            # Obtém configurações
-            resolucao_minutos = self.configuracoes.get('resolucao_minutos', 60)
-            timeout_pl = self.configuracoes.get('timeout_pl', 600)
+            # Cria executor unificado
+            print(f"\n🔧 Inicializando ExecutorUnificadoPL v2.0...")
+            executor = ExecutorUnificadoPL()
 
-            print(f"   ⚙️ Configuração PL: resolução={resolucao_minutos}min, timeout={timeout_pl}s")
+            # Define início da jornada
+            inicio_jornada = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
 
-            # Cria instâncias do otimizador e adaptador
-            print(f"\n🔧 Inicializando otimizador PL...")
-            otimizador = OtimizadorIntegrado(
-                resolucao_minutos=resolucao_minutos,
-                timeout_segundos=timeout_pl
-            )
-
-            sistema_producao = AdaptadorSistemaProducao()
-
-            # Executa otimização PL
-            print(f"\n🎯 Iniciando otimização com OR-Tools...")
+            # Executa otimização e execução
+            print(f"\n🎯 Iniciando otimização com OR-Tools CP-SAT...")
             print(f"   📊 {len(pedidos_convertidos)} pedidos a otimizar")
-            print(f"   🔍 Modelo JSSP (Job Shop Scheduling Problem)")
-            print(f"   🧮 Solver: OR-Tools SCIP/CBC\n")
+            print(f"   🔍 Modelo: Ordenação por deadline + CP-SAT")
+            print(f"   🧮 Solver: OR-Tools CP-SAT\n")
 
-            sucesso = otimizador.executar_pedidos_otimizados(
-                pedidos=pedidos_convertidos,
-                sistema_producao=sistema_producao
-            )
+            resultado = executor.otimizar_e_executar(pedidos_convertidos, inicio_jornada)
 
             fim_execucao = datetime.now()
             tempo_total = (fim_execucao - inicio_execucao).total_seconds()
 
-            # Coleta estatísticas do otimizador
-            if sucesso and hasattr(otimizador, 'estatisticas_execucao'):
-                stats_otimizador = otimizador.estatisticas_execucao
+            # Verifica resultado
+            if resultado.get('status') == 'CONCLUIDO':
+                stats = resultado.get('estatisticas_gerais', {})
+                exec_result = resultado.get('execucao', {})
 
                 self.estatisticas_execucao = {
-                    'modo': 'otimizado_pl',
+                    'modo': 'otimizado_pl_v2',
                     'total_pedidos': len(pedidos_convertidos),
-                    'pedidos_otimizados': stats_otimizador.get('pedidos_otimizados', 0),
-                    'pedidos_sequenciais': stats_otimizador.get('pedidos_sequenciais', 0),
-                    'pedidos_executados': sistema_producao.pedidos_executados,
-                    'pedidos_falhados': sistema_producao.pedidos_falhados,
+                    'pedidos_executados': exec_result.get('pedidos_executados', []),
+                    'pedidos_falhados': exec_result.get('pedidos_com_erro', []),
                     'tempo_execucao': tempo_total,
-                    'tempo_otimizacao': stats_otimizador.get('tempo_otimizacao', 0),
-                    'status_solver': stats_otimizador.get('status_solver', 'UNKNOWN'),
-                    'funcao_objetivo': stats_otimizador.get('funcao_objetivo', None),
-                    'taxa_atendimento': len(sistema_producao.pedidos_executados) / len(pedidos_convertidos) if len(pedidos_convertidos) > 0 else 0
+                    'tempo_otimizacao': stats.get('tempo_otimizacao', 0),
+                    'status_solver': resultado.get('otimizacao', {}).get('status', 'N/A'),
+                    'taxa_atendimento': stats.get('taxa_sucesso', 0) / 100
                 }
 
-                print(f"\n🎉 Otimização PL concluída!")
-                print(f"   📊 Solver: {stats_otimizador.get('status_solver', 'N/A')}")
-                print(f"   🎯 Pedidos otimizados via PL: {stats_otimizador.get('pedidos_otimizados', 0)}")
-                print(f"   📝 Pedidos sequenciais (fallback): {stats_otimizador.get('pedidos_sequenciais', 0)}")
-                print(f"   ✅ Total executados: {len(sistema_producao.pedidos_executados)}/{len(pedidos_convertidos)}")
-                print(f"   ❌ Falhas: {len(sistema_producao.pedidos_falhados)}")
+                print(f"\n🎉 Otimização PL v2.0 concluída!")
+                print(f"   📊 Modo: {resultado.get('modo', 'N/A')}")
+                print(f"   🎯 Método: {resultado.get('otimizacao', {}).get('metodo', 'N/A')}")
+                print(f"   ✅ Pedidos executados: {stats.get('pedidos_sucesso', 0)}/{len(pedidos_convertidos)}")
+                print(f"   ❌ Pedidos com erro: {stats.get('pedidos_erro', 0)}")
+                print(f"   📈 Taxa de sucesso: {stats.get('taxa_sucesso', 0):.1f}%")
                 print(f"   ⏱️ Tempo total: {tempo_total:.2f}s")
-                print(f"   ⚡ Tempo otimização PL: {stats_otimizador.get('tempo_otimizacao', 0):.2f}s")
-
-                if stats_otimizador.get('funcao_objetivo'):
-                    print(f"   🎯 Makespan otimizado: {stats_otimizador.get('funcao_objetivo')}min")
+                print(f"   ⚡ Tempo otimização: {stats.get('tempo_otimizacao', 0):.3f}s")
 
                 # Lista arquivos gerados
                 self._listar_arquivos_gerados()
 
-                return True
+                return stats.get('pedidos_sucesso', 0) > 0
             else:
-                print("❌ Otimização PL não retornou estatísticas!")
+                print(f"❌ Otimização PL v2.0 falhou: {resultado.get('status', 'ERRO')}")
+                if 'erro' in resultado:
+                    print(f"   Erro: {resultado['erro']}")
                 return False
 
         except ImportError as e:

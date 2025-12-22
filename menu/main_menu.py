@@ -170,8 +170,7 @@ class MenuPrincipal:
         print()
         print("🚀 EXECUÇÃO:")
         print("7️⃣  Executar Ordem Atual (SEQUENCIAL)")
-        print("8️⃣  Executar Ordem Atual (OTIMIZADO PL v1)")
-        print("9️⃣  Executar Ordem Atual (OTIMIZADO PL v2 - COMPLETO) ✨ NOVO")
+        print("8️⃣  Executar Ordem Atual (OTIMIZADO PL)")
         print()
         print("📅 AGENDA DE EQUIPAMENTOS:")  # 🆕 NOVA SEÇÃO
         print("D️⃣  Ver Agenda de Equipamentos")
@@ -232,9 +231,6 @@ class MenuPrincipal:
             self.executar_sequencial()
         
         elif opcao == "8":
-            self.executar_otimizado()
-
-        elif opcao == "9":
             self.executar_otimizado_v2()
 
         elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
@@ -1189,118 +1185,8 @@ class MenuPrincipal:
         
         input("\nPressione Enter para continuar...")
     
-    def executar_otimizado(self):
-        """Executa pedidos da ordem atual com otimização PL"""
-        self.utils.limpar_tela()
-        ordem_atual = self.gerenciador.obter_ordem_atual()
-        pedidos_ordem = self.gerenciador.obter_pedidos_ordem_atual()
-        
-        print("🚀 EXECUÇÃO OTIMIZADA (PL)")
-        print("=" * 40)
-        print(f"📦 Executando Ordem: {ordem_atual}")
-        
-        if not pedidos_ordem:
-            print(f"🔭 Ordem {ordem_atual} não possui pedidos para executar.")
-            print("\n💡 Use a opção '1' para registrar pedidos primeiro")
-            input("\nPressione Enter para continuar...")
-            return
-        
-        # Verifica OR-Tools primeiro
-        ortools_ok, ortools_msg = self.utils.validar_or_tools()
-        print(f"🔧 OR-Tools: {'✅' if ortools_ok else '⚡'} {ortools_msg}")
-        
-        if not ortools_ok:
-            print("\n💡 Para instalar: pip install ortools")
-            input("\nPressione Enter para continuar...")
-            return
-        
-        print(f"\n📊 {len(pedidos_ordem)} pedido(s) da Ordem {ordem_atual} será(ão) otimizado(s).")
-        print("⏱️ Isso pode levar alguns minutos para encontrar a solução ótima...")
-        print("\n🔧 Método: GestorProducao.executar_otimizado()")
-        print("📋 OTIMIZADO: Usa Programação Linear independente")
-        print("🧹 Ambiente limpo automaticamente")
-        print("📦 SISTEMA DE ORDENS: Execução por ordem/sessão")
-        
-        # Mostra resumo dos pedidos da ordem atual
-        print(f"\n📋 Pedidos da Ordem {ordem_atual} para otimização:")
-        for pedido in pedidos_ordem:
-            print(f"   • Ordem {pedido.id_ordem} | Pedido {pedido.id_pedido}: {pedido.nome_item} ({pedido.quantidade} uni)")
-            print(f"     Prazo: {pedido.fim_jornada.strftime('%d/%m %H:%M')}")
-        
-        confirmacao = input(f"\n🎯 Confirma execução otimizada da Ordem {ordem_atual}? (s/N): ").strip().lower()
-        
-        if confirmacao in ['s', 'sim', 'y', 'yes']:
-            try:
-                # Executa apenas pedidos da ordem atual
-                sucesso = self.gestor_producao.executar_otimizado(pedidos_ordem)
-                
-                # 🆕 SEMPRE incrementa ordem após tentativa de execução (sucesso ou falha)
-                nova_ordem = self.gerenciador.incrementar_ordem()
-                self.gerenciador.salvar_pedidos()  # Salva nova ordem
-                
-                if sucesso:
-                    print(f"\n🎉 Execução otimizada da Ordem {ordem_atual} concluída!")
-                    print(f"📈 Sistema avançou para Ordem {nova_ordem}")
-                    print("💡 Novos pedidos serão registrados na nova ordem")
-
-                    # 🆕 CAPTURA DE OCUPAÇÕES DETALHADAS DOS EQUIPAMENTOS
-                    try:
-                        from utils.logs.capturador_ocupacoes_equipamentos import CapturadorOcupacoes
-                        print("\n🔍 CAPTURANDO OCUPAÇÕES DETALHADAS DOS EQUIPAMENTOS ATIVOS...")
-                        print("=" * 60)
-
-                        capturador = CapturadorOcupacoes()
-                        pedidos_ids = [p.id_pedido for p in pedidos_ordem]
-
-                        # Gera relatório com ocupações detalhadas
-                        arquivo_relatorio = capturador.gerar_relatorio_ocupacoes_detalhadas(
-                            id_ordem=ordem_atual,
-                            pedidos_inclusos=pedidos_ids,
-                            salvar_arquivo=True
-                        )
-
-                        if arquivo_relatorio:
-                            print(f"📄 Relatório detalhado salvo: {arquivo_relatorio}")
-                        else:
-                            print("⚠️ Não foi possível gerar relatório detalhado")
-
-                    except Exception as e:
-                        print(f"⚠️ Erro ao capturar ocupações detalhadas: {e}")
-
-                    # 🆕 MODIFICAÇÃO: Limpeza automática após execução bem-sucedida
-                    try:
-                        from utils.logs.gerenciador_logs import limpar_arquivo_pedidos_salvos
-                        print("🧹 Executando limpeza automática de pedidos salvos...")
-                        if limpar_arquivo_pedidos_salvos():
-                            print("✅ Arquivo de pedidos salvos limpo após execução bem-sucedida")
-                    except Exception as e:
-                        print(f"⚠️ Erro na limpeza pós-execução: {e}")
-
-                    # Mostra estatísticas
-                    stats = self.gestor_producao.obter_estatisticas()
-                    print(f"📊 Total processado: {stats.get('total_pedidos', 0)} pedidos")
-                    print(f"⏱️ Tempo de execução: {stats.get('tempo_execucao', 0):.1f}s")
-                    if stats.get('modo') == 'otimizado':
-                        print(f"🎯 Solução: {stats.get('status_solver', 'N/A')}")
-                else:
-                    print(f"\n⚡ Falha na execução otimizada da Ordem {ordem_atual}!")
-                    print(f"📈 Mesmo assim, sistema avançou para Ordem {nova_ordem}")
-                    print("💡 Isso evita conflitos de IDs entre ordens com erro e novas ordens")
-                    
-            except Exception as e:
-                # 🆕 MESMO EM CASO DE EXCEPTION, incrementa ordem
-                print(f"\n⚡ Erro durante execução otimizada: {e}")
-                nova_ordem = self.gerenciador.incrementar_ordem()
-                self.gerenciador.salvar_pedidos()
-                print(f"📈 Ordem incrementada para {nova_ordem} (devido ao erro)")
-                print("💡 Isso evita conflitos de IDs em futuras execuções")
-        else:
-            print("\nℹ️ Execução cancelada.")
-
-        input("\nPressione Enter para continuar...")
-
     def executar_otimizado_v2(self):
-        """Executa pedidos da ordem atual com otimização PL v2.0 (COMPLETO)"""
+        """Executa pedidos da ordem atual com otimização PL v2.0 (OR-Tools CP-SAT)"""
         self.utils.limpar_tela()
         ordem_atual = self.gerenciador.obter_ordem_atual()
         pedidos_ordem = self.gerenciador.obter_pedidos_ordem_atual()
