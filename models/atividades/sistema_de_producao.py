@@ -97,13 +97,13 @@ class SistemaDeProducao:
     
     @property
     def otimizador(self):
-        """Carrega otimizador sob demanda (usando otimizador_v2)"""
+        """Carrega otimizador sob demanda (usando otimizador)"""
         if self.usar_otimizacao and self._otimizador is None:
             try:
-                from otimizador_v2 import ExecutorUnificadoPL
+                from otimizador import ExecutorUnificadoPL
                 self._otimizador = ExecutorUnificadoPL()
             except ImportError:
-                print("⚠️ Otimizador v2 não disponível. Alternando para modo sequencial.")
+                print("⚠️ Otimizador v3 não disponível. Alternando para modo sequencial.")
                 self.usar_otimizacao = False
         return self._otimizador
     

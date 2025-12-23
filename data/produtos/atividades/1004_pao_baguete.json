@@ -16,7 +16,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:12:20",
       "fips_equipamentos": {
         "balanca_digital_1": 1,
         "bancada_1": 1,
@@ -82,7 +82,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:04:59",
       "fips_equipamentos": {
         "divisora_de_massas_1": 1,
         "divisora_de_massas_2": 2,
@@ -153,7 +153,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:14:49",
       "fips_equipamentos": {
         "modeladora_de_paes_1": 1,
         "bancada_1": 1,
@@ -213,7 +213,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:54:07",
       "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
@@ -273,7 +273,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:15:31",
       "fips_equipamentos": {
         "armario_fermentador_1": 1,
         "armario_fermentador_2": 1,
@@ -317,7 +317,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:50:30",
       "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
@@ -375,7 +375,7 @@
         "forno_1",
         "forno_2"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:12:24",
       "fips_equipamentos": {
         "forno_1": 1,
         "forno_2": 2
@@ -426,7 +426,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:20:16",
       "fips_equipamentos": {
         "armario_fermentador_1": 2,
         "armario_fermentador_2": 2,

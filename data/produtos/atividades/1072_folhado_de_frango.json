@@ -16,7 +16,7 @@
         "bancada_6",
         "balanca_digital_2"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:03:00",
       "fips_equipamentos": {
         "bancada_4": 3,
         "bancada_5": 1,
@@ -78,7 +78,7 @@
         "armario_esqueleto_1",
         "armario_esqueleto_2"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:55:44",
       "fips_equipamentos": {
         "armario_esqueleto_1": 1,
         "armario_esqueleto_2": 2
@@ -128,7 +128,7 @@
       "equipamentos_elegiveis": [
         "camara_refrigerada_1"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:42:37",
       "fips_equipamentos": {
         "camara_refrigerada_1": 1
       },
@@ -171,7 +171,7 @@
         "armario_esqueleto_1",
         "armario_esqueleto_2"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:28:08",
       "fips_equipamentos": {
         "armario_esqueleto_1": 1,
         "armario_esqueleto_2": 2
@@ -222,7 +222,7 @@
         "forno_3",
         "forno_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:39:16",
       "fips_equipamentos": {
         "forno_3": 1,
         "forno_4": 2

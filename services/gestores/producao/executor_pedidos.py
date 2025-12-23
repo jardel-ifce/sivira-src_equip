@@ -167,9 +167,9 @@ class ExecutorPedidos:
     
     def executar_otimizado(self, pedidos_convertidos: List) -> bool:
         """
-        Executa pedidos com otimização PL v2.0 usando OR-Tools CP-SAT.
+        Executa pedidos com otimização PL v3.0 usando OR-Tools CP-SAT.
 
-        Utiliza o ExecutorUnificadoPL do otimizador_v2 para:
+        Utiliza o ExecutorUnificadoPL do otimizador para:
         - Detectar modo (DETERMINISTICO/FLEXIVEL)
         - Calcular horários via backward scheduling
         - Otimizar ordem de execução
@@ -182,7 +182,7 @@ class ExecutorPedidos:
             bool: True se sucesso
         """
         try:
-            print(f"🚀 Executando {len(pedidos_convertidos)} pedidos com OTIMIZAÇÃO PL v2.0...")
+            print(f"🚀 Executando {len(pedidos_convertidos)} pedidos com OTIMIZAÇÃO PL v3.0...")
 
             # Verifica disponibilidade do OR-Tools
             try:
@@ -193,18 +193,18 @@ class ExecutorPedidos:
                 print("   💡 Instale com: pip install ortools")
                 return False
 
-            # Importa otimizador v2
+            # Importa otimizador v3
             try:
-                from otimizador_v2 import ExecutorUnificadoPL
-                print("   ✅ Módulos de otimização v2.0 carregados")
+                from otimizador import ExecutorUnificadoPL
+                print("   ✅ Módulos de otimização v3.0 carregados")
             except ImportError as e:
-                print(f"   ❌ Erro ao importar otimizador_v2: {e}")
+                print(f"   ❌ Erro ao importar otimizador: {e}")
                 return False
 
             inicio_execucao = datetime.now()
 
             # Cria executor unificado
-            print(f"\n🔧 Inicializando ExecutorUnificadoPL v2.0...")
+            print(f"\n🔧 Inicializando ExecutorUnificadoPL v3.0...")
             executor = ExecutorUnificadoPL()
 
             # Define início da jornada

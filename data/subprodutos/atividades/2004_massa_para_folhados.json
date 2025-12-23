@@ -10,27 +10,48 @@
       "tipo_equipamento": {
         "MISTURADORAS": 1
       },
-      "equipamentos_elegiveis": ["masseira_3"],
+      "equipamentos_elegiveis": [
+        "masseira_3"
+      ],
       "fips_equipamentos": {
         "masseira_3": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:14:30",
       "configuracoes_equipamentos": {
         "masseira_3": {
-          "velocidade": ["BAIXA"],
-          "tipo_mistura": ["LENTA"]
+          "velocidade": [
+            "BAIXA"
+          ],
+          "tipo_mistura": [
+            "LENTA"
+          ]
         }
       },
-      "tipos_profissionais_permitidos": ["CONFEITEIRO", "AUXILIAR_DE_CONFEITEIRO"],
+      "tipos_profissionais_permitidos": [
+        "CONFEITEIRO",
+        "AUXILIAR_DE_CONFEITEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "CONFEITEIRO": 2,
         "AUXILIAR_DE_CONFEITEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 100, "quantidade_max": 8000, "duracao": "00:10:00" },
-        { "quantidade_min": 8001, "quantidade_max": 15000, "duracao": "00:15:00" },
-        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:20:00" }
+        {
+          "quantidade_min": 100,
+          "quantidade_max": 8000,
+          "duracao": "00:10:00"
+        },
+        {
+          "quantidade_min": 8001,
+          "quantidade_max": 15000,
+          "duracao": "00:15:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 20000,
+          "duracao": "00:20:00"
+        }
       ]
     },
     {
@@ -40,13 +61,17 @@
       "tipo_equipamento": {
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_4", "bancada_5", "bancada_6"],
+      "equipamentos_elegiveis": [
+        "bancada_4",
+        "bancada_5",
+        "bancada_6"
+      ],
       "fips_equipamentos": {
         "bancada_4": 2,
         "bancada_5": 3,
         "bancada_6": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:21:57",
       "configuracoes_equipamentos": {
         "bancada_4": {
           "fracoes_necessarias": 4,
@@ -61,15 +86,29 @@
           "numero_operadores": 1
         }
       },
-      "tipos_profissionais_permitidos": ["CONFEITEIRO"],
+      "tipos_profissionais_permitidos": [
+        "CONFEITEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "CONFEITEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 100, "quantidade_max": 8000, "duracao": "00:12:00" },
-        { "quantidade_min": 8001, "quantidade_max": 15000, "duracao": "00:18:00" },
-        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:24:00" }
+        {
+          "quantidade_min": 100,
+          "quantidade_max": 8000,
+          "duracao": "00:12:00"
+        },
+        {
+          "quantidade_min": 8001,
+          "quantidade_max": 15000,
+          "duracao": "00:18:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 20000,
+          "duracao": "00:24:00"
+        }
       ]
     },
     {
@@ -79,12 +118,15 @@
       "tipo_equipamento": {
         "REFRIGERACAO_CONGELAMENTO": 1
       },
-      "equipamentos_elegiveis": ["camara_refrigerada_1", "freezer_2"],
+      "equipamentos_elegiveis": [
+        "camara_refrigerada_1",
+        "freezer_2"
+      ],
       "fips_equipamentos": {
         "camara_refrigerada_1": 2,
         "freezer_2": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:53:13",
       "configuracoes_equipamentos": {
         "camara_refrigerada_1": {
           "faixa_temperatura": 4,
@@ -101,7 +143,11 @@
       "fips_profissionais_permitidos": {},
       "quantidade_funcionarios": 0,
       "faixas": [
-        { "quantidade_min": 100, "quantidade_max": 20000, "duracao": "01:00:00" }
+        {
+          "quantidade_min": 100,
+          "quantidade_max": 20000,
+          "duracao": "01:00:00"
+        }
       ]
     },
     {
@@ -111,14 +157,19 @@
       "tipo_equipamento": {
         "BANCADAS": 1
       },
-      "equipamentos_elegiveis": ["bancada_1", "bancada_4", "bancada_5", "bancada_6"],
+      "equipamentos_elegiveis": [
+        "bancada_1",
+        "bancada_4",
+        "bancada_5",
+        "bancada_6"
+      ],
       "fips_equipamentos": {
         "bancada_1": 4,
         "bancada_4": 2,
         "bancada_5": 3,
         "bancada_6": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:00:55",
       "configuracoes_equipamentos": {
         "bancada_1": {
           "fracoes_necessarias": 4,
@@ -137,15 +188,29 @@
           "numero_operadores": 1
         }
       },
-      "tipos_profissionais_permitidos": ["CONFEITEIRO"],
+      "tipos_profissionais_permitidos": [
+        "CONFEITEIRO"
+      ],
       "fips_profissionais_permitidos": {
         "CONFEITEIRO": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 100, "quantidade_max": 8000, "duracao": "00:12:00" },
-        { "quantidade_min": 8001, "quantidade_max": 15000, "duracao": "00:18:00" },
-        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:24:00" }
+        {
+          "quantidade_min": 100,
+          "quantidade_max": 8000,
+          "duracao": "00:12:00"
+        },
+        {
+          "quantidade_min": 8001,
+          "quantidade_max": 15000,
+          "duracao": "00:18:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 20000,
+          "duracao": "00:24:00"
+        }
       ]
     },
     {
@@ -155,11 +220,13 @@
       "tipo_equipamento": {
         "REFRIGERACAO_CONGELAMENTO": 1
       },
-      "equipamentos_elegiveis": ["camara_refrigerada_2"],
+      "equipamentos_elegiveis": [
+        "camara_refrigerada_2"
+      ],
       "fips_equipamentos": {
         "camara_refrigerada_2": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:08:19",
       "configuracoes_equipamentos": {
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,
@@ -167,15 +234,29 @@
           "gramas_por_caixa": 2000
         }
       },
-      "tipos_profissionais_permitidos": ["ALMOXARIFE"],
+      "tipos_profissionais_permitidos": [
+        "ALMOXARIFE"
+      ],
       "fips_profissionais_permitidos": {
         "ALMOXARIFE": 1
       },
       "quantidade_funcionarios": 1,
       "faixas": [
-        { "quantidade_min": 100, "quantidade_max": 8000, "duracao": "00:05:00" },
-        { "quantidade_min": 8001, "quantidade_max": 15000, "duracao": "00:08:00" },
-        { "quantidade_min": 15001, "quantidade_max": 20000, "duracao": "00:10:00" }
+        {
+          "quantidade_min": 100,
+          "quantidade_max": 8000,
+          "duracao": "00:05:00"
+        },
+        {
+          "quantidade_min": 8001,
+          "quantidade_max": 15000,
+          "duracao": "00:08:00"
+        },
+        {
+          "quantidade_min": 15001,
+          "quantidade_max": 20000,
+          "duracao": "00:10:00"
+        }
       ]
     }
   ]

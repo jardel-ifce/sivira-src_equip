@@ -3,7 +3,7 @@
 ================================================================================
 Ordem: 1
 Pedido: 2
-Iniciado em: 11/12/2025 10:58:46
+Iniciado em: 23/12/2025 09:37:35
 ================================================================================
 
 🔸 ATIVIDADE 10029: embalamento_de_paes_hamburguer
@@ -11,53 +11,47 @@ Iniciado em: 11/12/2025 10:58:46
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
 🔸 ATIVIDADE 10027: retirada_de_paes_hamburguer_da_coccao
-   ⏰ Horário: 06:47 [30/12/2024] - 06:50 [30/12/2024]
+   ⏰ Horário: 04:26 [30/12/2024] - 04:29 [30/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
 🔸 ATIVIDADE 10025: preparo_de_paes_hamburguer_para_coccao
-   ⏰ Horário: 06:23 [30/12/2024] - 06:27 [30/12/2024]
+   ⏰ Horário: 01:57 [30/12/2024] - 02:01 [30/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
 🔸 ATIVIDADE 10023: preparo_de_paes_hamburguer_para_fermentacao
-   ⏰ Horário: 03:50 [30/12/2024] - 03:53 [30/12/2024]
+   ⏰ Horário: 22:58 [29/12/2024] - 23:01 [29/12/2024]
    👥 Funcionários necessários: 1
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
 🔸 ATIVIDADE 10022: divisao_e_modelagem_de_massas_para_pao_hamburguer
-   ⏰ Horário: 03:18 [30/12/2024] - 03:50 [30/12/2024]
+   ⏰ Horário: 20:09 [29/12/2024] - 20:41 [29/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
 🔸 ATIVIDADE 10021: pesagem_de_massa_para_pao_hamburguer
-   ⏰ Horário: 02:54 [30/12/2024] - 03:18 [30/12/2024]
+   ⏰ Horário: 18:46 [29/12/2024] - 19:10 [29/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
 🔸 ATIVIDADE 20021: mistura_de_massas_suaves
-   ⏰ Horário: 02:47 [30/12/2024] - 02:54 [30/12/2024]
+   ⏰ Horário: 18:23 [29/12/2024] - 18:30 [29/12/2024]
    👥 Funcionários necessários: 2
    👨‍💼 Tipos permitidos: AUXILIAR_DE_PADEIRO, PADEIRO
    🎯 Prioridades (FIPs): PADEIRO:2, AUXILIAR_DE_PADEIRO:1
-   📅 Registrado: 10:58:46
+   📅 Registrado: 09:37:35
 
---------------------------------------------------------------------------------
-📊 RESUMO FINAL
---------------------------------------------------------------------------------
-Total de requisitos registrados: 0
-Finalizado em: 11/12/2025 10:58:46
-================================================================================

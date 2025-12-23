@@ -16,7 +16,7 @@
       "fips_equipamentos": {
         "bancada_7": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:26:48",
       "configuracoes_equipamentos": {
         "bancada_7": {
           "fracoes_necessarias": 1,
@@ -63,7 +63,7 @@
         "fogao_1": 1,
         "fogao_2": 2
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:11:27",
       "configuracoes_equipamentos": {
         "fogao_1": {
           "tipo_chama": [
@@ -125,7 +125,7 @@
         "bancada_7": 1,
         "balanca_digital_4": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:39:17",
       "configuracoes_equipamentos": {
         "bancada_7": {
           "fracoes_necessarias": 1,
@@ -170,7 +170,7 @@
       "fips_equipamentos": {
         "camara_refrigerada_2": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:50:07",
       "configuracoes_equipamentos": {
         "camara_refrigerada_2": {
           "faixa_temperatura": -18,

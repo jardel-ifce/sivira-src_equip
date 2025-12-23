@@ -231,7 +231,7 @@ class MenuPrincipal:
             self.executar_sequencial()
         
         elif opcao == "8":
-            self.executar_otimizado_v2()
+            self.executar_otimizado()
 
         elif opcao.lower() == "d":  # 🆕 NOVA OPÇÃO - AGENDA
             self.mostrar_submenu_agenda()
@@ -1185,16 +1185,17 @@ class MenuPrincipal:
         
         input("\nPressione Enter para continuar...")
     
-    def executar_otimizado_v2(self):
-        """Executa pedidos da ordem atual com otimização PL v2.0 (OR-Tools CP-SAT)"""
+    def executar_otimizado(self):
+        """Executa pedidos da ordem atual com otimização PL (Unificado: DETERMINÍSTICO e FLEXÍVEL)"""
         self.utils.limpar_tela()
         ordem_atual = self.gerenciador.obter_ordem_atual()
         pedidos_ordem = self.gerenciador.obter_pedidos_ordem_atual()
 
-        print("🚀 EXECUÇÃO OTIMIZADA v2.0 (PL COMPLETO)")
-        print("=" * 40)
+        print("🚀 EXECUÇÃO OTIMIZADA PL")
+        print("=" * 50)
         print(f"📦 Executando Ordem: {ordem_atual}")
-        print("✨ NOVO: Modelo PL com TODAS as restrições")
+        print("✨ Suporte a janelas temporais flexíveis (tau_max > 0)")
+        print("📊 Detecta modo automaticamente (DETERMINÍSTICO ou FLEXÍVEL)")
 
         if not pedidos_ordem:
             print(f"🔭 Ordem {ordem_atual} não possui pedidos para executar.")
@@ -1213,40 +1214,41 @@ class MenuPrincipal:
 
         print(f"\n📊 {len(pedidos_ordem)} pedido(s) da Ordem {ordem_atual} será(ão) otimizado(s).")
         print("⏱️ Isso pode levar alguns minutos para encontrar a solução ótima...")
-        print("\n🔧 Método: ExecutorV2 (Otimizador v2.0)")
-        print("📋 OTIMIZADO v2: Modelo PL COMPLETO com correções:")
-        print("   ✅ tempo_maximo_de_espera modelado")
-        print("   ✅ Equipamentos como recursos limitados")
-        print("   ✅ SEM orçamento de restrições (completo)")
+        print("\n🔧 Método: Otimizador PL Unificado")
+        print("📋 Características:")
+        print("   ✅ FASE 0: Cria atividades modulares")
+        print("   ✅ Detecta modo (DETERMINÍSTICO ou FLEXÍVEL)")
+        print("   ✅ Calcula janelas temporais se tau_max > 0")
+        print("   ✅ Retry dentro das janelas se alocação falhar")
         print("🧹 Ambiente limpo automaticamente")
         print("📦 SISTEMA DE ORDENS: Execução por ordem/sessão")
 
         # Mostra resumo dos pedidos da ordem atual
-        print(f"\n📋 Pedidos da Ordem {ordem_atual} para otimização v2:")
+        print(f"\n📋 Pedidos da Ordem {ordem_atual} para otimização:")
         for pedido in pedidos_ordem:
             print(f"   • Ordem {pedido.id_ordem} | Pedido {pedido.id_pedido}: {pedido.nome_item} ({pedido.quantidade} uni)")
             print(f"     Prazo: {pedido.fim_jornada.strftime('%d/%m %H:%M')}")
 
-        confirmacao = input(f"\n🎯 Confirma execução otimizada v2 da Ordem {ordem_atual}? (s/N): ").strip().lower()
+        confirmacao = input(f"\n🎯 Confirma execução otimizada da Ordem {ordem_atual}? (s/N): ").strip().lower()
 
         if confirmacao in ['s', 'sim', 'y', 'yes']:
             try:
-                # Importar ExecutorV2
-                print("\n📥 Importando Otimizador v2...")
-                from otimizador_v2 import ExecutorV2
+                # Importar Executor
+                print("\n📥 Importando Otimizador...")
+                from otimizador import Executor
 
                 # Criar executor
-                print("🔧 Criando executor v2...")
-                executor = ExecutorV2()
+                print("🔧 Criando executor...")
+                executor = Executor()
 
-                # Inicializar (já deve estar inicializado pelo gestor_producao, mas garante)
+                # Inicializar
                 print("⚙️ Inicializando ambiente...")
                 if not executor.inicializar():
-                    print("❌ Erro ao inicializar executor v2")
+                    print("❌ Erro ao inicializar executor")
                     input("\nPressione Enter para continuar...")
                     return
 
-                # Converter DadosPedidoMenu para PedidoDeProducao usando ambiente do ExecutorV2
+                # Converter DadosPedidoMenu para PedidoDeProducao
                 print("🔄 Convertendo pedidos do menu para formato de produção...")
                 from services.gestores.producao.conversor_pedidos import ConversorPedidos
                 conversor = ConversorPedidos(
@@ -1262,18 +1264,18 @@ class MenuPrincipal:
                 print(f"✅ {len(pedidos_convertidos)} pedido(s) convertido(s) com sucesso")
 
                 # Executar otimização
-                print(f"\n🚀 Executando otimização v2 com {len(pedidos_convertidos)} pedidos...")
+                print(f"\n🚀 Executando otimização com {len(pedidos_convertidos)} pedidos...")
                 solucao = executor.otimizar_pedidos(
                     pedidos=pedidos_convertidos,
                     timeout_segundos=600
                 )
 
-                # 🆕 SEMPRE incrementa ordem após tentativa de execução
+                # Sempre incrementa ordem após tentativa de execução
                 nova_ordem = self.gerenciador.incrementar_ordem()
                 self.gerenciador.salvar_pedidos()
 
                 if solucao and solucao.pedidos_atendidos > 0:
-                    print(f"\n🎉 Execução otimizada v2 da Ordem {ordem_atual} concluída!")
+                    print(f"\n🎉 Execução otimizada da Ordem {ordem_atual} concluída!")
                     print(f"📈 Sistema avançou para Ordem {nova_ordem}")
                     print("💡 Novos pedidos serão registrados na nova ordem")
 
@@ -1287,37 +1289,44 @@ class MenuPrincipal:
                     # Mostrar estatísticas
                     print(f"\n📊 ESTATÍSTICAS:")
                     print(f"   Status Solver: {solucao.status_solver}")
+                    print(f"   Modo Detectado: {solucao.modo_detectado}")
                     print(f"   Pedidos atendidos: {solucao.pedidos_atendidos}/{len(pedidos_convertidos)}")
                     print(f"   Taxa de sucesso: {(solucao.pedidos_atendidos/len(pedidos_convertidos)*100):.1f}%")
                     print(f"   Tempo de resolução: {solucao.tempo_resolucao:.2f}s")
                     print(f"   Makespan: {solucao.makespan_minutos:.0f} min ({solucao.makespan_minutos/60:.1f}h)")
 
-                    if 'total_variaveis' in solucao.estatisticas:
-                        print(f"\n📊 Modelo PL:")
-                        print(f"   Variáveis: {solucao.estatisticas['total_variaveis']:,}")
-                        print(f"   Restrições: {solucao.estatisticas['total_restricoes']:,}")
+                    # Detalhes do modo
+                    print(f"\n📊 Detalhes:")
+                    print(f"   Pedidos determinísticos: {solucao.estatisticas.get('pedidos_deterministicos', 0)}")
+                    print(f"   Pedidos flexíveis: {solucao.estatisticas.get('pedidos_flexiveis', 0)}")
+                    print(f"   Atividades com gap > 0: {solucao.estatisticas.get('atividades_com_gap', 0)}")
+
+                    if solucao.janelas_calculadas:
+                        print(f"   Janelas flexíveis calculadas: {len(solucao.janelas_calculadas)} pedidos")
 
                 else:
-                    print(f"\n⚡ Execução otimizada v2 não encontrou solução viável para Ordem {ordem_atual}!")
+                    print(f"\n⚡ Execução otimizada não encontrou solução viável para Ordem {ordem_atual}!")
                     print(f"📈 Mesmo assim, sistema avançou para Ordem {nova_ordem}")
                     print("💡 Possíveis causas:")
                     print("   - Deadlines muito apertados")
                     print("   - Conflitos de equipamentos insolúveis")
+                    print("   - tau_max insuficiente para flexibilidade")
                     print("   - Timeout atingido antes de encontrar solução")
 
                     if solucao:
                         print(f"\n   Status do solver: {solucao.status_solver}")
+                        print(f"   Modo detectado: {solucao.modo_detectado}")
 
             except ImportError as e:
-                print(f"\n⚡ Erro ao importar Otimizador v2: {e}")
-                print("💡 Verifique se o módulo otimizador_v2 está instalado corretamente")
+                print(f"\n⚡ Erro ao importar Otimizador: {e}")
+                print("💡 Verifique se o módulo otimizador está instalado corretamente")
                 nova_ordem = self.gerenciador.incrementar_ordem()
                 self.gerenciador.salvar_pedidos()
                 print(f"📈 Ordem incrementada para {nova_ordem} (devido ao erro)")
 
             except Exception as e:
-                # 🆕 MESMO EM CASO DE EXCEPTION, incrementa ordem
-                print(f"\n⚡ Erro durante execução otimizada v2: {e}")
+                # Mesmo em caso de exception, incrementa ordem
+                print(f"\n⚡ Erro durante execução otimizada: {e}")
                 import traceback
                 traceback.print_exc()
                 nova_ordem = self.gerenciador.incrementar_ordem()
@@ -1334,7 +1343,7 @@ class MenuPrincipal:
         self.utils.limpar_tela()
         print("🧪 TESTE DO SISTEMA")
         print("=" * 40)
-        
+
         print("Executando diagnóstico completo do sistema...\n")
         
         try:

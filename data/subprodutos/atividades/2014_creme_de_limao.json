@@ -20,7 +20,7 @@
         "bancada_5": 1,
         "bancada_6": 2
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:40:16",
       "configuracoes_equipamentos": {
         "bancada_4": {
           "fracoes_necessarias": 1,
@@ -82,7 +82,7 @@
         "bancada_6": 2,
         "balanca_digital_2": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:20:46",
       "configuracoes_equipamentos": {
         "bancada_4": {
           "fracoes_necessarias": 1,
@@ -137,7 +137,7 @@
       "fips_equipamentos": {
         "camara_refrigerada_1": 1
       },
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:48:43",
       "configuracoes_equipamentos": {
         "camara_refrigerada_1": {
           "faixa_temperatura": 4,

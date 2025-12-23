@@ -16,7 +16,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:00:25",
       "fips_equipamentos": {
         "balanca_digital_1": 1,
         "bancada_1": 1,
@@ -81,7 +81,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:49:51",
       "fips_equipamentos": {
         "modeladora_de_paes_1": 1,
         "bancada_1": 1,
@@ -141,7 +141,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:43:35",
       "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
@@ -201,7 +201,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:02:11",
       "fips_equipamentos": {
         "armario_fermentador_1": 1,
         "armario_fermentador_2": 1,
@@ -239,7 +239,7 @@
       "tipo_atividade": "PREPARO_DE_PAES_DE_FORMA_PARA_COCCAO",
       "tipo_equipamento": {},
       "equipamentos_elegiveis": [],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:21:34",
       "fips_equipamentos": {},
       "configuracoes_equipamentos": {},
       "tipos_profissionais_permitidos": [
@@ -280,7 +280,7 @@
         "forno_1",
         "forno_2"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:20:27",
       "fips_equipamentos": {
         "forno_1": 1,
         "forno_2": 2
@@ -331,7 +331,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "00:39:25",
       "fips_equipamentos": {
         "armario_fermentador_1": 2,
         "armario_fermentador_2": 2,
@@ -392,7 +392,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:25:19",
       "fips_equipamentos": {
         "armario_fermentador_1": 2,
         "armario_fermentador_2": 2,
@@ -434,7 +434,7 @@
       "equipamentos_elegiveis": [
         "embaladora_1"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:58:24",
       "fips_equipamentos": {
         "embaladora_1": 1
       },

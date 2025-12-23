@@ -1,0 +1,507 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+
+\geometry{margin=2.5cm}
+
+\title{\textbf{Algoritmos de Alocação: Sequencial e Otimizado}\\
+\large Sistema SIVIRA - Otimização de Produção}
+\author{Documentação Técnica}
+\date{Dezembro 2025}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introdução}
+
+Este documento descreve os dois algoritmos de alocação de pedidos disponíveis no sistema SIVIRA:
+
+\begin{enumerate}
+    \item \textbf{Algoritmo Sequencial}: Execução com heurística de priorização
+    \item \textbf{Otimizador PL}: Otimização unificada via MILP que suporta ambos os modos:
+    \begin{itemize}
+        \item Modo DETERMINÍSTICO ($\tau_{max} = 0$): Atividades contíguas
+        \item Modo FLEXÍVEL ($\tau_{max} > 0$): Janelas temporais flexíveis
+    \end{itemize}
+\end{enumerate}
+
+O Otimizador PL utiliza o solver \textbf{OR-Tools CP-SAT} do Google, que oferece alta performance para problemas de satisfação de restrições e otimização combinatória.
+
+\subsection{Objetivos do Sistema}
+
+\begin{itemize}
+    \item Maximizar o número de pedidos atendidos dentro dos prazos (deadlines)
+    \item Respeitar restrições de equipamentos (capacidade finita)
+    \item Garantir sequenciamento correto de atividades (gaps temporais)
+    \item Otimizar a ordem de execução considerando urgência dos pedidos
+\end{itemize}
+
+\section{Algoritmo Sequencial}
+
+O Algoritmo Sequencial é a abordagem mais simples para execução de pedidos, utilizando uma \textbf{heurística de priorização} baseada em critérios de restrições.
+
+\subsection{Descrição}
+
+O método sequencial ordena os pedidos por uma heurística de priorização antes da execução, considerando: (1) duração total estimada (maiores primeiro), (2) quantidade (maiores primeiro), (3) tempo de antecipação (menores primeiro) e (4) ID do pedido como desempate. É uma abordagem \textbf{gulosa (greedy)} que processa cada pedido individualmente, sem otimização global de recursos.
+
+\subsection{Arquitetura do Algoritmo Sequencial}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.2cm, auto,
+    fase/.style={draw, rectangle, rounded corners, minimum width=5cm, minimum height=0.9cm, font=\small}]
+
+    \node[fase, fill=blue!20] (f1) {Fase 1: Receber lista de pedidos};
+    \node[fase, fill=green!20, below=of f1] (f2) {Fase 2: Gerar comanda do pedido};
+    \node[fase, fill=orange!20, below=of f2] (f3) {Fase 3: Criar atividades modulares};
+    \node[fase, fill=red!20, below=of f3] (f4) {Fase 4: Executar atividades em ordem};
+
+    \draw[->, thick] (f1) -- (f2);
+    \draw[->, thick] (f2) -- (f3);
+    \draw[->, thick] (f3) -- (f4);
+    \draw[->, thick, dashed] (f4.east) to[out=0,in=0] node[right] {próximo pedido} (f2.east);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Pseudocódigo}
+
+\begin{algorithm}
+\caption{Execução Sequencial de Pedidos}
+\begin{algorithmic}[1]
+\State $pedidos\_executados \gets 0$
+\State $pedidos\_com\_erro \gets 0$
+\For{cada $pedido$ em $lista\_pedidos$}
+    \State Gerar comanda com reserva de ingredientes
+    \State Criar atividades modulares necessárias
+    \State Executar atividades em ordem cronológica
+    \If{execução bem-sucedida}
+        \State $pedidos\_executados \gets pedidos\_executados + 1$
+        \State Salvar log de sucesso
+    \Else
+        \State $pedidos\_com\_erro \gets pedidos\_com\_erro + 1$
+        \State Salvar log de erro
+        \State Continuar para próximo pedido
+    \EndIf
+\EndFor
+\State \Return estatísticas de execução
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Características}
+
+\begin{itemize}
+    \item \textbf{Ordem de execução}: Fixa, baseada na ordem de chegada (1, 2, 3...)
+    \item \textbf{Conflitos de equipamentos}: Não são detectados previamente
+    \item \textbf{Gaps temporais}: Não são verificados antecipadamente
+    \item \textbf{Função objetivo}: Nenhuma (execução simples)
+    \item \textbf{Método de solução}: Greedy (guloso)
+    \item \textbf{Complexidade}: $O(n)$ onde $n$ é o número de pedidos
+\end{itemize}
+
+\subsection{Componentes do Algoritmo Sequencial}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Módulo} & \textbf{Função} \\
+\midrule
+\texttt{executor\_pedidos.py} & Orquestrador da execução sequencial \\
+\texttt{gestor\_comandas.py} & Geração de comandas e reservas \\
+\texttt{atividades\_modulares.py} & Criação de atividades por pedido \\
+\texttt{gestor\_equipamentos.py} & Alocação de equipamentos \\
+\bottomrule
+\end{tabular}
+\caption{Módulos do sistema Sequencial}
+\end{table}
+
+\subsection{Vantagens e Desvantagens}
+
+\textbf{Vantagens:}
+\begin{itemize}
+    \item Implementação simples e direta
+    \item Baixo custo computacional
+    \item Fácil de depurar e manter
+    \item Comportamento previsível
+\end{itemize}
+
+\textbf{Desvantagens:}
+\begin{itemize}
+    \item Não otimiza ordem de execução
+    \item Pode violar deadlines desnecessariamente
+    \item Ignora conflitos de equipamentos até a execução
+    \item Não maximiza utilização de recursos
+\end{itemize}
+
+\section{Otimizador PL}
+
+O Otimizador PL é um sistema de otimização de produção que utiliza \textbf{Programação Linear Inteira Mista (MILP)} para determinar a ordem ótima de execução de pedidos.
+
+\subsection{Arquitetura do Otimizador PL}
+
+O sistema é composto por 5 fases principais:
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.2cm, auto,
+    fase/.style={draw, rectangle, rounded corners, minimum width=5cm, minimum height=0.9cm, font=\small}]
+
+    \node[fase, fill=purple!20] (f0) {Fase 0: Criar Atividades Modulares};
+    \node[fase, fill=blue!20, below=of f0] (f1) {Fase 1: Detecção de Modo};
+    \node[fase, fill=green!20, below=of f1] (f2) {Fase 2: Cálculo de Horários/Janelas};
+    \node[fase, fill=orange!20, below=of f2] (f3) {Fase 3: Otimização PL};
+    \node[fase, fill=red!20, below=of f3] (f4) {Fase 4: Execução};
+
+    \draw[->, thick] (f0) -- (f1);
+    \draw[->, thick] (f1) -- (f2);
+    \draw[->, thick] (f2) -- (f3);
+    \draw[->, thick] (f3) -- (f4);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Componentes do Otimizador PL}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Módulo} & \textbf{Função} \\
+\midrule
+\texttt{executor.py} & Orquestrador principal \\
+\texttt{detector\_modo.py} & Detecta modo de otimização \\
+\texttt{calculador\_horarios\_deterministicos.py} & Cálculo backward scheduling \\
+\texttt{calculador\_janelas.py} & Calcula janelas flexíveis \\
+\texttt{modelo\_pl\_ordenacao.py} & Modelo PL com OR-Tools CP-SAT \\
+\texttt{aplicador\_ordenacao.py} & Executa pedidos (modo determinístico) \\
+\texttt{aplicador\_flexivel.py} & Executa pedidos (modo flexível) \\
+\bottomrule
+\end{tabular}
+\caption{Módulos do Otimizador PL}
+\end{table}
+
+\subsection{Conceito de $\tau_{max}$ (tempo\_maximo\_de\_espera)}
+
+O parâmetro $\tau_{max}$ define o gap máximo permitido entre atividades consecutivas:
+
+\begin{itemize}
+    \item $\tau_{max} = 0$: Atividades consecutivas sem gap (modo DETERMINÍSTICO)
+    \item $\tau_{max} > 0$: Gap de até $\tau_{max}$ permitido entre atividades (modo FLEXÍVEL)
+\end{itemize}
+
+O modo é detectado automaticamente na Fase 1, após a criação das atividades modulares.
+
+\section{Formulação Matemática}
+
+\subsection{Variáveis de Decisão}
+
+O modelo utiliza variáveis binárias para representar a seleção de pedidos e suas posições:
+
+\begin{equation}
+x_{p,j} \in \{0, 1\}
+\end{equation}
+
+Onde:
+\begin{itemize}
+    \item $p$ = índice do pedido ($p \in P$)
+    \item $j$ = índice da janela temporal candidata ($j \in J_p$)
+    \item $x_{p,j} = 1$ significa que o pedido $p$ será executado na janela $j$
+\end{itemize}
+
+Para o modelo de ordenação, também são utilizadas:
+
+\begin{equation}
+pos_i \in \{0, 1, \ldots, n-1\}
+\end{equation}
+
+Onde $pos_i$ representa a posição do pedido $i$ na ordem de execução.
+
+\subsection{Função Objetivo}
+
+O objetivo é maximizar o número total de pedidos atendidos:
+
+\begin{equation}
+\max \sum_{p \in P} \sum_{j \in J_p} x_{p,j}
+\end{equation}
+
+\subsection{Restrições}
+
+\subsubsection{Restrição 1: Unicidade por Pedido}
+
+Cada pedido utiliza no máximo uma janela temporal:
+
+\begin{equation}
+\sum_{j \in J_p} x_{p,j} \leq 1, \quad \forall p \in P
+\end{equation}
+
+\subsubsection{Restrição 2: Permutação Única (Ordenação)}
+
+Para o modelo de ordenação, todas as posições devem ser diferentes:
+
+\begin{equation}
+pos_i \neq pos_j, \quad \forall i \neq j
+\end{equation}
+
+Esta restrição é implementada usando a constraint \texttt{AddAllDifferent} do OR-Tools.
+
+\subsubsection{Restrição 3: Tempo Máximo de Espera}
+
+Para atividades consecutivas:
+
+\begin{equation}
+0 \leq t_{inicio}^{(a+1)} - t_{fim}^{(a)} \leq \tau_{max}
+\end{equation}
+
+Quando $\tau_{max} = 0$, isso garante atividades contíguas (modo DETERMINÍSTICO).
+
+\subsubsection{Restrição 4: Conflitos Temporais (Equipamentos)}
+
+Se duas janelas se sobrepõem no tempo, não podem ser selecionadas simultaneamente:
+
+\begin{equation}
+x_{p_1,j_1} + x_{p_2,j_2} \leq 1
+\end{equation}
+
+Para todo par $(p_1,j_1), (p_2,j_2)$ onde:
+\begin{equation}
+[t_1^{ini}, t_1^{fim}] \cap [t_2^{ini}, t_2^{fim}] \neq \emptyset
+\end{equation}
+
+\subsubsection{Restrição 5: Deadline Rígido}
+
+Para pedidos com deadline obrigatório:
+
+\begin{equation}
+x_{p,j} = 0, \quad \forall j : |t_j^{fim} - d_p| > \epsilon
+\end{equation}
+
+Onde $d_p$ é o deadline do pedido $p$ e $\epsilon = 1$ minuto (tolerância).
+
+\section{Backward Scheduling}
+
+\subsection{Modo Determinístico ($\tau_{max} = 0$)}
+
+Para o modo determinístico, o sistema utiliza \textbf{backward scheduling} para calcular horários fixos:
+
+\begin{algorithm}
+\caption{Backward Scheduling (Determinístico)}
+\begin{algorithmic}[1]
+\State $t_{atual} \gets deadline$
+\For{cada atividade $a$ em ordem reversa}
+    \State $t_{fim}^{(a)} \gets t_{atual}$
+    \State $t_{inicio}^{(a)} \gets t_{fim}^{(a)} - duracao_a$
+    \State $t_{atual} \gets t_{inicio}^{(a)}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Modo Flexível ($\tau_{max} > 0$)}
+
+Para o modo flexível, o sistema calcula janelas temporais:
+
+\begin{algorithm}
+\caption{Cálculo de Janelas Flexíveis}
+\begin{algorithmic}[1]
+\State $t_{fim}^{tarde} \gets deadline$
+\For{cada atividade $a$ em ordem reversa}
+    \If{$a$ é última atividade}
+        \State $t_{fim}^{cedo}_a \gets deadline$
+        \State $t_{fim}^{tarde}_a \gets deadline$
+    \Else
+        \State $t_{fim}^{tarde}_a \gets t_{fim}^{tarde}$
+        \State $t_{fim}^{cedo}_a \gets t_{fim}^{tarde} - \tau_{max}^{sucessora}$
+    \EndIf
+    \State $t_{inicio}^{tarde}_a \gets t_{fim}^{tarde}_a - duracao_a$
+    \State $t_{inicio}^{cedo}_a \gets t_{fim}^{cedo}_a - duracao_a$
+    \State $t_{fim}^{tarde} \gets t_{inicio}^{cedo}_a$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Representação Visual}
+
+\textbf{Modo DETERMINÍSTICO ($\tau_{max} = 0$):}
+\begin{center}
+\begin{tikzpicture}[node distance=0cm]
+    \node[draw, rectangle, fill=blue!30, minimum width=2cm, minimum height=0.6cm] (a1) {A1};
+    \node[draw, rectangle, fill=blue!30, minimum width=2cm, minimum height=0.6cm, right=of a1] (a2) {A2};
+    \node[draw, rectangle, fill=blue!30, minimum width=2cm, minimum height=0.6cm, right=of a2] (a3) {A3};
+
+    \node[below=0.3cm of a1] {\small gap=0};
+    \node[below=0.3cm of a2] {\small gap=0};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Modo FLEXÍVEL ($\tau_{max} = 30min$):}
+\begin{center}
+\begin{tikzpicture}[node distance=0.5cm]
+    \node[draw, rectangle, fill=green!30, minimum width=2cm, minimum height=0.6cm] (a1) {A1};
+    \node[draw, rectangle, fill=green!30, minimum width=2cm, minimum height=0.6cm, right=of a1] (a2) {A2};
+    \node[draw, rectangle, fill=green!30, minimum width=2cm, minimum height=0.6cm, right=of a2] (a3) {A3};
+
+    \node[below=0.3cm of a1] {\small gap$\leq$30min};
+    \node[below=0.3cm of a2] {\small gap$\leq$30min};
+\end{tikzpicture}
+\end{center}
+
+\subsection{Estratégia de Retry (Modo Flexível)}
+
+Quando uma alocação falha no horário preferencial, o sistema tenta horários anteriores em steps de 5 minutos:
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.3cm]
+    \node[draw, rectangle, fill=green!30, minimum width=1.5cm, minimum height=0.6cm] (t1) {$t^{tarde}$};
+    \node[draw, rectangle, fill=yellow!30, minimum width=1.5cm, minimum height=0.6cm, left=of t1] (t2) {-5min};
+    \node[draw, rectangle, fill=yellow!30, minimum width=1.5cm, minimum height=0.6cm, left=of t2] (t3) {-10min};
+    \node[left=of t3] (dots) {...};
+    \node[draw, rectangle, fill=red!30, minimum width=1.5cm, minimum height=0.6cm, left=of dots] (tn) {$t^{cedo}$};
+
+    \draw[->, thick] (t1) -- (t2);
+    \draw[->, thick] (t2) -- (t3);
+    \draw[->, thick] (t3) -- (dots);
+    \draw[->, thick] (dots) -- (tn);
+
+    \node[above=0.3cm of t1] {\small Preferencial};
+    \node[above=0.3cm of tn] {\small Limite};
+\end{tikzpicture}
+\end{center}
+
+\section{Complexidade Computacional}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Componente} & \textbf{Complexidade} \\
+\midrule
+Variáveis de decisão & $O(n \cdot k)$ \\
+Restrições de unicidade & $O(n)$ \\
+Restrições de conflito & $O(n^2 \cdot k^2)$ (pior caso) \\
+\bottomrule
+\end{tabular}
+\caption{Complexidade por componente ($n$ = pedidos, $k$ = janelas/pedido)}
+\end{table}
+
+O solver OR-Tools CP-SAT utiliza técnicas avançadas de propagação de restrições e busca para encontrar soluções ótimas ou viáveis dentro do timeout configurado (padrão: 600 segundos).
+
+\section{Comparação: Sequencial vs Otimizado}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Aspecto} & \textbf{Sequencial} & \textbf{Otimizado PL} \\
+\midrule
+Ordem de execução & Fixa & Otimizada \\
+Conflitos de equipamentos & Ignora & Modela \\
+Modo DETERMINÍSTICO ($\tau_{max}=0$) & - & Sim \\
+Modo FLEXÍVEL ($\tau_{max}>0$) & - & Sim \\
+Detecção automática de modo & Não & Sim \\
+Janelas flexíveis & Não & Sim (modo FLEXÍVEL) \\
+Retry na alocação & Não & Sim (modo FLEXÍVEL) \\
+Função objetivo & Nenhuma & Max pedidos \\
+Método de solução & Greedy & MILP \\
+Complexidade & $O(n)$ & $O(n^2 \cdot k^2)$ \\
+\bottomrule
+\end{tabular}
+\caption{Comparação entre métodos}
+\end{table}
+
+\section{Implementação}
+
+\subsection{Exemplo de Uso - Sequencial}
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+from services.gestores.producao import ExecutorPedidos
+
+# Criar executor
+executor = ExecutorPedidos()
+
+# Executar pedidos sequencialmente
+sucesso = executor.executar_sequencial(pedidos_convertidos)
+
+# Verificar estatisticas
+stats = executor.obter_estatisticas()
+print(f"Executados: {stats['pedidos_executados']}")
+print(f"Com erro: {stats['pedidos_com_erro']}")
+\end{lstlisting}
+
+\subsection{Exemplo de Uso - Otimizador PL}
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+from otimizador import Executor
+
+# Criar executor
+executor = Executor()
+executor.inicializar()
+
+# Otimizar pedidos (detecta modo automaticamente)
+solucao = executor.otimizar_pedidos(pedidos)
+
+# Verificar resultados
+print(f"Modo detectado: {solucao.modo_detectado}")
+print(f"Pedidos atendidos: {solucao.pedidos_atendidos}")
+print(f"Taxa de sucesso: {solucao.estatisticas['taxa_sucesso']}%")
+\end{lstlisting}
+
+\subsection{Parâmetros de Configuração}
+
+\begin{itemize}
+    \item \textbf{timeout\_segundos}: Tempo máximo para resolução (padrão: 600s)
+    \item \textbf{inicio\_jornada}: Horário de início da jornada de trabalho
+\end{itemize}
+
+\section{Quando Usar Cada Algoritmo}
+
+\subsection{Use o Algoritmo Sequencial quando:}
+
+\begin{itemize}
+    \item Os pedidos não possuem deadlines rígidos
+    \item A ordem de chegada é importante para o cliente
+    \item O número de pedidos é pequeno (< 10)
+    \item Simplicidade é mais importante que otimização
+    \item Recursos computacionais são limitados
+\end{itemize}
+
+\subsection{Use o Otimizador PL quando:}
+
+\begin{itemize}
+    \item Existem deadlines rígidos a serem respeitados
+    \item Há conflitos potenciais de equipamentos
+    \item É necessário maximizar o número de pedidos atendidos
+    \item O número de pedidos é grande (> 10)
+    \item As atividades podem ter $\tau_{max} > 0$ (gaps permitidos)
+    \item É necessário flexibilidade na alocação temporal
+    \item O sistema deve adaptar-se a conflitos de recursos
+\end{itemize}
+
+\section{Conclusão}
+
+O sistema SIVIRA oferece dois algoritmos para alocação de pedidos:
+
+\begin{enumerate}
+    \item O \textbf{Algoritmo Sequencial} é ideal para cenários simples, onde a ordem de chegada deve ser respeitada e não há restrições temporais complexas. Sua simplicidade garante baixo custo computacional e comportamento previsível.
+
+    \item O \textbf{Otimizador PL} oferece uma abordagem matematicamente fundamentada para o problema de scheduling de produção, suportando ambos os modos:
+    \begin{itemize}
+        \item \textbf{DETERMINÍSTICO} ($\tau_{max} = 0$): Atividades contíguas, sem gaps
+        \item \textbf{FLEXÍVEL} ($\tau_{max} > 0$): Janelas temporais com retry automático
+    \end{itemize}
+    O modo é detectado automaticamente antes da execução, garantindo comportamento correto em ambos os casos.
+\end{enumerate}
+
+A arquitetura modular permite fácil extensão para novos modos de operação e integração com o sistema de menu existente.
+
+\end{document}

@@ -16,7 +16,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:59:28",
       "fips_equipamentos": {
         "balanca_digital_1": 1,
         "bancada_1": 1,
@@ -79,7 +79,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:02:57",
       "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
@@ -138,7 +138,7 @@
         "bancada_2",
         "bancada_3"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "02:09:20",
       "fips_equipamentos": {
         "bancada_1": 1,
         "bancada_2": 2,
@@ -198,7 +198,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:24:06",
       "fips_equipamentos": {
         "armario_fermentador_1": 1,
         "armario_fermentador_2": 1,
@@ -236,7 +236,7 @@
       "tipo_atividade": "PREPARO_DE_PAES_TRANCA_DE_QUEIJO_FINOS_PARA_COCCAO",
       "tipo_equipamento": {},
       "equipamentos_elegiveis": [],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:41:43",
       "fips_equipamentos": {},
       "configuracoes_equipamentos": {},
       "tipos_profissionais_permitidos": [
@@ -277,7 +277,7 @@
         "forno_1",
         "forno_2"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:08:35",
       "fips_equipamentos": {
         "forno_1": 1,
         "forno_2": 2
@@ -328,7 +328,7 @@
         "armario_fermentador_3",
         "armario_fermentador_4"
       ],
-      "tempo_maximo_de_espera": "00:00:00",
+      "tempo_maximo_de_espera": "01:05:18",
       "fips_equipamentos": {
         "armario_fermentador_1": 2,
         "armario_fermentador_2": 2,
